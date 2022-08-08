@@ -311,3 +311,31 @@ namespace SKL
     }
 }
 
+namespace SKL
+{
+    uint32_t PlatformTLS::GetCurrentThreadId() noexcept
+    {
+        return ::GetCurrentThreadId( );
+    }
+    
+    TLSSlot PlatformTLS::AllocTlsSlot() noexcept
+    {
+        return static_cast<TLSSlot>( ::TlsAlloc() );
+    }
+    
+    void PlatformTLS::SetTlsValue( TLSSlot InSlot, void* InValue ) noexcept
+    {
+        ::TlsSetValue( static_cast<DWORD>( InSlot ), InValue );
+    }
+    
+    void* PlatformTLS::GetTlsValue( TLSSlot InSlot ) noexcept
+    {
+        return ::TlsGetValue( static_cast<DWORD>( InSlot ) );
+    }
+    
+    void PlatformTLS::FreeTlsSlot( TLSSlot InSlot ) noexcept
+    {
+        ::TlsFree( static_cast<DWORD>( InSlot ) );
+    }
+}
+

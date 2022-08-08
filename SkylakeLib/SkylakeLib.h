@@ -16,5 +16,7 @@
 //! Platform
 #include "Platform/Platform.h"
 
+//! Thread Local Storage
+#include "ThreadLocalStorage/TLS.h"
 
 

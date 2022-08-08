@@ -12,7 +12,7 @@ namespace SKL
     //! Platform agnostic socket type 
     using TSocket = uint64_t;
 
-	//! \brief Platform specific timer API
+    //! \brief Platform specific timer API
     struct Timer;
 
     //! \brief Platform specific, opaque type, for the async IO API
@@ -26,6 +26,9 @@ namespace SKL
     
     //! \brief type that can hold a "handle" on any platform
     using THandle = uint64_t;
+
+    //! \brief type for the TLS slot
+    using TLSSlot = uint32_t;
     
     //! \brief Platform specific async IO API
     struct AsyncIO
@@ -108,6 +111,36 @@ namespace SKL
 
     //! \brief Set the timer resolution of the OS
     RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept;
+
+	struct PlatformTLS
+	{
+		static constexpr TLSSlot INVALID_SLOT_ID = 0xFFFFFFFF;
+
+		/**
+		 * \brief Return false if InSlotIndex is an invalid TLS slot
+		 * \param InSlotIndex the TLS index to check
+		 * \return true if InSlotIndex looks like a valid slot
+		 */
+		SKL_FORCEINLINE static bool IsValidTlsSlot( TLSSlot InSlotIndex ) noexcept
+		{
+			return InSlotIndex != INVALID_SLOT_ID;
+		}
+        
+        //! \brief Get the calling thread id
+        static uint32_t GetCurrentThreadId() noexcept;
+
+        //! \brief Allocate new thread local storage slot for all threads of the process
+        static TLSSlot AllocTlsSlot() noexcept;
+
+        //! \brief Set the TLS value at InSlot for the calling thread
+        static void SetTlsValue( TLSSlot InSlot, void* InValue ) noexcept;
+
+        //! \brief Get the TLS value at InSlot for the calling thread
+        static void* GetTlsValue( TLSSlot InSlot ) noexcept;
+
+        //! \brief Free a previously allocated TLS slot
+        static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
+    };
 }
 
 #if defined(SKL_BUILD_WINDOWS)

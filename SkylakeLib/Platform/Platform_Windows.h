@@ -49,11 +49,11 @@ namespace SKL
         SKL_FORCEINLINE double GetTotalTime() const noexcept { return TotalTime; }
 
     private:
-        double		  Elapsed		   { 0.0 };
-		double		  TotalTime		   { 0.0 };
-		double		  FrequencySeconds { 0.0 };
-		int64_t       I                {};
-		int64_t	      Start            { 0 };
+        double          Elapsed           { 0.0 };
+        double          TotalTime           { 0.0 };
+        double          FrequencySeconds { 0.0 };
+        int64_t       I                {};
+        int64_t          Start            { 0 };
     };
     
 }
