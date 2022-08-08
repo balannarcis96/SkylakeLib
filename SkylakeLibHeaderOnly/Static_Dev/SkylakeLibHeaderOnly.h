@@ -1,0 +1,33 @@
+//!
+//! \file SkylakeLibHeaderOnly.h
+//! 
+//! \brief All in one SkylakeLibHeaderOnly
+//! 
+//! \author Balan Narcis (balannarcis96@gmail.com)
+//! 
+#pragma once
+
+//! std dependencies
+#include "Std.h"
+
+//! Concepts
+#include "Concepts.h"
+
+//! Flags
+#include "Flags.h"
+
+//! ASD (Advanced Single Dispatch)
+#include "AdvancedSingleDispatch.h"
+#include "ASDForward.h"
+
+//! Macros
+#include "Macros.h"
+
+//! Result Status abstraction
+#include "RStatus.h"
+
+//! Base Types
+#include "Types.h"
+
+//! Assert 
+#include "SkylakeAssert.h"

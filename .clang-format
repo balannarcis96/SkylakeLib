@@ -1,0 +1,88 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: true
+AlignOperands: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortLambdasOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: All
+SpaceBeforeCpp11BracedList: true
+IncludeBlocks: Preserve
+SpaceBeforeAssignmentOperators: true
+BinPackArguments: false
+SpaceInEmptyParentheses: true
+SpacesBeforeTrailingComments: 2
+SpacesInAngles: false
+AlignAfterOpenBracket: Align
+SpacesInContainerLiterals: false
+SpacesInParentheses: true
+SpacesInSquareBrackets: true
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AlignEscapedNewlines: Left
+AllowShortBlocksOnASingleLine: true
+AlignConsecutiveMacros: true
+Standard: Cpp11
+ReflowComments: true
+SortIncludes: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: true
+AlignConsecutiveDeclarations: true
+AlwaysBreakBeforeMultilineStrings: false
+ContinuationIndentWidth: 4
+BraceWrapping: 
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBraces: Allman
+DerivePointerAlignment: false
+IndentWrappedFunctionNames: false
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: AfterColon
+ColumnLimit: 0
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+Cpp11BracedListStyle: false
+IncludeCategories: 
+  - Regex: '^<.*'
+    Priority: 1
+  - Regex: '^".*'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+IndentCaseLabels: true
+IndentWidth: 4
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+NamespaceIndentation: All
+SpaceAfterTemplateKeyword: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: Never
+SpaceInEmptyParentheses: true
+SpacesInAngles: true
+SpacesInConditionalStatement: true
+SpacesInCStyleCastParentheses: true
+SpacesInParentheses: true
+SpacesInSquareBrackets: true
+TabWidth: 4
+UseTab: Never
+DisableFormat: true
+...
