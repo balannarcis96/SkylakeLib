@@ -49,7 +49,7 @@ endif()
 if(SKL_BUILD_PLATFORM STREQUAL "Win64")
     add_compile_definitions(SKL_BUILD_WINDOWS)
 elseif(SKL_BUILD_PLATFORM STREQUAL "FreeBSD")
-    add_compile_definitions(SKL_BUILD_FREEBSD)
+    add_compile_definitions(    )
     message(FATAL_ERROR "FreeBSD not supported yet!")
 elseif(SKL_BUILD_PLATFORM STREQUAL "Ubuntu")
     add_compile_definitions(SKL_BUILD_UBUNTU)
@@ -68,12 +68,12 @@ add_subdirectory("SkylakeLibHeaderOnly")
 
 if(SKL_BUILD_TYPE STREQUAL "Full")
     add_subdirectory("SkylakeLib")
-endif()
 
-if(SKL_BUILD_TESTS)
-    # google test lib
-    add_subdirectory("googletest")    
-    
-    # SKL tests 
-    add_subdirectory ("tests")
+    if(SKL_BUILD_TESTS)
+        # google test lib
+        add_subdirectory("googletest")    
+        
+        # SKL tests 
+        add_subdirectory ("tests")
+    endif()
 endif()

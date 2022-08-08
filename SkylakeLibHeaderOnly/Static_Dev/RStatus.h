@@ -13,17 +13,18 @@ using RStatusNumericType = RStatusType;
 enum class RStatus : RStatusNumericType 
 {
     Success                             = 0
-    , Fail                              = 1
-    , Timeout                           = 2
-    , Aborted                           = 3
-    , InvalidParamters                  = 4
-    , OperationOverflows                = 5
-    , AllocationFailed                  = 6
-    , InvalidPoistion                   = 7
-    , InvalidOffset                     = 8
-    , SystemTerminated                  = 9
-    , SystemFailure                     = 10
-    , SuccessAsyncIORequestCancelled    = 13
+    , Fail                             
+    , Timeout                          
+    , Aborted                          
+    , AlreadyPerformed
+    , InvalidParamters                 
+    , OperationOverflows               
+    , AllocationFailed                 
+    , InvalidPoistion                  
+    , InvalidOffset                    
+    , SystemTerminated                 
+    , SystemFailure                    
+    , SuccessAsyncIORequestCancelled   
 
     , MAX
 };
@@ -44,6 +45,7 @@ constexpr RStatus RSuccess                          { RStatus::Success };
 constexpr RStatus RFail                             { RStatus::Fail };
 constexpr RStatus RTimeout                          { RStatus::Timeout };
 constexpr RStatus RAborted                          { RStatus::Aborted };
+constexpr RStatus RAlreadyPerformed                 { RStatus::AlreadyPerformed };
 constexpr RStatus RInvalidParamters                 { RStatus::InvalidParamters };
 constexpr RStatus ROperationOverflows               { RStatus::OperationOverflows };
 constexpr RStatus RInvalidPoistion                  { RStatus::InvalidPoistion };

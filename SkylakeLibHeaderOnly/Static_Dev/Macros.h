@@ -20,7 +20,6 @@
 #define SKL_FASTCALL        ASD_FASTCALL  
 #define SKL_VECTORCALL      ASD_VECTORCALL
 
-
 #define SKL_ALIGNMENT       sizeof( void* ) 
 
 #undef CONCAT_

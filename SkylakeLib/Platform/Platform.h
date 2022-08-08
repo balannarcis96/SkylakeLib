@@ -13,7 +13,7 @@ namespace SKL
     using TSocket = uint64_t;
 
 	//! \brief Platform specific timer API
-	struct Timer;
+    struct Timer;
 
     //! \brief Platform specific, opaque type, for the async IO API
     struct AsyncIOOpaqueType;
@@ -38,10 +38,15 @@ namespace SKL
 
         //! \brief Start and instance of the OS async IO system
         //! \param InThreadsCount number of threads accessing this instance
+        //! \returns RSuccess on success
+        //! \returns RFail on failure
         RStatus Start( int32_t InThreadsCount ) noexcept;
 
         //! \brief Stop this instance of the OS async IO system
         //! \remarks All outstanding async IO requests will be canceled
+        //! \returns RSuccess on success
+        //! \returns RAlreadyPerformed when Stop() was already called
+        //! \returns RFail on failure
         RStatus Stop() noexcept;
         
         //! \brief Attempt to retrieve completed async IO request from the OS 
@@ -49,8 +54,8 @@ namespace SKL
         //! \param OutCompletedRequestOpaqueTypeInstancePtr ptr to ptr that will contain the instance of the opaque type passed to the OS when making the async IO request
         //! \param OutNumberOfBytesTransferred number of bytes transferred for the async IO request (eg. when recv/send/red/write async request is completed)
         //! \param OutCompletionKey key used to identify the completed async IO request
-	    //! \returns RSuccess when a valid async IO request or custom work item is retrieved
-	    //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
+        //! \returns RSuccess when a valid async IO request or custom work item is retrieved
+        //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
         //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
         //! \returns RSystemFailure when a system failure occurs
         RStatus GetCompletedAsyncRequest( AsyncIOOpaqueType** OutCompletedRequestOpaqueTypeInstancePtr, uint32_t* OutNumberOfBytesTransferred, TCompletionKey* OutCompletionKey ) noexcept;
@@ -60,8 +65,8 @@ namespace SKL
         //! \param OutNumberOfBytesTransferred number of bytes transferred for the async IO request (eg. when recv/send/red/write async request is completed)
         //! \param OutCompletionKey key used to identify the completed async IO request
         //! \param InTimeout Time in milliseconds to wait for any async IO request to be completed
-	    //! \returns RSuccess when a valid async IO request or custom work item is retrieved
-	    //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
+        //! \returns RSuccess when a valid async IO request or custom work item is retrieved
+        //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
         //! \returns RTimeout when reached timeout value with no completed async IO request retrieved
         //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
         //! \returns RSystemFailure when a system failure occurs
@@ -94,9 +99,9 @@ namespace SKL
         std::relaxed_value<int32_t> ThreadsCount { 0 };
     };
 
-	//! \brief Enable ANSI color support in the main console window
-	//! \return RSuccess on success 
-	RStatus EnableConsoleANSIColorSupport() noexcept;
+    //! \brief Enable ANSI color support in the main console window
+    //! \return RSuccess on success 
+    RStatus EnableConsoleANSIColorSupport() noexcept;
 
     //! \brief Get the number of milliseconds that have elapsed since the system was started
     TEpochTimePoint GetSystemUpTickCount() noexcept;

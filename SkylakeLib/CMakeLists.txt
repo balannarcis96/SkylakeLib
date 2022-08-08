@@ -59,7 +59,7 @@ set_property(TARGET SkylakeLib PROPERTY CXX_STANDARD 20)
 target_include_directories(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/")
 
 if(SKL_HEADER_ONLY_BUILD_TYPE STREQUAL "Static_Dev")
-    target_link_libraries(SkylakeLib STATIC SkylakeLibHeaderOnly)
+    target_link_libraries(SkylakeLib PUBLIC SkylakeLibHeaderOnly)
 elseif(SKL_HEADER_ONLY_BUILD_TYPE STREQUAL "Interface")
     target_link_libraries(SkylakeLib INTERFACE SkylakeLibHeaderOnly)
 else()
