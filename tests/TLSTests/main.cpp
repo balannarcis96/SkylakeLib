@@ -2,7 +2,7 @@
 
 #include <SkylakeLib.h>
 
-namespace TLSTests
+namespace TLSValueTests
 {
     struct MyType { int a; };
 
@@ -20,14 +20,14 @@ namespace TLSTests
 
     using MyTLSPtr = SKL::TLSValue<MyType>;
 
-    TEST( TLSTests, Get_Set_TLS_Value )
+    TEST( TLSValueTests, Get_Set_TLS_Value )
     {
         MyTLSValue_u32::SetValue( 55 );
         const uint32_t Value = MyTLSValue_u32::GetValue();
         ASSERT_TRUE( 55 == Value );
     }
 
-    TEST( TLSTests, Get_Set_TLS_Value_Signed_Unsigned_Limits )
+    TEST( TLSValueTests, Get_Set_TLS_Value_Signed_Unsigned_Limits )
     {
         MyTLSValue_i8::SetValue( std::numeric_limits<int8_t>::max() );
         MyTLSValue_u8::SetValue( std::numeric_limits<uint8_t>::max() );
@@ -74,7 +74,7 @@ namespace TLSTests
         ASSERT_TRUE( std::numeric_limits<double>::min() == MyTLSValue_double::GetValue() );
     }
 
-    TEST( TLSTests, Get_Set_TLS_Ptr )
+    TEST( TLSValueTests, Get_Set_TLS_Ptr )
     {
         // nullptr is the default 
         MyType* Value = MyTLSPtr::GetValuePtr();
@@ -91,7 +91,7 @@ namespace TLSTests
         ASSERT_TRUE( Value->a == NewInstance->a );
     }
 
-    TEST( TLSTests, Get_Set_TLS_Ptr_Ex )
+    TEST( TLSValueTests, Get_Set_TLS_Ptr_Ex )
     {
         // nullptr is the default 
         std::string* Value = MyTLSValue_string::GetValuePtr();
@@ -106,6 +106,60 @@ namespace TLSTests
         Value = MyTLSValue_string::GetValuePtr();
         ASSERT_TRUE( NewInstance.get() == Value );
         ASSERT_TRUE( *Value == "A1B2C3" );
+    }
+}
+
+namespace TLSSingletonTests
+{
+    struct MyTSLSingletonType : SKL::ITLSSingleton<MyTSLSingletonType>
+    {
+        RStatus Initialize( ) noexcept override 
+        {
+            return RSuccess;
+        }
+
+        const char *GetName( ) const noexcept override 
+        {
+            return "MyTSLSingletonType";
+        }
+    };
+
+    TEST( TLSSingletonTests, Create_Ptr )
+    {
+        auto* ptr = MyTSLSingletonType::GetInstance();
+        ASSERT_TRUE( nullptr == ptr );
+
+        const auto Result = MyTSLSingletonType::Create();
+        ASSERT_TRUE( RSuccess == Result );
+
+        std::jthread OtherThread{ []()
+        {
+            auto* ptr = MyTSLSingletonType::GetInstance();
+            ASSERT_TRUE( nullptr == ptr );
+
+            const auto Result = MyTSLSingletonType::Create();
+            ASSERT_TRUE( RSuccess == Result );
+
+            ptr = MyTSLSingletonType::GetInstance();
+            ASSERT_TRUE( nullptr != ptr );
+
+            ASSERT_TRUE( 0 == strcmp( "MyTSLSingletonType", ptr->GetName() ) );
+
+            MyTSLSingletonType::Destroy();
+            ptr = MyTSLSingletonType::GetInstance();
+            ASSERT_TRUE( nullptr == ptr );        
+        } };
+
+        OtherThread.join();
+
+        ptr = MyTSLSingletonType::GetInstance();
+        ASSERT_TRUE( nullptr != ptr );
+
+        ASSERT_TRUE( 0 == strcmp( "MyTSLSingletonType", ptr->GetName() ) );
+
+        MyTSLSingletonType::Destroy();
+        ptr = MyTSLSingletonType::GetInstance();
+        ASSERT_TRUE( nullptr == ptr );
     }
 }
 

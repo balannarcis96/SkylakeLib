@@ -36,7 +36,7 @@ namespace SKL
                 TLSIndex = PlatformTLS::AllocTlsSlot( );
                 SKL_ASSERT( PlatformTLS::IsValidTlsSlot( TLSIndex ) );
 
-                if constexpr( bFitsInTLSSlot )
+                if constexpr( false == bIsClassType )
                 {
                     typename TypeTraits::WrappedValueType Value {};
 
