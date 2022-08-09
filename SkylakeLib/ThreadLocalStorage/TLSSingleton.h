@@ -1,7 +1,7 @@
 //!
 //! \file TLSSingleton.h
 //! 
-//! \brief TLS singleton abstractions for the SkylakeLib
+//! \brief TLS singleton abstraction for the SkylakeLib
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 

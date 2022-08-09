@@ -5,4 +5,5 @@ project ("SkyalakeLib_Tests" VERSION 1.0.0)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(AsyncIOTests)
+add_subdirectory(TLSTests)
 

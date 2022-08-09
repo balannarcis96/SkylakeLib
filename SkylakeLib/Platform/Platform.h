@@ -141,6 +141,28 @@ namespace SKL
         //! \brief Free a previously allocated TLS slot
         static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
     };
+
+	//Convert ip v4 address string to binary
+	inline uint32_t IPv4FromStringA( const char* InIpString )noexcept;
+
+	//Convert ip v4 address wide string to binary
+	inline uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
+
+	//UTF16 -> UTF8
+	template<size_t N>
+	inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept;
+
+	//UTF8 -> UTF16
+	template<size_t N>
+	bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept;
+
+	//UTF16 -> UTF8
+	template<size_t N, size_t M>
+	bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept;
+
+	//UTF8 -> UTF16
+	template<size_t N, size_t M>
+	bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept;
 }
 
 #if defined(SKL_BUILD_WINDOWS)

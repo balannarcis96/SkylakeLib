@@ -339,3 +339,60 @@ namespace SKL
     }
 }
 
+namespace SKL
+{
+    int32_t GGetLastError( ) noexcept
+    {
+        return ( int32_t )GetLastError( );
+    }
+
+    uint32_t IPv4FromStringA( const char* IpString )noexcept
+    {
+        uint32_t Result;
+        if ( InetPtonA( AF_INET, IpString, &Result ) != 1 )
+        {
+            return 0;
+        }
+
+        return Result;
+    }
+
+    uint32_t IPv4FromStringW( const wchar_t* IpString )noexcept
+    {
+        uint32_t Result;
+        if ( InetPtonW( AF_INET, IpString, &Result ) != 1 )
+        {
+            return 0;
+        }
+
+        return Result;
+    }
+
+    bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept
+    {
+        int32_t result = 0;
+        if ( ( result = ::WideCharToMultiByte( CP_UTF8, 0, InBuffer, ( int32_t )wcsnlen_s( InBuffer, InBufferSize ), OutBuffer, InOutBufferSize, nullptr, nullptr ) ) == 0 )
+        {
+            return false;
+        }
+
+        OutBuffer [ result ] = '\0';
+
+        return true;
+    }
+
+    bool GMultiByteToWideChar( const char * InBuffer, size_t InBufferSize, wchar_t* OutBuffer, int32_t InOutBufferSize ) noexcept
+    {
+        int32_t result = 0;
+        if ( ( result = ::MultiByteToWideChar( CP_UTF8, 0, InBuffer, ( int32_t )strnlen_s( InBuffer, InBufferSize ), OutBuffer, InOutBufferSize ) ) == 0 )
+        {
+            return false;
+        }
+
+        OutBuffer [ result ] = '\0';
+
+        return true;
+    }
+
+}
+

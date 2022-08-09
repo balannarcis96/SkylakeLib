@@ -1,7 +1,7 @@
 //!
 //! \file TLSValue.h
 //! 
-//! \brief TLS value wrapper abstractions for the SkylakeLib
+//! \brief TLS value wrapper abstraction for the SkylakeLib
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -12,16 +12,21 @@ namespace SKL
     template< typename T, uint32_t TypeIndex = 0, typename TDummy = void, size_t TSizeDummy = 0 >
     struct TLSValue
     {
-        static consteval bool GetIsValueType( )
-        {
-            return sizeof( T ) <= sizeof( void * );
-        }
-        static constexpr bool IsValueType = GetIsValueType( );
+        static constexpr bool bFitsInTLSSlot = sizeof( T ) <= sizeof( void * );
+        static constexpr bool bIsClassType   = std::is_class_v<T>;
+        static_assert( !bIsClassType || std::is_nothrow_default_constructible_v<T>, "Class types must be nothrow default constructible" );
+        static_assert( bIsClassType || bFitsInTLSSlot, "Non class types must be at most 8bytes" );
 
         struct TypeTraits
         {
             using MyT    = T;
             using MyType = TLSValue< T >;
+
+            struct WrappedValueType
+            {
+                MyT     DefaultInstance                                {};    //!< default constructed T
+                uint8_t Buffer[ sizeof( void* ) - sizeof( MyT ) +  1 ] { 0 }; //!< buffer to account for sizeof( T ) < 8bytes
+            };
         };
 
         struct TLSSlot
@@ -31,11 +36,12 @@ namespace SKL
                 TLSIndex = PlatformTLS::AllocTlsSlot( );
                 SKL_ASSERT( PlatformTLS::IsValidTlsSlot( TLSIndex ) );
 
-                if constexpr( IsValueType )
+                if constexpr( bFitsInTLSSlot )
                 {
-                    T Value = { };
+                    typename TypeTraits::WrappedValueType Value {};
 
-                    PlatformTLS::SetTlsValue( TLSIndex, reinterpret_cast< void * >( static_cast< uint64_t >( Value ) ) );
+                    //! perform a raw copy
+                    PlatformTLS::SetTlsValue( TLSIndex, *reinterpret_cast<void**>( &Value ) ); 
                 }
                 else
                 {
@@ -47,7 +53,7 @@ namespace SKL
             {
                 if( PlatformTLS::IsValidTlsSlot( TLSIndex ) )
                 {
-                    if constexpr( !IsValueType )
+                    if constexpr( bIsClassType )
                     {
                         SKL_ASSERT( PlatformTLS::GetTlsValue( TLSIndex ) == nullptr );
                     }
@@ -56,25 +62,36 @@ namespace SKL
                 }
             }
 
-            template< typename = std::enable_if< IsValueType > >
+            template<typename = std::enable_if<false == bIsClassType>>
             SKL_FORCEINLINE T GetValue( ) noexcept
             {
-                return static_cast< T >( reinterpret_cast< uint64_t >( PlatformTLS::GetTlsValue( TLSIndex ) ) );
+                const void* TLSValue = PlatformTLS::GetTlsValue( TLSIndex );
+                return *reinterpret_cast<T*>( &TLSValue );
             }
 
-            template< typename = std::enable_if< !IsValueType > >
+            template<typename = std::enable_if<true == bIsClassType>>
             SKL_FORCEINLINE T *GetValuePtr( ) noexcept
             {
-                return static_cast< T * >( PlatformTLS::GetTlsValue( TLSIndex ) );
+                return reinterpret_cast<T*>( PlatformTLS::GetTlsValue( TLSIndex ) );
             }
 
-            template< typename = std::enable_if< IsValueType > >
+            template<typename = std::enable_if<false == bIsClassType>>
             SKL_FORCEINLINE void SetValue( T InValue ) noexcept
             {
-                return PlatformTLS::SetTlsValue( TLSIndex, reinterpret_cast< void * >( static_cast< uint64_t >( InValue ) ) );
+                if constexpr( sizeof( T ) < sizeof( void* ) )
+                {
+                    typename TypeTraits::WrappedValueType Temp{};
+                    Temp.DefaultInstance = InValue;
+
+                    return PlatformTLS::SetTlsValue( TLSIndex, *reinterpret_cast<void **>( &Temp ) );
+                }
+                else
+                {
+                    return PlatformTLS::SetTlsValue( TLSIndex, *reinterpret_cast<void **>( &InValue ) );
+                }
             }
 
-            template< typename = std::enable_if< !IsValueType > >
+            template<typename = std::enable_if<true == bIsClassType>>
             SKL_FORCEINLINE void SetValuePtr( T *InValue ) noexcept
             {
                 return PlatformTLS::SetTlsValue( TLSIndex, InValue );
@@ -88,25 +105,25 @@ namespace SKL
             TLSSlot &operator=( TLSSlot && ) = delete;
         };
 
-        template< typename = std::enable_if< IsValueType > >
+        template<typename = std::enable_if<true == bIsClassType>>
         SKL_FORCEINLINE static T GetValue( ) noexcept
         {
             return Slot.GetValue( );
         }
 
-        template< typename = std::enable_if< !IsValueType > >
+        template<typename = std::enable_if<false == bIsClassType>>
         SKL_FORCEINLINE static T *GetValuePtr( ) noexcept
         {
             return Slot.GetValuePtr( );
         }
 
-        template< typename = std::enable_if< IsValueType > >
+        template<typename = std::enable_if<true == bIsClassType>>
         SKL_FORCEINLINE static void SetValue( T InValue ) noexcept
         {
             return Slot.SetValue( InValue );
         }
 
-        template< typename = std::enable_if< !IsValueType > >
+        template<typename = std::enable_if<false == bIsClassType>>
         SKL_FORCEINLINE static void SetValuePtr( T *InValue ) noexcept
         {
             return Slot.SetValuePtr( InValue );
