@@ -32,7 +32,7 @@ namespace SKL
 		{
 			static_assert( std::is_nothrow_default_constructible_v<T>, "T::T() must be noexcept!" );
 
-			new ( Ptr ) T( );
+			new ( Ptr ) T();
 		}
 		else
 		{
@@ -44,3 +44,6 @@ namespace SKL
 }
 
 #include "ObjectPool.h"
+#include "MemoryManagement.h"
+#include "SharedPointer.h"
+#include "AllocationStrategies.h"

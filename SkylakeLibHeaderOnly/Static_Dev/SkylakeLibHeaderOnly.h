@@ -7,14 +7,14 @@
 //! 
 #pragma once
 
+//! Flags
+#include "Flags.h"
+
 //! std dependencies
 #include "Std.h"
 
 //! Concepts
 #include "Concepts.h"
-
-//! Flags
-#include "Flags.h"
 
 //! ASD (Advanced Single Dispatch)
 #include "AdvancedSingleDispatch.h"

@@ -26,6 +26,11 @@ set(SKL_REAL_TYPE_OPTIONS Single Double)
 set(SKL_REAL_TYPE Single CACHE STRING "Skylake real type (float/double)")
 set_property(CACHE SKL_REAL_TYPE PROPERTY STRINGS ${SKL_REAL_TYPE_OPTIONS})
 
+#SKL_LOG_LEVEL
+set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR)
+set(SKL_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process")
+set_property(CACHE SKL_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
+
 if(SKL_BUILD_TESTS)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         set(MSVC_COMPILE_OPTIONS "/MP /MT")
@@ -68,6 +73,21 @@ endif()
 if(SKL_HEADERONLY_ENABLE_MATH)
     add_compile_definitions(SKL_HEADERONLY_ENABLE_MATH)
 endif()
+
+# LOG LEVEL
+if(SKL_LOG_LEVEL STREQUAL DEBUG)
+    add_compile_definitions(SKL_LOG_LEVEL=0)
+elseif(SKL_LOG_LEVEL STREQUAL ERR)
+    add_compile_definitions(SKL_LOG_LEVEL=1)
+elseif(SKL_LOG_LEVEL STREQUAL WRN)
+    add_compile_definitions(SKL_LOG_LEVEL=2)
+elseif(SKL_LOG_LEVEL STREQUAL INF)
+    add_compile_definitions(SKL_LOG_LEVEL=3)
+elseif(SKL_LOG_LEVEL STREQUAL DEBUG)
+    add_compile_definitions(SKL_LOG_LEVEL=4)
+endif()
+
+################################################################
 
 add_subdirectory("SkylakeLibHeaderOnly")
 

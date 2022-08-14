@@ -89,22 +89,22 @@ namespace SKL
 #if defined(SKL_MEMORY_STATISTICS) 
         SKL_FORCEINLINE constexpr static size_t GetTotalDeallocations( ) noexcept
         {
-            return TotalDeallocations.load( );
+            return TotalDeallocations.load( std::memory_order_acquire );
         }
 
         SKL_FORCEINLINE constexpr static size_t GetTotalAllocations( ) noexcept
         {
-            return TotalAllocations.load( );
+            return TotalAllocations.load( std::memory_order_acquire );
         }
 
         SKL_FORCEINLINE constexpr static size_t GetTotalOSDeallocations( ) noexcept
         {
-            return TotalOSDeallocations.load( );
+            return TotalOSDeallocations.load( std::memory_order_acquire );
         }
 
         SKL_FORCEINLINE constexpr static size_t GetTotalOSAllocations( ) noexcept
         {
-            return TotalOSAllocations.load( );
+            return TotalOSAllocations.load( std::memory_order_acquire );
         }
 #endif
 
@@ -218,16 +218,16 @@ namespace SKL
     };
 
 #if defined(SKL_MEMORY_STATISTICS) 
-    template< typename T, size_t PoolSize, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline std::atomic< size_t > ObjectPool< T, PoolSize, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalAllocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
+    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalAllocations;
 
-    template< typename T, size_t PoolSize, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline std::atomic< size_t > ObjectPool< T, PoolSize, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalDeallocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
+    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalDeallocations;
 
-    template< typename T, size_t PoolSize, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline std::atomic< size_t > ObjectPool< T, PoolSize, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSAllocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
+    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSAllocations;
 
-    template< typename T, size_t PoolSize, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline std::atomic< size_t > ObjectPool< T, PoolSize, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSDeallocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
+    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSDeallocations;
 #endif
 } // namespace SKL

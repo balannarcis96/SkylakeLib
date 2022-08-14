@@ -13,6 +13,12 @@
 //! Std
 #include "Std/Std.h"
 
+//! Tuning
+#include "Tuning/Tuning.h"
+
+//! Logging
+#include "Diagnostics/Log.h"
+
 //! Platform
 #include "Platform/Platform.h"
 
@@ -49,14 +55,4 @@ namespace SKL
     //! \brief Terminate the SkylakeLibrary per thread
     //!
     RStatus TerminateLibrary_Thread() noexcept;
-    
-    extern FILE* GLogOutput; //!< File handler for the log
-
-    #define SKL_INF( InString ) fprintf( GLogOutput, "[SkylakeLib::INF]" InString )
-    #define SKL_WRN( InString ) fprintf( GLogOutput, "[SkylakeLib::WRN]" InString )
-    #define SKL_ERR( InString ) fprintf( GLogOutput, "[SkylakeLib::ERR]" InString )
-
-    #define SKL_INF_FMT( InFormatString, ... ) fprintf( GLogOutput, "[SkylakeLib::INF]" InFormatString, __VA_ARGS__ )
-    #define SKL_WRN_FMT( InFormatString, ... ) fprintf( GLogOutput, "[SkylakeLib::WRN]" InFormatString, __VA_ARGS__ )
-    #define SKL_ERR_FMT( InFormatString, ... ) fprintf( GLogOutput, "[SkylakeLib::ERR]" InFormatString, __VA_ARGS__ )
 }
