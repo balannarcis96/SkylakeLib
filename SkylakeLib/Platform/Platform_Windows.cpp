@@ -31,23 +31,6 @@ namespace SKL
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TEpochTimePoint>, "TEpochTimePoint must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TSystemTimePoint>, "TSystemTimePoint must be updated!" );
     
-    TEpochTimePoint GetSystemUpTickCount() noexcept
-    {
-        return ::GetTickCount64( );
-    }
-
-    RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept
-    {
-        if ( ::timeBeginPeriod( InMilliseconds ) != TIMERR_NOERROR )
-        {
-            return RFail;
-        }
-    
-        ::Sleep( 128 );  /* wait for it to stabilize */
-    
-        return RSuccess;
-    }
-
     bool Timer::Init() noexcept
     {
         if( FALSE == ::QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &I ) ) ) SKL_UNLIKELY
@@ -57,9 +40,10 @@ namespace SKL
 
         FrequencySeconds = static_cast< double >( reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart );
         ::QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>( &I ) );
-        Start      = reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart;
+
+        Start     = reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart;
         TotalTime = 0.0;
-        Elapsed      = 0.0;
+        Elapsed   = 0.0;
 
         return true;
     }
@@ -67,9 +51,9 @@ namespace SKL
     double Timer::Tick() noexcept
     {
         QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>( &I ) );
-        Elapsed = static_cast< double >( reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart - Start ) / FrequencySeconds;
 
-        Start = reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart;
+        Elapsed    = static_cast< double >( reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart - Start ) / FrequencySeconds;
+        Start      = reinterpret_cast<LARGE_INTEGER*>( &I )->QuadPart;
         TotalTime += Elapsed;
 
         return TotalTime;
@@ -313,6 +297,47 @@ namespace SKL
 
 namespace SKL
 {
+    RStatus EnableConsoleANSIColorSupport() noexcept
+    {
+        // Set output mode to handle virtual terminal sequences
+		HANDLE hOut { ::GetStdHandle( STD_OUTPUT_HANDLE ) };
+		if( hOut == INVALID_HANDLE_VALUE )
+		{
+			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+		}
+
+		DWORD dwMode { 0 };
+		if( FALSE == ::GetConsoleMode( hOut, &dwMode ) )
+		{
+			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+		}
+
+		dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+		if( FALSE == ::SetConsoleMode( hOut, dwMode ) )
+		{
+			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+		}
+
+		return RSuccess;
+    }
+
+    TEpochTimePoint GetSystemUpTickCount() noexcept
+    {
+        return ::GetTickCount64( );
+    }
+
+    RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept
+    {
+        if ( ::timeBeginPeriod( InMilliseconds ) != TIMERR_NOERROR )
+        {
+            return RFail;
+        }
+    
+        ::Sleep( 128 );  /* wait for it to stabilize */
+    
+        return RSuccess;
+    }
+
     uint32_t PlatformTLS::GetCurrentThreadId() noexcept
     {
         return ::GetCurrentThreadId( );
@@ -337,10 +362,7 @@ namespace SKL
     {
         ::TlsFree( static_cast<DWORD>( InSlot ) );
     }
-}
 
-namespace SKL
-{
     int32_t GGetLastError( ) noexcept
     {
         return ( int32_t )GetLastError( );
@@ -349,7 +371,7 @@ namespace SKL
     uint32_t IPv4FromStringA( const char* IpString )noexcept
     {
         uint32_t Result;
-        if ( InetPtonA( AF_INET, IpString, &Result ) != 1 )
+        if ( ::InetPtonA( AF_INET, IpString, &Result ) != 1 )
         {
             return 0;
         }
@@ -360,7 +382,7 @@ namespace SKL
     uint32_t IPv4FromStringW( const wchar_t* IpString )noexcept
     {
         uint32_t Result;
-        if ( InetPtonW( AF_INET, IpString, &Result ) != 1 )
+        if ( ::InetPtonW( AF_INET, IpString, &Result ) != 1 )
         {
             return 0;
         }
@@ -393,6 +415,5 @@ namespace SKL
 
         return true;
     }
-
 }
 

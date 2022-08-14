@@ -6,4 +6,5 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(AsyncIOTests)
 add_subdirectory(TLSTests)
-
+add_subdirectory(TaskTests)
+add_subdirectory(ObjectPoolTests)

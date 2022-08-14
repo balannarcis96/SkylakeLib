@@ -12,7 +12,7 @@ using RStatusNumericType = RStatusType;
 
 enum class RStatus : RStatusNumericType 
 {
-    Success                             = 0
+    Success = 0
     , Fail                             
     , Timeout                          
     , Aborted                          
