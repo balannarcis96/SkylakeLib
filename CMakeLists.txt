@@ -81,7 +81,7 @@ if(SKL_DISABLE_EXCEPTIONS)
     add_compile_definitions(_HAS_EXCEPTIONS=0)
     
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable RTTI
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})   # Disable RTTI
         string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     endif()
 endif()

@@ -10,6 +10,12 @@
 //! The header only part
 #include <SkylakeLibHeaderOnly.h>
 
+//! Forward declarations
+namespace SKL
+{
+    struct IAsyncIOTask;
+}
+
 //! Std
 #include "Std/Std.h"
 
@@ -33,10 +39,12 @@
 
 //! Task
 #include "Task/Task.h"
-#include "Task/IOTask.h"
 
 //! Threading
 #include "Threading/Threading.h"
+
+//! Networking
+#include "Networking/Networking.h"
 
 namespace SKL
 {

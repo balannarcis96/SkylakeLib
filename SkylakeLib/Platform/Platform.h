@@ -12,25 +12,42 @@ namespace SKL
     //! Platform agnostic socket type 
     using TSocket = uint64_t;
 
-    //! \brief Platform specific timer API
+    //! Platform specific timer API
     struct Timer;
 
-    //! \brief Platform specific, opaque type, for the async IO API
+    //! Platform specific, opaque type, for the async IO API
     struct AsyncIOOpaqueType;
     
-    //! \brief Platform specific buffer type for async IO requests
+    //! Platform specific buffer type for async IO requests
     struct IBuffer;
     
-    //! \brief Type used as key to identify async IO requests
+    //! Type used as key to identify async IO requests
     using TCompletionKey = void *;
     
-    //! \brief type that can hold a "handle" on any platform
+    //! Type that can hold a "handle" on any platform
     using THandle = uint64_t;
 
-    //! \brief type for the TLS slot
+    //! Type for the TLS slot
     using TLSSlot = uint32_t;
-    
-    //! \brief Platform specific async IO API
+
+    //! Platform specific async IO API
+    struct AsyncIO;
+}
+
+namespace SKL
+{
+    //! Allocate new ipv4 tcp socket ( returns 0 on failure )
+    TSocket AllocateNewIPv4TCPSocket( bool bAsync = true ) noexcept;
+
+    //! Allocate new ipv4 udp socket ( returns 0 on failure )
+    TSocket AllocateNewIPv4UDPSocket( bool bAsync = true ) noexcept;
+}
+
+#include "TCPAsyncAccepter.h"
+
+namespace SKL
+{
+    //! Platform specific async IO API
     struct AsyncIO
     {   
         //! \brief Initialize the OS async IO system
@@ -52,6 +69,12 @@ namespace SKL
         //! \returns RFail on failure
         RStatus Stop() noexcept;
         
+        //! Get the OS specific handle to the API
+        THandle GetOsHandle() const noexcept { return QueueHandle; }
+
+        //! Get the max number of threads that can access this api instance at once
+        int32_t GetNumberOfThreads() const noexcept { return ThreadsCount.load_relaxed(); }
+
         //! \brief Attempt to retrieve completed async IO request from the OS 
         //! \remarks Will block
         //! \param OutCompletedRequestOpaqueTypeInstancePtr ptr to ptr that will contain the instance of the opaque type passed to the OS when making the async IO request
@@ -96,6 +119,23 @@ namespace SKL
         //! \return RSuccess on success
         //! \return RFail on failure
         RStatus SendAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept;
+
+        //! \brief Start an async send request on InSocket
+        //! \param InSocket target stream socket to receive from
+        //! \param InAsyncIOTask the send async IO task
+        //! \return RSuccess on success
+        //! \return RFail on failure
+        RStatus SendAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
+
+        //! \brief Start an async receive request on InSocket
+        //! \param InSocket target stream socket to receive from
+        //! \param InAsyncIOTask the send async IO task
+        //! \return RSuccess on success
+        //! \return RFail on failure
+        RStatus ReceiveAsync(TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
+
+        //! Associate the socket to this async IO API
+        RStatus AssociateToTheAPI( TSocket InSocket ) noexcept;
 
     private:
         std::relaxed_value<THandle> QueueHandle  { 0 };

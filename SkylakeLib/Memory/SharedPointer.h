@@ -116,8 +116,8 @@ namespace SKL
         {
             static_assert( sizeof( ControlBlock ) % 8 == 0 );
 
-            return *reinterpret_cast<ControlBlock*>(
-                reinterpret_cast<uint8_t*>( Pointer ) - sizeof( ControlBlock )
+            return *reinterpret_cast<const ControlBlock*>(
+                reinterpret_cast<const uint8_t*>( Pointer ) - sizeof( ControlBlock )
             );
         }
 
@@ -150,6 +150,32 @@ namespace SKL
             return { Result };
         }    
 
+    
+        static ControlBlock& GetControlBlockStatic( TObject* InPtr ) noexcept
+        {
+            static_assert( sizeof( ControlBlock ) % 8 == 0 );
+
+            return *reinterpret_cast<ControlBlock*>(
+                reinterpret_cast<uint8_t*>( InPtr ) - sizeof( ControlBlock )
+            );
+        }
+
+        static void DestroyRefStatic( TObject* InPtr ) noexcept
+        {
+            auto& ControllBlock { GetControlBlockStatic( InPtr ) };
+
+            //Decrement reference count and deallocate if needed
+            if ( true == ControllBlock.ReleaseReference() )
+            {   
+                if constexpr( true == bDeconstruct )
+                {
+                    GDestructNothrow<TObject>( InPtr );                
+                }
+
+                MemoryManager::Deallocate( &ControllBlock, ControllBlock.BlockSize );
+            }
+        }
+
     private:
         TObject* NewRefRaw() noexcept
         {
@@ -164,18 +190,7 @@ namespace SKL
         {
             if( nullptr != Pointer ) SKL_LIKELY
             {
-                //Decrement reference count and deallocate if needed
-                auto& CBlock { GetControlBlock() };
-                if ( true == CBlock.ReleaseReference() )
-                {   
-                    if constexpr( true == bDeconstruct )
-                    {
-                        GDestructNothrow<TObject>( Pointer );                
-                    }
-
-                    MemoryManager::Deallocate( &CBlock, CBlock.BlockSize );
-                }
-
+                DestroyRefStatic( Pointer );
                 Pointer = nullptr;
             }
         }

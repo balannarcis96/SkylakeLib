@@ -10,6 +10,7 @@ file( GLOB_RECURSE _Enums_files                  LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _Macros_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Macros/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Macros/*.h" )
 file( GLOB_RECURSE _Memory_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Memory/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Memory/*.h" )
 file( GLOB_RECURSE _Math_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Math/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Math/*.h" )
+file( GLOB_RECURSE _Networking_files             LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Networking/*.cpp"             "${SKYLAKE_SRC_ROOT}/Networking/*.h" )
 file( GLOB_RECURSE _Platform_files               LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Platform/*.cpp"               "${SKYLAKE_SRC_ROOT}/Platform/*.h" )
 file( GLOB         _Root_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/*.cpp"                        "${SKYLAKE_SRC_ROOT}/*.h" )
 file( GLOB_RECURSE _Std_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Std/*.cpp"                    "${SKYLAKE_SRC_ROOT}/Std/*.h" )
@@ -27,7 +28,8 @@ add_library (SkylakeLib STATIC
     ${_Enums_files}                 
     ${_Macros_files}                 
     ${_Memory_files}                 
-    ${_Math_files}                     
+    ${_Math_files}                   
+    ${_Networking_files}                   
     ${_Platform_files}                 
     ${_Root_files}                     
     ${_Std_files}     
@@ -46,6 +48,7 @@ source_group("Enums"                  FILES ${_Enums_files}                 )
 source_group("Macros"                 FILES ${_Macros_files}                )
 source_group("Memory"                 FILES ${_Memory_files}                )
 source_group("Math"                   FILES ${_Math_files}                  )
+source_group("Networking"             FILES ${_Networking_files}            )
 source_group("Platform"               FILES ${_Platform_files}              )
 source_group("/"                      FILES ${_Root_files}                  )
 source_group("Std"                    FILES ${_Std_files}                   )

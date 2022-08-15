@@ -44,6 +44,9 @@ namespace SKL
             return;
         }
 
+        // stop all acceptors
+        StopAllTCPAcceptors();
+
         if( true == Tag.bHandlesTasks )
         {
             if( RSuccess != AsyncIOAPI.Stop() )
@@ -353,10 +356,13 @@ namespace SKL
 
         {
             // cast back to shared object IAsyncIOTask
-            TSharedPtr<IAsyncIOTask> Task { reinterpret_cast<IAsyncIOTask*>( InOpaque ) };
+            auto* Task { reinterpret_cast<IAsyncIOTask*>( InOpaque ) };
             
             // dispatch the task
-            Task->Dispatch();
+            Task->Dispatch( NumberOfBytesTransferred );
+
+            // release ref
+            TSharedPtr<IAsyncIOTask>::DestroyRefStatic( Task );
         }
 
         return false;
@@ -368,10 +374,13 @@ namespace SKL
 
         {
             // cast back to shared object ITask
-            TSharedPtr<ITask> Task { reinterpret_cast<ITask*>( InCompletionKey ) };
+            auto* Task { reinterpret_cast<ITask*>( InCompletionKey ) };
         
             // dispatch the task
             Task->Dispatch();
+
+            // release ref
+            TSharedPtr<ITask>::DestroyRefStatic( Task );
         }
 
         return false;
@@ -397,10 +406,11 @@ namespace SKL
         if( TotalWorkers.load_relaxed() == NewRunningWorkersCount )
         {
             SKL_VER_FMT( "[WG:%ws] All workers started!", Tag.Name );
+            OnAllWorkersStarted();
             Manager->OnWorkerGroupStarted( *this );
         }
     }
-    
+
     void WorkerGroup::OnWorkerStopped( Worker& Worker ) noexcept
     {
         const auto NewRunningWorkersCount { RunningWorkers.decrement() };
@@ -415,7 +425,88 @@ namespace SKL
         if( 0 == NewRunningWorkersCount )
         {
             SKL_VER_FMT( "[WG:%ws] All workers stopped!", Tag.Name );
+            OnAllWorkersStopped();
             Manager->OnWorkerGroupStopped( *this );
         }
+    }
+    
+    void WorkerGroup::OnAllWorkersStarted() noexcept
+    {
+        ( void )StartAllTCPAcceptors();
+    }
+
+    void WorkerGroup::OnAllWorkersStopped() noexcept
+    {
+
+    }
+
+    bool WorkerGroup::StartAllTCPAcceptors() noexcept
+    {
+        for( auto& Acceptor : TCPAcceptors )
+        {
+            if ( RSuccess != Acceptor->StartAcceptingAsync() )
+            {
+                SKL_ERR_FMT( "[WG:%ws] Failed to start async acceptor ip[%d] port[%hu] id[%u]"
+                           , GetTag().Name
+                           , Acceptor->GetConfig().IpAddress
+                           , Acceptor->GetConfig().Port
+                           , Acceptor->GetConfig().Id );
+            
+                // signal to stop the entire management
+                Manager->SignalToStop();
+            }
+        }
+    
+        SKL_VER_FMT( "[WG:%ws] Started all tcp async acceptors!", GetTag().Name );
+
+        return true;
+    }
+
+    void WorkerGroup::StopAllTCPAcceptors() noexcept
+    {
+        for( auto& Acceptor : TCPAcceptors )
+        {
+            Acceptor->StopAcceptingAsync();
+        }
+    
+        SKL_VER_FMT( "[WG:%ws] Stopped all tcp async acceptors!", GetTag().Name );
+    }
+
+    RStatus WorkerGroup::AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept
+    {
+        if( false == Tag.bHandlesTasks )
+        {
+            SKL_ERR( "WorkerGroup::AddNewTCPAcceptor() The group must be able to execute tasks in order to handle accept async requests [Tag.bHandlesTasks=false!]!" );
+            return RInvalidParamters;
+        }
+
+        if( false == Config.IsValid() )
+        {
+            SKL_VER( "WorkerGroup::AddNewTCPAcceptor() Invalid tcp async acceptor config!" );
+            return RInvalidParamters;
+        }
+
+        if( nullptr != GetTCPAcceptorById( Config.Id ) )
+        {
+            SKL_VER_FMT( "WorkerGroup::AddNewTCPAcceptor() A tcp async acceptor with same id found id[%u]!", Config.Id );
+            return RInvalidParamters;
+        }
+        
+        if( nullptr != GetTCPAcceptor( Config.IpAddress, Config.Port ) )
+        {
+            SKL_VER_FMT( "WorkerGroup::AddNewTCPAcceptor() A tcp async acceptor with same ip and port found id[%u] port[%hu]!", Config.Id, Config.Port );
+            return RInvalidParamters;
+        }
+
+        auto NewTCPAcceptor = std::make_unique<TCPAcceptor>( Config, &AsyncIOAPI );
+        if( nullptr == NewTCPAcceptor ) SKL_UNLIKELY
+        {
+            SKL_VER_FMT( "WorkerGroup::AddNewTCPAcceptor() Failed to allocate! id[%u] ip[%hu] port[%hu]!", Config.Id, Config.IpAddress, Config.Port );
+            return RInvalidParamters;
+        }
+
+        TCPAcceptors.emplace_back( std::move( NewTCPAcceptor ) );
+
+        return RSuccess;
     }
 }

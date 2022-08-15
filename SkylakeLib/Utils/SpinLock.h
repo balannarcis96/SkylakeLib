@@ -34,6 +34,7 @@ namespace SKL
                 {
                     return;
                 }
+
                 // Wait for lock to be released without generating cache misses
                 while( LockFlag.load( std::memory_order_relaxed ) ) {
                     // Issue X86 PAUSE or ARM YIELD instruction to reduce contention between
@@ -43,15 +44,17 @@ namespace SKL
             }
         }    
    
-        SKL_FORCEINLINE bool TryLock() noexcept {
-          // First do a relaxed load to check if lock is free in order to prevent
-          // unnecessary cache misses if someone does while(!try_lock())
-          return !LockFlag.load(std::memory_order_relaxed) &&
-                 !LockFlag.exchange(true, std::memory_order_acquire);
+        SKL_FORCEINLINE bool TryLock() noexcept 
+        {
+            // First do a relaxed load to check if lock is free in order to prevent
+            // unnecessary cache misses if someone does while(!try_lock())
+            return false == LockFlag.load( std::memory_order_relaxed ) &&
+                   false == LockFlag.exchange( true, std::memory_order_acquire );
         }
 
-        SKL_FORCEINLINE void Unlock() noexcept {
-          LockFlag.store(false, std::memory_order_release);
+        SKL_FORCEINLINE void Unlock() noexcept 
+        {
+            LockFlag.store( false, std::memory_order_release );
         }
 
         // std compatible 

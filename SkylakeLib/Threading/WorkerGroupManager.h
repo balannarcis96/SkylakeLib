@@ -44,6 +44,12 @@ namespace SKL
             OnWorkerStop += std::forward<TFunctor>( InOnWorkerStop );
         }
     
+        //! Add new tcp async acceptor for this worker group
+        bool AddTCPAsyncAcceptor( const TCPAcceptorConfig& Config ) noexcept 
+        {
+            TCPAcceptorConfigs.push_back( Config );
+        }
+
         //! DO NOT CALL
         const WorkerGroup::WorkerTask& GetTaskToDispatch() const noexcept 
         {
@@ -51,10 +57,11 @@ namespace SKL
         }
 
     private:
-        WorkerGroupTag              Tag           {}; //!< Group tag
-        WorkerGroup::WorkerTask     OnWorkerTick  {}; //!< Task to be executed each time a worker in the group ticks
-        WorkerGroup::WorkerTask     OnWorkerStart {}; //!< Task to be executed each time a worker in the group start
-        WorkerGroup::WorkerTask     OnWorkerStop  {}; //!< Task to be executed each time a worker in the group stops
+        WorkerGroupTag                  Tag               {}; //!< Group tag
+        WorkerGroup::WorkerTask         OnWorkerTick      {}; //!< Task to be executed each time a worker in the group ticks
+        WorkerGroup::WorkerTask         OnWorkerStart     {}; //!< Task to be executed each time a worker in the group start
+        WorkerGroup::WorkerTask         OnWorkerStop      {}; //!< Task to be executed each time a worker in the group stops
+        std::vector<TCPAcceptorConfig>  TCPAcceptorConfigs{}; //!< List of all tcp async acceptors to create to be handled by the workers in the group
 
         friend WorkerGroupManager;
     }; 

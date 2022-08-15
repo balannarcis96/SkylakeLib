@@ -87,6 +87,12 @@ namespace SKL
         
         // set worker stop handler
         NewGroup->SetWorkerStopHandler( Config.OnWorkerStop );
+
+        // add async tcp acceptors
+        for( const auto& Config: Config.TCPAcceptorConfigs )
+        {
+            NewGroup->AddNewTCPAcceptor( Config );
+        }
         
         // build the group
         NewGroup->Build( bCreateMaster );

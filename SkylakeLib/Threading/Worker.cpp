@@ -24,6 +24,12 @@ namespace SKL
     
     void Worker::RunImpl() noexcept
     {
+        if( nullptr == Group || false == Group->IsRunning() )
+        {
+            SKL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group->GetTag().Name );
+            return;
+        }
+
         if( false == IsMaster() )
         {
             // init the SkylakeLib for this thread
@@ -40,6 +46,12 @@ namespace SKL
             // notice the group
             Group->OnWorkerStarted( *this );
         
+            if( false == Group->IsRunning() )
+            {
+                SKL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
+                return;
+            }
+
             // dispatch main task
             SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
             OnRun.Dispatch( *this, *Group );

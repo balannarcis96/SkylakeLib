@@ -121,13 +121,51 @@ namespace SKL
             auto* NewTask { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );
         }
+    
+        //! Create new tcp async acceptor on this instance
+        RStatus AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept;
+
+        //! Query tcp async acceptor by id
+        TCPAcceptor* GetTCPAcceptorById( uint32_t Id ) noexcept
+        {
+            for( auto& Acceptor : TCPAcceptors )
+            {
+                if( Acceptor->IsValid() && Acceptor->GetConfig().Id == Id )
+                {
+                    return Acceptor.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        //! Query tcp async acceptor by ip and port
+        TCPAcceptor* GetTCPAcceptor( uint32_t Ip, uint16_t Port ) noexcept
+        {
+            for( auto& Acceptor : TCPAcceptors )
+            {
+                if( Acceptor->IsValid() && Acceptor->GetConfig().IpAddress == Ip && Acceptor->GetConfig().Port == Port )
+                {
+                    return Acceptor.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        //! Get tcp async acceptor with the id as index
+        SKL_FORCEINLINE TCPAcceptor* GetTCPAcceptorIdAsIndex( uint32_t Id ) noexcept
+        {
+            SKL_ASSERT( TCPAcceptors.size() > Id );
+            return TCPAcceptors[ Id ].get();
+        }
 
         //! DO NOT CALL
         void ProactiveWorkerRun( Worker& Worker ) noexcept;
 
         //! DO NOT CALL
         void ReactiveWorkerRun( Worker& Worker ) noexcept;
-
+        
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;
 
@@ -139,6 +177,10 @@ namespace SKL
 
         void OnWorkerStopped( Worker& Worker ) noexcept;
 
+        void OnAllWorkersStarted() noexcept;
+
+        void OnAllWorkersStopped() noexcept;
+
         bool HandleTasks_Proactive( uint32_t MillisecondsToSleep ) noexcept;
 
         bool HandleTasks_Reactive() noexcept;
@@ -149,18 +191,23 @@ namespace SKL
 
         bool HandleTLSSync( Worker& Worker ) noexcept;
 
+        bool StartAllTCPAcceptors() noexcept;
+
+        void StopAllTCPAcceptors() noexcept;
+
     private:
-        const WorkerGroupTag                 Tag                 {};          //!< Worker group tag
-        std::synced_value<uint32_t>          RunningWorkers      { 0 };       //!< Count of active running workers
-        std::synced_value<uint32_t>          TotalWorkers        { 0 };       //!< Count of total workers registered in the group
-        std::synced_value<uint32_t>          bIsRunning          { FALSE };   //!< Is the group marked as active
-        AsyncIO                              AsyncIOAPI          {};          //!< Async IO interface
-        std::vector<std::shared_ptr<Worker>> Workers             {};          //!< All workers registered in the group
-        WorkerGroupManager*                  Manager             { nullptr }; //!< Manager of this group
-        WorkerTask                           OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
-        WorkerTask                           OnWorkerStartTask   {};          //!< Task to be executed each time a worker starts
-        WorkerTask                           OnWorkerStopTask    {};          //!< Task to be executed each time a worker stoppes
-        std::shared_ptr<Worker>              MasterWorker        {};          //!< Cached pointer to the master worker [if any]
+        const WorkerGroupTag                      Tag                 {};          //!< Worker group tag
+        std::synced_value<uint32_t>               RunningWorkers      { 0 };       //!< Count of active running workers
+        std::synced_value<uint32_t>               TotalWorkers        { 0 };       //!< Count of total workers registered in the group
+        std::synced_value<uint32_t>               bIsRunning          { FALSE };   //!< Is the group marked as active
+        AsyncIO                                   AsyncIOAPI          {};          //!< Async IO interface
+        std::vector<std::shared_ptr<Worker>>      Workers             {};          //!< All workers registered in the group
+        std::vector<std::unique_ptr<TCPAcceptor>> TCPAcceptors        {};          //!< All tcp async acceptors in the group
+        WorkerGroupManager*                       Manager             { nullptr }; //!< Manager of this group
+        WorkerTask                                OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
+        WorkerTask                                OnWorkerStartTask   {};          //!< Task to be executed each time a worker starts
+        WorkerTask                                OnWorkerStopTask    {};          //!< Task to be executed each time a worker stoppes
+        std::shared_ptr<Worker>                   MasterWorker        {};          //!< Cached pointer to the master worker [if any]
 
         friend Worker;    
         friend WorkerGroupManager;    

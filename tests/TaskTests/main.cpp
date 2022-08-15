@@ -87,6 +87,36 @@ namespace TaskTests
         delete NewTask;
         NewTask = nullptr;
     }
+
+    TEST( TaskTests, AsyncIoTask_API )
+    {
+        using BufferType = SKL::AsyncIOBuffer<128, 32>;
+        uint32_t nbt { 400 };
+
+        auto NewTask      { SKL::MakeShared<BufferType>() };
+        auto Interface    { NewTask->GetInterface() };
+        auto SpanIterface { NewTask->get_span() };
+
+        Interface.Buffer[2] = 0xF1;
+        ASSERT_TRUE( 0xF1 == SpanIterface[2] );
+
+        auto SPtr = std::make_shared<MyType>();
+        ASSERT_TRUE( SPtr.use_count() == 1 );
+        
+        NewTask->SetCompletionHandler( [&nbt, SelfPtr = NewTask.get(), SPtr ]( SKL::IAsyncIOTask& Self, uint32_t NumberOfBytesTransferred ) noexcept -> void
+        {
+            ASSERT_TRUE( NumberOfBytesTransferred == nbt );
+            ASSERT_TRUE( SelfPtr == &Self );
+
+            auto Interface { Self.GetInterface() };
+            ASSERT_TRUE( 0xF1 == Interface.Buffer[2] );
+        } );
+        ASSERT_TRUE( SPtr.use_count() == 2 );
+        NewTask->Dispatch( nbt );
+        ASSERT_TRUE( SPtr.use_count() == 2 );
+        NewTask->Clear();
+        ASSERT_TRUE( SPtr.use_count() == 1 );
+    }
 }
 
 int main( int argc, char** argv )
