@@ -21,6 +21,7 @@ namespace SKL
     public:
         struct PoolTraits
         {
+            static constexpr size_t MyObjectSize         { sizeof( T ) };
             static constexpr size_t MyPoolSize           { PoolSize };
             static constexpr size_t MyPoolMask           { PoolSize - 1 };
             static constexpr size_t Alignment            { TAlignment };
@@ -126,7 +127,7 @@ namespace SKL
                 { //Critical section
                     SpinLockScopeGuard Guard { SpinLock };
 
-                    const uint64_t InsPos { TailPosition++ };
+                    const auto InsPos { TailPosition++ };
 
                     PrevVal                                 = Pool[ InsPos & PoolTraits::MyPoolMask ];
                     Pool[ InsPos & PoolTraits::MyPoolMask ] = reinterpret_cast< void* >( Obj );
@@ -138,9 +139,10 @@ namespace SKL
                 PrevVal = Pool[ ( InsPos - 1 ) & PoolTraits::MyPoolMask ].exchange( reinterpret_cast< void* >( Obj ) );
             }
 
-            if( PrevVal ) SKL_UNLIKELY
+            if( nullptr != PrevVal ) SKL_UNLIKELY
             {
-                SKL_FREE_ALIGNED( PrevVal, PoolTraits::Alignment );
+                // stomped over valid pointer, just deallocate to OS
+                SKL_FREE_SIZE_ALIGNED( PrevVal, PoolTraits::MyObjectSize, PoolTraits::Alignment );
                 SKL_IFMEMORYSTATS( ++TotalOSDeallocations );
                 return;
             }
@@ -185,7 +187,8 @@ namespace SKL
 
             if( nullptr == Allocated ) SKL_UNLIKELY
             {
-                Allocated = reinterpret_cast<T*>( SKL_MALLOC_ALIGNED( sizeof( T ), PoolTraits::Alignment ) );
+                // dequeued nullptr, allocate from OS
+                Allocated = reinterpret_cast<T*>( SKL_MALLOC_ALIGNED( PoolTraits::MyObjectSize, PoolTraits::Alignment ) );
                 if( nullptr == Allocated ) SKL_UNLIKELY
                 {
                     return nullptr;

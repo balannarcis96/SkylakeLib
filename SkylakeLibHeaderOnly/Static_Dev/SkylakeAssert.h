@@ -6,23 +6,17 @@
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
 
+#undef NDEBUG
+#define NDEBUG
 #include <assert.h>
 
-#define SKL_ASSERT(expression) assert(expression)
-
-#if defined(NDEBUG)
-    //! copied from assert.h
-    
-    _ACRTIMP void __cdecl _wassert(
-        _In_z_ wchar_t const* _Message,
-        _In_z_ wchar_t const* _File,
-        _In_   unsigned       _Line
-        );
-
-    #define SKL_ASSERT_ALLWAYS(expression) (void)(                                           \
-            (!!(expression)) ||                                                              \
-            (_wassert(_CRT_WIDE(#expression), _CRT_WIDE(__FILE__), (unsigned)(__LINE__)), 0) \
-        )
+#if defined(SKL_BUILD_SHIPPING)
+    #define SKL_ASSERT(expression)
 #else
+    #define SKL_ASSERT(expression) assert(expression)
+#endif
+
+#if not defined(SKL_NO_ASSERTS)
     #define SKL_ASSERT_ALLWAYS(expression) assert(expression)
 #endif
+

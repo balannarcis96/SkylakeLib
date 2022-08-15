@@ -102,16 +102,16 @@ namespace SKL
         WorkerGroupManager() noexcept = default;
         ~WorkerGroupManager() noexcept  
         {
-            
+            SKL_ASSERT( false == IsAnyWorkerGroupRunning() );
         }
 
-        //! Initialize the group manager
+        //! Initialize the manager
         RStatus Initialize( ApplicationWorkersConfig&& InConfig ) noexcept;
 
-        //! Start all worker groups and use the calling thread as for the master worker
+        //! Start all worker groups and use the calling thread for the master worker
         RStatus StartRunningWithCallingThreadAsMaster() noexcept;
         
-        //! Get join all worker groups
+        //! Join all worker groups
         void JoinAllGroups() noexcept
         {
             for( auto& Group : WorkerGroups )
@@ -136,13 +136,56 @@ namespace SKL
 
             return { nullptr };
         }
+    
+        //! Get worker group by using the Id as index 
+        std::shared_ptr<WorkerGroup> GetWorkerGroupWithIdAsIndex( uint16_t Id ) noexcept 
+        {
+            SKL_ASSERT( WorkerGroups.size() > Id );
+            return WorkerGroups[ Id ];
+        }
+    
+        //! Get worker group by using the Id as index 
+        WorkerGroup* GetWorkerGroupWithIdAsIndexRaw( uint16_t Id ) noexcept 
+        {
+            SKL_ASSERT( WorkerGroups.size() > Id );
+            return WorkerGroups[ Id ].get();
+        }
 
+        //! Get worker group by using the Id as index 
+        const std::shared_ptr<WorkerGroup> GetWorkerGroupWithIdAsIndex( uint16_t Id ) const noexcept 
+        {
+            SKL_ASSERT( WorkerGroups.size() > Id );
+            return WorkerGroups[ Id ];
+        }
+    
+        //! Get worker group by using the Id as index 
+        const WorkerGroup* GetWorkerGroupWithIdAsIndexRaw( uint16_t Id ) const noexcept 
+        {
+            SKL_ASSERT( WorkerGroups.size() > Id );
+            return WorkerGroups[ Id ].get();
+        }
+
+        //! Signal all worker groups to stop
         void SignalToStop() noexcept
         {
             for( auto& Group: WorkerGroups )
             {
                 Group->SignalToStop();
             }
+        }
+
+        //! Is any woker group running now
+        bool IsAnyWorkerGroupRunning() const noexcept   
+        {
+            for( auto& Group: WorkerGroups )
+            {
+                if( true == Group->IsRunning() )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
     private:
