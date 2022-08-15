@@ -35,7 +35,6 @@ namespace SKL
     #define SKL_INF( InString ) fprintf( SKL::GLogOutput.load(), "[SkylakeLib::INF] " InString "\n" )
     #define SKL_WRN( InString ) fprintf( SKL::GLogOutput.load(), "[SkylakeLib::WRN] " InString "\n" )
     #define SKL_ERR( InString ) fprintf( SKL::GLogOutput.load(), "[SkylakeLib::ERR] " InString "\n" )
-    #define SKL_VER( InString ) fprintf( SKL::GLogOutput.load(), "[SkylakeLib::INF] " InString "\n" )
     #define SKL_VER( InString )
 
     #define SKL_INF_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(), "[SkylakeLib::INF] " InFormatString "\n", __VA_ARGS__ )

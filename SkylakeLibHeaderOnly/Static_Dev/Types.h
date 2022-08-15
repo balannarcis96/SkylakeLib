@@ -23,22 +23,5 @@ namespace SKL
 
     constexpr TObjectId  TObjectIdNone = 0;
     constexpr TObjectId  TObjectIdMax  = std::numeric_limits< uint32_t >::max( );
-    
-#if defined(SKL_REAL_TYPE_SINGLE)
-    using TReal = float;
-#elif defined(SKL_REAL_TYPE_DOUBLE)
-    using TReal = double;
-#else
-    #error "Unknown real type!"
-#endif
-
-    constexpr TReal TRealZero = SK_REAL_ZERO;
-    constexpr TReal TRealOne  = SK_REAL_ONE;
-    constexpr TReal TRealUnit = SK_REAL_ONE;
 }
-
-using TSkylakeReal                      = SKL::TReal;
-constexpr TSkylakeReal TSkylakeRealZero = SKL::TRealZero;
-constexpr TSkylakeReal TSkylakeRealOne  = SKL::TRealOne;
-constexpr TSkylakeReal TSkylakeRealUnit = SKL::TRealUnit;
 

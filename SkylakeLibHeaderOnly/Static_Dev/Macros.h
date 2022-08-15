@@ -42,29 +42,6 @@
 #undef TRUE
 #define TRUE 1
 
-//! Skylake real value helper
-#if defined(SKL_REAL_TYPE_SINGLE)
-    #define SKL_REAL_VALUE( x ) ( x##f )
-#elif defined(SKL_REAL_TYPE_DOUBLE)
-    #define SKL_REAL_VALUE( x ) ( x )
-#else
-    #error "Unknown real type!"
-#endif
-
-//! Skylake math values
-#if defined(SKL_HEADERONLY_ENABLE_MATH)
-    #undef PI
-    #define PI SKL_REAL_VALUE( 3.1415926535897932 )
-    #define SMALL_NUMBER SKL_REAL_VALUE( 1.e-8 )
-    #define KINDA_SMALL_NUMBER SKL_REAL_VALUE( 1.e-4 )
-    #define BIG_NUMBER SKL_REAL_VALUE( 3.4e+38 )
-    #define EULERS_NUMBER SKL_REAL_VALUE( 2.71828182845904523536 )
-#endif
-
-//! Skylake real general values
-#define SK_REAL_ZERO SKL_REAL_VALUE( 0.0 )
-#define SK_REAL_ONE SKL_REAL_VALUE( 1.0 )
-
 //! Clock helpers
 #define TCLOCK_MILLIS( x ) std::chrono::milliseconds( x )
 #define TCLOCK_MICROS( x ) std::chrono::microseconds( x )

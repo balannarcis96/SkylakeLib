@@ -2,10 +2,9 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkylakeLib_repo" VERSION 1.0.0)
 
 option(SKL_BUILD_TESTS            "Build tests"                         ON)  
-option(SKL_HEADERONLY_ENABLE_MATH "SkylakeHeaderOnly enable math types" ON)  
-option(SKL_DISABLE_EXCEPTIONS     "Define exceptions[Recommended]!"     ON)   
+option(SKL_DISABLE_EXCEPTIONS     "Disable exceptions[Recommended]!"    ON)   
 option(SKL_BUILD_SHIPPING         "Build for shipping"                 OFF) 
-option(SKL_MEMORY_STATISTICS      "Enable memory statistics"           OFF) 
+option(SKL_MEMORY_STATISTICS      "Enable memory statistics"            ON) 
 option(SKL_NO_ASSERTS             "Disabled all runtime asserts"       OFF) 
 
 #SKL_BUILD_TYPE
@@ -71,10 +70,6 @@ endif()
 
 if(SKL_MEMORY_STATISTICS)
     add_compile_definitions(SKL_MEMORY_STATISTICS)
-endif()
-
-if(SKL_HEADERONLY_ENABLE_MATH)
-    add_compile_definitions(SKL_HEADERONLY_ENABLE_MATH)
 endif()
 
 if(SKL_NO_ASSERTS)
