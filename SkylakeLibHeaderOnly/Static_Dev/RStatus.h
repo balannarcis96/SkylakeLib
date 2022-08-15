@@ -48,6 +48,7 @@ constexpr RStatus RAborted                          { RStatus::Aborted };
 constexpr RStatus RAlreadyPerformed                 { RStatus::AlreadyPerformed };
 constexpr RStatus RInvalidParamters                 { RStatus::InvalidParamters };
 constexpr RStatus ROperationOverflows               { RStatus::OperationOverflows };
+constexpr RStatus RAllocationFailed                 { RStatus::AllocationFailed };
 constexpr RStatus RInvalidPoistion                  { RStatus::InvalidPoistion };
 constexpr RStatus RInvalidOffset                    { RStatus::InvalidOffset };
 constexpr RStatus RSystemTerminated                 { RStatus::SystemTerminated };

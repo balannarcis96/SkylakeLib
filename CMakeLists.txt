@@ -2,7 +2,8 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkylakeLib_repo" VERSION 1.0.0)
 
 option(SKL_BUILD_TESTS            "Build tests"                         ON)  
-option(SKL_HEADERONLY_ENABLE_MATH "SkylakeHeaderOnly enable math types" ON)   
+option(SKL_HEADERONLY_ENABLE_MATH "SkylakeHeaderOnly enable math types" ON)  
+option(SKL_DISABLE_EXCEPTIONS     "Define exceptions[Recommended]!"     ON)   
 option(SKL_BUILD_SHIPPING         "Build for shipping"                 OFF) 
 option(SKL_MEMORY_STATISTICS      "Enable memory statistics"           OFF) 
 
@@ -11,10 +12,10 @@ set(SKL_BUILD_TYPE_OPTIONS Full HeaderOnly)
 set(SKL_BUILD_TYPE Full CACHE STRING "SkyaleLib build type")
 set_property(CACHE SKL_BUILD_TYPE PROPERTY STRINGS ${SKL_BUILD_TYPE_OPTIONS})
 
-#SKL_BUILD_PLATFORM
-set(SKL_BUILD_PLATFORM_OPTIONS Win64 FreeBSD Ubuntu)
-set(SKL_BUILD_PLATFORM Win64 CACHE STRING "SkyaleLib target platform")
-set_property(CACHE SKL_BUILD_PLATFORM PROPERTY STRINGS ${SKL_BUILD_PLATFORM_OPTIONS})
+#SKL_BUILD_OS
+set(SKL_BUILD_OS_OPTIONS Win64 FreeBSD64 Ubuntu64)
+set(SKL_BUILD_OS Win64 CACHE STRING "SkyaleLib target OS")
+set_property(CACHE SKL_BUILD_OS PROPERTY STRINGS ${SKL_BUILD_OS_OPTIONS})
 
 #SKL_HEADER_ONLY_BUILD_TYPE
 set(SKL_HEADER_ONLY_BUILD_TYPE_OPTIONS Interface Static_Dev)
@@ -52,12 +53,13 @@ else()
     message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
 endif()
 
-if(SKL_BUILD_PLATFORM STREQUAL "Win64")
+if(SKL_BUILD_OS STREQUAL "Win64")
     add_compile_definitions(SKL_BUILD_WINDOWS)
-elseif(SKL_BUILD_PLATFORM STREQUAL "FreeBSD")
-    add_compile_definitions(    )
+    message("Building for Windows 64bit!")
+elseif(SKL_BUILD_OS STREQUAL "FreeBSD")
+    add_compile_definitions(SKL_BUILD_FREEBSD)
     message(FATAL_ERROR "FreeBSD not supported yet!")
-elseif(SKL_BUILD_PLATFORM STREQUAL "Ubuntu")
+elseif(SKL_BUILD_OS STREQUAL "Ubuntu")
     add_compile_definitions(SKL_BUILD_UBUNTU)
     message(FATAL_ERROR "Ubuntu not supported yet!")
 endif()
@@ -74,6 +76,16 @@ if(SKL_HEADERONLY_ENABLE_MATH)
     add_compile_definitions(SKL_HEADERONLY_ENABLE_MATH)
 endif()
 
+if(SKL_DISABLE_EXCEPTIONS)
+    # Disable std exceptions
+    add_compile_definitions(_HAS_EXCEPTIONS=0)
+    
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable RTTI
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+    endif()
+endif()
+
 # LOG LEVEL
 if(SKL_LOG_LEVEL STREQUAL DEBUG)
     add_compile_definitions(SKL_LOG_LEVEL=0)
@@ -86,6 +98,8 @@ elseif(SKL_LOG_LEVEL STREQUAL INF)
 elseif(SKL_LOG_LEVEL STREQUAL DEBUG)
     add_compile_definitions(SKL_LOG_LEVEL=4)
 endif()
+
+
 
 ################################################################
 

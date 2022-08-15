@@ -16,16 +16,16 @@ namespace SKL
               BlockSize{ BlockSize } 
         {}
 
-	    /**
-	     * \brief Adds 1 to the reference count of this instance.
-	     * \remarks Only call this function while holding a valid reference to this instance.
-	     */
-	    SKL_FORCEINLINE void AddReference() noexcept
-	    {
-	    	int32_t RefCountValue = ReferenceCount.load( std::memory_order_relaxed );
-	    	while( false == std::atomic_compare_exchange_strong_explicit( &ReferenceCount, &RefCountValue, RefCountValue + 1, std::memory_order_release, std::memory_order_relaxed ) )
-	    	{ }
-	    }
+        /**
+         * \brief Adds 1 to the reference count of this instance.
+         * \remarks Only call this function while holding a valid reference to this instance.
+         */
+        SKL_FORCEINLINE void AddReference() noexcept
+        {
+            int32_t RefCountValue = ReferenceCount.load( std::memory_order_relaxed );
+            while( false == std::atomic_compare_exchange_strong_explicit( &ReferenceCount, &RefCountValue, RefCountValue + 1, std::memory_order_release, std::memory_order_relaxed ) )
+            { }
+        }
 
         SKL_FORCEINLINE void ReleaseReferenceChecked() noexcept
         {
@@ -45,6 +45,8 @@ namespace SKL
     struct TSharedPtr
     {
         TSharedPtr() noexcept : Pointer { nullptr } {}
+
+        TSharedPtr( TObject* InPointer ) noexcept : Pointer{ InPointer } {}
         
         TSharedPtr( const TSharedPtr& Other ) noexcept : Pointer{ Other.Pointer }
         {
@@ -132,9 +134,23 @@ namespace SKL
 
         explicit operator bool() const noexcept { return nullptr != Pointer; }
 
-    private:
-        TSharedPtr( TObject* InPointer ) noexcept : Pointer{ InPointer } {}
+        template<typename T>
+        TSharedPtr<T> CastTo() noexcept
+        {
+            return { reinterpret_cast<T*>( NewRefRaw() ) };
+        }    
 
+        template<typename T>
+        TSharedPtr<T> CastMoveTo() noexcept
+        {
+            T* Result { reinterpret_cast<T*>( Pointer ) };
+
+            Pointer = nullptr;
+
+            return { Result };
+        }    
+
+    private:
         TObject* NewRefRaw() noexcept
         {
             //Increment reference count

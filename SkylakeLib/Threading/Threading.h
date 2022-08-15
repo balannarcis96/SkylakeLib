@@ -7,4 +7,13 @@
 //! 
 #pragma once
 
-#include "SpinLock.h"
+namespace SKL
+{
+    class Worker;
+    class WorkerGroup;
+    class WorkerGroupManager;
+}
+
+#include "Worker.h"
+#include "WorkerGroup.h"
+#include "WorkerGroupManager.h"

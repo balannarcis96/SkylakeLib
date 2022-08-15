@@ -25,34 +25,36 @@
 //! Thread Local Storage
 #include "ThreadLocalStorage/TLS.h"
 
-//! Task
-#include "Task/Task.h"
-
-//! Threading
-#include "Threading/Threading.h"
+//! Spin Lock
+#include "Utils/SpinLock.h"
 
 //! Memory abstractions
 #include "Memory/Memory.h"
 
+//! Task
+#include "Task/Task.h"
+#include "Task/IOTask.h"
+
+//! Threading
+#include "Threading/Threading.h"
+
 namespace SKL
 {
-    //!
-    //! \brief Initialize the SkylakeLibrary
-    //!
-    RStatus InitializeLibrary( int32_t Argc, char** Argv, FILE* InLogOutput ) noexcept;
+    //! Initialize the SkylakeLibrary
+    RStatus Skylake_InitializeLibrary( int32_t Argc, char** Argv, FILE* InLogOutput ) noexcept;
 
-    //!
-    //! \brief Terminate the SkylakeLibrary
-    //!
-    RStatus TerminateLibrary() noexcept;
+    //! Terminate the SkylakeLibrary
+    RStatus Skylake_TerminateLibrary() noexcept;
 
-    //!
-    //! \brief Initialize the SkylakeLibrary per thread
-    //!
-    RStatus InitializeLibrary_Thread() noexcept;
+    //! Initialize the SkylakeLibrary per thread
+    RStatus Skylake_InitializeLibrary_Thread() noexcept;
 
-    //!
-    //! \brief Terminate the SkylakeLibrary per thread
-    //!
-    RStatus TerminateLibrary_Thread() noexcept;
+    //! Terminate the SkylakeLibrary per thread
+    RStatus Skylake_TerminateLibrary_Thread() noexcept;
+
+    //! Is the skylake library init and ready to use
+    bool Skylake_IsTheLibraryInitialize() noexcept;
+
+    //! Is the skylake library init and ready to use for the calling thread
+    bool Skylake_IsTheLibraryInitialize_Thread() noexcept;
 }

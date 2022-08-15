@@ -76,10 +76,10 @@ namespace SKL
     }
     
     //!
-    //! \brief Allocate new shared object through the MemoryManager
+    //! \brief Allocate new shared object (raw ptr) through the MemoryManager
     //!
     template<typename TObject, typename ...TArgs>
-    TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
+    TObject* MakeSharedRaw( TArgs... Args ) noexcept 
     {
         using TResultType                  = TSharedPtr<TObject>;
         using TControlBlock                = ControlBlock;
@@ -89,7 +89,7 @@ namespace SKL
 
         TObject* Result { nullptr };
 
-        auto AllocationResult = MemoryManager::Allocate<ToAllocateSize>();
+        auto AllocationResult { MemoryManager::Allocate<ToAllocateSize>() };
         if( true == AllocationResult.IsValid() ) SKL_LIKELY
         {
             //Construct the control block
@@ -106,6 +106,15 @@ namespace SKL
             Result = reinterpret_cast<TObject*>( reinterpret_cast<uint8_t*>( AllocationResult.MemoryBlock ) + sizeof( TControlBlock ) );
         }
 
-        return { Result };
+        return Result;
+    }
+
+    //!
+    //! \brief Allocate new shared object through the MemoryManager
+    //!
+    template<typename TObject, typename ...TArgs>
+    SKL_FORCEINLINE TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
+    {
+        return { MakeSharedRaw<TObject>( std::forward<TArgs>( Args )... ) };
     }
 }

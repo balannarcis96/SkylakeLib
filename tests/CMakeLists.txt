@@ -9,3 +9,6 @@ add_subdirectory(TLSTests)
 add_subdirectory(TaskTests)
 add_subdirectory(ObjectPoolTests)
 add_subdirectory(MemoryManagementTests)
+add_subdirectory(WorkersTests)
+
+
