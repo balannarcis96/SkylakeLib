@@ -164,7 +164,6 @@ namespace SKL
             }
         });     
 
-
         return RSuccess;
     }
 
@@ -175,12 +174,6 @@ namespace SKL
 
         // cache master worker pointer
         MasterWorker = InMasterWorker;
-
-        // set master terminate handler
-        InMasterWorker->SetOnMasterTerminatedHandler( []( SKL::Worker& Worker, WorkerGroup& Group ) noexcept -> void 
-        {
-            //@TODO
-        } );
 
         return RSuccess;
     }
@@ -195,7 +188,7 @@ namespace SKL
         {
             if( true == Tag.bSupportsTLSSync )
             {
-                while( Worker.GetIsRunning() ) SKL_LIKELY
+                while( IsRunning() ) SKL_LIKELY
                 {
                     bool bShouldTermiante { HandleTasks_Proactive( MillisecondsToSleep ) };
                     if ( true == bShouldTermiante ) SKL_UNLIKELY
@@ -214,7 +207,7 @@ namespace SKL
             }
             else
             {
-                while( Worker.GetIsRunning() ) SKL_LIKELY
+                while( IsRunning() ) SKL_LIKELY
                 {
                     const bool bShouldTermiante { HandleTasks_Proactive( MillisecondsToSleep ) };
                     if ( true == bShouldTermiante ) SKL_UNLIKELY
@@ -230,7 +223,7 @@ namespace SKL
         {
             if( true == Tag.bSupportsTLSSync )
             {
-                while( Worker.GetIsRunning() ) SKL_LIKELY
+                while( IsRunning() ) SKL_LIKELY
                 {
                     OnWorkerTick.Dispatch( Worker, *this );
 
@@ -245,7 +238,7 @@ namespace SKL
             }
             else
             {
-                while( Worker.GetIsRunning() ) SKL_LIKELY
+                while( IsRunning() ) SKL_LIKELY
                 {
                     OnWorkerTick.Dispatch( Worker, *this );
                     TCLOCK_SLEEP_FOR_MILLIS( MillisecondsToSleep );
@@ -265,7 +258,7 @@ namespace SKL
 
         if( true == Tag.bHandlesTasks )
         {
-            while( Worker.GetIsRunning() ) SKL_LIKELY
+            while( IsRunning() ) SKL_LIKELY
             {
                 bool bShouldTermiante = HandleTasks_Proactive( MillisecondsToSleep );
                 if ( true == bShouldTermiante ) SKL_UNLIKELY
@@ -282,7 +275,7 @@ namespace SKL
         }
         else
         {
-            while( Worker.GetIsRunning() ) SKL_LIKELY
+            while( IsRunning() ) SKL_LIKELY
             {
                 const bool bShouldTermiante = HandleTasks_Reactive();             
                 if ( true == bShouldTermiante ) SKL_UNLIKELY
@@ -393,8 +386,17 @@ namespace SKL
     void WorkerGroup::OnWorkerStarted( Worker& Worker ) noexcept
     {
         const auto NewRunningWorkersCount { RunningWorkers.increment() };
+
+        SKL_VER_FMT( "[WG:%ws] Worker started!", Tag.Name );
+
+        if( false == OnWorkerStartTask.IsNull() )
+        {
+            OnWorkerStartTask.Dispatch( Worker, *this );
+        }
+
         if( TotalWorkers.load_relaxed() == NewRunningWorkersCount )
         {
+            SKL_VER_FMT( "[WG:%ws] All workers started!", Tag.Name );
             Manager->OnWorkerGroupStarted( *this );
         }
     }
@@ -402,8 +404,17 @@ namespace SKL
     void WorkerGroup::OnWorkerStopped( Worker& Worker ) noexcept
     {
         const auto NewRunningWorkersCount { RunningWorkers.decrement() };
+
+        SKL_VER_FMT( "[WG:%ws] Worker stopped!", Tag.Name );
+
+        if( false == OnWorkerStopTask.IsNull() )
+        {
+            OnWorkerStopTask.Dispatch( Worker, *this );
+        }
+
         if( 0 == NewRunningWorkersCount )
         {
+            SKL_VER_FMT( "[WG:%ws] All workers stopped!", Tag.Name );
             Manager->OnWorkerGroupStopped( *this );
         }
     }

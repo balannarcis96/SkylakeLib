@@ -95,55 +95,48 @@ namespace ASD
 
 namespace ASD
 {
-    // Most reliable way (i found + edit) to check if T is a lambda/functor with a specific signature
     namespace lambda_ex
     {
-        template< typename T >
+        template<typename T>
         struct identity
         {
             using type = T;
         };
 
-        template< typename... >
-        using void_t = void;
-
-        template< typename F >
+        template<typename F>
         struct call_operator;
 
-        template< typename C, typename R, typename... A >
-        struct call_operator< R ( ASD_CDECL C::* )( A... ) >: identity< R( A... ) >
+        template<typename C, typename R, typename... A>
+        struct call_operator<R ( ASD_CDECL C::* )( A... ) >: identity< R( A... )>
         {
         };
 
-        template< typename C, typename R, typename... A >
-        struct call_operator< R ( ASD_CDECL C::* )( A... ) const >: identity< R( A... ) >
+        template<typename C, typename R, typename... A >
+        struct call_operator< R ( ASD_CDECL C::* )( A... ) const >: identity< R( A... )>
         {
         };
 
-        template< typename C, typename R, typename... A >
-        struct call_operator< R ( ASD_CDECL C::* )( A... ) noexcept >: identity< R( A... ) >
+        template<typename C, typename R, typename... A >
+        struct call_operator<R ( ASD_CDECL C::* )( A... ) noexcept >: identity< R( A... ) noexcept>
         {
         };
 
-        template< typename C, typename R, typename... A >
-        struct call_operator< R ( ASD_CDECL C::* )( A... ) const noexcept >: identity< R( A... ) >
+        template<typename C, typename R, typename... A>
+        struct call_operator<R ( ASD_CDECL C::* )( A... ) const noexcept >: identity< R( A... ) noexcept>
         {
         };
 
-        template< typename F >
-        using call_operator_t = typename call_operator< F >::type;
+        template<typename F>
+        using call_operator_t = typename call_operator<F>::type;
 
-        template< typename, typename, typename = void_t<> >
+        template<typename L, typename TSignature>
         struct is_convertible_to_function
-            : std::false_type
         {
+            static constexpr bool value = std::is_same_v<call_operator_t<decltype( &L::operator() )>, TSignature>;
         };
 
-        template< typename L, typename TSignature >
-        struct is_convertible_to_function< L, TSignature, void_t< decltype( &L::operator( ) ) > >
-            : std::is_assignable< call_operator_t< decltype( &L::operator( ) ) > *&, TSignature >
-        {
-        };
+        template<typename L, typename TSignature>
+        inline constexpr bool is_convertible_to_function_v = is_convertible_to_function<L, TSignature>::value;
     } // namespace lambda_ex
 
     template<typename L, typename TSignature>
@@ -1282,14 +1275,14 @@ namespace ASD
         template<typename TFunctor>                                                                                                                                                                 \
         ASD_FORCEINLINE void operator+=( TFunctor&& lambda ) NOEXCEPT_VALUE                                                                                                                         \
         {                                                                                                                                                                                           \
-            static_assert(ASD::is_functor_v<TFunctor, ReturnType( Args... ) NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!");                                            \
+            static_assert( ASD::is_functor_v<TFunctor, ReturnType( Args... ) NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!" );                                          \
             BuildHandler( std::forward<TFunctor>( lambda ) );                                                                                                                                       \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
         template<typename TFunctor>                                                                                                                                                                 \
         ASD_FORCEINLINE void SetFunctor( TFunctor&& lambda ) NOEXCEPT_VALUE                                                                                                                         \
         {                                                                                                                                                                                           \
-            static_assert(ASD::is_functor_v<TFunctor, ReturnType( Args... ) NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!");                                            \
+            static_assert( ASD::is_functor_v<TFunctor, ReturnType( Args... ) NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!" );                                          \
             BuildHandler( std::forward<TFunctor>( lambda ) );                                                                                                                                       \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
@@ -1382,7 +1375,7 @@ namespace ASD
         template<typename TFunctor>                                                                                                                                                                 \
         ASD_FORCEINLINE void operator+=( const TFunctor& lambda ) NOEXCEPT_VALUE                                                                                                                    \
         {                                                                                                                                                                                           \
-            static_assert(ASD::is_functor_v<std::decay_t<TFunctor>, ReturnType( Args... ) const NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!");                        \
+            static_assert(ASD::is_functor_v<TFunctor, ReturnType( Args... ) NOEXCEPT_VALUE>, "The givent type must be a functor of the required type!");                                      \
             BuildHandler( lambda );                                                                                                                                                                 \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
@@ -1417,7 +1410,7 @@ namespace ASD
             }                                                                                                                                                                                       \
             else                                                                                                                                                                                    \
             {                                                                                                                                                                                       \
-                return false == IsNull() && nullptr == DestroyPointer;                                                                                                                              \
+                return true == IsNull() || nullptr == DestroyPointer;                                                                                                                               \
             }                                                                                                                                                                                       \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
@@ -1628,7 +1621,7 @@ protected:                                                                      
             }                                                                                                                                                                                       \
             else                                                                                                                                                                                    \
             {                                                                                                                                                                                       \
-                return false == IsNull() && nullptr == DestroyPointer;                                                                                                                              \
+                return true == IsNull() || nullptr == DestroyPointer;                                                                                                                               \
             }                                                                                                                                                                                       \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
@@ -1639,8 +1632,8 @@ protected:                                                                      
             static_assert( sizeof( TFunctor ) <= FunctorSize, "The given functor's size must be smaller or equal to FunctorSize" );                                                                 \
             static_assert( !bStrict || !asd_is_trivial_v<TFunctor>, "The provided functor (TFunctor) must not be trivial, use TrivialFuctorTraits instead!" );                                      \
             constexpr bool bIsCopyable = NOEXCEPT_BOOL_VALUE ?                                                                                                                                      \
-                                std::is_nothrow_copy_constructible_v<TFunctor> && std::is_nothrow_copy_assignable_v<TFunctor> :                                                                     \
-                                std::is_copy_constructible_v<TFunctor> && std::is_copy_assignable_v<TFunctor>;                                                                                      \
+                                std::is_nothrow_copy_constructible_v<TFunctor> :                                                                                                                    \
+                                std::is_copy_constructible_v<TFunctor>;                                                                                                                             \
             static_assert( bIsCopyable, "The provided Functor must be copy constructible and assignable" );                                                                                         \
             static_assert( !NOEXCEPT_BOOL_VALUE || std::is_nothrow_destructible_v<TFunctor>, "The provided Functor must be noexcept destructible" );                                                \
             static_assert( !NOEXCEPT_BOOL_VALUE || std::is_nothrow_invocable_v<TFunctor, Args...> , "The given functor's call operator must be noexexcept" );                                       \
@@ -1827,7 +1820,7 @@ protected:                                                                      
             }                                                                                                                                                                                       \
             else                                                                                                                                                                                    \
             {                                                                                                                                                                                       \
-                return false == IsNull() && nullptr == DestroyPointer;                                                                                                                              \
+                return true == IsNull() || nullptr == DestroyPointer;                                                                                                                               \
             }                                                                                                                                                                                       \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
@@ -1838,8 +1831,8 @@ protected:                                                                      
             static_assert( sizeof( TFunctor ) <= FunctorSize, "The given functor's size must be smaller or equal to FunctorSize" );                                                                 \
             static_assert( !bStrict || !asd_is_trivial_v<TFunctor>, "The provided functor (TFunctor) must not be trivial, use TrivialFuctorTraits instead!" );                                      \
             constexpr bool bIsMoveable = NOEXCEPT_BOOL_VALUE ?                                                                                                                                      \
-                                std::is_nothrow_move_constructible_v<TFunctor> && std::is_nothrow_move_assignable_v<TFunctor> :                                                                     \
-                                std::is_move_constructible_v<TFunctor> && std::is_move_assignable_v<TFunctor>;                                                                                      \
+                                std::is_nothrow_move_constructible_v<TFunctor>:                                                                                                                     \
+                                std::is_move_constructible_v<TFunctor>;                                                                                                                             \
             static_assert( bIsMoveable, "The provided Functor must be move constructible and assignable" );                                                                                         \
             static_assert( !NOEXCEPT_BOOL_VALUE || std::is_nothrow_destructible_v<TFunctor>, "The provided Functor must be noexcept destructible" );                                                \
             static_assert( !NOEXCEPT_BOOL_VALUE || std::is_nothrow_invocable_v<TFunctor, Args...> , "The given functor's call operator must be noexexcept" );                                       \
@@ -2020,8 +2013,6 @@ namespace ASD
     template<size_t TaskSize>
     struct Task : ITask
     {
-        static_assert( TaskSize >= 1, "The task size must be at least 1 byte" );
-
         using TDispatch = ASD::UniqueFunctorWrapper<TaskSize, typename ITask::TDispatchFunctionPtr>;
 
         Task() noexcept = default;

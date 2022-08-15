@@ -26,7 +26,7 @@ namespace SKL
     class WorkerGroup
     {
     public:
-        using WorkerTickTask = ASD::CopyFunctorWrapper<32, void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept>;
+        using WorkerTask = ASD::CopyFunctorWrapper<32, void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept>;
 
         WorkerGroup( const WorkerGroupTag& Tag, WorkerGroupManager* Manager ) noexcept 
             : Tag{ Tag }
@@ -47,9 +47,35 @@ namespace SKL
         }
 
         //! Set functor to be called each time a worker ticks [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
-        SKL_FORCEINLINE void SetWorkerTickHandler( const WorkerTickTask& InOnWorkerTick ) noexcept 
+        SKL_FORCEINLINE void SetWorkerTickHandler( const WorkerTask& InOnWorkerTick ) noexcept 
         {
             OnWorkerTick = InOnWorkerTick;
+        }
+
+        //! Set functor to be called each time a worker starts [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE void SetWorkerStartHandler( TFunctor&& InOnWorkerStarted ) noexcept 
+        {
+            OnWorkerStartTask += std::forward<TFunctor>( InOnWorkerStarted );
+        }
+
+        //! Set functor to be called each time a worker starts [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        SKL_FORCEINLINE void SetWorkerStartHandler( const WorkerTask& InOnWorkerStarted ) noexcept 
+        {
+            OnWorkerStartTask = InOnWorkerStarted;
+        }
+
+        //! Set functor to be called each time a worker stops [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE void SetWorkerStopHandler( TFunctor&& InOnWorkerStopped ) noexcept 
+        {
+            OnWorkerStopTask += std::forward<TFunctor>( InOnWorkerStopped );
+        }
+
+        //! Set functor to be called each time a worker stops [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        SKL_FORCEINLINE void SetWorkerStopHandler( const WorkerTask& InOnWorkerStopped ) noexcept 
+        {
+            OnWorkerStopTask = InOnWorkerStopped;
         }
 
         //! Initialize and prepare all components of this workers group
@@ -131,7 +157,9 @@ namespace SKL
         AsyncIO                              AsyncIOAPI          {};          //!< Async IO interface
         std::vector<std::shared_ptr<Worker>> Workers             {};          //!< All workers registered in the group
         WorkerGroupManager*                  Manager             { nullptr }; //!< Manager of this group
-        WorkerTickTask                       OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
+        WorkerTask                           OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
+        WorkerTask                           OnWorkerStartTask   {};          //!< Task to be executed each time a worker starts
+        WorkerTask                           OnWorkerStopTask    {};          //!< Task to be executed each time a worker stoppes
         std::shared_ptr<Worker>              MasterWorker        {};          //!< Cached pointer to the master worker [if any]
 
         friend Worker;    

@@ -27,7 +27,7 @@ namespace SKL
         NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
         // cast to base and return
-        return NewTask.CastMoveTo<ITask>();
+        return reinterpret_cast<ITask*>( NewTask );
     }
 
     template<typename TFunctor>

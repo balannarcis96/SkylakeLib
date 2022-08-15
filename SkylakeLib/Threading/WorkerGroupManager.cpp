@@ -79,8 +79,14 @@ namespace SKL
     {
         auto NewGroup { std::make_shared<WorkerGroup>( Config.Tag, this ) };
 
-        // set tick handler
+        // set worker tick handler
         NewGroup->SetWorkerTickHandler( Config.OnWorkerTick );
+        
+        // set worker start handler
+        NewGroup->SetWorkerStartHandler( Config.OnWorkerStart );
+        
+        // set worker stop handler
+        NewGroup->SetWorkerStopHandler( Config.OnWorkerStop );
         
         // build the group
         NewGroup->Build( bCreateMaster );

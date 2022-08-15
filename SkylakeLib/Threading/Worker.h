@@ -28,13 +28,6 @@ namespace SKL
             OnRun += std::forward<TFunctor>( OnRunHandler );
         }
 
-        //! Set the functor to be executed when the worker(as master) is termianted [ void( ASD_CDECL *)( Worker&, WorkerGroup& ) noexcept ]
-        template<typename TFunctor>
-        SKL_FORCEINLINE void SetOnMasterTerminatedHandler( TFunctor OnMasterTermiantedHandler ) noexcept 
-        {
-            OnMasterTermianted += std::forward<TFunctor>( OnMasterTermiantedHandler );
-        }
-
         //! Is this worker running
         bool GetIsRunning() const noexcept { return bIsRunning.load_relaxed(); }
 
@@ -43,9 +36,6 @@ namespace SKL
 
         //! Start the worker
         RStatus Start() noexcept;   
-
-        //! Signal the worker to stop
-        void SignalStop() noexcept;
 
         //! Join worker thread
         void Join() noexcept
@@ -57,8 +47,10 @@ namespace SKL
         }
 
         //! Get the time point at which the worker started 
-        TEpochTimePoint GetStartedAt() const noexcept { StartedAt.load_relaxed(); }
-
+        TEpochTimePoint GetStartedAt() const noexcept { return StartedAt.load_relaxed(); }
+        
+        //! Get the time duration this worker was active for
+        TEpochTimeDuration GetAliveTime() const noexcept { return GetSystemUpTickCount() - GetStartedAt(); }
     private:
         void RunImpl() noexcept;
 
@@ -67,7 +59,6 @@ namespace SKL
         std::synced_value<uint32_t>         bIsMasterThread    { FALSE };   //!< Is this a master worker
         std::relaxed_value<TEpochTimePoint> StartedAt          { 0 };       //!< Time point when the worker started
         RunTask                             OnRun              {};          //!< Task to run as main of the thread
-        RunTask                             OnMasterTermianted {};          //!< Task to run when this worker termiantes (if master)
         WorkerGroup*                        Group              { nullptr }; //!< Owning group of this worker
 
         friend WorkerGroup;

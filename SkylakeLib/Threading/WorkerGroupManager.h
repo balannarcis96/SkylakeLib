@@ -23,22 +23,38 @@ namespace SKL
         //! Is this config valid
         bool IsValid() const noexcept { return true == Tag.IsValid(); }
 
-        //! Set functor to be called each time a worker in the group ticks [void( SKL_CDECL* )( WorkerGroup&, Worker& ) noexcept]
+        //! Set functor to be called each time a worker in the group ticks [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
         template<typename TFunctor>
         void SetWorkerTickHandler( TFunctor&& InOnWorkerTick ) noexcept 
         {
             OnWorkerTick += std::forward<TFunctor>( InOnWorkerTick );
         }
     
+        //! Set functor to be called each time a worker in the group starts [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        template<typename TFunctor>
+        void SetWorkerStartHandler( TFunctor&& InOnWorkerStart ) noexcept 
+        {
+            OnWorkerStart += std::forward<TFunctor>( InOnWorkerStart );
+        }
+    
+        //! Set functor to be called each time a worker in the group stops [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
+        template<typename TFunctor>
+        void SetWorkerStopHandler( TFunctor&& InOnWorkerStop ) noexcept 
+        {
+            OnWorkerStop += std::forward<TFunctor>( InOnWorkerStop );
+        }
+    
         //! DO NOT CALL
-        const WorkerGroup::WorkerTickTask& GetTaskToDispatch() const noexcept 
+        const WorkerGroup::WorkerTask& GetTaskToDispatch() const noexcept 
         {
             return OnWorkerTick;
         }
 
     private:
-        WorkerGroupTag              Tag          {}; //!< Group tag
-        WorkerGroup::WorkerTickTask OnWorkerTick {}; //!< Task to be executed each time a worker in the group ticks
+        WorkerGroupTag              Tag           {}; //!< Group tag
+        WorkerGroup::WorkerTask     OnWorkerTick  {}; //!< Task to be executed each time a worker in the group ticks
+        WorkerGroup::WorkerTask     OnWorkerStart {}; //!< Task to be executed each time a worker in the group start
+        WorkerGroup::WorkerTask     OnWorkerStop  {}; //!< Task to be executed each time a worker in the group stops
 
         friend WorkerGroupManager;
     }; 
@@ -86,7 +102,7 @@ namespace SKL
         WorkerGroupManager() noexcept = default;
         ~WorkerGroupManager() noexcept  
         {
-
+            
         }
 
         //! Initialize the group manager
@@ -119,6 +135,14 @@ namespace SKL
             }
 
             return { nullptr };
+        }
+
+        void SignalToStop() noexcept
+        {
+            for( auto& Group: WorkerGroups )
+            {
+                Group->SignalToStop();
+            }
         }
 
     private:

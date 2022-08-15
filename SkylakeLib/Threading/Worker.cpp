@@ -29,15 +29,13 @@ namespace SKL
             // init the SkylakeLib for this thread
             Skylake_InitializeLibrary_Thread();
         }
-        else
-        {
-            //The master thread must have the library initialized before run
-            SKL_ASSERT_ALLWAYS( IsMaster() && Skylake_IsTheLibraryInitialize_Thread() );
-        }
         
         { 
             // mark as running
             bIsRunning.exchange( true );
+
+            // save approx start time
+            StartedAt.exchange( GetSystemUpTickCount() );
         
             // notice the group
             Group->OnWorkerStarted( *this );
@@ -53,33 +51,10 @@ namespace SKL
             Group->OnWorkerStopped( *this );
         }
         
-        if( true == IsMaster() )
-        {
-            // notice group of mater termination 
-            SKL_ASSERT_ALLWAYS( false == OnMasterTermianted.IsNull() );
-            OnMasterTermianted( *this, *Group );
-        
-            SKL_INF_FMT( "WorkerGroup[%hu] Master termianted!", Group->GetTag().Id );
-        }
-        else
-        {
-            SKL_INF_FMT( "WorkerGroup[%hu] Slave termianted!", Group->GetTag().Id );
-        }
-        
         if( false == IsMaster() )
         {
             // terminate the SkylakeLib for this thread
             Skylake_TerminateLibrary_Thread();
-        }
-    }
-    
-
-    //! Signal the worker to stop
-    void Worker::SignalStop() noexcept  
-    {
-        if( false == bIsRunning.exchange( false ) )
-        {
-            SKL_INF_FMT( "[Worker::SignalStop()][Group:%hu] Worker already signaled to stop!", Group->GetTag( ).Id );
         }
     }
 }

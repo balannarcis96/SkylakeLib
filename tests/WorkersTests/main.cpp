@@ -4,11 +4,17 @@
 
 namespace WorkersTests
 {
-    struct MyType { int a; };
+    struct MyType { 
+        void operator()( SKL::Worker& Worker, SKL::WorkerGroup& Group ) noexcept {};
+        
+        int a;
+    };
 
     TEST( WorkersTests, MainTest )
     {
         SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr );
+
+        SKL::WorkerGroupManager Manager;
 
         SKL::ApplicationWorkersConfig Config { L"TEST_APPLICATION" };
 
@@ -16,20 +22,38 @@ namespace WorkersTests
         {
             SKL::WorkerGroupTag 
             {
-                .TickRate         = 60, 
+                .TickRate         = 5, 
                 .SyncTLSTickRate  = 0,
                 .Id               = 1,
-                .WorkersCount     = 2,
+                .WorkersCount     = 1,
                 .bIsActive        = true,
                 .bHandlesTasks    = true,
                 .bSupportsTLSSync = false,
                 .Name             = L"FRONT_END_GROUP"
             }
         };
-        Group1.SetWorkerTickHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) noexcept -> void 
+
+        using TT = ASD::CopyFunctorWrapper<16, void(*)(void)> ;        
+
+        Group1.SetWorkerStartHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void {
+            SKL_INF( "Worker Group1 WORKER STARTED!" );
+        } ); 
+
+        Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
         {
             SKL_INF( "Worker Group1 Tick()" );
-            Group.SignalToStop();
+
+            if( Worker.GetAliveTime() < 1000 )
+            {
+                return;
+            }
+
+            Manager.GetWorkerGroupById( 2 )->Deferre( [ &Manager ]() noexcept {
+                SKL_INF( "From TASK" );
+                Manager.SignalToStop();
+            } );
+            
+            TCLOCK_SLEEP_FOR_MILLIS( 50 );
         } );
         Config.AddNewGroup( std::move( Group1 ) );
 
@@ -37,24 +61,21 @@ namespace WorkersTests
         {
             SKL::WorkerGroupTag 
             {
-                .TickRate         = 60, 
+                .TickRate         = 5, 
                 .SyncTLSTickRate  = 0,
                 .Id               = 2,
                 .WorkersCount     = 2,
-                .bIsActive        = true,
+                .bIsActive        = false,
                 .bHandlesTasks    = true,
                 .bSupportsTLSSync = false,
                 .Name             = L"BACK_END_GROUP"
             }
         };
-        Group2.SetWorkerTickHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) noexcept -> void 
+        Group2.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
         {
             SKL_INF( "Worker Group2 Tick()" );
-            Group.SignalToStop();
         } );
         Config.AddNewGroup( std::move( Group2 ) );
-
-        SKL::WorkerGroupManager Manager;
 
         auto Result = Manager.Initialize( std::move( Config ) );
         ASSERT_TRUE( RSuccess == Result );
