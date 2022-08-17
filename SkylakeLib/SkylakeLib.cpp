@@ -14,8 +14,21 @@ namespace SKL
     std::relaxed_value<FILE*> GLogOutput { stdout }; //!< Defaulted to stdout
     std::relaxed_value<BOOL>  GIsInit    { FALSE };  //!< Is the SkylakeLib init
 
+    void ValidatePlatformRuntime() noexcept
+    {
+        const auto L1CacheLineSize { GetL1CacheLineSize() };
+        if ( SKL_CACHE_LINE_SIZE != L1CacheLineSize )
+        {
+            SKL_ERR_FMT( "Expected L1 cache line size to be %d but it is %llu, PLATFORM NOT SUPPORTED, REBUILD!", static_cast<int32_t>( SKL_CACHE_LINE_SIZE ), L1CacheLineSize );
+        }
+
+        SKL_ASSERT_ALLWAYS_MSG( SKL_CACHE_LINE_SIZE == L1CacheLineSize, "Unsupported l1 cache line size!" );
+    }
+
     RStatus Skylake_InitializeLibrary( int32_t Argc, char** Argv, FILE* InLogOutput ) noexcept 
     {
+        ValidatePlatformRuntime();
+
         if( TRUE == GIsInit.load_relaxed() )
         {
             SKL_WRN( "The SkylakeLib was already initialized" );

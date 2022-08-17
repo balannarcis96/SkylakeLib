@@ -146,11 +146,14 @@ namespace SKL
     //! \return RSuccess on success 
     RStatus EnableConsoleANSIColorSupport() noexcept;
 
-    //! \brief Get the number of milliseconds that have elapsed since the system was started
+    //! Get the number of milliseconds that have elapsed since the system was started
     TEpochTimePoint GetSystemUpTickCount() noexcept;
 
-    //! \brief Set the timer resolution of the OS
+    //! Set the timer resolution of the OS
     RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept;
+
+    //! Get the system l1 cache line size
+    size_t GetL1CacheLineSize() noexcept;
 
 	struct PlatformTLS
 	{

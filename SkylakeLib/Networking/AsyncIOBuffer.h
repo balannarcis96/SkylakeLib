@@ -100,18 +100,18 @@ namespace SKL
         using TDispatch = ASD::UniqueFunctorWrapper<CompletionTaskSize, typename IAsyncIOTask::TDispatchFunctionPtr>;
         
         AsyncIOBuffer() noexcept 
-            : IAsyncIOTask( IBuffer{ .Length = BufferSize, .Buffer = Buffer } ) {}
+            : IAsyncIOTask( IBuffer{ .Length = BufferSize, .Buffer = Buffer } ), OnDispatch{} {}
 
         ~AsyncIOBuffer() noexcept = default;
 
-        //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( const IAsyncIOTask*, uint32_t ) noexcept]
+        //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( IAsyncIOTask&, uint32_t ) noexcept]
         template<typename TFunctor>
         ASD_FORCEINLINE void operator+=( TFunctor&& InFunctor ) noexcept
         {
             OnDispatch += std::forward<TFunctor>( InFunctor );
         }
 
-        //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( const IAsyncIOTask*, uint32_t ) noexcept]
+        //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( IAsyncIOTask&, uint32_t ) noexcept]
         template<typename TFunctor>
         ASD_FORCEINLINE void SetCompletionHandler( TFunctor&& InFunctor ) noexcept
         {

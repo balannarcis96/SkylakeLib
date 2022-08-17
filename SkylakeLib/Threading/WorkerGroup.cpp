@@ -362,7 +362,7 @@ namespace SKL
             Task->Dispatch( NumberOfBytesTransferred );
 
             // release ref
-            TSharedPtr<IAsyncIOTask>::DestroyRefStatic( Task );
+            TSharedPtr<IAsyncIOTask>::Static_Reset( Task );
         }
 
         return false;
@@ -380,7 +380,7 @@ namespace SKL
             Task->Dispatch();
 
             // release ref
-            TSharedPtr<ITask>::DestroyRefStatic( Task );
+            TSharedPtr<ITask>::Static_Reset( Task );
         }
 
         return false;

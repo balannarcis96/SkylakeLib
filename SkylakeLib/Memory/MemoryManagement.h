@@ -30,6 +30,7 @@ namespace SKL
             size_t MemoryBlockSize;
 
             SKL_FORCEINLINE const bool IsValid() const noexcept { return nullptr != MemoryBlock; }
+            SKL_FORCEINLINE void Zero() noexcept { memset( MemoryBlock, 0, MemoryBlockSize ); }
         };
     
         // Memory Pools
@@ -94,14 +95,14 @@ namespace SKL
             Pool6::TObjectPool::ZeroAllMemory( );
         }
         
-        //!
-        //! \brief Allocate new memory block with the size known at compile time
-        //!
+        //! Allocate new memory block with the size known at compile time
         template<size_t AllocateSize>
         static AllocResult Allocate() noexcept
         {
+            static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+
             AllocResult Result { };
-            
+         
             if constexpr( AllocateSize <= CMemoryManager_Pool1_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool1_BlockSize;
@@ -138,15 +139,21 @@ namespace SKL
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment );
             }
 
+            SKL_IFMEMORYSTATS( ++TotalAllocations );
+
             return Result;
         }
 
-        //!
-        //! \brief Allocate new memory block with the size known at run time
-        //!
+        //! Allocate new memory block with the size known at run time
         static AllocResult Allocate( size_t AllocateSize ) noexcept
         {
             AllocResult Result { };
+
+            if( SKL_GUARD_ALLOC_SIZE_ON && ( AllocateSize > CMemoryManager_MaxAllocSize ) ) SKL_UNLIKELY
+            {
+                SKL_ERR_FMT( "MemorymManager::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocateSize );
+                return Result;
+            }
             
             if( AllocateSize <= CMemoryManager_Pool1_BlockSize )
             {
@@ -191,9 +198,7 @@ namespace SKL
             return Result;
         }
        
-        //!
-        //! \brief Deallocate memory block with the size known at compile time
-        //!
+        //! Deallocate memory block with the size known at compile time
         template<size_t AllocateSize>
         static void Deallocate( void* InPointer ) noexcept 
         {
@@ -230,9 +235,7 @@ namespace SKL
             SKL_IFMEMORYSTATS( ++TotalDeallocations );
         }
 
-        //!
-        //! \brief Deallocate memory block with the size known at run time
-        //!
+        //! Deallocate memory block with the size known at run time
         static void Deallocate( void* InPointer, size_t AllocateSize ) noexcept 
         {
             if( AllocateSize <= CMemoryManager_Pool1_BlockSize )
@@ -365,7 +368,6 @@ namespace SKL
 #endif
         }
 
-    private:   
         // Stats variables
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> CustomSizeAllocations   );
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> CustomSizeDeallocations );

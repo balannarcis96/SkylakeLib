@@ -170,7 +170,7 @@ namespace SKL
         }
 
         LPFN_ACCEPTEX AcceptExPtr { Win32_AcquireAcceptEx( NewSocket ) };
-        if( nullptr == AcceptEx )
+        if( nullptr == AcceptExPtr )
         {
             SKL_ERR_FMT( "TCPAccepter::StartAcceptingAsync() Failed acquire AcceptEx on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
             CloseSocket();
@@ -279,7 +279,7 @@ namespace SKL
         {
             SKL_ERR_FMT( "TCPAccepter::BeginAcceptAsync() Failed to AcceptEx WSAError:%d!", WSAGetLastError() );
             closesocket( AcceptSocket );
-            TSharedPtr<AsyncAcceptTask>::DestroyRefStatic( NewAsyncAcceptTask );
+            TSharedPtr<AsyncAcceptTask>::Static_Reset( NewAsyncAcceptTask );
             return false;
         }
 
@@ -744,6 +744,30 @@ namespace SKL
         OutBuffer [ result ] = '\0';
 
         return true;
+    }
+
+    size_t GetL1CacheLineSize() noexcept
+    {
+        //source: https://github.com/NickStrupat/CacheLineSize/blob/master/CacheLineSize.c
+
+        size_t lineSize = 0;
+	    DWORD bufferSize = 0;
+	    DWORD i = 0;
+	    SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
+
+	    GetLogicalProcessorInformation(0, &bufferSize);
+	    buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) malloc(bufferSize);
+	    GetLogicalProcessorInformation(&buffer[0], &bufferSize);
+
+	    for (i = 0; i != bufferSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+		    if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+			    lineSize = buffer[i].Cache.LineSize;
+			    break;
+		    }
+	    }
+
+	    free(buffer);
+	    return lineSize;
     }
 }
 

@@ -19,10 +19,29 @@
 namespace SKL
 {
 	template<typename T>
+	SKL_FORCEINLINE constexpr void GDestruct( T* Ptr ) noexcept
+	{
+		Ptr->~T( );
+	}
+
+	template<typename T>
 	SKL_FORCEINLINE constexpr void GDestructNothrow( T* Ptr ) noexcept
 	{
 		static_assert( std::is_nothrow_destructible_v<T>, "T::~T() must be noexcept!" );
 		Ptr->~T( );
+	}
+
+	template<typename T, typename ...TArgs>
+	SKL_FORCEINLINE constexpr void GConstruct( void* Ptr, TArgs... Args ) noexcept
+	{
+		if constexpr( sizeof...( TArgs ) == 0 )
+		{
+			new ( Ptr ) T();
+		}
+		else
+		{
+			new ( Ptr ) T( std::forward<TArgs>( Args )... );
+		}
 	}
 
 	template<typename T, typename ...TArgs>
@@ -45,5 +64,7 @@ namespace SKL
 
 #include "ObjectPool.h"
 #include "MemoryManagement.h"
+
+#include "MemoryPolicy.h"
 #include "SharedPointer.h"
 #include "AllocationStrategies.h"

@@ -1,11 +1,20 @@
 cmake_minimum_required (VERSION 3.8)
 project ("SkylakeLib_repo" VERSION 1.0.0)
 
-option(SKL_BUILD_TESTS            "Build tests"                         ON)  
-option(SKL_DISABLE_EXCEPTIONS     "Disable exceptions[Recommended]!"    ON)   
-option(SKL_BUILD_SHIPPING         "Build for shipping"                 OFF) 
-option(SKL_MEMORY_STATISTICS      "Enable memory statistics"            ON) 
-option(SKL_NO_ASSERTS             "Disabled all runtime asserts"       OFF) 
+set(SKL_CACHE_LINE_MEM_MANAGER_DESC "Allign all memory blocks inside the MemoryManager to the cache line, removing any possiblity of false sharing between memory blocks in the MemoryManager at the cost of more memory consumtion" )
+
+option(SKL_BUILD_TESTS            "Build tests"                          ON)  
+option(SKL_DISABLE_EXCEPTIONS     "Disable exceptions[Recommended]!"     ON)   
+option(SKL_BUILD_SHIPPING         "Build for shipping"                  OFF) 
+option(SKL_MEMORY_STATISTICS      "Enable memory statistics"             ON) 
+option(SKL_NO_ASSERTS             "Disabled all runtime asserts"        OFF) 
+option(SKL_GUARD_ALLOC_SIZE       "Cap allocation sizes to a max value"  ON)
+option(SKL_CACHE_LINE_MEM_MANAGER "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
+
+#SKL_L1_CACHE_LINE_SIZE
+set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
+set(SKL_L1_CACHE_LINE_SIZE 64bytes CACHE STRING "Expected L1 cache line size")
+set_property(CACHE SKL_L1_CACHE_LINE_SIZE PROPERTY STRINGS ${SKL_L1_CACHE_LINE_SIZE_OPTIONS})
 
 #SKL_BUILD_TYPE
 set(SKL_BUILD_TYPE_OPTIONS Full HeaderOnly)
@@ -53,6 +62,15 @@ else()
     message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
 endif()
 
+message("Expected L1 cache size is ${SKL_L1_CACHE_LINE_SIZE}!")
+if(SKL_L1_CACHE_LINE_SIZE STREQUAL "64bytes")
+    add_compile_definitions(SKL_L1_CACHE_LINE_64)
+elseif(SKL_L1_CACHE_LINE_SIZE STREQUAL "128bytes")
+    add_compile_definitions(SKL_L1_CACHE_LINE_128)
+elseif(SKL_L1_CACHE_LINE_SIZE STREQUAL "512bytes")
+    add_compile_definitions(SKL_L1_CACHE_LINE_512)
+endif()
+
 if(SKL_BUILD_OS STREQUAL "Win64")
     add_compile_definitions(SKL_BUILD_WINDOWS)
     message("Building for Windows 64bit!")
@@ -74,6 +92,14 @@ endif()
 
 if(SKL_NO_ASSERTS)
     add_compile_definitions(SKL_NO_ASSERTS)
+endif()
+
+if(SKL_GUARD_ALLOC_SIZE)
+    add_compile_definitions(SKL_GUARD_ALLOC_SIZE)
+endif()
+
+if(SKL_CACHE_LINE_MEM_MANAGER)
+    add_compile_definitions(SKL_CACHE_LINE_MEM_MANAGER)
 endif()
 
 if(SKL_DISABLE_EXCEPTIONS)

@@ -9,112 +9,151 @@
 
 namespace SKL
 {
-    namespace DeallocationStrategy
-    {
-        template<typename T>
-        struct DeconstructAndDeallocateStrategy
-        {
-            SKL_FORCEINLINE void operator()( T* InPtr ) const noexcept
-            {
-                GDestructNothrow<T>( InPtr );                  
-                MemoryManager::Deallocate<sizeof( T )>( InPtr );
-            }
-        };
-
-        template<typename T>
-        struct JustDeallocateStrategy
-        {
-            SKL_FORCEINLINE void operator()( T* InPtr ) const noexcept
-            {
-                MemoryManager::Deallocate<sizeof( T )>( InPtr );
-            }
-        };
-    }
+    template<typename T>
+    using skl_unique_ptr = std::unique_ptr<T, typename SKL::MemoryStrategy::UniqueMemoryStrategy<T>::DestructDeallocator>;
 
     template<typename T>
-    using skl_unique_ptr = std::unique_ptr<T, DeallocationStrategy::DeconstructAndDeallocateStrategy<T>>;
+    using skl_unique_nd_ptr = std::unique_ptr<T, typename SKL::MemoryStrategy::UniqueMemoryStrategy<T>::Deallocator>;
 
-    template<typename T>
-    using skl_unique_nd_ptr = std::unique_ptr<T, DeallocationStrategy::JustDeallocateStrategy<T>>;
-
-    //!
-    //! \brief Allocate new unique object through the MemoryManager
-    //!
+    //! Allocate new unique object through the MemoryManager
     template<typename TObject, typename ...TArgs>
     skl_unique_ptr<TObject> MakeUnique( TArgs... Args ) noexcept 
     {
-        TObject* Result { nullptr };
-
-        MemoryManager::AllocResult AllocationResult = MemoryManager::Allocate<sizeof(TObject)>();
-        if( true == AllocationResult.IsValid() ) SKL_LIKELY
-        {
-            GConstructNothrow<TObject>( AllocationResult.MemoryBlock, std::forward<TArgs>( Args )... );
-            Result = reinterpret_cast<TObject*>( AllocationResult.MemoryBlock );
-        }
-
-        return skl_unique_ptr<TObject>{ Result };
+        static_assert( false == std::is_array_v<TObject>, "Please use MakeArrayUnique()" ); 
+        static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TObject>::Allocator;
+        return skl_unique_ptr<TObject>( Allocator::template AllocateObject<true, false>( std::forward<TArgs>( Args )... ) );
     }
 
     //!
     //! \brief Allocate new unique object through the MemoryManager
     //!
-    //! \remarks Destructor will not be called when destroyed
+    //! \remarks The object will be deallocated without a call to its destructor
     //!
-    template<typename TObject, typename ...TArgs>
+    template<typename TObject, bool bConstruct = false, typename ...TArgs>
     skl_unique_nd_ptr<TObject> MakeUniqueNoDeconstruct( TArgs... Args ) noexcept 
     {
-        TObject* Result { nullptr };
+        static_assert( false == std::is_array_v<TObject>, "Please use MakeArrayUnique()" ); 
+        static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TObject>::Allocator;
+        return skl_unique_nd_ptr<TObject>{ Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... ) };
+    }
+     
+    //!
+    //! \brief Allocate new unique array of TItemType through the MemoryManager
+    //!
+    //! \remarks The array will be deallocated without a call to the destructor to the objects use MakeUniqueArrayWithDestruct<T>
+    //!
+    template<typename TItemType, bool bConstructAllItems = false>
+    skl_unique_nd_ptr<TItemType[]> MakeUniqueArrayWithNoDestruct( uint32_t ItemCount ) noexcept
+    {
+        static_assert( false == std::is_array_v<TItemType>, "Can't allocate array of arrays!" );
+        using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TItemType[]>::Allocator;
 
-        MemoryManager::AllocResult AllocationResult = MemoryManager::Allocate<sizeof(TObject)>();
-        if( true == AllocationResult.IsValid() ) SKL_LIKELY
+        if constexpr( SKL_GUARD_ALLOC_SIZE_ON )
         {
-            GConstructNothrow<TObject>( AllocationResult.MemoryBlock, std::forward<TArgs>( Args )... );
-            Result = reinterpret_cast<TObject*>( AllocationResult.MemoryBlock );
+            const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
+            if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
+            {
+                SKL_ERR_FMT( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                return skl_unique_nd_ptr<TItemType[]>();
+            }
         }
 
-        return skl_unique_nd_ptr<TObject>{ Result };
+        return skl_unique_nd_ptr<TItemType[]>{ Allocator::template AllocateArray<bConstructAllItems, false>( ItemCount ) };
     }
     
     //!
-    //! \brief Allocate new shared object (raw ptr) through the MemoryManager
+    //! \brief Allocate a new unique array of TItemType through the MemoryManager
     //!
-    template<typename TObject, typename ...TArgs>
-    TObject* MakeSharedRaw( TArgs... Args ) noexcept 
+    //! \remarks The array will be deallocated without calling the destructor of the objects, alt use MakeUniqueArrayWithDestruct<T>
+    //!
+    template<typename TItemType, bool bConstructAllItems = true>
+    SKL_FORCEINLINE skl_unique_ptr<TItemType[]> MakeUniqueArray( uint32_t ItemCount ) noexcept
     {
-        using TResultType                  = TSharedPtr<TObject>;
-        using TControlBlock                = ControlBlock;
-        constexpr size_t CControlBlockSize = sizeof( TControlBlock );
-        static_assert( sizeof( TControlBlock ) % 8 == 0 );
-        constexpr size_t ToAllocateSize = sizeof( TControlBlock ) + sizeof( TObject );
+        static_assert( false == std::is_array_v<TItemType>, "Can't allocate array of arrays!" );
+        using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TItemType[]>::Allocator;
 
-        TObject* Result { nullptr };
-
-        auto AllocationResult { MemoryManager::Allocate<ToAllocateSize>() };
-        if( true == AllocationResult.IsValid() ) SKL_LIKELY
+        if constexpr( SKL_GUARD_ALLOC_SIZE_ON )
         {
-            //Construct the control block
-            GConstructNothrow<TControlBlock>( 
-                  AllocationResult.MemoryBlock
-                , 1 //Start Reference count
-                , static_cast<uint32_t>( AllocationResult.MemoryBlockSize ) );
-
-            //Construct the object
-            GConstructNothrow<TObject>( 
-                    reinterpret_cast<uint8_t*>( AllocationResult.MemoryBlock ) + sizeof( TControlBlock )
-                  , std::forward<TArgs>( Args )... );
-
-            Result = reinterpret_cast<TObject*>( reinterpret_cast<uint8_t*>( AllocationResult.MemoryBlock ) + sizeof( TControlBlock ) );
+            const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
+            if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
+            {
+                SKL_ERR_FMT( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                return skl_unique_ptr<TItemType[]>();
+            }
         }
 
-        return Result;
+        return skl_unique_ptr<TItemType[]>{ Allocator::template AllocateArray<bConstructAllItems, false>( ItemCount ) };
+    }
+}
+
+namespace SKL
+{
+    //! Allocate new shared object (raw ptr) through the MemoryManager
+    template<typename TObject, bool bConstruct = true, typename ...TArgs>
+    SKL_FORCEINLINE TObject* MakeSharedRaw( TArgs... Args ) noexcept 
+    {
+        static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArrayRaw()" ); 
+        static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        using Allocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::Allocator;
+        return Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... );
+    }
+
+    //! Allocate new shared object through the MemoryManager
+    template<typename TObject, typename ...TArgs>
+    SKL_FORCEINLINE TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
+    {
+        static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArray()" ); 
+        return { MakeSharedRaw<TObject>( std::forward<TArgs>( Args )... ) };
     }
 
     //!
     //! \brief Allocate new shared object through the MemoryManager
     //!
-    template<typename TObject, typename ...TArgs>
-    SKL_FORCEINLINE TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
+    //! \remarks The object will be deallocated without a call to its destructor
+    //!
+    template<typename TObject, bool bConstruct = false, typename ...TArgs>
+    SKL_FORCEINLINE TSharedPtrNoDestruct<TObject> MakeSharedNoDestruct( TArgs... Args ) noexcept 
     {
-        return { MakeSharedRaw<TObject>( std::forward<TArgs>( Args )... ) };
+        static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArray()" ); 
+        return { MakeSharedRaw<TObject, bConstruct>( std::forward<TArgs>( Args )... ) };
+    }
+
+    template<typename TItemType, bool bConstructAllItems = true>
+    SKL_FORCEINLINE TItemType* MakeSharedArrayRaw( uint32_t ItemCount ) noexcept
+    {
+        static_assert( false == std::is_array_v<TItemType>, "Cannot allocate array of arrays" ); 
+        using Allocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TItemType[]>::Allocator;
+        
+        if constexpr( SKL_GUARD_ALLOC_SIZE_ON )
+        {
+            const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
+            if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
+            {
+                SKL_ERR_FMT( "MakeSharedArrayRaw<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                return nullptr;
+            }
+        }
+
+        return Allocator::template AllocateArray<bConstructAllItems, false>( ItemCount );
+    }
+
+    //! Allocate new shared object through the MemoryManager
+    template<typename TItemType, bool bConstructAllItems = true>
+    SKL_FORCEINLINE TSharedPtr<TItemType[]> MakeSharedArray( uint32_t ItemCount ) noexcept 
+    {
+        return { MakeSharedArrayRaw<TItemType, bConstructAllItems>( ItemCount ) };
+    }
+
+    //!
+    //! \brief Allocate new shared object through the MemoryManager
+    //!
+    //! \remarks The object will be deallocated without a call to its destructor
+    //!
+    template<typename TItemType, bool bConstructAllItems = false>
+    SKL_FORCEINLINE TSharedPtrNoDestruct<TItemType[]> MakeSharedArrayNoDestruct( uint32_t ItemCount ) noexcept 
+    {
+        return { MakeSharedArrayRaw<TItemType, bConstructAllItems>( ItemCount ) };
     }
 }

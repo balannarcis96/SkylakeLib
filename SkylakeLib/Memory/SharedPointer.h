@@ -9,85 +9,36 @@
 
 namespace SKL
 {
-    struct ControlBlock
-    {
-        ControlBlock( uint32_t ReferenceCount, uint32_t BlockSize ) noexcept 
-            : ReferenceCount{ ReferenceCount },
-              BlockSize{ BlockSize } 
-        {}
-
-        /**
-         * \brief Adds 1 to the reference count of this instance.
-         * \remarks Only call this function while holding a valid reference to this instance.
-         */
-        SKL_FORCEINLINE void AddReference() noexcept
-        {
-            int32_t RefCountValue = ReferenceCount.load( std::memory_order_relaxed );
-            while( false == std::atomic_compare_exchange_strong_explicit( &ReferenceCount, &RefCountValue, RefCountValue + 1, std::memory_order_release, std::memory_order_relaxed ) )
-            { }
-        }
-
-        SKL_FORCEINLINE void ReleaseReferenceChecked() noexcept
-        {
-            ( void )--ReferenceCount;
-        }
-
-        SKL_FORCEINLINE bool ReleaseReference() noexcept
-        {
-            return 0 == --ReferenceCount;
-        }
-
-        std::atomic<int32_t>  ReferenceCount { 0 };
-        const uint32_t        BlockSize      { 0 };
-    };
-
-    template<typename TObject, bool bDeconstruct = true>
+    template<typename TObject, typename TDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::DestructDeallocator>
     struct TSharedPtr
     {
-        TSharedPtr() noexcept : Pointer { nullptr } {}
-
-        TSharedPtr( TObject* InPointer ) noexcept : Pointer{ InPointer } {}
+        using TObjectDecay          = std::remove_all_extents_t<TObject>;
+        using element_type          = TObjectDecay;
+        using MemoryPolicy          = typename TDeallocator::MyMemoryPolicy;
+        using MyMemoryPolicyApplier = typename TDeallocator::MyMemoryPolicyApplier;
         
-        TSharedPtr( const TSharedPtr& Other ) noexcept : Pointer{ Other.Pointer }
-        {
-            if( nullptr != Other.Pointer ) SKL_LIKELY
-            {
-                auto& CBlock { GetControlBlock() };
-                CBlock.AddReference();
-            }
-        }
-
-        TSharedPtr( TSharedPtr&& Other ) noexcept : Pointer{ Other.Pointer }
-        {
-            Other.Pointer = nullptr;
-        }
-
+        TSharedPtr() noexcept : Pointer { nullptr } {}
+        TSharedPtr( TObjectDecay* InPointer ) noexcept : Pointer{ InPointer } {}
+        TSharedPtr( const TSharedPtr& Other ) noexcept : Pointer{ Other.Pointer } { if( nullptr != Pointer ){ Static_IncrementReference( Pointer ); } }
+        TSharedPtr( TSharedPtr&& Other ) noexcept : Pointer{ Other.Pointer } { Other.Pointer = nullptr; }
         TSharedPtr& operator=( const TSharedPtr& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             
-            // Release the potention held ref
-            ReleaseResource();
+            // Release the potentialy held ref
+            reset();
     
-            // Copy the object pointer
-            Pointer = Other.Pointer;
-            
-            //Increment reference count if possible
-            if( nullptr != Other.Pointer ) SKL_LIKELY
-            {
-                auto& CBlock { GetControlBlock() };
-                CBlock.AddReference();   
-            }
-        
+            // Copy the object pointer and increment ref if possible
+            Pointer = Other.NewRefRaw();
+
             return *this;
         }
-
         TSharedPtr& operator=( TSharedPtr&& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             
-            // Release the potention held ref
-            ReleaseResource();
+            // Release the potentialy held ref
+            reset();
     
             // Copy the object pointer
             Pointer = Other.Pointer;
@@ -97,107 +48,99 @@ namespace SKL
         
             return *this;
         }
-
         ~TSharedPtr() noexcept 
         {
-            ReleaseResource();
+            reset();
         }
 
-        ControlBlock& GetControlBlock() noexcept
+        // stl compatible API
+        SKL_FORCEINLINE          TObjectDecay* get()                              noexcept { return Pointer; }
+        SKL_FORCEINLINE const    TObjectDecay* get()                        const noexcept { return Pointer; }
+        SKL_FORCEINLINE          TObjectDecay* operator->()                       noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
+        SKL_FORCEINLINE const    TObjectDecay* operator->()                 const noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
+        SKL_FORCEINLINE          TObjectDecay& operator*()                        noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
+        SKL_FORCEINLINE const    TObjectDecay& operator*()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
+        SKL_FORCEINLINE          size_t        use_count()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return static_cast<size_t>( Static_GetReferenceCount( Pointer ) ); }
+        SKL_FORCEINLINE explicit               operator bool()              const noexcept { return nullptr != Pointer; }
+        SKL_FORCEINLINE          void          reset()                            noexcept { if( nullptr != Pointer ) SKL_LIKELY { Static_Reset( Pointer ); Pointer = nullptr;  } }
+        SKL_FORCEINLINE          TObjectDecay& operator[]( uint32_t Index )       noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        SKL_FORCEINLINE const    TObjectDecay& operator[]( uint32_t Index ) const noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        
+        template<typename TNewObject, typename TNewDeallocator = TDeallocator>
+        SKL_FORCEINLINE TSharedPtr<TNewObject, TNewDeallocator> CastTo() noexcept
         {
-            static_assert( sizeof( ControlBlock ) % 8 == 0 );
-
-            return *reinterpret_cast<ControlBlock*>(
-                reinterpret_cast<uint8_t*>( Pointer ) - sizeof( ControlBlock )
-            );
-        }
-
-        const ControlBlock& GetControlBlock() const noexcept
-        {
-            static_assert( sizeof( ControlBlock ) % 8 == 0 );
-
-            return *reinterpret_cast<const ControlBlock*>(
-                reinterpret_cast<const uint8_t*>( Pointer ) - sizeof( ControlBlock )
-            );
-        }
-
-        TObject* GetPointer() noexcept { return Pointer; }
-        const TObject* GetPointer() const noexcept { return Pointer; }
-
-        // std compatible API
-        TObject* get() noexcept { return Pointer; }
-
-        TObject* operator->() noexcept { return Pointer; }
-        const TObject* operator->() const noexcept { return Pointer; }
-
-        size_t use_count() const noexcept { return static_cast<size_t>( GetControlBlock().ReferenceCount.load( std::memory_order_relaxed ) ); }
-
-        explicit operator bool() const noexcept { return nullptr != Pointer; }
-
-        template<typename T>
-        TSharedPtr<T> CastTo() noexcept
-        {
-            return { reinterpret_cast<T*>( NewRefRaw() ) };
+            if constexpr( std::is_class_v<TNewObject> )
+            {
+                return { static_cast<TNewObject*>( NewRefRaw() ) };
+            }
+            else
+            {
+                return { reinterpret_cast<TNewObject*>( NewRefRaw() ) };
+            }
         }    
-
-        template<typename T>
-        TSharedPtr<T> CastMoveTo() noexcept
+        template<typename TNewObject, typename TNewDeallocator = TDeallocator>
+        SKL_FORCEINLINE TSharedPtr<TNewObject, TNewDeallocator> CastMoveTo() noexcept
         {
-            T* Result { reinterpret_cast<T*>( Pointer ) };
+            TNewObject* Result;
+
+            if constexpr( std::is_class_v<TNewObject> )
+            {
+                Result = static_cast<TNewObject*>( NewRefRaw() );
+            }
+            else
+            {
+                Result = reinterpret_cast<TNewObject*>( NewRefRaw() );
+            }
 
             Pointer = nullptr;
 
             return { Result };
         }    
-
     
-        static ControlBlock& GetControlBlockStatic( TObject* InPtr ) noexcept
+        SKL_FORCEINLINE static void     Static_Reset( TObjectDecay* InPtr ) noexcept
         {
-            static_assert( sizeof( ControlBlock ) % 8 == 0 );
-
-            return *reinterpret_cast<ControlBlock*>(
-                reinterpret_cast<uint8_t*>( InPtr ) - sizeof( ControlBlock )
-            );
+            TDeallocator::Deallocate( InPtr );
         }
-
-        static void DestroyRefStatic( TObject* InPtr ) noexcept
+        
+        SKL_FORCEINLINE static uint32_t Static_GetReferenceCount( TObjectDecay* InPtr ) noexcept
         {
-            auto& ControllBlock { GetControlBlockStatic( InPtr ) };
+            if constexpr( std::is_array_v<TObject> )
+            {
+                return MemoryPolicy::GetReferenceCountForArray( InPtr );
+            }
+            else
+            {
+                return MemoryPolicy::GetReferenceCountForObject( InPtr );
+            }
+        }
+        SKL_FORCEINLINE static void     Static_IncrementReference( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != Pointer );
 
-            //Decrement reference count and deallocate if needed
-            if ( true == ControllBlock.ReleaseReference() )
-            {   
-                if constexpr( true == bDeconstruct )
-                {
-                    GDestructNothrow<TObject>( InPtr );                
-                }
-
-                MemoryManager::Deallocate( &ControllBlock, ControllBlock.BlockSize );
+            if constexpr( std::is_array_v<TObject> )
+            {
+                MemoryPolicy::IncrementReferenceForArray( InPtr );
+            }
+            else
+            {
+                MemoryPolicy::IncrementReferenceForObject( InPtr );
             }
         }
 
-    private:
-        TObject* NewRefRaw() noexcept
+        TObjectDecay* NewRefRaw() noexcept
         {
-            //Increment reference count
-            auto& CBlock { GetControlBlock() };
-            CBlock.AddReference();
+            if( Pointer != nullptr )
+            {
+                Static_IncrementReference( Pointer );
+            }
 
             return Pointer;  
         }
 
-        void ReleaseResource() noexcept
-        {
-            if( nullptr != Pointer ) SKL_LIKELY
-            {
-                DestroyRefStatic( Pointer );
-                Pointer = nullptr;
-            }
-        }
-
-        TObject* Pointer { nullptr };
-    
-        template<typename TObject, typename ...TArgs>
-        friend TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept;
+    private:
+        TObjectDecay* Pointer { nullptr };
     };
+
+    template<typename TObject>
+    using TSharedPtrNoDestruct = TSharedPtr<TObject, typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::Deallocator>;
 }
