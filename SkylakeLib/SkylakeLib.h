@@ -14,6 +14,17 @@
 namespace SKL
 {
     struct IAsyncIOTask;
+    class ServerInstance;
+
+    union ServerInstanceFlags
+    {
+        struct
+        {
+            uint8_t bAllGroupsAreActive: 1;
+            uint8_t bSupportsDelayedTasks: 1;
+        };   
+        uint32_t Flags{ 0 };
+    };
 }
 
 //! Std
@@ -45,6 +56,12 @@ namespace SKL
 
 //! Networking
 #include "Networking/Networking.h"
+
+//! AOD
+#include "AOD/AOD.h"
+
+//! Application
+#include "Application/Application.h"
 
 namespace SKL
 {

@@ -5,9 +5,8 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-#pragma once
 
-#include <SkylakeLib.h>
+#include "SkylakeLib.h"
 
 namespace SKL
 {

@@ -22,7 +22,9 @@ namespace SKL
         ITLSSingleton( ITLSSingleton && ) noexcept = default;
         ITLSSingleton &operator=( ITLSSingleton && ) noexcept = default;
 
-        static RStatus Create( ) noexcept
+        //Create the object instance for the calling thread, must call Destroy() when not needed anymore
+        template<typename ...TArgs>
+        static RStatus Create( TArgs... Args ) noexcept
         {
             auto *NewObject = new TUpper( );
             if( !NewObject )
@@ -30,7 +32,7 @@ namespace SKL
                 return RStatus::AllocationFailed;
             }
 
-            if( const auto InitializeResult = NewObject->Initialize( ); InitializeResult != RSuccess )
+            if( const auto InitializeResult = NewObject->Initialize( std::forward<TArgs>( Args )... ); InitializeResult != RSuccess )
             {
                 return InitializeResult;
             }
@@ -59,7 +61,7 @@ namespace SKL
             TLSSingletonType::SetValuePtr( nullptr );
         }
 
-        virtual RStatus Initialize( ) noexcept = 0;
+        virtual RStatus Initialize( ) noexcept { return RSuccess; }
 
         virtual const char *GetName( ) const noexcept = 0;
     };

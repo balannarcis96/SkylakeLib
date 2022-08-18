@@ -129,8 +129,8 @@ namespace SKL
 //Memory Manager
 namespace SKL
 {
-    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> MemoryManager::CustomSizeAllocations  { 0 } );
-    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> MemoryManager::CustomSizeDeallocations{ 0 } );
-    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> MemoryManager::TotalAllocations       { 0 } );
-    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> MemoryManager::TotalDeallocations     { 0 } );
+    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::CustomSizeAllocations  { 0 } );
+    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::CustomSizeDeallocations{ 0 } );
+    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::TotalAllocations       { 0 } );
+    SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::TotalDeallocations     { 0 } );
 }

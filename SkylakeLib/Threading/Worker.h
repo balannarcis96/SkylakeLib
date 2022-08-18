@@ -62,6 +62,6 @@ namespace SKL
         WorkerGroup*                        Group              { nullptr }; //!< Owning group of this worker
 
         friend WorkerGroup;
-        friend WorkerGroupManager;    
+        friend class ServerInstance;    
     };  
 }

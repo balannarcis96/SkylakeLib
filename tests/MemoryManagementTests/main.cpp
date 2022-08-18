@@ -20,20 +20,20 @@ namespace MManagementTests
 
     TEST( MManagementTests, Init )
     {
-        //SKL::MemoryManager::Preallocate();
-        //SKL::MemoryManager::LogStatistics();
+        //SKL::SkylakeGlobalMemoryManager::Preallocate();
+        //SKL::SkylakeGlobalMemoryManager::LogStatistics();
         
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
-        auto AllocResult = SKL::MemoryManager::Allocate<24>();
+        auto AllocResult = SKL::SkylakeGlobalMemoryManager::Allocate<24>();
         ASSERT_TRUE( true == AllocResult.IsValid() );
 
-        SKL::MemoryManager::Deallocate( AllocResult );
+        SKL::SkylakeGlobalMemoryManager::Deallocate( AllocResult );
         ASSERT_TRUE( false == AllocResult.IsValid() );
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
@@ -42,8 +42,8 @@ namespace MManagementTests
     {
         int b = 5;
     
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto UniqueItem = SKL::MakeUnique<MyType>( &b );
@@ -51,8 +51,8 @@ namespace MManagementTests
             ASSERT_TRUE( 5 == *UniqueItem->a );
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
@@ -63,8 +63,8 @@ namespace MManagementTests
     {
         int b = 5;
     
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto UniqueItem = SKL::MakeUniqueNoDeconstruct<MyType>( &b );
@@ -72,8 +72,8 @@ namespace MManagementTests
             //ASSERT_TRUE( 5 == *UniqueItem->a );
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
@@ -82,8 +82,8 @@ namespace MManagementTests
 
     TEST( MManagementTests, MakeUniqueArray )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto UniqueItem = SKL::MakeUniqueArray<MyType>( 32 );
@@ -95,16 +95,16 @@ namespace MManagementTests
             }
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
     TEST( MManagementTests, MakeUniqueArrayWithNoDestructAndConstruct )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto UniqueItem = SKL::MakeUniqueArrayWithNoDestruct<MyType>( 32 );
@@ -116,16 +116,16 @@ namespace MManagementTests
             }*/
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
     TEST( MManagementTests, MakeUniqueArrayWithNoDestructButConstruct )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto UniqueItem = SKL::MakeUniqueArrayWithNoDestruct<MyType, true>( 32 );
@@ -137,8 +137,8 @@ namespace MManagementTests
             }
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
@@ -147,8 +147,8 @@ namespace MManagementTests
     {
         int b = 5;
      
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedItem = SKL::MakeShared<MyType>( &b );
@@ -173,8 +173,8 @@ namespace MManagementTests
             ASSERT_TRUE( 1 == SharedItem.use_count() );
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
@@ -185,8 +185,8 @@ namespace MManagementTests
     {
         int b = 5;
      
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedItem = SKL::MakeSharedNoDestruct<MyType>( &b );
@@ -211,8 +211,8 @@ namespace MManagementTests
             ASSERT_TRUE( 1 == SharedItem.use_count() );
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
@@ -223,8 +223,8 @@ namespace MManagementTests
     {
         int b = 5;
      
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedItem = SKL::MakeSharedNoDestruct<MyType, true>( &b );
@@ -249,8 +249,8 @@ namespace MManagementTests
             ASSERT_TRUE( 1 == SharedItem.use_count() );
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
@@ -259,8 +259,8 @@ namespace MManagementTests
 
     TEST( MManagementTests, MakeSharedArray )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedArray = SKL::MakeSharedArray<MyType>( 32 );
@@ -272,16 +272,16 @@ namespace MManagementTests
             }
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
     TEST( MManagementTests, MakeSharedArrayNoDestructAndConstruct )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedArray = SKL::MakeSharedArrayNoDestruct<MyType>( 32 );
@@ -294,16 +294,16 @@ namespace MManagementTests
             }*/
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
     TEST( MManagementTests, MakeSharedArrayNoDestructButWithConstruct )
     {
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
             auto SharedArray = SKL::MakeSharedArrayNoDestruct<MyType, true>( 32 );
@@ -316,8 +316,8 @@ namespace MManagementTests
             }
         }
 
-        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::MemoryManager::TotalAllocations );
-        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::MemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }

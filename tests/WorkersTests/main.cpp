@@ -14,29 +14,35 @@ namespace WorkersTests
     {
         SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr );
 
-        SKL::WorkerGroupManager Manager;
+        SKL::ServerInstance Manager;
 
-        SKL::ApplicationWorkersConfig Config { L"TEST_APPLICATION" };
+        SKL::ServerInstanceConfig::ServerInstanceConfig Config { L"TEST_APPLICATION" };
 
-        SKL::ApplicationWorkerGroupConfig Group1
+        SKL::ServerInstanceConfig::WorkerGroupConfig Group1
         {
             SKL::WorkerGroupTag 
             {
-                .TickRate         = 5, 
-                .SyncTLSTickRate  = 0,
-                .Id               = 1,
-                .WorkersCount     = 1,
-                .bIsActive        = true,
-                .bHandlesTasks    = true,
-                .bSupportsTLSSync = false,
-                .Name             = L"FRONT_END_GROUP"
+                .TickRate                        = 5, 
+                .SyncTLSTickRate                 = 0,
+                .Id                              = 1,
+                .WorkersCount                    = 1,
+                .bIsActive                       = true,
+                .bHandlesTasks                   = true,
+                .bSupportsTLSSync                = false,
+                .bHasThreadLocalMemoryManager    = false,
+                .bPreallocateAllThreadLocalPools = false,
+                .bSupportsAOD                    = false,
+                .bSupportesTCPAsyncAcceptors     = false,
+                .Name                            = L"FRONT_END_GROUP"
             }
         };
+        ASSERT_TRUE( true == Group1.Validate() );
 
         using TT = ASD::CopyFunctorWrapper<16, void(*)(void)> ;        
 
-        Group1.SetWorkerStartHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void {
+        Group1.SetWorkerStartHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> bool {
             SKL_INF( "Worker Group1 WORKER STARTED!" );
+            return true;
         } ); 
 
         Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
@@ -45,7 +51,7 @@ namespace WorkersTests
 
             if( Worker.GetAliveTime() < 1000 )
             {
-                return;
+                return ;
             }
 
             Manager.GetWorkerGroupById( 2 )->Deferre( [ &Manager ]() noexcept {
@@ -54,10 +60,12 @@ namespace WorkersTests
             } );
             
             TCLOCK_SLEEP_FOR_MILLIS( 50 );
+
+            return ;
         } );
         Config.AddNewGroup( std::move( Group1 ) );
 
-        SKL::ApplicationWorkerGroupConfig Group2
+        SKL::ServerInstanceConfig::WorkerGroupConfig Group2
         {
             SKL::WorkerGroupTag 
             {
@@ -88,7 +96,7 @@ namespace WorkersTests
         ASSERT_TRUE( nullptr != QueryResult.get() );
         ASSERT_TRUE( 2 == QueryResult->GetTag().Id );
 
-        Manager.StartRunningWithCallingThreadAsMaster();
+        Manager.StartServer();
     
         SKL::Skylake_TerminateLibrary();
     }

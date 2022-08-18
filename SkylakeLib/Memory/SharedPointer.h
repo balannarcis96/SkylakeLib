@@ -1,7 +1,7 @@
 //!
-//! \file Memory.h
+//! \file SharedPointer.h
 //! 
-//! \brief Shared pointer abstraction for SkylakeLib to be used with the MemoryManager
+//! \brief Shared pointer abstraction for SkylakeLib
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -97,13 +97,27 @@ namespace SKL
             return { Result };
         }    
     
+        //! 
+        //! Reset the shared reference for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
         SKL_FORCEINLINE static void     Static_Reset( TObjectDecay* InPtr ) noexcept
         {
+            SKL_ASSERT( nullptr != InPtr );
+
             TDeallocator::Deallocate( InPtr );
         }
         
+        //! 
+        //! Get the reference count for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
         SKL_FORCEINLINE static uint32_t Static_GetReferenceCount( TObjectDecay* InPtr ) noexcept
         {
+            SKL_ASSERT( nullptr != InPtr );
+
             if constexpr( std::is_array_v<TObject> )
             {
                 return MemoryPolicy::GetReferenceCountForArray( InPtr );
@@ -113,6 +127,12 @@ namespace SKL
                 return MemoryPolicy::GetReferenceCountForObject( InPtr );
             }
         }
+
+        //! 
+        //! Increment the reference count for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
         SKL_FORCEINLINE static void     Static_IncrementReference( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != Pointer );

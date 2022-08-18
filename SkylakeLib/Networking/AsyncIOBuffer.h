@@ -62,7 +62,7 @@ namespace SKL
         }
 
         //! Cast self to Os opaque type
-        ASD_FORCEINLINE AsyncIOOpaqueType* ToOSOpaquieObject() noexcept
+        ASD_FORCEINLINE AsyncIOOpaqueType* ToOSOpaqueObject() noexcept
         {
             return reinterpret_cast<AsyncIOOpaqueType*>( this );
         }

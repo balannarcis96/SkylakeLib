@@ -10,5 +10,5 @@ add_subdirectory(TaskTests)
 add_subdirectory(ObjectPoolTests)
 add_subdirectory(MemoryManagementTests)
 add_subdirectory(WorkersTests)
-
+add_subdirectory(TCPAcceptorTests)
 

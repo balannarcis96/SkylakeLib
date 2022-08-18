@@ -1,5 +1,5 @@
 //!
-//! \file AllocationPolicy.h
+//! \file MemoryPolicy.h
 //! 
 //! \brief Global allocation policies
 //! 
@@ -565,12 +565,12 @@ namespace SKL::MemoryDeallocation
             if constexpr( true == std::is_array_v<TObject> )
             {
                 auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
-                MemoryManager::Deallocate( Result.first, Result.second );
+                GlobalMemoryManager::Deallocate( Result.first, Result.second );
             }
             else
             {
                 auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
-                MemoryManager::Deallocate<sizeof( TObject )>( Result );
+                GlobalMemoryManager::Deallocate<sizeof( TObject )>( Result );
             }
         }
     };
@@ -595,7 +595,7 @@ namespace SKL::MemoryDeallocation
                 auto Result{ MyMemoryPolicyApplier::TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result.first )
                 {
-                    MemoryManager::Deallocate( Result.first, Result.second );
+                    GlobalMemoryManager::Deallocate( Result.first, Result.second );
                 }
             }
             else
@@ -603,7 +603,7 @@ namespace SKL::MemoryDeallocation
                 auto Result{ MyMemoryPolicyApplier::TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result )
                 {
-                    MemoryManager::Deallocate( Result, sizeof( TObject ) );
+                    GlobalMemoryManager::Deallocate( Result, sizeof( TObject ) );
                 }
             }
         }
@@ -641,7 +641,7 @@ namespace SKL::MemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ MemoryManager::Allocate<AllocSize>() };
+            auto AllocResult{ GlobalMemoryManager::Allocate<AllocSize>() };
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
@@ -649,7 +649,7 @@ namespace SKL::MemoryAllocation
             }
             else
             {
-                SKL_ERR_FMT( "MemoryAllocator<>::AllocateObject(size:%u) Failed to allocate from MemoryManager!", AllocSize );
+                SKL_ERR_FMT( "MemoryAllocator<>::AllocateObject(size:%u) Failed to allocate from GlobalMemoryManager!", AllocSize );
                 Result = nullptr;
             }
             
@@ -664,7 +664,7 @@ namespace SKL::MemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ MemoryManager::Allocate( AllocSize ) };
+            auto AllocResult{ GlobalMemoryManager::Allocate( AllocSize ) };
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the array policy on the block
@@ -672,7 +672,7 @@ namespace SKL::MemoryAllocation
             }
             else
             {
-                SKL_ERR_FMT( "MemoryAllocator<>::AllocateObject(size:%u) Failed to allocate from MemoryManager!", AllocSize );
+                SKL_ERR_FMT( "MemoryAllocator<>::AllocateObject(size:%u) Failed to allocate from GlobalMemoryManager!", AllocSize );
                 Result = nullptr;
             }
             

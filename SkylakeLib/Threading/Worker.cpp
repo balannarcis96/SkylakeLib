@@ -5,7 +5,6 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-#pragma once
 
 #include "SkylakeLib.h"
 
@@ -44,7 +43,11 @@ namespace SKL
             StartedAt.exchange( GetSystemUpTickCount() );
         
             // notice the group
-            Group->OnWorkerStarted( *this );
+            if( false == Group->OnWorkerStarted( *this ) )
+            {
+                Group->GetServerInstance()->SignalToStop( true );
+                return;
+            }
         
             if( false == Group->IsRunning() )
             {

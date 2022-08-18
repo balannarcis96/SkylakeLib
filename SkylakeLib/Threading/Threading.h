@@ -11,9 +11,8 @@ namespace SKL
 {
     class Worker;
     class WorkerGroup;
-    class WorkerGroupManager;
+    class ServerInstance;
 }
 
 #include "Worker.h"
 #include "WorkerGroup.h"
-#include "WorkerGroupManager.h"

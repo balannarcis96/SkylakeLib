@@ -39,6 +39,27 @@ namespace SKL
     );
 
     /*------------------------------------------------------------
-        Allocation constants
+        Thread local MemoryManager
       ------------------------------------------------------------*/
+    struct ThreadLocalMemoryManagerConfig
+    {
+        static constexpr size_t  Pool1_BlockSize  = 64;                 
+        static constexpr size_t  Pool1_BlockCount = 32768;              
+        static constexpr size_t  Pool2_BlockSize  = 128;                
+        static constexpr size_t  Pool2_BlockCount = 32768;              
+        static constexpr size_t  Pool3_BlockSize  = 512;                
+        static constexpr size_t  Pool3_BlockCount = 32768;              
+        static constexpr size_t  Pool4_BlockSize  = 1024;               
+        static constexpr size_t  Pool4_BlockCount = 16384;              
+        static constexpr size_t  Pool5_BlockSize  = (1024 * 512);       
+        static constexpr size_t  Pool5_BlockCount = 8192;               
+        static constexpr size_t  Pool6_BlockSize  = ((1024 * 1024) * 2);
+        static constexpr size_t  Pool6_BlockCount = 8;         
+
+        static constexpr wchar_t PoolName[]                          = L"MainThreadLocalMemoryManager";         
+        static constexpr bool    bIsThreadSafe                       = false;
+        static constexpr bool    bUseSpinLock_Or_Atomics             = false;
+        static constexpr bool    bAlignAllMemoryBlocksToTheCacheLine = false;
+        static constexpr size_t  MaxAllocationSize                   = CMemoryManager_MaxAllocSize;
+    };
 }

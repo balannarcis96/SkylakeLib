@@ -1,7 +1,7 @@
 //!
 //! \file Log.h
 //! 
-//! \brief Simple file logging 
+//! \brief Simple logging 
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 

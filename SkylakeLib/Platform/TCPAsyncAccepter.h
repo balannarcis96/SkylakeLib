@@ -13,14 +13,14 @@ namespace SKL
     {
         using AcceptTask = ASD::CopyFunctorWrapper<32, void( SKL_CDECL* )( TSocket ) noexcept>;
 
-        //! Set the functor to be executed when a new tcp connection is successfully accepted
+        //! Set the functor to be executed when a new tcp connection is successfully accepted [void( SKL_CDECL* )( TSocket ) noexcept]
         template<typename TFunctor>
         void SetOnAcceptHandler( const TFunctor& InFunctor ) noexcept
         {
             OnAccept += InFunctor;
         }
 
-        //! Set the functor to be executed when a new tcp connection is successfully accepted
+        //! Set the functor to be executed when a new tcp connection is successfully accepted [void( SKL_CDECL* )( TSocket ) noexcept]
         void SetOnAcceptHandler( const AcceptTask& InFunctor ) noexcept
         {
             OnAccept = InFunctor;
@@ -61,10 +61,8 @@ namespace SKL
     
     private:
         void CloseSocket() noexcept;
-
         bool BindAndListen() noexcept;
-
-        bool BeginAcceptAsync() noexcept;
+        bool BeginAcceptAsync( void* InAsyncTask = nullptr ) noexcept;
 
         std::relaxed_value<TSocket>   Socket       { 0 };       //!< Socket to listen on
         std::relaxed_value<void*>     CustomHandle { nullptr }; //!< 8 bytes for custom use by specific OS implementation

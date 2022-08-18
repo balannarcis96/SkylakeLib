@@ -18,6 +18,9 @@
 
 namespace SKL
 {
+    template<size_t BlockSize>
+    using MemoryBlock = std::array<uint8_t, BlockSize>;
+
 	template<typename T>
 	SKL_FORCEINLINE constexpr void GDestruct( T* Ptr ) noexcept
 	{
@@ -62,8 +65,11 @@ namespace SKL
 	}
 }
 
-#include "ObjectPool.h"
-#include "MemoryManagement.h"
+#include "StaticObjectPool.h"
+#include "LocalObjectPool.h"
+#include "LocalMemoryManager.h"
+#include "GlobalMemoryManagement.h"
+#include "ThreadMemoryManagement.h"
 
 #include "MemoryPolicy.h"
 #include "SharedPointer.h"

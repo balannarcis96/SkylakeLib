@@ -25,6 +25,9 @@ enum class RStatus : RStatusNumericType
     , SystemTerminated                 
     , SystemFailure                    
     , SuccessAsyncIORequestCancelled   
+    , ExecutedSync
+    , NotSupported
+    , ServerInstanceFinalized
 
     , MAX
 };
@@ -52,8 +55,11 @@ constexpr RStatus RAllocationFailed                 { RStatus::AllocationFailed 
 constexpr RStatus RInvalidPoistion                  { RStatus::InvalidPoistion };
 constexpr RStatus RInvalidOffset                    { RStatus::InvalidOffset };
 constexpr RStatus RSystemTerminated                 { RStatus::SystemTerminated };
+constexpr RStatus RExecutedSync                     { RStatus::ExecutedSync };
 constexpr RStatus RSystemFailure                    { RStatus::SystemFailure };
 constexpr RStatus RSuccessAsyncIORequestCancelled   { RStatus::SuccessAsyncIORequestCancelled };
+constexpr RStatus RNotSupported                     { RStatus::NotSupported };
+constexpr RStatus RServerInstanceFinalized          { RStatus::ServerInstanceFinalized };
 
 SKL_FORCEINLINE bool operator!( const RStatus &Status ) noexcept
 {

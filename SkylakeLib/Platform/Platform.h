@@ -70,7 +70,7 @@ namespace SKL
         RStatus Stop() noexcept;
         
         //! Get the OS specific handle to the API
-        THandle GetOsHandle() const noexcept { return QueueHandle; }
+        THandle GetOsHandle() const noexcept { return QueueHandle.load_relaxed(); }
 
         //! Get the max number of threads that can access this api instance at once
         int32_t GetNumberOfThreads() const noexcept { return ThreadsCount.load_relaxed(); }
@@ -185,11 +185,20 @@ namespace SKL
         static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
     };
 
+    //Is socket valid
+    bool IsValidSocket( TSocket InSocket ) noexcept;
+
+    //Close socket
+    bool CloseSocket( TSocket InSocket ) noexcept;
+    
+    //Shutdown socket
+    bool ShutdownSocket( TSocket InSocket ) noexcept;
+
 	//Convert ip v4 address string to binary
-	inline uint32_t IPv4FromStringA( const char* InIpString )noexcept;
+	uint32_t IPv4FromStringA( const char* InIpString )noexcept;
 
 	//Convert ip v4 address wide string to binary
-	inline uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
+	uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
 
 	//UTF16 -> UTF8
 	template<size_t N>

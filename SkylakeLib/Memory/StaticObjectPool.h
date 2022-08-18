@@ -1,6 +1,6 @@
 #pragma once
 //!
-//! \file ObjectPool.h
+//! \file StaticObjectPool.h
 //! 
 //! \brief ObjectPool: Ring buffer based [thread safe?] object pool
 //!         bNoSync:

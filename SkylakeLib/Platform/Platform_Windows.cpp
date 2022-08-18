@@ -132,7 +132,7 @@ namespace SKL
             return nullptr;
         }
         
-        return nullptr;
+        return Output;
     }
 
     RStatus TCPAcceptor::StartAcceptingAsync() noexcept
@@ -169,6 +169,14 @@ namespace SKL
             return RFail;
         }
 
+        if ( RSuccess != AsyncIOAPI->AssociateToTheAPI( NewSocket ) )
+        {
+            SKL_ERR( "TCPAccepter::StartAcceptingAsync() Failed enable async io on socket!" );
+            closesocket( NewSocket );
+            Socket.exchange( 0 );
+            return RFail;
+        }
+
         LPFN_ACCEPTEX AcceptExPtr { Win32_AcquireAcceptEx( NewSocket ) };
         if( nullptr == AcceptExPtr )
         {
@@ -198,29 +206,36 @@ namespace SKL
         return RSuccess;
     }
     
-    bool TCPAcceptor::BeginAcceptAsync() noexcept
+    bool TCPAcceptor::BeginAcceptAsync( void* InAcceptTask ) noexcept
     {
-        using AsyncAcceptTask = AsyncIOBuffer<8>;
+        using AsyncAcceptTask = AsyncIOBuffer<64, 16>; // 32bytes should suffice, update otherwise
 
-        auto *NewAsyncAcceptTask = MakeSharedRaw<AsyncAcceptTask>();
-        if( nullptr == NewAsyncAcceptTask )
+        AsyncAcceptTask* AcceptTask;
+        if ( nullptr == InAcceptTask ) SKL_UNLIKELY
         {
-            SKL_VER( "TCPAccepter::BeginAcceptAsync() Failed to allocate task!" );
-            return false;
+            AcceptTask = MakeSharedRaw<AsyncAcceptTask>();
+            if( nullptr == AcceptTask ) SKL_UNLIKELY
+            {
+                SKL_VER( "TCPAccepter::BeginAcceptAsync() Failed to allocate task!" );
+                return false;
+            }
+        }
+        else
+        {
+            AcceptTask = reinterpret_cast<AsyncAcceptTask*>( InAcceptTask );
+            
+            // Increment the reference count for the reused task so it will not be destroyed
+            TSharedPtr<AsyncAcceptTask>::Static_IncrementReference( AcceptTask );
+
+            // guard
+            SKL_ASSERT( 2 == TSharedPtr<AsyncAcceptTask>::Static_GetReferenceCount( AcceptTask ) );
         }
 
+        // Allocate new tcp socket
         TSocket AcceptSocket { AllocateNewIPv4TCPSocket() };
 
-        NewAsyncAcceptTask->SetCompletionHandler( [ this, AcceptSocket ]( IAsyncIOTask& Self, uint32_t NumberOfBytesTransferred ) noexcept -> void
+        AcceptTask->SetCompletionHandler( [ this, AcceptSocket ]( IAsyncIOTask& Self, uint32_t NumberOfBytesTransferred ) noexcept -> void
         {
-            if( 0 == NumberOfBytesTransferred ) SKL_UNLIKELY
-            {
-                closesocket( AcceptSocket );
-                StopAcceptingAsync();
-                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to accept WSAError:%d!", WSAGetLastError() );
-                return;
-            }
-        
             const TSocket ListenSocket{ GetSocket() };
 
             const auto UpdateResult { setsockopt( AcceptSocket
@@ -230,29 +245,27 @@ namespace SKL
                                                 , sizeof( TSocket ) ) };
             if( SOCKET_ERROR == UpdateResult  ) SKL_UNLIKELY
             {
+                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to accept WSAError:%d!", WSAGetLastError() );
                 closesocket( AcceptSocket );
                 StopAcceptingAsync();
-                
-                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to accept WSAError:%d!", WSAGetLastError() );
                 return;        
             }
 
             if ( RSuccess != AsyncIOAPI->AssociateToTheAPI( AcceptSocket ) ) SKL_UNLIKELY
             {
+                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to associate to the AsyncIO API WSAError:%d!", WSAGetLastError() );
                 closesocket( AcceptSocket );
                 StopAcceptingAsync();
-                
-                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to associate to the AsyncIO API WSAError:%d!", WSAGetLastError() );
                 return;
             }
 
             // dispatch the accept handler
             GetConfig().OnAccept( AcceptSocket );
         
-            if ( true == IsAccepting() ) 
+            if ( true == IsAccepting() ) SKL_LIKELY
             {
                 // continue to accept
-                const auto AcceptResult { BeginAcceptAsync() };
+                const auto AcceptResult { BeginAcceptAsync( &Self ) };
                 if ( false == AcceptResult )
                 {
                     SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to start to accept again WSAError:%d!", WSAGetLastError() );
@@ -261,26 +274,32 @@ namespace SKL
             }
         } );
 
-        THandle IOCPHandle    { AsyncIOAPI->GetOsHandle() };
         auto    AcceptEx      { reinterpret_cast<LPFN_ACCEPTEX>( CustomHandle.load_relaxed() ) };
-        auto    Buffer        { NewAsyncAcceptTask->GetInterface() };
+        auto    Buffer        { AcceptTask->GetInterface() };
         DWORD   BytesReceived { 0 };
+        
+        // Prepare the opaque object
+        memset( AcceptTask->ToOSOpaqueObject(), 0, sizeof( AsyncIOOpaqueType ) );
 
         const BOOL AcceptResult { AcceptEx( Socket.load_relaxed() 
                                     , AcceptSocket
                                     , Buffer.Buffer
                                     , 0
-                                    , sizeof( sockaddr_in )
-                                    , sizeof( sockaddr_in )
+                                    , sizeof( sockaddr_in ) + 16
+                                    , sizeof( sockaddr_in ) + 16
                                     , &BytesReceived
-                                    , reinterpret_cast<OVERLAPPED*>( IOCPHandle )
+                                    , reinterpret_cast<OVERLAPPED*>( AcceptTask )
                                  ) };
         if( FALSE == AcceptResult ) SKL_UNLIKELY
         {
-            SKL_ERR_FMT( "TCPAccepter::BeginAcceptAsync() Failed to AcceptEx WSAError:%d!", WSAGetLastError() );
-            closesocket( AcceptSocket );
-            TSharedPtr<AsyncAcceptTask>::Static_Reset( NewAsyncAcceptTask );
-            return false;
+            const auto WSALastError{ WSAGetLastError() };
+            if( WSA_IO_PENDING != WSALastError ) SKL_UNLIKELY
+            {
+                SKL_ERR_FMT( "TCPAccepter::BeginAcceptAsync() Failed to AcceptEx WSAError:%d!", WSALastError );
+                closesocket( AcceptSocket );
+                TSharedPtr<AsyncAcceptTask>::Static_Reset( AcceptTask );
+                return false;
+            }
         }
 
         return true;
@@ -313,7 +332,7 @@ namespace SKL
     {
         const ::sockaddr_in Address {
             .sin_family = AF_INET,
-            .sin_port   = Config.Port,
+            .sin_port   = htons( Config.Port ),
             .sin_addr   = { .S_un = { .S_addr = Config.IpAddress } },
             .sin_zero   = { 0, 0, 0, 0, 0, 0, 0, 0 }
         };  
@@ -342,7 +361,6 @@ namespace SKL
 namespace SKL
 {
     WSADATA       GWSAData;                 //!< WSADATA global instance
-    //LPFN_ACCEPTEX GAcceptExFunctionPointer; //!< Pointer to the async accept function
 
     RStatus AsyncIO::InitializeSystem() noexcept 
     {
@@ -351,25 +369,6 @@ namespace SKL
             SKL_ERR_FMT( "AsyncIO::Initialize() Failed to WSAStartup() returned [%d] WSAERROR: %d", WSAStartupResult, ::WSAGetLastError() );
             return RFail;
         }
-
-        //GUID GuidAcceptEx{ WSAID_ACCEPTEX };
-        //// Load the AcceptEx function into memory using WSAIoctl.
-        //// The WSAIoctl function is an extension of the ioctlsocket()
-        //// function that can use overlapped I/O. The function's 3rd
-        //// through 6th parameters are input and output buffers where
-        //// we pass the pointer to our AcceptEx function. This is used
-        //// so that we can call the AcceptEx function directly, rather
-        //// than refer to the Mswsock.lib library.
-        //int32_t iResult = WSAIoctl(ListenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
-        //         &GuidAcceptEx, sizeof (GuidAcceptEx), 
-        //         &lpfnAcceptEx, sizeof (lpfnAcceptEx), 
-        //         &dwBytes, NULL, NULL);
-        //if (iResult == SOCKET_ERROR) {
-        //    wprintf(L"WSAIoctl failed with error: %u\n", WSAGetLastError());
-        //    closesocket(ListenSocket);
-        //    WSACleanup();
-        //    return 1;
-        //}
 
         return RSuccess;
     }
@@ -600,12 +599,12 @@ namespace SKL
 
     RStatus AsyncIO::SendAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept
     {
-        return SendAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaquieObject() );
+        return SendAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaqueObject() );
     }
 
     RStatus AsyncIO::ReceiveAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept
     {
-        return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaquieObject() );
+        return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaqueObject() );
     }
 
     RStatus AsyncIO::AssociateToTheAPI( TSocket InSocket ) noexcept
@@ -698,26 +697,42 @@ namespace SKL
         return ( int32_t )GetLastError( );
     }
 
+    bool IsValidSocket( TSocket InSocket ) noexcept
+    {
+        return INVALID_SOCKET != InSocket &&
+               0              != InSocket;
+    }
+
+    bool CloseSocket( TSocket InSocket ) noexcept   
+    {
+        return 0 == closesocket( InSocket );
+    }
+
+    bool ShutdownSocket( TSocket InSocket ) noexcept
+    {
+        return 0 == shutdown( InSocket, SD_BOTH );
+    }
+
     uint32_t IPv4FromStringA( const char* IpString )noexcept
     {
-        uint32_t Result;
-        if ( ::InetPtonA( AF_INET, IpString, &Result ) != 1 )
+        in_addr addr;
+        if ( ::InetPtonA( AF_INET, IpString, &addr ) != 1 )
         {
             return 0;
         }
 
-        return Result;
+        return addr.S_un.S_addr;
     }
 
     uint32_t IPv4FromStringW( const wchar_t* IpString )noexcept
     {
-        uint32_t Result;
-        if ( ::InetPtonW( AF_INET, IpString, &Result ) != 1 )
+        in_addr addr;
+        if ( ::InetPtonW( AF_INET, IpString, &addr ) != 1 )
         {
             return 0;
         }
 
-        return Result;
+        return addr.S_un.S_addr;
     }
 
     bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept
@@ -757,6 +772,7 @@ namespace SKL
 
 	    GetLogicalProcessorInformation(0, &bufferSize);
 	    buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) malloc(bufferSize);
+        SKL_ASSERT(nullptr != buffer);
 	    GetLogicalProcessorInformation(&buffer[0], &bufferSize);
 
 	    for (i = 0; i != bufferSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {

@@ -1,5 +1,5 @@
 //!
-//! \file MemoryManagement.h
+//! \file GlobalMemoryManagement.h
 //! 
 //! \brief Global memory allocation solution
 //! 
@@ -9,10 +9,7 @@
 
 namespace SKL
 {
-    template<size_t BlockSize>
-    using MemoryBlock = std::array<uint8_t, BlockSize>;
-
-    class MemoryManager final
+    class SkylakeGlobalMemoryManager final
     {
     public:
         template<size_t TBlockSize, size_t TBlockCount> 
@@ -48,36 +45,36 @@ namespace SKL
         {
             if( RSuccess != Pool1::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool1" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool1" );
                 return RFail;
             }
             if( RSuccess != Pool2::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool2" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool2" );
                 return RFail;
             }
             if( RSuccess != Pool3::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool3" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool3" );
                 return RFail;
             }
             if( RSuccess != Pool4::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool4" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool4" );
                 return RFail;
             }
             if( RSuccess != Pool5::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool5" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool5" );
                 return RFail;
             }
             if( RSuccess != Pool6::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "MemoryManager::Preallocate() -> Failed to Preallocate Pool6" );
+                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool6" );
                 return RFail;
             }
 
-            SKL_INF( "MemoryManager ALL POOLS PREALLOCATED!" );
+            SKL_INF( "SkylakeGlobalMemoryManager ALL POOLS PREALLOCATED!" );
 
             return RSuccess;
         }
@@ -151,7 +148,7 @@ namespace SKL
 
             if( SKL_GUARD_ALLOC_SIZE_ON && ( AllocateSize > CMemoryManager_MaxAllocSize ) ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "MemorymManager::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocateSize );
+                SKL_ERR_FMT( "SkylakeGlobalMemoryManager::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocateSize );
                 return Result;
             }
             
@@ -295,7 +292,7 @@ namespace SKL
         static void LogStatistics( ) noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
-            SKL_INF( "MemoryManager ###############################################################" );
+            SKL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
             SKL_INF_FMT( "Pool1:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool1::TObjectPool::GetTotalAllocations( ),
                     Pool1::TObjectPool::GetTotalDeallocations( ),
@@ -362,9 +359,9 @@ namespace SKL
                         + Pool4::TObjectPool::GetTotalOSDeallocations( ) 
                         + Pool5::TObjectPool::GetTotalOSDeallocations( )
                     );
-            SKL_INF( "MemoryManager ###############################################################" );
+            SKL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
 #else
-            SKL_WRN( "MemoryManager::LogStatistics()\n\t\tTried to log memory statistics, but the MemoryManager has the statistics turned off!" );
+            SKL_WRN( "SkylakeGlobalMemoryManager::LogStatistics()\n\t\tTried to log memory statistics, but the SkylakeGlobalMemoryManager has the statistics turned off!" );
 #endif
         }
 
@@ -374,4 +371,7 @@ namespace SKL
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalAllocations        );
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalDeallocations      );
     };
+
+    // GlobalMemoryManager - Override here if the global memory manager must be changed
+    using GlobalMemoryManager = SkylakeGlobalMemoryManager;
 }
