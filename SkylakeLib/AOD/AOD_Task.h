@@ -12,15 +12,20 @@
 namespace SKL
 {
     constexpr size_t CAODTaskMinimumSize = 1;
-    
+
+    struct IAODTaskBase
+    { 
+        IAODTask* volatile Next{ nullptr }; //!< Intrusive singly-linked list next pointer
+    };
+
     //! 
     //! \brief Single level dispatched task
     //! 
     //! \important Do not temper! Any modifications that will affect sizeof(ITask) will break the task abstraction.
     //! 
-    struct IAODTask
+    struct IAODTask : IAODTaskBase
     {   
-        using TDispatchFunctionPtr = void( SKL_CDECL* )() noexcept;
+        using TDispatchFunctionPtr = void( SKL_CDECL* )( AODObject& ) noexcept;
         using TDispatchProto       = ASD::UniqueFunctorWrapper<CAODTaskMinimumSize, TDispatchFunctionPtr>;
 
         IAODTask() = default;
@@ -30,10 +35,12 @@ namespace SKL
         }
 
         //! \brief Dispatch this task
-        SKL_FORCEINLINE void Dispatch() const noexcept
+        SKL_FORCEINLINE void Dispatch() noexcept
         {
-            //ASD_ASSERT( false == IsNull() );
-            CastSelfToProto().Dispatch();
+            SKL_ASSERT( false == IsNull() );
+            SKL_ASSERT( nullptr == Parent.get() );
+
+            CastSelfToProto().Dispatch( *Parent );
         }
         
         //! Is this task valid
@@ -48,18 +55,39 @@ namespace SKL
             CastSelfToProto().Destroy();
         }
 
+        SKL_FORCEINLINE void SetParent( AODObject* InObject )noexcept
+        {
+            TSharedPtr<AODObject>::Static_IncrementReference( InObject );
+            Parent.Pointer = InObject;
+        }
+
+        SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
+        {
+            Due = GetSystemUpTickCount() + AfterMilliseconds;
+        }
+
+        SKL_FORCEINLINE bool operator>( const IAODTask& Other ) noexcept    
+        {
+            return Due > Other.Due;
+        }
+
     protected:
         const TDispatchProto& CastSelfToProto() const noexcept
         {
-            return *reinterpret_cast<const TDispatchProto*>( this );
+            return *reinterpret_cast<const TDispatchProto*>( 
+                reinterpret_cast<const uint8_t*>( this ) + sizeof( IAODTask )
+            );
         }
 
         TDispatchProto& CastSelfToProto() noexcept
         {
-            return *reinterpret_cast<TDispatchProto*>( this );
+            return *reinterpret_cast<TDispatchProto*>( 
+                reinterpret_cast<uint8_t*>( this ) + sizeof( IAODTask )
+            );
         }
 
-        IAODTask* volatile Next{ nullptr }; //!< Intrusive singly-linked list next pointer
+        TSharedPtr<AODObject> Parent{ nullptr};  //!< Parent object ref, the AOD object, this task will be dispatched on
+        TEpochTimePoint       Due   { 0 };       //!< Used for when this task is delayed
 
         friend struct AODTaskQueue;
     };

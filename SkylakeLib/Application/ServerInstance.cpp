@@ -174,17 +174,17 @@ namespace SKL
             }
         }
 
-        if( RSuccess != ServerInstanceTLSData::Create( this ) )
+        if( RSuccess != ServerInstanceTLSContext::Create( this, Group.GetTag() ) )
         {
-            SKL_ERR_FMT("[WorkerGroup:%ws] failed to create ServerInstanceTLSData for worker!", Group.GetTag().Name );
+            SKL_ERR_FMT("[WorkerGroup:%ws] failed to create ServerInstanceTLSContext for worker!", Group.GetTag().Name );
             return false;
         }
 
         if( true == Group.GetTag().bSupportsAOD )
         {
-            if( RSuccess != AODTLSData::Create( this ) )
+            if( RSuccess != AODTLSContext::Create( this, Group.GetTag() ) )
             {
-                SKL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSData for worker!", Group.GetTag().Name );
+                SKL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", Group.GetTag().Name );
                 return false;
             }
         }
@@ -197,12 +197,12 @@ namespace SKL
     {
         if( true == Group.GetTag().bSupportsAOD )
         {
-            AODTLSData::Destroy();
-            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSData.", Group.GetTag().Name );
+            AODTLSContext::Destroy();
+            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", Group.GetTag().Name );
         }
 
-        ServerInstanceTLSData::Destroy();
-        SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSData.", Group.GetTag().Name );
+        ServerInstanceTLSContext::Destroy();
+        SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", Group.GetTag().Name );
 
         if( true == Group.GetTag().bHasThreadLocalMemoryManager )
         {

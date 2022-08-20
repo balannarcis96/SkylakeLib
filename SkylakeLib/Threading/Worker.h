@@ -51,15 +51,30 @@ namespace SKL
         
         //! Get the time duration this worker was active for
         TEpochTimeDuration GetAliveTime() const noexcept { return GetSystemUpTickCount() - GetStartedAt(); }
+
+        //! Defer task execution on this worker
+        SKL_FORCEINLINE void Defer( ITask* InTask ) noexcept
+        {
+            DelayedTasks.Push( InTask );
+        }
+
+        //! Defer AOD task execution on this worker
+        SKL_FORCEINLINE void Defer( IAODTask* InTask ) noexcept
+        {
+            AODDelayedTasks.Push( InTask );
+        }
+
     private:
         void RunImpl() noexcept;
-
-        std::jthread                        Thread             {};          //!< Thread of this worker
+                
+        TaskQueue                           DelayedTasks       {};          //!< Single consummer multiple producers queue for delayed tasks 
+        AODTaskQueue                        AODDelayedTasks    {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
         std::synced_value<uint32_t>         bIsRunning         { FALSE };   //!< Is this worker signaled to run
         std::synced_value<uint32_t>         bIsMasterThread    { FALSE };   //!< Is this a master worker
         std::relaxed_value<TEpochTimePoint> StartedAt          { 0 };       //!< Time point when the worker started
         RunTask                             OnRun              {};          //!< Task to run as main of the thread
         WorkerGroup*                        Group              { nullptr }; //!< Owning group of this worker
+        std::jthread                        Thread             {};          //!< Thread of this worker
 
         friend WorkerGroup;
         friend class ServerInstance;    

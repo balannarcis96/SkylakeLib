@@ -31,3 +31,11 @@
 
 //! Assert 
 #include "SkylakeAssert.h"
+
+#if !defined(SKL_BUILD_SHIPPING)
+#include "DebugTrap.h"
+#define SKL_BREAK() psnip_trap()
+#else
+#define SKL_BREAK() 
+#endif
+

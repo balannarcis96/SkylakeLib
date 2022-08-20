@@ -664,7 +664,63 @@ namespace SKL
     
         ::Sleep( 128 );  /* wait for it to stabilize */
     
+
         return RSuccess;
+    }
+
+    //! source: https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
+    void PreciseSleep( double InSeconds ) noexcept
+    {
+        struct TPreciseSleep_WaitableTimer
+        {
+            HANDLE  Timer   { nullptr };
+            double  Estimate{ 5e-3 };
+            double  Mean    { 5e-3 };
+            double  M2      { 0.0 };
+            int64_t Count   { 1 };
+        };
+        using PreciseSleep_WaitableTimer = TLSValue<TPreciseSleep_WaitableTimer>;
+
+        using namespace std::chrono;
+
+        auto* Timer{ PreciseSleep_WaitableTimer::GetValuePtr() };
+        if( nullptr == Timer ) SKL_UNLIKELY
+        {
+            Timer = new TPreciseSleep_WaitableTimer();
+            SKL_ASSERT( nullptr != Timer );
+
+            Timer->Timer = CreateWaitableTimer( NULL, FALSE, NULL );
+            SKL_ASSERT( nullptr != Timer->Timer );
+
+            PreciseSleep_WaitableTimer::SetValuePtr( Timer );
+        }
+        
+        while( InSeconds - Timer->Estimate > 1e-7 ) 
+        {
+            double        ToWait{ InSeconds - Timer->Estimate };
+            LARGE_INTEGER Due   { .QuadPart = -int64_t( ToWait * 1e7 ) };
+            const auto    Start { high_resolution_clock::now() };
+
+            ( void )::SetWaitableTimerEx( Timer->Timer, &Due, 0, NULL, NULL, NULL, 0 );
+            ( void )::WaitForSingleObject( Timer->Timer, INFINITE );
+
+            const auto   End     { high_resolution_clock::now() };
+            const double Observed{ (End - Start).count() / 1e9 };
+
+            InSeconds -= Observed;
+
+            ++Timer->Count;
+            double Error = Observed - ToWait;
+            double Delta = Error - Timer->Mean;
+            Timer->Mean += Delta / Timer->Count;
+            Timer->M2   += Delta * ( Error - Timer->Mean );
+            double Stddev = sqrt( Timer->M2 / (Timer->Count - 1) );
+            Timer->Estimate = Timer->Mean + Stddev;
+        }
+
+        // Spin lock
+        const auto Start{ high_resolution_clock::now() };
+        while ( ( high_resolution_clock::now() - Start ).count() / 1e9 < InSeconds );
     }
 
     uint32_t PlatformTLS::GetCurrentThreadId() noexcept

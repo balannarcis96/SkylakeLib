@@ -592,6 +592,10 @@ void mi_free_size(void* p, size_t size) mi_attr_noexcept {
 
 void mi_free_size_aligned(void* p, size_t size, size_t alignment) mi_attr_noexcept {
   MI_UNUSED_RELEASE(alignment);
+    if( ((uintptr_t)p % alignment) != 0 )
+    {   
+        mi_assert(((uintptr_t)p % alignment) == 0);
+    }
   mi_assert(((uintptr_t)p % alignment) == 0);
   mi_free_size(p,size);
 }

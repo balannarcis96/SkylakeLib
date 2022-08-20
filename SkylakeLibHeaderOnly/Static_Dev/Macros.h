@@ -20,6 +20,12 @@
 #define SKL_FASTCALL        ASD_FASTCALL  
 #define SKL_VECTORCALL      ASD_VECTORCALL
 
+#if ( defined(_MSC_VER) || defined(__INTEL_COMPILER) ) && !defined(SKL_BUILD_SHIPPING)
+	#define SKL_ALLOCATOR_FUNCTION __declspec(allocator)
+#else
+	#define SKL_ALLOCATOR_FUNCTION 
+#endif
+
 #define SKL_ALIGNMENT       sizeof( void* ) 
 
 #undef CONCAT_

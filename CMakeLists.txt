@@ -2,14 +2,18 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkylakeLib_repo" VERSION 1.0.0)
 
 set(SKL_CACHE_LINE_MEM_MANAGER_DESC "Allign all memory blocks inside the MemoryManager to the cache line, removing any possiblity of false sharing between memory blocks in the MemoryManager at the cost of more memory consumtion" )
+set(SKL_USE_PRECISE_SLEEP_DESC "Use very precise sleep function for the active, non-task-handling workers")
+set(SKL_DEBUG_MEMORY_ALLOCATORS_DESC "Enable checks for correct allocation/deallocation")
 
-option(SKL_BUILD_TESTS            "Build tests"                          ON)  
-option(SKL_DISABLE_EXCEPTIONS     "Disable exceptions[Recommended]!"     ON)   
-option(SKL_BUILD_SHIPPING         "Build for shipping"                  OFF) 
-option(SKL_MEMORY_STATISTICS      "Enable memory statistics"             ON) 
-option(SKL_NO_ASSERTS             "Disabled all runtime asserts"        OFF) 
-option(SKL_GUARD_ALLOC_SIZE       "Cap allocation sizes to a max value"  ON)
-option(SKL_CACHE_LINE_MEM_MANAGER "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
+option(SKL_BUILD_TESTS              "Build tests"                          ON)  
+option(SKL_DISABLE_EXCEPTIONS       "Disable exceptions[Recommended]!"     ON)   
+option(SKL_BUILD_SHIPPING           "Build for shipping"                  OFF) 
+option(SKL_MEMORY_STATISTICS        "Enable memory statistics"             ON) 
+option(SKL_NO_ASSERTS               "Disabled all runtime asserts"        OFF) 
+option(SKL_GUARD_ALLOC_SIZE         "Cap allocation sizes to a max value"  ON)
+option(SKL_USE_PRECISE_SLEEP        "${SKL_USE_PRECISE_SLEEP_DESC}"        ON)
+option(SKL_CACHE_LINE_MEM_MANAGER   "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
+option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"  ON)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -98,8 +102,16 @@ if(SKL_GUARD_ALLOC_SIZE)
     add_compile_definitions(SKL_GUARD_ALLOC_SIZE)
 endif()
 
+if(SKL_USE_PRECISE_SLEEP)
+    add_compile_definitions(SKL_USE_PRECISE_SLEEP)
+endif()
+
 if(SKL_CACHE_LINE_MEM_MANAGER)
     add_compile_definitions(SKL_CACHE_LINE_MEM_MANAGER)
+endif()
+
+if(SKL_DEBUG_MEMORY_ALLOCATORS)
+    add_compile_definitions(SKL_DEBUG_MEMORY_ALLOCATORS)
 endif()
 
 if(SKL_DISABLE_EXCEPTIONS)

@@ -62,7 +62,7 @@ namespace SKL
         }
         
         //! Deallocate memory block with the size known at run time
-        SKL_FORCEINLINE static void Deallocate(  void* InPtr, size_t AllocSize ) noexcept
+        SKL_FORCEINLINE static void Deallocate( void* InPtr, size_t AllocSize ) noexcept
         {
             auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
             return Instance->Manager.Deallocate( InPtr, AllocSize );

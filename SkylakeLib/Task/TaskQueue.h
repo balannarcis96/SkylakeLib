@@ -1,7 +1,7 @@
 //!
-//! \file AOD_Queue.h
+//! \file TaskQueue.h
 //! 
-//! \brief Async Object bound Dispatcher Queue abstraction for SkylakeLib
+//! \brief ITask thread safe queue for SkylakeLib
 //! 
 //! \reference https://github.com/balannarcis96/Dispatcher (G.O.D: Grand Object-bound Dispatcher)
 //!
@@ -12,31 +12,31 @@
 namespace SKL
 {
     //! Single consumer multiple producers intrusive singly-linked list based lock free queue
-    struct AODTaskQueue
+    struct TaskQueue
     {
-        AODTaskQueue() noexcept: Head{ reinterpret_cast<IAODTask*>( &Stub ) }, Tail{ reinterpret_cast<IAODTask*>( &Stub ) }, Stub{} {}
-        ~AODTaskQueue() noexcept = default;
+        TaskQueue() noexcept: Head{ reinterpret_cast<ITask*>( &Stub ) }, Tail{ reinterpret_cast<ITask*>( &Stub ) }, Stub{} {}
+        ~TaskQueue() noexcept = default;
 
         // Can't copy or move
-        AODTaskQueue( const AODTaskQueue & ) = delete;
-        AODTaskQueue &operator=( const AODTaskQueue & ) = delete;
-        AODTaskQueue( AODTaskQueue && ) = delete;
-        AODTaskQueue &operator=( AODTaskQueue && ) = delete;
+        TaskQueue( const TaskQueue & ) = delete;
+        TaskQueue &operator=( const TaskQueue & ) = delete;
+        TaskQueue( TaskQueue && ) = delete;
+        TaskQueue &operator=( TaskQueue && ) = delete;
 
         //! Multiple producers push
-        SKL_FORCEINLINE void Push( IAODTask* InTask ) noexcept
+        SKL_FORCEINLINE void Push( ITask* InTask ) noexcept
         {
             auto* PrevNode{ Head.exchange( InTask ) };
             PrevNode->Next = InTask;
         }
 
         //! Single consumer pop
-        SKL_NODISCARD IAODTask* Pop() noexcept  
+        SKL_NODISCARD ITask* Pop() noexcept  
         {
-            IAODTask* LocalTail{ Tail };
-            IAODTask* LocalNext{ LocalTail->Next };
+            ITask* LocalTail{ Tail };
+            ITask* LocalNext{ LocalTail->Next };
 
-            if( reinterpret_cast<IAODTask*>( &Stub ) == LocalTail ) SKL_UNLIKELY
+            if( reinterpret_cast<ITask*>( &Stub ) == LocalTail ) SKL_UNLIKELY
             {
                 if( nullptr == LocalNext )
                 {       
@@ -57,7 +57,7 @@ namespace SKL
                 return LocalTail;
             }
 
-            const IAODTask* LocalHead{ Head.load_acquire() };
+            const ITask* LocalHead{ Head.load_acquire() };
             if( LocalTail != LocalHead )
             {
                 return nullptr;
@@ -65,7 +65,7 @@ namespace SKL
 
             //Last pop
             Stub.Next = nullptr;
-            Push( reinterpret_cast<IAODTask*>( &Stub ) );
+            Push( reinterpret_cast<ITask*>( &Stub ) );
 
             LocalNext = Tail->Next;
             if( nullptr != LocalNext )
@@ -78,8 +78,8 @@ namespace SKL
         }
 
     private:
-        std::synced_value<IAODTask*> Head; //!< Head of the queue
-        IAODTask*                    Tail; //!< Tail of the queue
-        IAODTaskBase                 Stub; //!< Stub item
+        std::synced_value<ITask*> Head; //!< Head of the queue
+        ITask*                    Tail; //!< Tail of the queue
+        ITaskBase                 Stub; //!< Stub item
     };
 }

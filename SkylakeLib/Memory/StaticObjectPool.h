@@ -46,7 +46,9 @@ namespace SKL
             // ! Hopefully SKL_MALLOC_ALIGNED will allocate in a continuous fashion.
             for( size_t i = 0; i < PoolSize; i++ )
             {
-                Pool[ i ] = SKL_MALLOC_ALIGNED( sizeof( T ), PoolTraits::Alignment );
+                Pool[ i ] = SKL_MALLOC_ALIGNED( PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                mi_assert(((uintptr_t)Pool[ i ] % PoolTraits::Alignment) == 0);
+                SKL_ASSERT( ((uintptr_t)Pool[ i ]) % PoolTraits::Alignment == 0 );
 
                 SKL_IFSHIPPING( memset( Pool[ i ], 0, sizeof( T ) ) );
 
@@ -57,6 +59,52 @@ namespace SKL
             }
 
             return RSuccess;
+        }
+
+        constexpr static void FreePool() noexcept
+        {
+            if constexpr ( false == PoolTraits::bNoSync )
+            {
+                if constexpr( true == PoolTraits::bUseSpinLock )
+                {
+                    { //Critical section
+                        SpinLockScopeGuard Guard { SpinLock };
+
+                        for( size_t i = 0; i < PoolSize; i++ )
+                        {
+                            auto* PopValue{ Pool[ i ] };
+                            Pool[ i ] = nullptr;
+                            if( nullptr != PopValue )
+                            {
+                                SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for( size_t i = 0; i < PoolSize; i++ )
+                    {
+                        auto* PopValue{ Pool[ i ].exchange( nullptr ) };
+                        if( nullptr != PopValue )
+                        {
+                            SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for( size_t i = 0; i < PoolSize; i++ )
+                {
+                    auto* PopValue{ Pool[ i ] };
+                    Pool[ i ] = nullptr;
+                    if( nullptr != PopValue )
+                    {
+                        SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                    }
+                }
+            }
         }
 
         //! Allocate new T
@@ -113,6 +161,11 @@ namespace SKL
         constexpr static void Deallocate( T *Obj ) noexcept
         {
             static_assert( std::is_nothrow_destructible_v< T > || false == PoolTraits::bPerformDestruction || false == PoolTraits::bPerformConstruction, "ObjectPool::Deallocate() T must be nothrow destructible" );
+            SKL_ASSERT( ((uintptr_t)Obj) % PoolTraits::Alignment == 0 );
+            if( ((uintptr_t)Obj) % PoolTraits::Alignment != 0 )
+            {
+                SKL_ASSERT( ((uintptr_t)Obj) % PoolTraits::Alignment == 0 );
+            }
 
             if constexpr( PoolTraits::bPerformDestruction && PoolTraits::bPerformConstruction )
             {
@@ -203,6 +256,8 @@ namespace SKL
             }
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
+
+            SKL_ASSERT( ((uintptr_t)Allocated) % PoolTraits::Alignment == 0 );
 
             return Allocated;
         }

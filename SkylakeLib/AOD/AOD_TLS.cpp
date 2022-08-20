@@ -10,28 +10,48 @@
 
 namespace SKL
 {
-    RStatus AODTLSData::Initialize( ServerInstance* InServerInstance ) noexcept 
+    AODTLSContext::~AODTLSContext() noexcept
+    {
+        DeferredTasksHandlingGroups.clear();
+        ServerFlags.Flags = 0;
+        
+        while( false == DelayedTasks.empty() )
+        {
+            DelayedTasks.pop();
+        }
+    }
+
+    RStatus AODTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
     {
         SKL_ASSERT( nullptr != InServerInstance );
+        SKL_ASSERT( true == InWorkerGroupTag.IsValid() );
     
-        SourceServerInstance = InServerInstance;
+        SourceServerInstance     = InServerInstance;
+        ParentWorkerGroup        = InWorkerGroupTag;
+        bScheduleAODDelayedTasks = false == ParentWorkerGroup.bHandlesTimerTasks;
 
         Reset();
 
         // Build name
-        snprintf( NameBuffer, 512, "[%ws AODTLSData]", SourceServerInstance->GetName() );
+        snprintf( NameBuffer, 512, "[%ws AODTLSContext]", SourceServerInstance->GetName() );
 
         return RSuccess;
     }
 
-    void AODTLSData::Reset() noexcept
+    void AODTLSContext::Reset() noexcept
     {   
         DeferredTasksHandlingGroups.clear();
         ServerFlags.Flags = 0;
+        
+        while( false == DelayedTasks.empty() )
+        {
+            TSharedPtr<IAODTask>::Static_Reset( DelayedTasks.top() );
+            DelayedTasks.pop();
+        }
 
         if( nullptr == SourceServerInstance )   
         {
-            SKL_WRN( "AODTLSData::Reset() no server instance specified!" );
+            SKL_WRN( "AODTLSContext::Reset() no server instance specified!" );
             return;
         }
 

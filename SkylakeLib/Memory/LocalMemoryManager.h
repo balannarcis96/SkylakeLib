@@ -90,6 +90,16 @@ namespace SKL
             return RSuccess;
         }
 
+        void FreeAllPools() noexcept
+        {
+            Pool1.Pool.FreePool();
+            Pool2.Pool.FreePool();
+            Pool3.Pool.FreePool();
+            Pool4.Pool.FreePool();
+            Pool5.Pool.FreePool();
+            Pool6.Pool.FreePool();
+        }
+
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         void ZeroAllMemory( ) noexcept
         {
@@ -145,6 +155,35 @@ namespace SKL
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
             }
 
+            SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % MemoryBlockAlignment );
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                if constexpr( true == StaticConfig::bIsThreadSafe )
+                {
+                    std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
+                    {
+                        Allocations.insert( { Result.MemoryBlock, 0 } );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+                else
+                {
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+            }
+#endif
+
             SKL_IFMEMORYSTATS( ++TotalAllocations );
 
             return Result;
@@ -194,8 +233,37 @@ namespace SKL
             else
             {
                 Result.MemoryBlockSize = AllocateSize;
-                Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment );
+                Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
             }
+
+            SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % MemoryBlockAlignment );
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                if constexpr( true == StaticConfig::bIsThreadSafe )
+                {
+                    std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
+                    {
+                        Allocations.insert( { Result.MemoryBlock, 0 } );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+                else
+                {
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+            }
+#endif
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
 
@@ -206,6 +274,35 @@ namespace SKL
         template<size_t AllocateSize>
         void Deallocate( void* InPointer ) noexcept 
         {
+            SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % MemoryBlockAlignment );
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                if constexpr( true == StaticConfig::bIsThreadSafe )
+                {
+                    std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                    if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+                else
+                {
+                    if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+            }
+#endif
+
             if constexpr( AllocateSize <= TStaticConfig::Pool1_BlockSize )
             {
                 Pool1.Pool.Deallocate( reinterpret_cast<TPool1::TMemoryBlock*>( InPointer ) );
@@ -232,7 +329,7 @@ namespace SKL
             }
             else
             {
-                SKL_FREE_SIZE_ALIGNED( InPointer, AllocateSize, CMemoryManager_Alignment );
+                SKL_FREE_SIZE_ALIGNED( InPointer, AllocateSize, MemoryBlockAlignment );
                 SKL_IFMEMORYSTATS( ++CustomSizeDeallocations );
             }
 
@@ -242,6 +339,35 @@ namespace SKL
         //! Deallocate memory block with the size known at run time
         void Deallocate( void* InPointer, size_t AllocateSize ) noexcept 
         {
+            SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % MemoryBlockAlignment );
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                if constexpr( true == StaticConfig::bIsThreadSafe )
+                {
+                    std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                    if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+                else
+                {
+                    if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                    {
+                        Allocations.erase( It );
+                    }
+                    else
+                    {
+                        SKL_BREAK();
+                    }
+                }
+            }
+#endif
+
             if( AllocateSize <= TStaticConfig::Pool1_BlockSize )
             {
                 Pool1.Pool.Deallocate( reinterpret_cast<TPool1::TMemoryBlock*>( InPointer ) );
@@ -387,5 +513,10 @@ namespace SKL
         SKL_IFMEMORYSTATS( alignas( InternalAlignment ) TStatisticsValue CustomSizeDeallocations{ 0 }; );
         SKL_IFMEMORYSTATS( alignas( InternalAlignment ) TStatisticsValue TotalAllocations       { 0 }; );
         SKL_IFMEMORYSTATS( alignas( InternalAlignment ) TStatisticsValue TotalDeallocations     { 0 }; );
+
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+        std::mutex                         AllocationsMutex;
+        std::unordered_map<void*, int32_t> Allocations;
+#endif
     };
 }

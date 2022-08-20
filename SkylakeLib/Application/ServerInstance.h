@@ -164,7 +164,7 @@ namespace SKL
         friend class Worker;
         friend class WorkerGroup;
         friend class ServerInstance;
-        friend struct AODTLSData;
-        friend struct ServerInstanceTLSData;
+        friend struct AODTLSContext;
+        friend struct ServerInstanceTLSContext;
     };
 }

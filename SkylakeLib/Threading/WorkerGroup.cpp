@@ -187,7 +187,8 @@ namespace SKL
     {
         const auto Tag                 { GetTag() }; //!< Stack tag copy
         const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
-        const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0f / static_cast<float>( TickRate ) ) };
+        const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
+        const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
 
         if( true == Tag.bHandlesTasks )
         {
@@ -238,7 +239,7 @@ namespace SKL
                         break;
                     }
 
-                    TCLOCK_SLEEP_FOR_MILLIS( MillisecondsToSleep );
+                    PreciseSleep( SecondsToSleep );
                 }
             }
             else
@@ -246,7 +247,7 @@ namespace SKL
                 while( IsRunning() ) SKL_LIKELY
                 {
                     OnWorkerTick.Dispatch( Worker, *this );
-                    TCLOCK_SLEEP_FOR_MILLIS( MillisecondsToSleep );
+                    PreciseSleep( SecondsToSleep );
                 }
             }
         }

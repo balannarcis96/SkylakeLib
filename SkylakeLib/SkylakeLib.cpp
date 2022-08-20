@@ -81,6 +81,8 @@ namespace SKL
             return Result;
         }
 
+        GlobalMemoryManager::FreeAllPools();
+
         GIsInit.exchange( false );
         return RSuccess;
     }

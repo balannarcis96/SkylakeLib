@@ -10,28 +10,36 @@
 
 namespace SKL
 {
-    RStatus ServerInstanceTLSData::Initialize( ServerInstance* InServerInstance ) noexcept 
+    RStatus ServerInstanceTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
     {
         SKL_ASSERT( nullptr != InServerInstance );
+        SKL_ASSERT( true == InWorkerGroupTag.IsValid() );
     
         SourceServerInstance = InServerInstance;
+        ParentWorkerGroup = InWorkerGroupTag;
+
+        while( false == DelayedTasks.empty() )
+        {
+            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            DelayedTasks.pop();
+        }
 
         Reset();
 
         // Build name
-        snprintf( NameBuffer, 512, "[%ws ServerInstanceTLSData]", SourceServerInstance->GetName() );
+        snprintf( NameBuffer, 512, "[%ws ServerInstanceTLSContext]", SourceServerInstance->GetName() );
 
         return RSuccess;
     }
 
-    void ServerInstanceTLSData::Reset() noexcept
+    void ServerInstanceTLSContext::Reset() noexcept
     {   
         DeferredTasksHandlingGroups.clear();
         ServerFlags.Flags = 0;
 
         if( nullptr == SourceServerInstance )   
         {
-            SKL_WRN( "ServerInstanceTLSData::Reset() no server instance specified!" );
+            SKL_WRN( "ServerInstanceTLSContext::Reset() no server instance specified!" );
             return;
         }
 

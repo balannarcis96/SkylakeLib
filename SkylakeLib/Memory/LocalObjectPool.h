@@ -25,17 +25,17 @@ namespace SKL
             static constexpr size_t MyPoolSize           { PoolSize };
             static constexpr size_t MyPoolMask           { PoolSize - 1 };
             static constexpr size_t Alignment            { TAlignment };
-            static constexpr size_t InternalAlignment    { true == TbNoSync ? SKL_CACHE_LINE_SIZE : SKL_ALIGNMENT };
+            static constexpr size_t InternalAlignment    { true == TbNoSync ? SKL_ALIGNMENT : SKL_CACHE_LINE_SIZE };
             static constexpr bool   bNoSync              { TbNoSync };
-            static constexpr bool   bUseSpinLock         { bNoSync || TbUseSpinLock };
+            static constexpr bool   bUseSpinLock         { true == bNoSync || true == TbUseSpinLock };
             static constexpr bool   bPerformConstruction { TbPerformConstruction };
             static constexpr bool   bPerformDestruction  { TbPerformDestruction };
 
             using MyPoolType       = T;
-            using MyType           = ObjectPool< T, PoolSize >;
-            using TPoolHead        = std::conditional_t<( bNoSync || bUseSpinLock ), uint64_t, std::atomic_uint64_t>;
-            using TPoolTail        = std::conditional_t<( bNoSync || bUseSpinLock ), uint64_t, std::atomic_uint64_t>;
-            using TPoolPtr         = std::conditional_t<( bNoSync || bUseSpinLock ), void*, std::atomic<void*>>;
+            using MyType           = ObjectPool<T, PoolSize>;
+            using TPoolHead        = std::conditional_t<( true == bNoSync || true == bUseSpinLock ), uint64_t, std::atomic_uint64_t>;
+            using TPoolTail        = std::conditional_t<( true == bNoSync || true == bUseSpinLock ), uint64_t, std::atomic_uint64_t>;
+            using TPoolPtr         = std::conditional_t<( true == bNoSync || true == bUseSpinLock ), void*, std::atomic<void*>>;
             using TPoolSpinLock    = std::conditional_t<bNoSync, SKL::FakeSpinLock, SKL::SpinLock>;
             using TStatisticsValue = std::conditional_t<bNoSync, uint64_t, std::atomic_uint64_t>;
 
@@ -59,6 +59,52 @@ namespace SKL
             }
 
             return RSuccess;
+        }
+
+        constexpr void FreePool() noexcept
+        {
+            if constexpr ( false == PoolTraits::bNoSync )
+            {
+                if constexpr( true == PoolTraits::bUseSpinLock )
+                {
+                    { //Critical section
+                        SpinLockScopeGuard Guard { SpinLock };
+
+                        for( size_t i = 0; i < PoolSize; i++ )
+                        {
+                            auto* PopValue{ Pool[ i ] };
+                            Pool[ i ] = nullptr;
+                            if( nullptr != PopValue )
+                            {
+                                SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for( size_t i = 0; i < PoolSize; i++ )
+                    {
+                        auto* PopValue{ Pool[ i ].exchange( nullptr ) };
+                        if( nullptr != PopValue )
+                        {
+                            SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for( size_t i = 0; i < PoolSize; i++ )
+                {
+                    auto* PopValue{ Pool[ i ] };
+                    Pool[ i ] = nullptr;
+                    if( nullptr != PopValue )
+                    {
+                        SKL_FREE_SIZE_ALIGNED( PopValue, PoolTraits::MyObjectSize, PoolTraits::Alignment );
+                    }
+                }
+            }
         }
 
         //! Allocate new T

@@ -185,6 +185,9 @@ namespace SKL
         static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
     };
 
+    //Very precise sleep
+    void PreciseSleep( double InSeconds ) noexcept;
+
     //Is socket valid
     bool IsValidSocket( TSocket InSocket ) noexcept;
 

@@ -491,7 +491,7 @@ namespace SKL::MemoryPolicy
                     }  
                 }
 
-                return InObjectPtr;
+                return &ControlBlock;
             }
 
             return nullptr;

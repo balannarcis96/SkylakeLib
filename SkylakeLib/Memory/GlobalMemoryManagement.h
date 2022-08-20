@@ -38,6 +38,16 @@ namespace SKL
         using Pool5 = MemoryPool<CMemoryManager_Pool5_BlockSize, CMemoryManager_Pool5_BlockCount>;
         using Pool6 = MemoryPool<CMemoryManager_Pool6_BlockSize, CMemoryManager_Pool6_BlockCount>;
         
+        static void FreeAllPools() noexcept
+        {
+            Pool1::TObjectPool::FreePool();
+            Pool2::TObjectPool::FreePool();
+            Pool3::TObjectPool::FreePool();
+            Pool4::TObjectPool::FreePool();
+            Pool5::TObjectPool::FreePool();
+            Pool6::TObjectPool::FreePool();
+        }
+
         //! 
         //! \brief Preallocate all pools
         //! 
@@ -137,6 +147,21 @@ namespace SKL
             }
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
+            SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % CMemoryManager_Alignment );
+
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
+                {
+                    Allocations.insert( { Result.MemoryBlock, 0 } );
+                }
+                else
+                {
+                    SKL_BREAK();
+                }
+            }
+#endif
 
             return Result;
         }
@@ -191,14 +216,45 @@ namespace SKL
             }
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
+            SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % CMemoryManager_Alignment );
+                                
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
+                {
+                    Allocations.insert( { Result.MemoryBlock, 0 } );
+                }
+                else
+                {
+                    SKL_BREAK();
+                }
+            }
+#endif
 
             return Result;
         }
        
         //! Deallocate memory block with the size known at compile time
         template<size_t AllocateSize>
-        static void Deallocate( void* InPointer ) noexcept 
+        SKL_NOINLINE static void Deallocate( void* InPointer ) noexcept 
         {
+            SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % CMemoryManager_Alignment );
+                     
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                {
+                    Allocations.erase( It );
+                }
+                else
+                {
+                    SKL_BREAK();
+                }
+            }
+#endif
+
             if constexpr( AllocateSize <= CMemoryManager_Pool1_BlockSize )
             {
                 Pool1::TObjectPool::Deallocate( reinterpret_cast<Pool1::TMemoryBlock*>( InPointer ) );
@@ -233,8 +289,24 @@ namespace SKL
         }
 
         //! Deallocate memory block with the size known at run time
-        static void Deallocate( void* InPointer, size_t AllocateSize ) noexcept 
+        SKL_NOINLINE static void Deallocate( void* InPointer, size_t AllocateSize ) noexcept 
         {
+            SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % CMemoryManager_Alignment );
+          
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+            {
+                std::lock_guard<std::mutex> Guard{ AllocationsMutex };
+                if( auto It{ Allocations.find( InPointer ) }; It != Allocations.end() )
+                {
+                    Allocations.erase( It );
+                }
+                else
+                {
+                    SKL_BREAK();
+                }
+            }
+#endif
+
             if( AllocateSize <= CMemoryManager_Pool1_BlockSize )
             {
                 Pool1::TObjectPool::Deallocate( reinterpret_cast<Pool1::TMemoryBlock*>( InPointer ) );
@@ -370,6 +442,11 @@ namespace SKL
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> CustomSizeDeallocations );
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalAllocations        );
         SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalDeallocations      );
+
+#if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
+        static inline std::mutex                         AllocationsMutex;
+        static inline std::unordered_map<void*, int32_t> Allocations;
+#endif
     };
 
     // GlobalMemoryManager - Override here if the global memory manager must be changed

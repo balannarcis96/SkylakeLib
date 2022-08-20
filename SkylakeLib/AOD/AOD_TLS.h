@@ -9,20 +9,48 @@
 
 namespace SKL
 {
-    struct AODTLSData final : ITLSSingleton<AODTLSData>
+    struct AODTLSContext final : ITLSSingleton<AODTLSContext>
     {
-        AODTLSData() noexcept = default;
-        ~AODTLSData() noexcept = default;
+        union ThreadFlags
+        {
+            struct
+            {
+                uint8_t bIsInitialized : 1;
+                uint8_t bIsAnyDispatchInProgress : 1;
+            };
+            uint16_t Flags = { 0 };
+        };
 
-        RStatus Initialize( ServerInstance* InServerInstance ) noexcept;
+        AODTLSContext() noexcept = default;
+        ~AODTLSContext() noexcept;
 
-        const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSData]"; }
+        RStatus Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
+
+        SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSContext]"; }
 
         void Reset() noexcept;
 
-        ServerInstance*                           SourceServerInstance       { nullptr };
-        ServerInstanceFlags                       ServerFlags                {};
-        std::vector<std::shared_ptr<WorkerGroup>> DeferredTasksHandlingGroups{};
-        char                                      NameBuffer[512]            { 0 };
+        SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
+        SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
+        SKL_FORCEINLINE WorkerGroupTag GetWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
+        SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredTasksHandlingGroups() noexcept { return { DeferredTasksHandlingGroups }; }
+
+    public:
+        TLSManagedPriorityQueue<IAODTask*> DelayedTasks             {};
+        TLSManagedQueue<AODObject*>        PendingAODObjects        {};
+        TEpochTimePoint                    CurrentLoopBeginTick     { 0 };
+        TEpochTimePoint                    TickCount                { 0 };
+        TEpochTimePoint                    BeginTick                { 0 };
+        uint16_t                           bScheduleAODDelayedTasks { FALSE };
+        ThreadFlags                        Flags                    { 0 };
+        uint16_t                           RRLastIndex              { 0 };
+        uint16_t                           RRLastIndex2             { 0 };
+
+    private:
+        ServerInstance*                               SourceServerInstance       { nullptr };
+        ServerInstanceFlags                           ServerFlags                {};
+        WorkerGroupTag                                ParentWorkerGroup          {};
+        std::vector<std::shared_ptr<WorkerGroup>>     DeferredTasksHandlingGroups{};
+        char                                          NameBuffer[512]            { 0 };
     };
 }
