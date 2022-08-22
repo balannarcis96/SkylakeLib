@@ -131,7 +131,7 @@ namespace AODTests
     {
         struct MyObject : SKL::AODObject
         {
-            int a { 0 };
+            uint64_t a { 0 };
         };
         
         auto obj = SKL::MakeShared<MyObject>();
@@ -140,13 +140,11 @@ namespace AODTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
 
-        SKL::GlobalMemoryManager::Preallocate();
-
         ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 60, 
+            .TickRate                        = 160, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
-            .WorkersCount                    = 4,
+            .WorkersCount                    = 16,
             .bIsActive                       = true,
             .bHandlesTasks                   = true,
             .bSupportsAOD                    = true,
@@ -159,7 +157,7 @@ namespace AODTests
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
         }, [ Ptr = obj.get() ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
         {
-            for( int i = 0; i < 400000; ++i )
+            for( uint64_t i = 0; i < 100000; ++i )
             {
                 Ptr->DoAsync( []( SKL::AODObject& InObj ) noexcept -> void
                 {
@@ -173,13 +171,13 @@ namespace AODTests
 
         ASSERT_TRUE( true == Start( true ) );
 
-        ASSERT_TRUE( 4 * 400000 == obj->a );
+        ASSERT_TRUE( 16 * 100000 == obj->a );
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
         const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
-        ASSERT_TRUE( TotalAllocationsBefore + 4 * 400000 == TotalAllocationsAfter );
-        ASSERT_TRUE( TotalDeallocationsBefore + 4 * 400000 == TotalDeallocationsAfter );
+        ASSERT_TRUE( TotalAllocationsBefore + 16 * 100000 == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore + 16 * 100000 == TotalDeallocationsAfter );
     }
 
     TEST_F( AODTestsFixture, AODObjectMultipleWorkers_OneDeferedTask )

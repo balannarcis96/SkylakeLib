@@ -26,9 +26,12 @@ namespace SKL
         //! Multiple producers push
         SKL_FORCEINLINE void Push( IAODTask* InTask ) noexcept
         {
-            auto* PrevNode{ Head.exchange( InTask ) };
+            auto* PrevNode{ std::atomic_exchange_explicit( &Head, InTask, std::memory_order_acq_rel ) };
             PrevNode->Next = InTask;
         }
+
+        //! Is the pointer pointing to the stub 
+        SKL_FORCEINLINE bool IsStub( void* InPtr ) const noexcept { return InPtr == &Stub; }
 
         //! Single consumer pop
         SKL_NODISCARD IAODTask* Pop() noexcept  
@@ -54,10 +57,13 @@ namespace SKL
             if( nullptr != LocalNext ) SKL_LIKELY
             {
                 Tail = LocalNext;
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
                 return LocalTail;
             }
 
-            const IAODTask* LocalHead{ Head.load_acquire() };
+            // sq-consistent load
+            const IAODTask* LocalHead{ Head };
             if( LocalTail != LocalHead )
             {
                 return nullptr;
@@ -71,6 +77,8 @@ namespace SKL
             if( nullptr != LocalNext )
             {
                 Tail = LocalNext;
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
                 return LocalTail;
             }
 
@@ -78,8 +86,8 @@ namespace SKL
         }
 
     private:
-        std::synced_value<IAODTask*> Head; //!< Head of the queue
-        IAODTask*                    Tail; //!< Tail of the queue
-        IAODTaskBase                 Stub; //!< Stub item
+        std::atomic<IAODTask*> Head; //!< Head of the queue
+        IAODTask*              Tail; //!< Tail of the queue
+        IAODTaskBase           Stub; //!< Stub item
     };
 }

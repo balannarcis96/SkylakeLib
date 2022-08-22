@@ -23,10 +23,13 @@ namespace SKL
         TaskQueue( TaskQueue && ) = delete;
         TaskQueue &operator=( TaskQueue && ) = delete;
 
+        //! Is the pointer pointing to the stub 
+        SKL_FORCEINLINE bool IsStub( void* InPtr ) const noexcept { return InPtr == &Stub; }
+
         //! Multiple producers push
         SKL_FORCEINLINE void Push( ITask* InTask ) noexcept
         {
-            auto* PrevNode{ Head.exchange( InTask ) };
+            auto* PrevNode{ std::atomic_exchange_explicit( &Head, InTask, std::memory_order_acq_rel ) };
             PrevNode->Next = InTask;
         }
 
@@ -54,10 +57,13 @@ namespace SKL
             if( nullptr != LocalNext ) SKL_LIKELY
             {
                 Tail = LocalNext;
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
                 return LocalTail;
             }
 
-            const ITask* LocalHead{ Head.load_acquire() };
+            // sq-consistent load
+            const ITask* LocalHead{ Head };
             if( LocalTail != LocalHead )
             {
                 return nullptr;
@@ -71,6 +77,8 @@ namespace SKL
             if( nullptr != LocalNext )
             {
                 Tail = LocalNext;
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
                 return LocalTail;
             }
 
@@ -78,7 +86,7 @@ namespace SKL
         }
 
     private:
-        std::synced_value<ITask*> Head; //!< Head of the queue
+        std::atomic<ITask*>       Head; //!< Head of the queue
         ITask*                    Tail; //!< Tail of the queue
         ITaskBase                 Stub; //!< Stub item
     };
