@@ -18,7 +18,11 @@ namespace SKL
     RStatus AODTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
     {
         SKL_ASSERT( nullptr != InServerInstance );
-        SKL_ASSERT( true == InWorkerGroupTag.IsValid() );
+        
+        if( false == InWorkerGroupTag.Validate() )
+        {
+            return RInvalidParamters;
+        }
     
         SourceServerInstance     = InServerInstance;
         ParentWorkerGroup        = InWorkerGroupTag;

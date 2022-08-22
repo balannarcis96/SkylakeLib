@@ -18,7 +18,12 @@ namespace AODTests
             ServerInstanceConfig.AddNewGroup( SKL::WorkerGroupTag{  .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } );        
             ASSERT_TRUE( RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
 
-            ASSERT_TRUE( RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } ) );
+            ASSERT_TRUE( RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ 
+                .Id = 1, 
+                .WorkersCount = 1, 
+                .bHandlesTasks = true, 
+                .Name = L"TEMP" 
+            } ) );
             ASSERT_TRUE( RSuccess == SKL::AODTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } ) );
         }
 

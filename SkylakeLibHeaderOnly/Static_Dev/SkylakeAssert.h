@@ -7,7 +7,6 @@
 //! 
 
 #undef NDEBUG
-#define NDEBUG
 #include <assert.h>
 
 #if defined(SKL_BUILD_SHIPPING)

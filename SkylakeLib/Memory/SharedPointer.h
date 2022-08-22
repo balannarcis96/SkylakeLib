@@ -173,8 +173,6 @@ namespace SKL
         //! 
         SKL_FORCEINLINE static consteval size_t Static_GetMetaBlockSize() noexcept
         {
-            SKL_ASSERT( nullptr != InPtr );
-
             if constexpr( std::is_array_v<TObject> )
             {
                 return MemoryPolicy::GetMetaBlockSizeForArray();
@@ -192,7 +190,7 @@ namespace SKL
         //! 
         SKL_FORCEINLINE static void Static_IncrementReference( TObjectDecay* InPtr ) noexcept
         {
-            SKL_ASSERT( nullptr != Pointer );
+            SKL_ASSERT( nullptr != InPtr );
 
             if constexpr( std::is_array_v<TObject> )
             {

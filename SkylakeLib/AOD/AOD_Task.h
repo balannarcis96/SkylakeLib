@@ -38,7 +38,7 @@ namespace SKL
         SKL_FORCEINLINE void Dispatch() noexcept
         {
             SKL_ASSERT( false == IsNull() );
-            SKL_ASSERT( nullptr == Parent.get() );
+            SKL_ASSERT( nullptr != Parent.get() );
 
             CastSelfToProto().Dispatch( *Parent );
         }
