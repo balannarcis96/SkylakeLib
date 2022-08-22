@@ -105,6 +105,38 @@ namespace SKL::MemoryPolicy
             return Header.ItemCount > Index;
         }
 
+        SKL_FORCEINLINE static void* GetBlockPointerForArray( void* InPtr ) noexcept
+        {
+            auto& Header{ GetArrayHeader( InPtr ) };
+            return reinterpret_cast<void*>( &Header );
+        }
+
+        SKL_FORCEINLINE static void* GetBlockPointerForObject( void* InPtr ) noexcept
+        {
+            return InPtr;
+        }
+
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
+        {
+            auto& Header { GetArrayHeader( InPtr ) };
+            return { reinterpret_cast<void*>( &Header ), CArrayHeaderSize };
+        }
+
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
+        {
+            return { InPtr, 0 };
+        }
+
+        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForArray() noexcept
+        {
+            return CArrayHeaderSize;
+        }
+
+        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForObject() noexcept
+        {
+            return 0;
+        }
+
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
         template<typename TArrayItem, bool bConstruct = true, bool bAcceptNoThrowConstructor = false>
         static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
@@ -301,17 +333,52 @@ namespace SKL::MemoryPolicy
         }
 
         //! Get memory block pointer and memory block size for shared object
-        static std::pair<void*, size_t> GetObjectMemoryBlockAndBlockSize( void* InPtr ) noexcept
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetObjectMemoryBlockAndBlockSize( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForObject( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), static_cast<size_t>( ControlBlock.BlockSize ) };
         }
 
         //! Get memory block pointer and memory block size for shared array
-        static std::pair<void*, size_t> GetArrayMemoryBlockAndBlockSize( void* InPtr ) noexcept
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetArrayMemoryBlockAndBlockSize( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForArray( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), static_cast<size_t>( ControlBlock.BlockSize ) };
+        }
+
+        SKL_FORCEINLINE static void* GetBlockPointerForArray( void* InPtr ) noexcept
+        {
+            auto& ControlBlock { GetControlBlockForArray( InPtr ) };
+            return reinterpret_cast<void*>( &ControlBlock );
+        }
+
+        SKL_FORCEINLINE static void* GetBlockPointerForObject( void* InPtr ) noexcept
+        {
+            auto& ControlBlock { GetControlBlockForObject( InPtr ) };
+            return reinterpret_cast<void*>( &ControlBlock );
+        }
+
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
+        {
+            auto& ControlBlock { GetControlBlockForArray( InPtr ) };
+            return { reinterpret_cast<void*>( &ControlBlock ), CSharedArrayHeaderSize };
+        }
+
+
+        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
+        {
+            auto& ControlBlock { GetControlBlockForObject( InPtr ) };
+            return { reinterpret_cast<void*>( &ControlBlock ), CSharedObjectHeaderSize };
+        }
+
+        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForArray() noexcept
+        {
+            return CSharedArrayHeaderSize;
+        }
+
+        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForObject() noexcept
+        {
+            return CSharedObjectHeaderSize;
         }
 
         //! Get the total memory block size
@@ -546,7 +613,7 @@ namespace SKL::MemoryPolicy
 }
 
 namespace SKL::MemoryDeallocation
-{
+{  
     template<typename TObject, typename TMyMemoryPolicy, bool bDestruct = true> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::UniqueMemoryPolicy> )
     struct UniqueMemoryDeallocator final
     {

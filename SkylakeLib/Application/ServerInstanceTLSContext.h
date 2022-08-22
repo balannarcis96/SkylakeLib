@@ -12,13 +12,14 @@ namespace SKL
     struct ServerInstanceTLSContext final : ITLSSingleton<ServerInstanceTLSContext>
     {
         ServerInstanceTLSContext() noexcept = default;
-        ~ServerInstanceTLSContext() noexcept = default;
+        ~ServerInstanceTLSContext() noexcept;
 
         RStatus Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
 
         SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED ServerInstanceTLSData]"; }
 
         void Reset() noexcept;
+        void Clear() noexcept;
 
         SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
         SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
@@ -38,5 +39,7 @@ namespace SKL
 
         friend bool DeferTask( ITask* InTask ) noexcept;    
         friend bool ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept;
+
+        friend class WorkerGroup;
     };
 }

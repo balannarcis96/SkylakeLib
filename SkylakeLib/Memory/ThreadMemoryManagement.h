@@ -38,6 +38,13 @@ namespace SKL
             Instance->Manager.ZeroAllMemory();
         }
         
+        //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
+        SKL_FORCEINLINE static void FreeAllPools( ) noexcept
+        {
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            Instance->Manager.FreeAllPools();
+        }
+        
         //! Allocate new memory block with the size known at compile time
         template<size_t AllocSize>
         SKL_FORCEINLINE static AllocResult Allocate() noexcept
@@ -81,6 +88,9 @@ namespace SKL
             auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
             Instance->Manager.Deallocate( InAllocResult );
         }
+
+        MemoryManager& GetManager() noexcept{ return Manager; }
+        const MemoryManager& GetManager() const noexcept{ return Manager; }
 
         ThreadLocalMemoryManager() noexcept = default;
         ~ThreadLocalMemoryManager() noexcept = default;

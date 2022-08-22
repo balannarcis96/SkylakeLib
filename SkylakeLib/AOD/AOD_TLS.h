@@ -29,11 +29,12 @@ namespace SKL
         SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSContext]"; }
 
         void Reset() noexcept;
+        void Clear() noexcept;
 
         SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
         SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
         SKL_FORCEINLINE WorkerGroupTag GetWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
-        SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredTasksHandlingGroups() noexcept { return { DeferredTasksHandlingGroups }; }
+        SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
         TLSManagedPriorityQueue<IAODTask*> DelayedTasks             {};
@@ -47,10 +48,10 @@ namespace SKL
         uint16_t                           RRLastIndex2             { 0 };
 
     private:
-        ServerInstance*                               SourceServerInstance       { nullptr };
-        ServerInstanceFlags                           ServerFlags                {};
-        WorkerGroupTag                                ParentWorkerGroup          {};
-        std::vector<std::shared_ptr<WorkerGroup>>     DeferredTasksHandlingGroups{};
-        char                                          NameBuffer[512]            { 0 };
+        ServerInstance*                               SourceServerInstance          { nullptr };
+        ServerInstanceFlags                           ServerFlags                   {};
+        WorkerGroupTag                                ParentWorkerGroup             {};
+        std::vector<std::shared_ptr<WorkerGroup>>     DeferredAODTasksHandlingGroups{};
+        char                                          NameBuffer[512]               { 0 };
     };
 }

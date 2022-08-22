@@ -159,6 +159,7 @@ namespace SKL
         std::relaxed_value<uint32_t>              bIsRunning                     { FALSE }; //!< Is the server running
         ServerInstanceFlags                       ServerBuiltFlags               {};
         std::vector<std::shared_ptr<WorkerGroup>> DeferredTasksHandlingGroups    {};        //!< All active worker groups marked with [bHandlesTimerTasks=true]
+        std::vector<std::shared_ptr<WorkerGroup>> DeferredAODTasksHandlingGroups {};        //!< All active worker groups marked with [bSupportsAOD=true]
         ServerInstanceConfig                      Config                         {};        //!< Config
 
         friend class Worker;

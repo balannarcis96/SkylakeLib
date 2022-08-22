@@ -13,23 +13,16 @@ namespace SKL
 {
     struct AODObject
     {
-        AODObject() noexcept
-        {
-            SKL_ASSERT_MSG( ( (uintptr_t)this ) % SKL_CACHE_LINE_SIZE == 0, "Instances of AODObject must be cache line aligned" );
-        }
+        AODObject() noexcept = default;
         ~AODObject() noexcept = default;
 
+        //! Execute the functor thread safe relative to the object [void(AODObject&)noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODTask<sizeof(TFunctor)>;
             
-            if( TRUE == bIsPendingDestroy ) SKL_UNLIKELY
-            {
-                return RAborted;
-            }
-
-            TaskType* NewTask = MakeSharedRaw<TaskType>();
+            TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
                 SKL_ERR( "AODObject::DoAsync() Failed to allocate task!" );
@@ -47,17 +40,13 @@ namespace SKL
             return RSuccess;
         }
 
+        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void(AODObject&)noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODTask<sizeof(TFunctor)>;
             
-            if( TRUE == bIsPendingDestroy ) SKL_UNLIKELY
-            {
-                return RAborted;
-            }
-
-            TaskType* NewTask = MakeSharedRaw<TaskType>();
+            TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
                 SKL_ERR( "AODObject::DoAsyncAfter() Failed to allocate task!" );
@@ -85,9 +74,5 @@ namespace SKL
         //First cache line
         std::relaxed_value<uint64_t> RemainingTasksCount;
         AODTaskQueue                 TaskQueue;
-        uint8_t                      CacheLinePayload[ SKL_CACHE_LINE_SIZE - sizeof( void* ) - sizeof( AODTaskQueue ) ];
-
-        //Next cache line
-        uint8_t                      bIsPendingDestroy{ FALSE };
     };
 }

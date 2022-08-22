@@ -17,7 +17,7 @@ namespace SKL
         SKL_ASSERT( true == TargetWG->GetTag().bHandlesTasks );
 
         //Select target worker group
-        auto TaskHandlingWGs{ TLSContext.GetDeferredTasksHandlingGroups() };
+        auto TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
         auto* TargetWG{ TaskHandlingWGs[ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() ].get() };
         SKL_ASSERT( nullptr != TargetWG );
@@ -56,36 +56,12 @@ namespace SKL
         while( true )
         {
             auto* Task{ this->TaskQueue.Pop() };
-            SKL_ASSERT( nullptr != Task );
-        
-            if( FALSE == bIsPendingDestroy ) SKL_LIKELY
-            {
-                Task->Dispatch();
-                TSharedPtr<IAODTask>::Static_Reset( Task );
+            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+           
+            Task->Dispatch();
 
-                if( 1 == RemainingTasksCount.decrement() )
-                {
-                    break;
-                }
-            }
-            else
-            {
-                TSharedPtr<IAODTask>::Static_Reset( Task );
+            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
 
-                if( 1 == RemainingTasksCount.decrement() )
-                {
-                    break;
-                }
-
-                goto cleanup;
-            }        
-        }
-
-    cleanup:
-        while( true )
-        {
-            auto* Task{ this->TaskQueue.Pop() };
-            SKL_ASSERT( nullptr != Task );
             TSharedPtr<IAODTask>::Static_Reset( Task );
 
             if( 1 == RemainingTasksCount.decrement() )
@@ -102,9 +78,9 @@ namespace SKL
 
         TaskQueue.Push( InTask );
         
-        if( RemainingTasksCount.increment() != 1 )
+        if( RemainingTasksCount.increment() != 0 )
         {
-            // There is a consumer present just add the task for it to be dispatched
+            // There is a consumer present, just bail
             return false;
         }
 

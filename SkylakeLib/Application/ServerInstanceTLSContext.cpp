@@ -10,6 +10,11 @@
 
 namespace SKL
 {
+    ServerInstanceTLSContext::~ServerInstanceTLSContext() noexcept
+    {
+        Clear();
+    }
+
     RStatus ServerInstanceTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
     {
         SKL_ASSERT( nullptr != InServerInstance );
@@ -17,12 +22,6 @@ namespace SKL
     
         SourceServerInstance = InServerInstance;
         ParentWorkerGroup = InWorkerGroupTag;
-
-        while( false == DelayedTasks.empty() )
-        {
-            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
-            DelayedTasks.pop();
-        }
 
         Reset();
 
@@ -32,10 +31,28 @@ namespace SKL
         return RSuccess;
     }
 
+    void ServerInstanceTLSContext::Clear() noexcept
+    {
+        DeferredTasksHandlingGroups.clear();
+        ServerFlags.Flags = 0;
+
+        while( false == DelayedTasks.empty() )
+        {
+            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            DelayedTasks.pop();
+        }
+    }
+
     void ServerInstanceTLSContext::Reset() noexcept
     {   
         DeferredTasksHandlingGroups.clear();
         ServerFlags.Flags = 0;
+
+        while( false == DelayedTasks.empty() )
+        {
+            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            DelayedTasks.pop();
+        }
 
         if( nullptr == SourceServerInstance )   
         {

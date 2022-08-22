@@ -7,6 +7,7 @@
 //! 
 
 #include "SkylakeLib.h"
+#include "WorkerGroupRunVariants.h"
 
 namespace SKL
 {
@@ -185,110 +186,106 @@ namespace SKL
 
     void WorkerGroup::ProactiveWorkerRun( Worker& Worker ) noexcept
     {
-        const auto Tag                 { GetTag() }; //!< Stack tag copy
-        const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
-        const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
-        const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
-
-        if( true == Tag.bHandlesTasks )
+        const auto& Tag{ GetTag() };
+        const auto bAllGroupsAreActive{ GetServerInstance()->GetFlags().bAllGroupsAreActive };
+        if( TRUE == bAllGroupsAreActive )
         {
-            if( true == Tag.bSupportsTLSSync )
+            if( false == Tag.bHandlesTasks
+             && false == Tag.bSupportsAOD 
+             && false == Tag.bHandlesTimerTasks 
+             && false == Tag.bSupportsTLSSync 
+             && false == Tag.bCallTickHandler )
             {
-                while( IsRunning() ) SKL_LIKELY
-                {
-                    bool bShouldTermiante { HandleTasks_Proactive( MillisecondsToSleep ) };
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
-
-                    OnWorkerTick.Dispatch( Worker, *this );
-
-                    bShouldTermiante = HandleTLSSync( Worker );
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
-                }
+                ActiveWorkerVariant<false, false, false, false, false, true>::Run( Worker, *this );
             }
-            else
-            {
-                while( IsRunning() ) SKL_LIKELY
-                {
-                    const bool bShouldTermiante { HandleTasks_Proactive( MillisecondsToSleep ) };
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
-
-                    OnWorkerTick.Dispatch( Worker, *this );
-                }
-            }
+            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	, true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	, true )
         }
         else
         {
-            if( true == Tag.bSupportsTLSSync )
+            if( false == Tag.bHandlesTasks
+             && false == Tag.bSupportsAOD 
+             && false == Tag.bHandlesTimerTasks 
+             && false == Tag.bSupportsTLSSync 
+             && false == Tag.bCallTickHandler )
             {
-                while( IsRunning() ) SKL_LIKELY
-                {
-                    OnWorkerTick.Dispatch( Worker, *this );
-
-                    const bool bShouldTermiante { HandleTLSSync( Worker ) };
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
-
-                    PreciseSleep( SecondsToSleep );
-                }
+                ActiveWorkerVariant<false, false, false, false, false, false>::Run( Worker, *this );
             }
-            else
-            {
-                while( IsRunning() ) SKL_LIKELY
-                {
-                    OnWorkerTick.Dispatch( Worker, *this );
-                    PreciseSleep( SecondsToSleep );
-                }
-            }
+            //SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	, true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	, true )
         }
     }
     
     void WorkerGroup::ReactiveWorkerRun( Worker& Worker ) noexcept
     {
-        const auto Tag                 { GetTag() }; //!< Stack tag copy
-        const auto TickRate            { Tag.SyncTLSTickRate };
-        const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0f / static_cast<float>( TickRate ) ) };
-
-        // REACTIVE WORKERS MUST HANDLE TASKS
-        SKL_ASSERT_ALLWAYS( true == Tag.bHandlesTasks );
-
-        if( true == Tag.bHandlesTasks )
+        const auto& Tag{ GetTag() };
+        if( true == Tag.bSupportsTLSSync )
         {
-            while( IsRunning() ) SKL_LIKELY
-            {
-                bool bShouldTermiante = HandleTasks_Proactive( MillisecondsToSleep );
-                if ( true == bShouldTermiante ) SKL_UNLIKELY
-                {
-                    break;
-                }
-
-                bShouldTermiante = HandleTLSSync( Worker );
-                if ( true == bShouldTermiante ) SKL_UNLIKELY
-                {
-                    break;
-                }
-            }
+            ReactiveWorkerVariant<true>::Run( Worker, *this );
         }
         else
         {
-            while( IsRunning() ) SKL_LIKELY
-            {
-                const bool bShouldTermiante = HandleTasks_Reactive();             
-                if ( true == bShouldTermiante ) SKL_UNLIKELY
-                {
-                    break;
-                }
-            }
+            ReactiveWorkerVariant<false>::Run( Worker, *this );
         }
     }
 
@@ -393,6 +390,92 @@ namespace SKL
     {
         //@TODO
         return  false;
+    }
+    
+    bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& Worker ) noexcept
+    {
+        auto&      TLSContext{ *AODTLSContext::GetInstance() };
+        const auto Now{ GetSystemUpTickCount() };
+
+        while( false == TLSContext.DelayedTasks.empty() )
+        {
+            if( true == TLSContext.DelayedTasks.top()->IsDue( Now ) )
+            {
+                TLSContext.DelayedTasks.top()->Dispatch();
+                TSharedPtr<IAODTask>::Static_Reset( TLSContext.DelayedTasks.top() );
+                TLSContext.DelayedTasks.pop();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return  false;
+    }
+
+    bool WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
+    {
+        auto&      TLSContext{ *AODTLSContext::GetInstance() };
+        const auto Now{ GetSystemUpTickCount() };
+
+        while( auto* NewTask{ Worker.AODDelayedTasks.Pop() } )
+        {
+            if( true == NewTask->IsDue( Now ) )
+            {
+                NewTask->Dispatch();
+                TSharedPtr<IAODTask>::Static_Reset( NewTask );
+            }
+            else
+            {
+                TLSContext.DelayedTasks.push( NewTask );
+            }
+        }
+
+        return HandleAODDelayedTasks_Local( Worker );
+    }
+
+    bool WorkerGroup::HandleTimerTasks_Local( Worker& Worker ) noexcept
+    {
+        auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
+        const auto Now{ GetSystemUpTickCount() };
+
+        while( false == TLSContext.DelayedTasks.empty() )
+        {
+            if( true == TLSContext.DelayedTasks.top()->IsDue( Now ) )
+            {
+                TLSContext.DelayedTasks.top()->Dispatch();
+                TSharedPtr<ITask>::Static_Reset( TLSContext.DelayedTasks.top() );
+                TLSContext.DelayedTasks.pop();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return  false;
+    }
+
+    bool WorkerGroup::HandleTimerTasks_Global( Worker& Worker ) noexcept
+    {
+        auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
+        const auto Now{ GetSystemUpTickCount() };
+
+        while( auto* NewTask{ Worker.DelayedTasks.Pop() } )
+        {
+            if( true == NewTask->IsDue( Now ) )
+            {
+                NewTask->Dispatch();
+                TSharedPtr<ITask>::Static_Reset( NewTask );
+            }
+            else
+            {
+                TLSContext.DelayedTasks.push( NewTask );
+            }
+        }
+
+        return HandleTimerTasks_Local( Worker );
     }
 
     bool WorkerGroup::OnWorkerStarted( Worker& Worker ) noexcept
@@ -537,4 +620,6 @@ namespace SKL
 
         return RSuccess;
     }
+
+#undef SKL_WORKER_ACTIVE_RUN_VARTIAN
 }

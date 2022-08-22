@@ -172,9 +172,9 @@ namespace SKL
                 }
                 else
                 {
-                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It != Allocations.end() )
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
                     {
-                        Allocations.erase( It );
+                        Allocations.insert( { Result.MemoryBlock, 0 } );
                     }
                     else
                     {
@@ -253,9 +253,9 @@ namespace SKL
                 }
                 else
                 {
-                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It != Allocations.end() )
+                    if( auto It{ Allocations.find( Result.MemoryBlock ) }; It == Allocations.end() )
                     {
-                        Allocations.erase( It );
+                        Allocations.insert( { Result.MemoryBlock, 0 } );
                     }
                     else
                     {

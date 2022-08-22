@@ -25,7 +25,7 @@ namespace SKL
     {
         if( nullptr == Group || false == Group->IsRunning() )
         {
-            SKL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group->GetTag().Name );
+            SKL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group ? Group->GetTag().Name : L"UNKNOWN" );
             return;
         }
 

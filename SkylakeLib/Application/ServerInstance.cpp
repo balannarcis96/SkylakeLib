@@ -144,9 +144,14 @@ namespace SKL
             SKL_ASSERT_ALLWAYS( nullptr != MasterWorker.get() );
         }
         
-        if( false == ServerBuiltFlags.bAllGroupsAreActive && true == ServerBuiltFlags.bSupportsDelayedTasks )
+        if( true == NewGroup->GetTag().bHandlesTimerTasks )
         {
             DeferredTasksHandlingGroups.push_back( NewGroup );
+        }
+        
+        if( true == NewGroup->GetTag().bSupportsAOD )
+        {
+            DeferredAODTasksHandlingGroups.push_back( NewGroup );
         }
 
         // save
@@ -158,13 +163,16 @@ namespace SKL
     bool ServerInstance::OnWorkerStarted( Worker& InWorker, WorkerGroup& Group ) noexcept
     {
         if( true == Group.GetTag().bHasThreadLocalMemoryManager )
-        {
-            if ( RSuccess != ThreadLocalMemoryManager::Create() )
+        {   
+            if( nullptr == ThreadLocalMemoryManager::GetInstance() )
             {
-                SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", Group.GetTag().Name );
-                return false;
-            }   
-
+                if ( RSuccess != ThreadLocalMemoryManager::Create() )
+                {
+                    SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", Group.GetTag().Name );
+                    return false;
+                }   
+            }
+    
             SKL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", Group.GetTag().Name );
         
             if( true == Group.GetTag().bPreallocateAllThreadLocalPools )
@@ -206,6 +214,7 @@ namespace SKL
 
         if( true == Group.GetTag().bHasThreadLocalMemoryManager )
         {
+            ThreadLocalMemoryManager::FreeAllPools();
             ThreadLocalMemoryManager::Destroy();
             SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", Group.GetTag().Name );
         }

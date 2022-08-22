@@ -49,14 +49,15 @@ namespace SKL
         uint32_t       SyncTLSTickRate                 { 0 };       //!< Tick rate of tls sync [ bSupportsTLSSync == true ]
         uint16_t       Id                              { 0 };       //!< UID of the tag [max 65536 workers] recommended to treat id as index starting from 1 (0 = invalid id)
         uint16_t       WorkersCount                    { 0 };       //!< Number of workers in the group
-        bool           bIsActive                       { false };   //!< Is this an pro-active worker [ it has an active ticks/second loop ] 
+        bool           bIsActive                       { false };   //!< Is this an pro-active worker [ it has an active ticks/second loop ]
         bool           bHandlesTasks                   { false };   //!< Does this group handle tasks and async IO tasks [ an AsyncIO instance will be created for the group if true ]
-        bool           bSupportsAOD                    { false };   //!< true -> Workers in this group can use AOD (Async Object Dispatcher) 
+        bool           bSupportsAOD                    { false };   //!< true -> Workers in this group can use AOD (Async Object Dispatcher) delayed tasks directly (handled by the same thread)
         bool           bHandlesTimerTasks              { false };   //!< true -> This group handles global and AOD(if bSupportsAOD=true) delayed tasks -> requires [bIsActive=true]
         bool           bSupportsTLSSync                { false };   //!< Supports TLSSync [ TLSSync it is its own feature, please get documented before use ]
         bool           bHasThreadLocalMemoryManager    { false };   //!< true -> If any of the workers in this group need to use ThreadLocalMemoryManager or associated allocation strategies
         bool           bPreallocateAllThreadLocalPools { false };   //!< true -> Preallocate all pools in ThreadLocalMemoryManager
         bool           bSupportesTCPAsyncAcceptors     { false };   //!< Does this group supports and handles tcp async acceptors
+        bool           bCallTickHandler                { false };   //!< true -> the workers in the group will call the thick handler
         const wchar_t *Name                            { nullptr }; //!< Name of the worker group
         mutable bool   bIsValid                        { false };   //!< Initialize this member to false if you want your server to run correctly ;)
 
@@ -116,9 +117,9 @@ namespace SKL
                 return false;
             }
 
-            if( true == bSupportsAOD && false == bHasThreadLocalMemoryManager )
+            if( true == bSupportsAOD && ( false == bHasThreadLocalMemoryManager || false == bIsActive ) )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
+                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true and bIsActive = true!", Name );
                 return false;
             }
 

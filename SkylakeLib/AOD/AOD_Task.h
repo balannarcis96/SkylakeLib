@@ -66,6 +66,12 @@ namespace SKL
             Due = GetSystemUpTickCount() + AfterMilliseconds;
         }
 
+        //! Is this task due
+        SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
+        {
+            return InNow >= Due;
+        }
+
         SKL_FORCEINLINE bool operator>( const IAODTask& Other ) noexcept    
         {
             return Due > Other.Due;

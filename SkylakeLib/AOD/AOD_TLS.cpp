@@ -12,13 +12,7 @@ namespace SKL
 {
     AODTLSContext::~AODTLSContext() noexcept
     {
-        DeferredTasksHandlingGroups.clear();
-        ServerFlags.Flags = 0;
-        
-        while( false == DelayedTasks.empty() )
-        {
-            DelayedTasks.pop();
-        }
+        Clear();
     }
 
     RStatus AODTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
@@ -38,9 +32,9 @@ namespace SKL
         return RSuccess;
     }
 
-    void AODTLSContext::Reset() noexcept
-    {   
-        DeferredTasksHandlingGroups.clear();
+    void AODTLSContext::Clear() noexcept
+    {
+        DeferredAODTasksHandlingGroups.clear();
         ServerFlags.Flags = 0;
         
         while( false == DelayedTasks.empty() )
@@ -48,6 +42,11 @@ namespace SKL
             TSharedPtr<IAODTask>::Static_Reset( DelayedTasks.top() );
             DelayedTasks.pop();
         }
+    }
+
+    void AODTLSContext::Reset() noexcept
+    {   
+        Clear();
 
         if( nullptr == SourceServerInstance )   
         {
@@ -56,7 +55,7 @@ namespace SKL
         }
 
         //Cache for fast, thread local, access
-        ServerFlags.Flags           = SourceServerInstance->ServerBuiltFlags.Flags;
-        DeferredTasksHandlingGroups = SourceServerInstance->DeferredTasksHandlingGroups;
+        ServerFlags.Flags              = SourceServerInstance->ServerBuiltFlags.Flags;
+        DeferredAODTasksHandlingGroups = SourceServerInstance->DeferredTasksHandlingGroups;
     }
 }

@@ -35,6 +35,7 @@ namespace WorkersTests
                     .bHasThreadLocalMemoryManager    = false,
                     .bPreallocateAllThreadLocalPools = false,
                     .bSupportesTCPAsyncAcceptors     = false,
+                    .bCallTickHandler                = true,
                     .Name                            = L"FRONT_END_GROUP"
                 }
             };
@@ -78,6 +79,7 @@ namespace WorkersTests
                     .bIsActive        = false,
                     .bHandlesTasks    = true,
                     .bSupportsTLSSync = false,
+                    .bCallTickHandler = true,
                     .Name             = L"BACK_END_GROUP"
                 }
             };

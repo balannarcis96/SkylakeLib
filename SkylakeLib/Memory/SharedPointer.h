@@ -102,7 +102,7 @@ namespace SKL
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
         //! 
-        SKL_FORCEINLINE static void     Static_Reset( TObjectDecay* InPtr ) noexcept
+        SKL_FORCEINLINE static void Static_Reset( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InPtr );
 
@@ -129,11 +129,68 @@ namespace SKL
         }
 
         //! 
+        //! Get the pointer to the actual memory block of the managed pointer
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static void* Static_GetBlockPtr( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            if constexpr( std::is_array_v<TObject> )
+            {
+                return MemoryPolicy::GetBlockPointerForArray( InPtr );
+            }
+            else
+            {
+                return MemoryPolicy::GetBlockPointerForObject( InPtr );
+            }
+        }
+
+        //! 
+        //! Get the pointer to the actual memory block of the managed pointer and the size of the metadata block
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static std::pair<void*, size_t> Static_GetBlockPtrAndMetaBlockSize( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            if constexpr( std::is_array_v<TObject> )
+            {
+                return MemoryPolicy::GetBlockPointerAndMetaBlockSizeForArray( InPtr );
+            }
+            else
+            {
+                return MemoryPolicy::GetBlockPointerAndMetaBlockSizeForObject( InPtr );
+            }
+        }
+
+        //! 
+        //! Get the size of the metadata block (compile time value)
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static consteval size_t Static_GetMetaBlockSize() noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            if constexpr( std::is_array_v<TObject> )
+            {
+                return MemoryPolicy::GetMetaBlockSizeForArray();
+            }
+            else
+            {
+                return MemoryPolicy::GetMetaBlockSizeForObject();
+            }
+        }
+
+        //! 
         //! Increment the reference count for InPtr
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
         //! 
-        SKL_FORCEINLINE static void     Static_IncrementReference( TObjectDecay* InPtr ) noexcept
+        SKL_FORCEINLINE static void Static_IncrementReference( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != Pointer );
 

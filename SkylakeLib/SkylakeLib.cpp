@@ -91,11 +91,18 @@ namespace SKL
     {
         if( true == SkylakeLibInitPerThread::GetValue() )
         {
-            SKL_INF( "The SkylakeLib was already init on this thread!" );
+            SKL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
             return RSuccess;
         }
-        
-        // per thread init code goes here
+
+        if( nullptr == ThreadLocalMemoryManager::GetInstance() )
+        {
+            if( RSuccess != SKL::ThreadLocalMemoryManager::Create() )
+            {
+                SKL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
+                return RSuccess;
+            }
+        }
 
         SkylakeLibInitPerThread::SetValue( true );
 
@@ -106,11 +113,15 @@ namespace SKL
     {
         if( false == SkylakeLibInitPerThread::GetValue() )
         {
-            SKL_INF( "The SkylakeLib was already terminated on this thread!" );
+            SKL_INF( "[Skylake_TerminateLibrary_Thread()] The SkylakeLib was already terminated on this thread!" );
             return RSuccess;
         }
 
-        // per thread shutdown code goes here
+        if( nullptr != SKL::ThreadLocalMemoryManager::GetInstance() )
+        {
+            SKL::ThreadLocalMemoryManager::FreeAllPools();
+            SKL::ThreadLocalMemoryManager::Destroy();
+        }
 
         SkylakeLibInitPerThread::SetValue( false );
 

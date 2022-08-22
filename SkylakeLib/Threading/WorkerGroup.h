@@ -191,7 +191,10 @@ namespace SKL
         bool HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept;
         bool HandleTask( TCompletionKey InCompletionKey ) noexcept;
         bool HandleTLSSync( Worker& Worker ) noexcept;
-        void HandleAODDelayedTasks( Worker& Worker ) noexcept;
+        bool HandleAODDelayedTasks_Local( Worker& Worker ) noexcept;
+        bool HandleTimerTasks_Local( Worker& Worker ) noexcept;
+        bool HandleAODDelayedTasks_Global( Worker& Worker ) noexcept;
+        bool HandleTimerTasks_Global( Worker& Worker ) noexcept;
 
     private:
         const WorkerGroupTag                      Tag                 {};          //!< Worker group tag
@@ -210,5 +213,7 @@ namespace SKL
         friend Worker;    
         friend ServerInstance;    
         friend struct AODObject;
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive>
+        friend struct WorkerGroupRunVariant;
     }; 
 }
