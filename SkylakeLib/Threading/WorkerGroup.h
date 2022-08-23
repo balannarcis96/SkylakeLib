@@ -105,7 +105,7 @@ namespace SKL
         //! Is this group the master workers group 
         bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker.get(); };
 
-        //! Deferre functor exectuion to the a worker in this group [if the group handles async IO only!]
+        //! Deferre functor exectuion to the a worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
         template<typename TFunctor>
         RStatus Deferre( TFunctor&& InFunctor ) noexcept
         {

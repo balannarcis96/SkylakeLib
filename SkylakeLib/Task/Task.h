@@ -142,8 +142,10 @@ namespace SKL
         return { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
     }
 
+    //! Defer task execution [void( void )noexcept] 
     bool DeferTask( ITask* InTask ) noexcept;
 
+    //! Defer functor execution asap [void( void )noexcept] 
     template<typename TFunctor>
     bool DeferTask( TFunctor&& InFunctor ) noexcept
     {
@@ -160,6 +162,7 @@ namespace SKL
         return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
     }
 
+    //! Defer functor execution after AfterMilliseconds [void( void )noexcept] 
     template<typename TFunctor>
     bool DeferTask( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
     {

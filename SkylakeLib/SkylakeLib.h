@@ -104,6 +104,11 @@ namespace SKL
                 return false;
             }
 
+            if ( true == bIsActive && true == bHandlesTasks && false == bCallTickHandler )
+            {
+                SKL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bHandlesTasks=true;bCallTickHandler=false] Recommended to use a reactive worker group instead!", Name );
+            }
+
             // tick rate 0 means no delay or relay on TickRate
             //if ( true == bSupportsTLSSync && 0 == SyncTLSTickRate )
             //{
@@ -117,9 +122,9 @@ namespace SKL
                 return false;
             }
 
-            if( true == bSupportsAOD && ( false == bHasThreadLocalMemoryManager || false == bIsActive ) )
+            if( true == bSupportsAOD && ( false == bHasThreadLocalMemoryManager ) )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true and bIsActive = true!", Name );
+                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
                 return false;
             }
 

@@ -26,7 +26,7 @@ namespace SKL
     
         SourceServerInstance     = InServerInstance;
         ParentWorkerGroup        = InWorkerGroupTag;
-        bScheduleAODDelayedTasks = false == ParentWorkerGroup.bHandlesTimerTasks;
+        bScheduleAODDelayedTasks = false == ParentWorkerGroup.bIsActive;
 
         Reset();
 

@@ -54,9 +54,6 @@ namespace SKL
             const auto& WorkerConfig                { Config.WorkerGroups[i] };
             const bool  bDoesMasterNeedsToBeCreated { ( i == Config.WorkerGroups.size() - 1 ) && true == InConfig.bWillCaptureCallingThread };
  
-            bAllGroupsAreActive &= WorkerConfig.Tag.bIsActive;
-            bAtLeastOneWorkerGroupThatHandlesDelayedTasks |= WorkerConfig.Tag.bHandlesTimerTasks;
-
             if( false == CreateWorkerGroup( WorkerConfig, bDoesMasterNeedsToBeCreated ) )
             {
                 SKL_ERR_FMT( "ServerInstance[%ws]::Initialize()", Config.Name );
@@ -149,7 +146,7 @@ namespace SKL
             DeferredTasksHandlingGroups.push_back( NewGroup );
         }
         
-        if( true == NewGroup->GetTag().bSupportsAOD )
+        if( true == NewGroup->GetTag().bSupportsAOD && true == NewGroup->GetTag().bIsActive )
         {
             DeferredAODTasksHandlingGroups.push_back( NewGroup );
         }
@@ -298,6 +295,10 @@ namespace SKL
     bool ServerInstance::OnBeforeStartServer() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Will start!", Config.Name );
+
+        //The server is finally running
+        bIsRunning.exchange( TRUE );
+
         return true;
     }
     
@@ -305,21 +306,23 @@ namespace SKL
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Started!", Config.Name );
         
-        //The server is finally running
-        bIsRunning.exchange( TRUE );
-
         return true;
     }
     
     bool ServerInstance::OnBeforeStopServer() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Will stop!", Config.Name );
+
         return true;
     }
     
     bool ServerInstance::OnServerStopped() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Stopped!", Config.Name );
+
+        //The server is finally running
+        bIsRunning.exchange( TRUE );
+
         return true;
     }
 

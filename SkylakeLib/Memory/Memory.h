@@ -74,3 +74,4 @@ namespace SKL
 #include "MemoryPolicy.h"
 #include "SharedPointer.h"
 #include "AllocationStrategies.h"
+#include "STLAllocator.h"

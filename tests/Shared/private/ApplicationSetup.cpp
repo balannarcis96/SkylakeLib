@@ -1,34 +1,26 @@
 #include "ApplicationSetup.h"
 
-
-bool TestApplication::Start( bool bIncludeCallignThread )
+bool TestApplication::Start( bool bIncludeCallignThread ) noexcept
 {
-    if( false == Initialize() )
-    {
-        return false;
-    }
-
     ServerInstanceConfig.SetWillCaptureCallingThread( bIncludeCallignThread );
-    
     SKL::ServerInstanceConfig::ServerInstanceConfig ConfigCopy{ ServerInstanceConfig };
-    
-    if( RSuccess != ServerInstance.Initialize( std::move( ConfigCopy ) ) )
+    if( RSuccess != Initialize( std::move( ConfigCopy ) ) )
+    {
+        return false;
+    }
+
+    if( true != InitializeTestApplication() )
     {
         return false;
     }
     
-    return ServerInstance.StartServer() == ( bIncludeCallignThread ? RServerInstanceFinalized : RSuccess );
+    return StartServer() == ( bIncludeCallignThread ? RServerInstanceFinalized : RSuccess );
 }
 
-void TestApplication::SignalToStop()
+bool TestApplication::Stop() noexcept
 {
-    ServerInstance.SignalToStop();
-}
+    SignalToStop();
+    JoinAllGroups();
 
-bool TestApplication::Stop()
-{
-    ServerInstance.SignalToStop();
-
-    ServerInstance.JoinAllGroups();
     return true;
 }

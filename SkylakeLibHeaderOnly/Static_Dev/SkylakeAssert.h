@@ -6,7 +6,9 @@
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
 
-#undef NDEBUG
+#if !defined(SKL_BUILD_SHIPPING)
+    #undef NDEBUG
+#endif
 #include <assert.h>
 
 #if defined(SKL_BUILD_SHIPPING)

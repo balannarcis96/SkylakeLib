@@ -16,7 +16,7 @@ namespace SKL
         auto TaskHandlingWGs{ TLSContext.GetDeferredTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
         auto* TargetWG{ TaskHandlingWGs[ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() ].get() };
-        SKL_ASSERT( true == TargetWG->GetTag().bHandlesTasks );
+        SKL_ASSERT( true == TargetWG->GetTag().bHandlesTimerTasks );
         SKL_ASSERT( nullptr != TargetWG );
         SKL_ASSERT( 0 < TargetWG->GetNumberOfRunningWorkers() );
         

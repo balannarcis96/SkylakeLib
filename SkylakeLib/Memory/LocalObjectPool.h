@@ -105,6 +105,13 @@ namespace SKL
                     }
                 }
             }
+
+#if defined(SKL_MEMORY_STATISTICS) 
+        TotalAllocations     = 0;
+        TotalDeallocations   = 0;
+        TotalOSAllocations   = 0;
+        TotalOSDeallocations = 0;
+#endif
         }
 
         //! Allocate new T

@@ -1,20 +1,19 @@
 #include <gtest/gtest.h>
 #include <SkylakeLib.h>
 
-class TestApplication
+class TestApplication : public SKL::ServerInstance 
 {
 public:
-    TestApplication( const wchar_t* Name ) : 
+    TestApplication( const wchar_t* Name ) noexcept : 
         ServerInstanceConfig{ Name },
         ServerInstance{}
     {}
 
-    virtual bool Start( bool bIncludeCallignThread = true );
-    virtual void SignalToStop();
-    virtual bool Stop();
+    virtual bool Start( bool bIncludeCallignThread = true ) noexcept;
+    virtual bool Stop() noexcept;
 
     template<typename TFunctor>
-    bool AddNewWorkerGroup( const SKL::WorkerGroupTag& InTag, TFunctor&& InOnTickFunctor )
+    bool AddNewWorkerGroup( const SKL::WorkerGroupTag& InTag, TFunctor&& InOnTickFunctor ) noexcept
     {
         InTag.Validate();
 
@@ -33,18 +32,13 @@ public:
         }
 
         ServerInstanceConfig.AddNewGroup( std::move( WGConfig ) );
-        
-        if( false == WGConfig.IsValid() )
-        {
-            return false;
-        }
 
         return true;
     }
+
 protected:
-    virtual bool Initialize() = 0;
+    virtual bool InitializeTestApplication() noexcept  { return true; }
 
     SKL::ServerInstanceConfig::ServerInstanceConfig ServerInstanceConfig;
-    SKL::ServerInstance                             ServerInstance;
 };
 
