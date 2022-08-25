@@ -25,5 +25,8 @@ namespace SKL
         virtual void OnTickWorker( Worker& InWorker, WorkerGroup& InWorkerGroup ) noexcept = 0;
 
         friend ServerInstance;
+
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive>
+        friend struct WorkerGroupRunVariant;
     };
 }    

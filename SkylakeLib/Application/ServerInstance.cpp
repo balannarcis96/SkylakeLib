@@ -401,7 +401,7 @@ namespace SKL
                 // Start from 1 as first entry is nullptr
                 for( size_t i = 1; i < ActiveServices.size(); ++i )
                 {
-                    ActiveServices[i]->OnTick();
+                    ActiveServices[ i ]->OnTick();
                 }
 
                 if( true == IsRunning() ) SKL_LIKELY

@@ -21,6 +21,7 @@ namespace SKL
             const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
+            auto&      WorkerServices      { InGroup.GetServerInstance()->GetAllWorkerServices() };
             
             PreciseSleep_WaitableTimer::Create();
 
@@ -73,6 +74,11 @@ namespace SKL
                             break;
                         }
                     }
+                }
+
+                for( size_t i = 1; i < WorkerServices.size(); ++i )
+                {
+                    WorkerServices[ i ]->OnTickWorker( InWorker, InGroup );
                 }
 
                 if constexpr( true == bHasTickHandler )

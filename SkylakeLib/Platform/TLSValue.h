@@ -9,7 +9,7 @@
 
 namespace SKL
 {
-    template< typename T, uint32_t TypeIndex = 0, typename TDummy = void, size_t TSizeDummy = 0 >
+    template< typename T, uint32_t TypeIndex = 0, typename TDependentType = void, size_t TDependentSize = 0 >
     struct TLSValue
     {
         static constexpr bool bFitsInTLSSlot = sizeof( T ) <= sizeof( void * );

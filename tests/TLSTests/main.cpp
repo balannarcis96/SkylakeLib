@@ -89,6 +89,8 @@ namespace TLSValueTests
         Value = MyTLSPtr::GetValuePtr();
         ASSERT_TRUE( NewInstance.get() == Value );
         ASSERT_TRUE( Value->a == NewInstance->a );
+
+        MyTLSPtr::SetValuePtr( nullptr );
     }
 
     TEST( TLSValueTests, Get_Set_TLS_Ptr_Ex )
@@ -106,6 +108,8 @@ namespace TLSValueTests
         Value = MyTLSValue_string::GetValuePtr();
         ASSERT_TRUE( NewInstance.get() == Value );
         ASSERT_TRUE( *Value == "A1B2C3" );
+
+        MyTLSValue_string::SetValuePtr( nullptr );
     }
 }
 

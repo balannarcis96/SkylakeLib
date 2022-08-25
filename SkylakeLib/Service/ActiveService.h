@@ -16,6 +16,7 @@ namespace SKL
 
     protected:
         //! [Callback] Each time this service is ticked
+        //! This is not thread safe with respect to the DoAsync API
         virtual void OnTick() noexcept = 0;
 
         friend ServerInstance;

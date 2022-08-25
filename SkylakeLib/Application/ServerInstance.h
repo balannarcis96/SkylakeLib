@@ -111,11 +111,11 @@ namespace SKL
         ServerInstanceFlags GetFlags() const noexcept { return ServerBuiltFlags; }
 
         //! Get service API
-        const std::vector<std::unique_ptr<SimpleService>>& GetAllSimpleServices() const noexcept { SimpleServices; }
-        const std::vector<std::unique_ptr<AODService>>&    GetAllAODServices() const noexcept { AODServices; }
-        const std::vector<std::unique_ptr<ActiveService>>& GetAllActiveServices() const noexcept { ActiveServices; }
-        const std::vector<std::unique_ptr<WorkerService>>& GetAllWorkerServices() const noexcept { WorkerServices; }
-        const std::vector<IService*>&                      GetAllServices() const noexcept { AllServices; }
+        const std::vector<std::unique_ptr<SimpleService>>& GetAllSimpleServices() const noexcept { return SimpleServices; }
+        const std::vector<std::unique_ptr<AODService>>&    GetAllAODServices() const noexcept { return AODServices; }
+        const std::vector<std::unique_ptr<ActiveService>>& GetAllActiveServices() const noexcept { return ActiveServices; }
+        const std::vector<std::unique_ptr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
+        const std::vector<IService*>&                      GetAllServices() const noexcept { return AllServices; }
 
         IService* GetServiceById( uint32_t UID ) noexcept
         {
