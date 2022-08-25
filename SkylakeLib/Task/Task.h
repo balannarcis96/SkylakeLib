@@ -23,7 +23,7 @@ namespace SKL
     //! 
     struct ITask : ITaskBase
     {   
-        using TDispatchFunctionPtr = void( SKL_CDECL* )() noexcept;
+        using TDispatchFunctionPtr = void( SKL_CDECL* )( ITask* ) noexcept;
         using TDispatchProto       = ASD::UniqueFunctorWrapper<CITask_TaskMinimumSize, TDispatchFunctionPtr>;
 
         ITask() = default;
@@ -33,10 +33,10 @@ namespace SKL
         }
 
         //! Dispatch this task
-        SKL_FORCEINLINE void Dispatch() const noexcept
+        SKL_FORCEINLINE void Dispatch() noexcept
         {
-            //ASD_ASSERT( false == IsNull() );
-            CastSelfToProto().Dispatch();
+            SKL_ASSERT( false == IsNull() );
+            CastSelfToProto().Dispatch( this );
         }
         
         //! Is this task valid
@@ -142,8 +142,11 @@ namespace SKL
         return { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
     }
 
-    //! Defer task execution [void( void )noexcept] 
+    //! Defer an newly allocated task
     bool DeferTask( ITask* InTask ) noexcept;
+
+    //! Defer an already deferred task
+    bool DeferTaskAgain( ITask* InTask ) noexcept;
 
     //! Defer functor execution asap [void( void )noexcept] 
     template<typename TFunctor>

@@ -55,7 +55,13 @@ namespace SKL
                 {
                     if constexpr( bIsClassType )
                     {
-                        SKL_ASSERT( PlatformTLS::GetTlsValue( TLSIndex ) == nullptr );
+                        const auto* TLSValue = reinterpret_cast<T*>( PlatformTLS::GetTlsValue( TLSIndex ) );
+                        if( nullptr != TLSValue )
+                        {
+                            psnip_trap();
+                        }
+            
+                        SKL_ASSERT( TLSValue == nullptr );
                     }
 
                     PlatformTLS::FreeTlsSlot( TLSIndex );

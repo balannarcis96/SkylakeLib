@@ -14,6 +14,7 @@ file( GLOB_RECURSE _Math_files                   LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _Networking_files             LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Networking/*.cpp"             "${SKYLAKE_SRC_ROOT}/Networking/*.h" )
 file( GLOB_RECURSE _Platform_files               LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Platform/*.cpp"               "${SKYLAKE_SRC_ROOT}/Platform/*.h" )
 file( GLOB         _Root_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/*.cpp"                        "${SKYLAKE_SRC_ROOT}/*.h" )
+file( GLOB_RECURSE _Service_files                LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Service/*.cpp"                "${SKYLAKE_SRC_ROOT}/Service/*.h" )
 file( GLOB_RECURSE _Std_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Std/*.cpp"                    "${SKYLAKE_SRC_ROOT}/Std/*.h" )
 file( GLOB_RECURSE _Task_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Task/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Task/*.h" )
 file( GLOB_RECURSE _Tuning_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Tuning/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Tuning/*.h" )
@@ -34,6 +35,7 @@ add_library (SkylakeLib STATIC
     ${_Networking_files}                   
     ${_Platform_files}                 
     ${_Root_files}                     
+    ${_Service_files}                     
     ${_Std_files}     
     ${_Task_files}
     ${_Tuning_files}                 
@@ -54,6 +56,7 @@ source_group("Math"                   FILES ${_Math_files}                  )
 source_group("Networking"             FILES ${_Networking_files}            )
 source_group("Platform"               FILES ${_Platform_files}              )
 source_group("/"                      FILES ${_Root_files}                  )
+source_group("Service"                FILES ${_Service_files}               )
 source_group("Std"                    FILES ${_Std_files}                   )
 source_group("Task"                   FILES ${_Task_files}                  )
 source_group("Tuning"                 FILES ${_Tuning_files}                )

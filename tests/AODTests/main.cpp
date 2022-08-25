@@ -90,11 +90,11 @@ namespace AODTests
             if( InGroup.GetTag().Id == 1 )
             {
                 SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
-                InGroup.Deferre( [ this ]() noexcept -> void 
+                InGroup.Defer( [ this ]( SKL::ITask* Self ) noexcept -> void 
                 {
                     for( uint64_t i = 0; i < IterCount; ++i )
                     {
-                        SKL::DeferTask( [ this ]() noexcept -> void 
+                        SKL::DeferTask( [ this ]( SKL::ITask* Self ) noexcept -> void 
                         {
                             Counter.decrement();
                         } );
@@ -137,7 +137,7 @@ namespace AODTests
             for( uint64_t i = 0; i < IterCount; ++i )
             {
                 int32_t ExecCounter = 0;
-                InGroup.Deferre( [ this, ExecCounter ]() mutable noexcept -> void 
+                InGroup.Defer( [ this, ExecCounter ]( SKL::ITask* Self ) mutable noexcept -> void 
                 {
                     SKL_ASSERT_ALLWAYS( 0 == ExecCounter++ );
 
@@ -195,7 +195,6 @@ namespace AODTests
             {
                 auto obj = SKL::MakeShared<MyObject>();
 
-                SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
                     SKL_ASSERT_ALLWAYS( RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AODObject& InObj ) noexcept -> void 
@@ -473,7 +472,7 @@ namespace AODTests
             {
                 bHasCreatedTask = true;
 
-                SKL::DeferTask( [ &InGroup ]() noexcept -> void 
+                SKL::DeferTask( [ &InGroup ]( SKL::ITask* Self ) noexcept -> void 
                 {
                     SKL_INF( "FROM TASK" );
                     InGroup.GetServerInstance()->SignalToStop( true );
@@ -525,7 +524,7 @@ namespace AODTests
 
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
-                    SKL::DeferTask( [ &Counter ]() noexcept -> void 
+                    SKL::DeferTask( [ &Counter ]( SKL::ITask* Self ) noexcept -> void 
                     {
                         Counter.decrement();
                     } );

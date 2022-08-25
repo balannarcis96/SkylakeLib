@@ -57,7 +57,7 @@ namespace WorkersTests
                     return ;
                 }
 
-                Manager.GetWorkerGroupById( 2 )->Deferre( [ &Manager ]() noexcept {
+                Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* Self ) noexcept {
                     SKL_INF( "From TASK" );
                     Manager.SignalToStop();
                 } );

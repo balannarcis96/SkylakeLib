@@ -22,6 +22,18 @@ namespace SKL
         // save config
         Config = std::forward<ServerInstanceConfig>( InConfig );
 
+        SimpleServices.reserve( 32 );
+        SimpleServices.emplace_back( nullptr ); //index zero is not valid!
+
+        AODServices.reserve( 32 );   
+        AODServices.emplace_back( nullptr ); //index zero is not valid!
+
+        ActiveServices.reserve( 32 );
+        ActiveServices.emplace_back( nullptr ); //index zero is not valid!
+
+        WorkerServices.reserve( 32 );
+        WorkerServices.emplace_back( nullptr ); //index zero is not valid!
+
         WorkerGroups.reserve( 32 );
         WorkerGroups.emplace_back( nullptr ); //index zero is not valid!
 
@@ -57,6 +69,22 @@ namespace SKL
             if( false == CreateWorkerGroup( WorkerConfig, bDoesMasterNeedsToBeCreated ) )
             {
                 SKL_ERR_FMT( "ServerInstance[%ws]::Initialize()", Config.Name );
+                return RFail;
+            }
+        }
+
+        if( false == OnAddServices() )
+        {
+            SKL_ERR_FMT( "ServerInstance[%ws]::OnAddServices() Failed", Config.Name );
+            return RFail;
+        }
+
+        // initialize all services
+        for( auto* Service : AllServices )
+        {
+            if( const auto Result{ Service->Initialize() }; RSuccess != Result )
+            {
+                SKL_ERR_FMT( "ServerInstance[%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
                 return RFail;
             }
         }
@@ -112,6 +140,39 @@ namespace SKL
         return RFail;
     }
     
+    //! Signal all worker groups to stop
+    void ServerInstance::SignalToStop( bool bForce ) noexcept
+    {
+        if( false == bIsRunning.exchange( false ) )
+        {
+            SKL_VER_FMT( "[ServerInstance:%ws] SignalToStop() Already signaled!", Config.Name );
+            return;
+        }
+
+        // notice all services
+        for( auto* Service : AllServices )
+        {
+            Service->OnServerStopSignaled();
+        }
+
+        if( false == OnBeforeStopServer() )
+        {
+            if( false == bForce )
+            {
+                SKL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed and cancelled the stop process!", Config.Name );
+                return;
+            }
+
+            SKL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
+        }
+
+        for( auto& Group: WorkerGroups )
+        {
+            if( nullptr == Group ) { continue; }
+            Group->SignalToStop();
+        }
+    }
+
     bool ServerInstance::CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept
     {
         auto NewGroup { std::make_shared<WorkerGroup>( Config.Tag, this ) };
@@ -157,66 +218,78 @@ namespace SKL
         return true;
     }
 
-    bool ServerInstance::OnWorkerStarted( Worker& InWorker, WorkerGroup& Group ) noexcept
+    bool ServerInstance::OnWorkerStarted( Worker& InWorker, WorkerGroup& InGroup ) noexcept
     {
-        if( true == Group.GetTag().bHasThreadLocalMemoryManager )
+        if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
         {   
             if( nullptr == ThreadLocalMemoryManager::GetInstance() )
             {
                 if ( RSuccess != ThreadLocalMemoryManager::Create() )
                 {
-                    SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", Group.GetTag().Name );
+                    SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
                     return false;
                 }   
             }
     
-            SKL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", Group.GetTag().Name );
+            SKL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         
-            if( true == Group.GetTag().bPreallocateAllThreadLocalPools )
+            if( true == InGroup.GetTag().bPreallocateAllThreadLocalPools )
             {
-                SKL_VER_FMT( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", Group.GetTag().Name );
+                SKL_VER_FMT( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", InGroup.GetTag().Name );
                 ThreadLocalMemoryManager::Preallocate();
             }
         }
 
-        if( RSuccess != ServerInstanceTLSContext::Create( this, Group.GetTag() ) )
+        if( RSuccess != ServerInstanceTLSContext::Create( this, InGroup.GetTag() ) )
         {
-            SKL_ERR_FMT("[WorkerGroup:%ws] failed to create ServerInstanceTLSContext for worker!", Group.GetTag().Name );
+            SKL_ERR_FMT("[WorkerGroup:%ws] failed to create ServerInstanceTLSContext for worker!", InGroup.GetTag().Name );
             return false;
         }
 
-        if( true == Group.GetTag().bSupportsAOD )
+        if( true == InGroup.GetTag().bSupportsAOD )
         {
-            if( RSuccess != AODTLSContext::Create( this, Group.GetTag() ) )
+            if( RSuccess != AODTLSContext::Create( this, InGroup.GetTag() ) )
             {
-                SKL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", Group.GetTag().Name );
+                SKL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", InGroup.GetTag().Name );
                 return false;
             }
         }
 
-        SKL_INF_FMT("[WorkerGroup:%ws] worker started!", Group.GetTag().Name );
+        for( auto& Service : WorkerServices )
+        {
+            if( nullptr == Service ){ continue; }
+            Service->OnWorkerStarted( InWorker, InGroup );
+        }
+
+        SKL_INF_FMT("[WorkerGroup:%ws] worker started!", InGroup.GetTag().Name );
         return true;
     }
     
-    bool ServerInstance::OnWorkerStopped( Worker& InWorker, WorkerGroup& Group ) noexcept
+    bool ServerInstance::OnWorkerStopped( Worker& InWorker, WorkerGroup& InGroup ) noexcept
     {
-        if( true == Group.GetTag().bSupportsAOD )
+        for( auto& Service : WorkerServices )
+        {
+            if( nullptr == Service ){ continue; }
+            Service->OnWorkerStopped( InWorker, InGroup );
+        }
+
+        if( true == InGroup.GetTag().bSupportsAOD )
         {
             AODTLSContext::Destroy();
-            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", Group.GetTag().Name );
+            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", InGroup.GetTag().Name );
         }
 
         ServerInstanceTLSContext::Destroy();
-        SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", Group.GetTag().Name );
+        SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", InGroup.GetTag().Name );
 
-        if( true == Group.GetTag().bHasThreadLocalMemoryManager )
+        if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
         {
             ThreadLocalMemoryManager::FreeAllPools();
             ThreadLocalMemoryManager::Destroy();
-            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", Group.GetTag().Name );
+            SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         }
 
-        SKL_INF_FMT("[WorkerGroup:%ws] worker stopped!", Group.GetTag().Name );
+        SKL_INF_FMT("[WorkerGroup:%ws] worker stopped!", InGroup.GetTag().Name );
         return true;
     }
 
@@ -305,7 +378,48 @@ namespace SKL
     bool ServerInstance::OnServerStarted() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Started!", Config.Name );
+
+        SKL_ASSERT( 1 <= SimpleServices.size() && nullptr == SimpleServices[0] );
+        SKL_ASSERT( 1 <= AODServices.size() && nullptr == AODServices[0] );
+        SKL_ASSERT( 1 <= ActiveServices.size() && nullptr == ActiveServices[0] );
+        SKL_ASSERT( 1 <= WorkerServices.size() && nullptr == WorkerServices[0] );
         
+        // notice all services
+        for( auto* Service : AllServices )
+        {
+            Service->OnServerStarted();
+        }
+
+        // Start from 1 as first entry is nullptr
+        if( 1 < ActiveServices.size() )
+        {
+            SKL_VER_FMT( "[ServerInstance:%ws] Started ticking %llu active services registered.", Config.Name, ActiveServices.size() - 1 );
+
+            DeferTask([ this ]( ITask* Self ) noexcept -> void
+            {
+                // Tick all active services
+                // Start from 1 as first entry is nullptr
+                for( size_t i = 1; i < ActiveServices.size(); ++i )
+                {
+                    ActiveServices[i]->OnTick();
+                }
+
+                if( true == IsRunning() ) SKL_LIKELY
+                {
+                    // defer again the same task
+                    DeferTaskAgain( Self );
+                }
+                else
+                {
+                    SKL_VER_FMT( "[ServerInstance:%ws] Stopped ticking active servers.", Config.Name );
+                }
+            } );
+        }
+        else
+        {
+            SKL_VER_FMT( "[ServerInstance:%ws] No active services registered.", Config.Name );
+        }
+
         return true;
     }
     
@@ -323,12 +437,126 @@ namespace SKL
         //The server is finally running
         bIsRunning.exchange( TRUE );
 
+        // notice all services
+        for( auto* Service : AllServices )
+        {
+            Service->OnServerStopped();
+        }
+
         return true;
     }
 
     bool ServerInstance::OnAfterServerStopped() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Stopped final!", Config.Name );
+        return true;
+    }
+
+    bool ServerInstance::AddService( SimpleService* InService ) noexcept
+    {
+        SKL_ASSERT( false == IsRunning() );
+
+        if( nullptr == InService )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) nullptr service!", GetName() );
+            return false;
+        }
+
+        if( nullptr != GetServiceById( InService->GetUID() ) )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            return false;
+        }
+
+        SimpleServices.emplace_back( InService );
+        SKL_ASSERT( static_cast<uint32_t>( SimpleServices.size() - 1 ) == InService->GetUID() );
+
+        // Set the server instance
+        InService->MyServerInstance = this;
+
+        AllServices.push_back( InService );
+        
+        return true;
+    }
+
+    bool ServerInstance::AddService( AODService* InService ) noexcept
+    {
+        SKL_ASSERT( false == IsRunning() );
+
+        if( nullptr == InService )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) nullptr service!", GetName() );
+            return false;
+        }
+
+        if( nullptr != GetServiceById( InService->GetUID() ) )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            return false;
+        }
+
+        AODServices.emplace_back( InService );
+        SKL_ASSERT( static_cast<uint32_t>( AODServices.size() - 1 ) == InService->GetUID() );
+
+        // Set the server instance
+        InService->MyServerInstance = this;
+
+        AllServices.push_back( InService );
+        
+        return true;
+    }
+
+    bool ServerInstance::AddService( ActiveService* InService ) noexcept
+    {
+        SKL_ASSERT( false == IsRunning() );
+
+        if( nullptr == InService )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) nullptr service!", GetName() );
+            return false;
+        }
+
+        if( nullptr != GetServiceById( InService->GetUID() ) )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            return false;
+        }
+
+        ActiveServices.emplace_back( InService );
+        SKL_ASSERT( static_cast<uint32_t>( ActiveServices.size() - 1 ) == InService->GetUID() );
+
+        // Set the server instance
+        InService->MyServerInstance = this;
+
+        AllServices.push_back( InService );
+        
+        return true;
+    }
+
+    bool ServerInstance::AddService( WorkerService* InService ) noexcept
+    {
+        SKL_ASSERT( false == IsRunning() );
+
+        if( nullptr == InService )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) nullptr service!", GetName() );
+            return false;
+        }
+
+        if( nullptr != GetServiceById( InService->GetUID() ) )
+        {
+            SKL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            return false;
+        }
+
+        WorkerServices.emplace_back( InService );
+        SKL_ASSERT( static_cast<uint32_t>( WorkerServices.size() - 1 ) == InService->GetUID() );
+
+        // Set the server instance
+        InService->MyServerInstance = this;
+
+        AllServices.push_back( InService );
+        
         return true;
     }
 }

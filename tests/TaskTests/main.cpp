@@ -31,7 +31,7 @@ namespace TaskTests
             SKL::Task<24> NewTask;
             int aaa = 5;
 
-            auto NewLambda = [ SPtr, aaa ]() noexcept -> void
+            auto NewLambda = [ SPtr, aaa ]( SKL::ITask* Self ) noexcept -> void
             {
                 puts("This is from the task!");
             };
@@ -65,7 +65,7 @@ namespace TaskTests
         auto SPtr = std::make_shared<MyType>();
         ASSERT_TRUE( SPtr.use_count() == 1 );
         
-        SKL::ITask* NewTask = CreateTask([ SPtr ]() noexcept 
+        SKL::ITask* NewTask = CreateTask([ SPtr ]( SKL::ITask* Self ) noexcept 
         {
             printf( "FromTask value:%d\n", SPtr->a );
         }); 

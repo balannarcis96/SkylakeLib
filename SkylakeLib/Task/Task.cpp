@@ -62,4 +62,22 @@ namespace SKL
 
         return ScheduleTask( TLSContext, InTask );
     }
+
+    bool DeferTaskAgain( ITask* InTask ) noexcept
+    {
+        SKL_ASSERT( nullptr != InTask );
+        SKL_ASSERT( 0 < TSharedPtr<ITask>::Static_GetReferenceCount( InTask ) );
+
+        // Add reference
+        TSharedPtr<ITask>::Static_IncrementReference( InTask );
+
+        auto& TLSContext{ *ServerInstanceTLSContext::GetInstance() };
+        if( true == TLSContext.GetCurrentWorkerGroupTag().bHandlesTimerTasks )
+        {
+            TLSContext.DelayedTasks.push( InTask );
+            return true;
+        }
+
+        return ScheduleTask( TLSContext, InTask );
+    }
 }

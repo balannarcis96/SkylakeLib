@@ -14,4 +14,4 @@ add_subdirectory(MemoryManagementTests)
 add_subdirectory(WorkersTests)
 add_subdirectory(TCPAcceptorTests)
 add_subdirectory(AODTests)
-
+add_subdirectory(ServiceTests)

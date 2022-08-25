@@ -105,9 +105,9 @@ namespace SKL
         //! Is this group the master workers group 
         bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker.get(); };
 
-        //! Deferre functor exectuion to the a worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
+        //! Defer functor exectuion to the a worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
         template<typename TFunctor>
-        RStatus Deferre( TFunctor&& InFunctor ) noexcept
+        RStatus Defer( TFunctor&& InFunctor ) noexcept
         {
             auto* NewTask { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );

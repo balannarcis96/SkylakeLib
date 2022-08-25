@@ -220,6 +220,27 @@ namespace SKL
 	bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept;
 }
 
+#include "TLSValue.h"
+#include "TLSSingleton.h"
+
+namespace SKL
+{
+    struct PreciseSleep_WaitableTimer: public ITLSSingleton<PreciseSleep_WaitableTimer>
+    {
+        PreciseSleep_WaitableTimer() noexcept = default;
+        ~PreciseSleep_WaitableTimer() noexcept = default;
+
+        void*   Timer   { nullptr };
+        double  Estimate{ 5e-3 };
+        double  Mean    { 5e-3 };
+        double  M2      { 0.0 };
+        int64_t Count   { 1 };
+        
+        RStatus Initialize() noexcept override;
+        const char *GetName( ) const noexcept override { return "[PreciseSleep_WaitableTimer]"; }
+    };
+}
+
 #if defined(SKL_BUILD_WINDOWS)
     #define SKL_PLATFORM_NAME "Windows"
     #include "Platform_Windows.h"

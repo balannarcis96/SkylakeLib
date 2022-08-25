@@ -38,6 +38,7 @@ namespace SKL
         char                                       NameBuffer[512]            { 0 };
 
         friend bool DeferTask( ITask* InTask ) noexcept;    
+        friend bool DeferTaskAgain( ITask* InTask ) noexcept;
         friend bool ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept;
 
         friend class WorkerGroup;

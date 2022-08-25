@@ -15,12 +15,14 @@ namespace SKL
     template<bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive>
     struct WorkerGroupRunVariant<true, bHandlesTasks, bSupportsAOD, bHandlesTimerTasks, bSupportsTLSSync, bHasTickHandler, bAllWorkerGroupsAreActive>
     {
-        SKL_FORCEINLINE static void Run( Worker& Worker, WorkerGroup& InGroup ) noexcept
+        SKL_FORCEINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
+            
+            PreciseSleep_WaitableTimer::Create();
 
             while( InGroup.IsRunning() ) SKL_LIKELY
             {
@@ -37,7 +39,7 @@ namespace SKL
                 {
                     if constexpr( true == bAllWorkerGroupsAreActive )
                     {
-                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Local( Worker ) };
+                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Local( InWorker ) };
                         if ( true == bShouldTermiante ) SKL_UNLIKELY
                         {
                             break;
@@ -45,7 +47,7 @@ namespace SKL
                     }
                     else
                     {
-                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Global( Worker ) };
+                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Global( InWorker ) };
                         if ( true == bShouldTermiante ) SKL_UNLIKELY
                         {
                             break;
@@ -57,7 +59,7 @@ namespace SKL
                 {
                     if constexpr( true == bAllWorkerGroupsAreActive )
                     {
-                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Local( Worker ) };
+                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Local( InWorker ) };
                         if ( true == bShouldTermiante ) SKL_UNLIKELY
                         {
                             break;
@@ -65,7 +67,7 @@ namespace SKL
                     }
                     else
                     {
-                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Global( Worker ) };
+                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Global( InWorker ) };
                         if ( true == bShouldTermiante ) SKL_UNLIKELY
                         {
                             break;
@@ -75,12 +77,12 @@ namespace SKL
 
                 if constexpr( true == bHasTickHandler )
                 {
-                    InGroup.OnWorkerTick.Dispatch( Worker, InGroup );
+                    InGroup.OnWorkerTick.Dispatch( InWorker, InGroup );
                 }
 
                 if constexpr( true == bSupportsTLSSync )
                 {
-                    const bool bShouldTermiante{ InGroup.HandleTLSSync( Worker ) };
+                    const bool bShouldTermiante{ InGroup.HandleTLSSync( InWorker ) };
                     if ( true == bShouldTermiante ) SKL_UNLIKELY
                     {
                         break;
@@ -92,6 +94,8 @@ namespace SKL
                     PreciseSleep( SecondsToSleep );
                 }
             }
+
+            PreciseSleep_WaitableTimer::Destroy();
         }
     };
 

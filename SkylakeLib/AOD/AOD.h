@@ -9,9 +9,28 @@
 //! 
 #pragma once
 
+#include "AOD_Object.h"
+
 namespace SKL
 {
-    
-}
+    struct alignas( SKL_ALIGNMENT ) EmbededAODObject
+    {
+        //! Execute the functor thread safe relative to the object [void(AODObject&)noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE RStatus DoAsync(TFunctor&& InFunctor) noexcept
+        {
+            return AODObjectInterface.DoAsync(std::forward<TFunctor>(InFunctor));
+        }
 
-#include "AOD_Object.h"
+        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void(AODObject&)noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE RStatus DoAsyncAfter(TDuration AfterMilliseconds, TFunctor&& InFunctor) noexcept
+        {
+            return AODObjectInterface.DoAsync(AfterMilliseconds, std::forward<TFunctor>(InFunctor));
+        }
+
+    protected:
+        MemoryPolicy::ControlBlock CB { 1, 0 };
+        AODObject AODObjectInterface {};
+    };
+}

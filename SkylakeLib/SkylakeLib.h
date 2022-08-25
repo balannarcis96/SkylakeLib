@@ -177,6 +177,9 @@ namespace SKL
 //! AOD
 #include "AOD/AOD.h"
 
+//! Service
+#include "Service\Service.h"
+
 //! Application
 #include "Application/Application.h"
 
