@@ -14,7 +14,7 @@ namespace SKL
     //! Single consumer multiple producers intrusive singly-linked list based lock free queue
     struct AODTaskQueue
     {
-        AODTaskQueue() noexcept: Head{ reinterpret_cast<IAODTask*>( &Stub ) }, Tail{ reinterpret_cast<IAODTask*>( &Stub ) }, Stub{} {}
+        AODTaskQueue() noexcept: Head{ reinterpret_cast<IAODTaskBase*>( &Stub ) }, Tail{ reinterpret_cast<IAODTaskBase*>( &Stub ) }, Stub{} {}
         ~AODTaskQueue() noexcept = default;
 
         // Can't copy or move
@@ -24,7 +24,7 @@ namespace SKL
         AODTaskQueue &operator=( AODTaskQueue && ) = delete;
 
         //! Multiple producers push
-        SKL_FORCEINLINE void Push( IAODTask* InTask ) noexcept
+        SKL_FORCEINLINE void Push( IAODTaskBase* InTask ) noexcept
         {
             auto* PrevNode{ std::atomic_exchange_explicit( &Head, InTask, std::memory_order_acq_rel ) };
             PrevNode->Next = InTask;
@@ -34,12 +34,12 @@ namespace SKL
         SKL_FORCEINLINE bool IsStub( void* InPtr ) const noexcept { return InPtr == &Stub; }
 
         //! Single consumer pop
-        SKL_NODISCARD IAODTask* Pop() noexcept  
+        SKL_NODISCARD IAODTaskBase* Pop() noexcept  
         {
-            IAODTask* LocalTail{ Tail };
-            IAODTask* LocalNext{ LocalTail->Next };
+            IAODTaskBase* LocalTail{ Tail };
+            IAODTaskBase* LocalNext{ LocalTail->Next };
 
-            if( reinterpret_cast<IAODTask*>( &Stub ) == LocalTail ) SKL_UNLIKELY
+            if( reinterpret_cast<IAODTaskBase*>( &Stub ) == LocalTail ) SKL_UNLIKELY
             {
                 if( nullptr == LocalNext )
                 {       
@@ -63,7 +63,7 @@ namespace SKL
             }
 
             // sq-consistent load
-            const IAODTask* LocalHead{ Head };
+            const IAODTaskBase* LocalHead{ Head };
             if( LocalTail != LocalHead )
             {
                 return nullptr;
@@ -71,7 +71,7 @@ namespace SKL
 
             //Last pop
             Stub.Next = nullptr;
-            Push( reinterpret_cast<IAODTask*>( &Stub ) );
+            Push( reinterpret_cast<IAODTaskBase*>( &Stub ) );
 
             LocalNext = Tail->Next;
             if( nullptr != LocalNext )
@@ -86,8 +86,8 @@ namespace SKL
         }
 
     private:
-        std::atomic<IAODTask*> Head; //!< Head of the queue
-        IAODTask*              Tail; //!< Tail of the queue
-        IAODTaskBase           Stub; //!< Stub item
+        std::atomic<IAODTaskBase*> Head; //!< Head of the queue
+        IAODTaskBase*              Tail; //!< Tail of the queue
+        IAODTaskBase               Stub; //!< Stub item
     };
 }

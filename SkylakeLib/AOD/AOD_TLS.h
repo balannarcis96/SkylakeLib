@@ -16,7 +16,8 @@ namespace SKL
             struct
             {
                 uint8_t bIsInitialized : 1;
-                uint8_t bIsAnyDispatchInProgress : 1;
+                uint8_t bIsAnyStaticDispatchInProgress : 1;
+                uint8_t bIsAnySharedDispatchInProgress : 1;
             };
             uint16_t Flags = { 0 };
         };
@@ -37,15 +38,17 @@ namespace SKL
         SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
-        TLSManagedPriorityQueue<IAODTask*> DelayedTasks             {};
-        TLSManagedQueue<AODObject*>        PendingAODObjects        {};
-        TEpochTimePoint                    CurrentLoopBeginTick     { 0 };
-        TEpochTimePoint                    TickCount                { 0 };
-        TEpochTimePoint                    BeginTick                { 0 };
-        uint16_t                           bScheduleAODDelayedTasks { FALSE };
-        ThreadFlags                        Flags                    { 0 };
-        uint16_t                           RRLastIndex              { 0 };
-        uint16_t                           RRLastIndex2             { 0 };
+        TLSManagedPriorityQueue<IAODSharedObjectTask*> DelayedSharedObjectTasks {};
+        TLSManagedPriorityQueue<IAODStaticObjectTask*> DelayedStaticObjectTasks {};
+        TLSManagedQueue<AOD::SharedObject*>            PendingAOD_SharedObjects {};
+        TLSManagedQueue<AOD::StaticObject*>            PendingAOD_StaticObjects {};
+        TEpochTimePoint                                CurrentLoopBeginTick     { 0 };
+        TEpochTimePoint                                TickCount                { 0 };
+        TEpochTimePoint                                BeginTick                { 0 };
+        uint16_t                                       bScheduleAODDelayedTasks { FALSE };
+        ThreadFlags                                    Flags                    { 0 };
+        uint16_t                                       RRLastIndex              { 0 };
+        uint16_t                                       RRLastIndex2             { 0 };
 
     private:
         ServerInstance*                               SourceServerInstance          { nullptr };

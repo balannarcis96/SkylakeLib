@@ -158,11 +158,11 @@ namespace AODTests
     public:
         static constexpr uint64_t IterCount{ 10000 };
 
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
             int Counter { IterCount };
 
-            MyObject() noexcept = default;
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
             ~MyObject() noexcept
             {
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
@@ -197,7 +197,7 @@ namespace AODTests
 
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
-                    SKL_ASSERT_ALLWAYS( RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AODObject& InObj ) noexcept -> void 
+                    SKL_ASSERT_ALLWAYS( RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObj );
                         if( 0 == --Self.Counter )           
@@ -216,8 +216,10 @@ namespace AODTests
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread )
     {
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
+
             int a { 0 };
         };
         
@@ -228,7 +230,7 @@ namespace AODTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         
-        obj->DoAsync( []( SKL::AODObject& Obj ) noexcept -> void
+        obj->DoAsync( []( SKL::AOD::SharedObject& Obj ) noexcept -> void
         {
             auto& Self = reinterpret_cast<MyObject&>( Obj );
         
@@ -247,8 +249,10 @@ namespace AODTests
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread_MultipleCalls )
     {
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
+
             int a { 0 };
         };
         
@@ -261,10 +265,9 @@ namespace AODTests
         
         for( int i = 0; i < 50; ++i )
         {
-            obj->DoAsync( [i]( SKL::AODObject& Obj ) noexcept -> void
+            obj->DoAsync( [i]( SKL::AOD::SharedObject& Obj ) noexcept -> void
             {
-                auto& Self = reinterpret_cast<MyObject&>( Obj );
-        
+                auto& Self = Obj.GetParentObject<MyObject>();
                 Self.a = i;
             } );
         }
@@ -281,8 +284,9 @@ namespace AODTests
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers )
     {
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
             uint64_t a { 0 };
         };
         
@@ -313,9 +317,9 @@ namespace AODTests
         {
             for( uint64_t i = 0; i < IterCount; ++i )
             {
-                Ptr->DoAsync( []( SKL::AODObject& InObj ) noexcept -> void
+                Ptr->DoAsync( []( SKL::AOD::SharedObject& InObj ) noexcept -> void
                 {
-                    auto& Self = reinterpret_cast<MyObject&>( InObj );
+                    auto& Self = InObj.GetParentObject<MyObject>();
                     ++Self.a;
                 } );
             }
@@ -336,8 +340,9 @@ namespace AODTests
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers_OneDeferedTask )
     {
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
             std::relaxed_value<int32_t> bShouldStop{ FALSE };
         };
         
@@ -354,7 +359,7 @@ namespace AODTests
             {
                 bHasCreatedTask.exchange( TRUE );
 
-                ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AODObject& InObject ) noexcept -> void 
+                ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                 {
                     auto& Self = reinterpret_cast<MyObject&>( InObject );
                     SKL_INF( "################# stop #################" );
@@ -396,8 +401,9 @@ namespace AODTests
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers_MultipleDeferedTasks )
     {
-        struct MyObject : SKL::AODObject
+        struct MyObject : SKL::AOD::SharedObject
         {
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
             std::relaxed_value<int32_t> Counter{ 2000 };
         };
         
@@ -416,7 +422,7 @@ namespace AODTests
 
                 for( auto i = 0; i < 2000; ++i )
                 {
-                    ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 5, []( SKL::AODObject& InObject ) noexcept -> void 
+                    ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 5, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObject );
                         if( 1 == Self.Counter.decrement() )

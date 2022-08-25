@@ -41,10 +41,16 @@ namespace SKL
         DeferredAODTasksHandlingGroups.clear();
         ServerFlags.Flags = 0;
         
-        while( false == DelayedTasks.empty() )
+        while( false == DelayedSharedObjectTasks.empty() )
         {
-            TSharedPtr<IAODTask>::Static_Reset( DelayedTasks.top() );
-            DelayedTasks.pop();
+            TSharedPtr<IAODSharedObjectTask>::Static_Reset( DelayedSharedObjectTasks.top() );
+            DelayedSharedObjectTasks.pop();
+        }
+
+        while( false == DelayedStaticObjectTasks.empty() )
+        {
+            TSharedPtr<IAODStaticObjectTask>::Static_Reset( DelayedStaticObjectTasks.top() );
+            DelayedStaticObjectTasks.pop();
         }
     }
 

@@ -27,11 +27,18 @@ namespace SKL
 {
     struct ITask;
     struct IAsyncIOTask;
-    struct IAODTask;
-    struct AODObject;
+    struct IAODStaticObjectTask;
+    struct IAODSharedObjectTask;
     class WorkerGroup;
     class Worker;
     class ServerInstance;
+
+    namespace AOD
+    {
+        struct Object;
+        struct StaticObject;
+        struct SharedObject;
+    }
 
     union ServerInstanceFlags
     {

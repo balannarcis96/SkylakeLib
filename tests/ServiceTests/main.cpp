@@ -83,7 +83,7 @@ namespace AODTests
             {
                 SKL_ASSERT_ALLWAYS( 2 == ++SeqCounter );
 
-                DoAsync([ this ]( SKL::AODObject& ) noexcept -> void 
+                DoAsync([ this ]() noexcept -> void 
                 {
                     GetServerInstance().SignalToStop();
                 } );

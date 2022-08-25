@@ -394,16 +394,35 @@ namespace SKL
     
     bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& Worker ) noexcept
     {
-        auto&      TLSContext{ *AODTLSContext::GetInstance() };
-        const auto Now{ GetSystemUpTickCount() };
+        auto& TLSContext{ *AODTLSContext::GetInstance() };
+        auto  Now{ GetSystemUpTickCount() };
 
-        while( false == TLSContext.DelayedTasks.empty() )
+        //Shared Object tasks
+        while( false == TLSContext.DelayedSharedObjectTasks.empty() )
         {
-            if( true == TLSContext.DelayedTasks.top()->IsDue( Now ) )
+            if( true == TLSContext.DelayedSharedObjectTasks.top()->IsDue( Now ) )
             {
-                TLSContext.DelayedTasks.top()->Dispatch();
-                TSharedPtr<IAODTask>::Static_Reset( TLSContext.DelayedTasks.top() );
-                TLSContext.DelayedTasks.pop();
+                TLSContext.DelayedSharedObjectTasks.top()->Dispatch();
+                TSharedPtr<IAODSharedObjectTask>::Static_Reset( TLSContext.DelayedSharedObjectTasks.top() );
+                TLSContext.DelayedSharedObjectTasks.pop();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        //Update now
+        Now = GetSystemUpTickCount();
+
+        //Static Object tasks
+        while( false == TLSContext.DelayedStaticObjectTasks.empty() )
+        {
+            if( true == TLSContext.DelayedStaticObjectTasks.top()->IsDue( Now ) )
+            {
+                TLSContext.DelayedStaticObjectTasks.top()->Dispatch();
+                TSharedPtr<IAODStaticObjectTask>::Static_Reset( TLSContext.DelayedStaticObjectTasks.top() );
+                TLSContext.DelayedStaticObjectTasks.pop();
             }
             else
             {
@@ -416,19 +435,37 @@ namespace SKL
 
     bool WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
     {
-        auto&      TLSContext{ *AODTLSContext::GetInstance() };
-        const auto Now{ GetSystemUpTickCount() };
+        auto& TLSContext{ *AODTLSContext::GetInstance() };
+        auto  Now{ GetSystemUpTickCount() };
 
-        while( auto* NewTask{ Worker.AODDelayedTasks.Pop() } )
+        //Shared Object tasks
+        while( auto* NewTask{ reinterpret_cast<IAODSharedObjectTask*>( Worker.AODSharedObjectDelayedTasks.Pop() ) } )
         {
             if( true == NewTask->IsDue( Now ) )
             {
                 NewTask->Dispatch();
-                TSharedPtr<IAODTask>::Static_Reset( NewTask );
+                TSharedPtr<IAODSharedObjectTask>::Static_Reset( NewTask );
             }
             else
             {
-                TLSContext.DelayedTasks.push( NewTask );
+                TLSContext.DelayedSharedObjectTasks.push( NewTask );
+            }
+        }
+
+        //Update now
+        Now = GetSystemUpTickCount();
+
+        //Static Object tasks
+        while( auto* NewTask{ reinterpret_cast<IAODStaticObjectTask*>( Worker.AODStaticObjectDelayedTasks.Pop() ) } )
+        {
+            if( true == NewTask->IsDue( Now ) )
+            {
+                NewTask->Dispatch();
+                TSharedPtr<IAODStaticObjectTask>::Static_Reset( NewTask );
+            }
+            else
+            {
+                TLSContext.DelayedStaticObjectTasks.push( NewTask );
             }
         }
 

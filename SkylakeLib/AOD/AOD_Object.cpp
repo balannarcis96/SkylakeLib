@@ -10,9 +10,10 @@
 
 #include "SkylakeLib.h"
 
-namespace SKL
+namespace SKL::AOD
 {
-    bool ScheduleTask( AODTLSContext& TLSContext, IAODTask* InTask ) noexcept
+    template<typename TTask>
+    bool ScheduleTask( AODTLSContext& TLSContext, TTask* InTask ) noexcept requires( std::is_same_v<TTask, IAODSharedObjectTask> || std::is_same_v<TTask, IAODStaticObjectTask> )
     {
         //Select target worker group
         auto TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
@@ -43,25 +44,28 @@ namespace SKL
         if( HandleTries > MaxTries ) SKL_UNLIKELY
         {
             SKL_ERR( "AODObject::ScheduleTask() Failed to schedule task to workers!" );
-            TSharedPtr<IAODTask>::Static_Reset( InTask );
+            TSharedPtr<TTask>::Static_Reset( InTask );
             return false;
         }
 
         return true;
     }
+}
 
-    void AODObject::Flush() noexcept
+namespace SKL::AOD
+{
+    void StaticObject::Flush() noexcept
     {
         while( true )
         {
-            auto* Task{ this->TaskQueue.Pop() };
+            auto* Task{ reinterpret_cast<IAODStaticObjectTask*>( TaskQueue.Pop() ) };
             SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
            
             Task->Dispatch();
 
             SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
 
-            TSharedPtr<IAODTask>::Static_Reset( Task );
+            TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
 
             if( 1 == RemainingTasksCount.decrement() )
             {
@@ -70,7 +74,96 @@ namespace SKL
         }
     }
 
-    bool AODObject::Dispatch( IAODTask* InTask ) noexcept
+    bool StaticObject::Dispatch( IAODStaticObjectTask* InTask ) noexcept
+    {
+        SKL_ASSERT( nullptr != InTask );
+        SKL_ASSERT( false == InTask->IsNull() );
+
+        TaskQueue.Push( InTask );
+        
+        if( RemainingTasksCount.increment() != 0 )
+        {
+            // There is a consumer present, just bail
+            return false;
+        }
+
+        // This thread is the new consumer for this AODStaticObject instance, dispatch all available tasks.
+
+        // Static object lifetime expected (no tasks should be issued before the object was destroyed)
+        //TSharedPtr<AODObject>::Static_IncrementReference( this );
+
+        auto *TLSContext = AODTLSContext::GetInstance();
+        SKL_ASSERT( nullptr != TLSContext );
+
+        if( true == TLSContext->Flags.bIsAnyStaticDispatchInProgress )
+        {
+            TLSContext->PendingAOD_StaticObjects.push( this );
+        }
+        else
+        {
+            TLSContext->Flags.bIsAnyStaticDispatchInProgress = true;
+
+            Flush();
+
+            while( false == TLSContext->PendingAOD_StaticObjects.empty() )
+            {
+                auto* PendingAODObject{ TLSContext->PendingAOD_StaticObjects.front() };
+                TLSContext->PendingAOD_StaticObjects.pop();
+
+                PendingAODObject->Flush();
+
+                // Static object lifetime expected (no tasks should be issued before the object was destroyed)
+                //TSharedPtr<AODObject>::Static_Reset( PendingAODObject );
+            }
+
+            TLSContext->Flags.bIsAnyStaticDispatchInProgress = false;
+
+            // Static object lifetime expected (no tasks should be issued before the object was destroyed)
+            //TSharedPtr<AODObject>::Static_Reset( this );
+        }                
+
+        return true;
+    }
+
+    bool StaticObject::DelayTask( IAODStaticObjectTask* InTask ) noexcept
+    {
+        SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
+        auto& TLSData{ *AODTLSContext::GetInstance() };
+
+        if( FALSE == TLSData.bScheduleAODDelayedTasks )
+        {
+            // Push task
+            TLSData.DelayedStaticObjectTasks.push( InTask );
+            return true;
+        }
+
+        return ScheduleTask( TLSData, InTask );
+    }
+}
+
+namespace SKL::AOD
+{
+    void SharedObject::Flush() noexcept
+    {
+        while( true )
+        {
+            auto* Task{ reinterpret_cast<IAODSharedObjectTask*>( TaskQueue.Pop() ) };
+            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+           
+            Task->Dispatch();
+
+            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+
+            TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
+
+            if( 1 == RemainingTasksCount.decrement() )
+            {
+                break;
+            }
+        }
+    }
+
+    bool SharedObject::Dispatch( IAODSharedObjectTask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
@@ -85,40 +178,40 @@ namespace SKL
 
         // This thread is the new consumer for this AODObject instance, dispatch all available tasks.
 
-        // Increment ref count for self
-        TSharedPtr<AODObject>::Static_IncrementReference( this );
+        // Increment ref count for self (the reinterpret_cast should not affect the end result, the pointer is used as base to jump to the control block only)
+        TSharedPtr<SharedObject>::Static_IncrementReference( reinterpret_cast<SharedObject*>( TargetSharedPointer ) );
 
         auto *TLSContext = AODTLSContext::GetInstance();
         SKL_ASSERT( nullptr != TLSContext );
 
-        if( true == TLSContext->Flags.bIsAnyDispatchInProgress )
+        if( true == TLSContext->Flags.bIsAnySharedDispatchInProgress )
         {
-            TLSContext->PendingAODObjects.push( this );
+            TLSContext->PendingAOD_SharedObjects.push( this );
         }
         else
         {
-            TLSContext->Flags.bIsAnyDispatchInProgress = true;
+            TLSContext->Flags.bIsAnySharedDispatchInProgress = true;
 
             Flush();
 
-            while( false == TLSContext->PendingAODObjects.empty() )
+            while( false == TLSContext->PendingAOD_SharedObjects.empty() )
             {
-                auto* PendingAODObject{ TLSContext->PendingAODObjects.front() };
-                TLSContext->PendingAODObjects.pop();
+                auto* PendingAODObject{ TLSContext->PendingAOD_SharedObjects.front() };
+                TLSContext->PendingAOD_SharedObjects.pop();
 
                 PendingAODObject->Flush();
-                TSharedPtr<AODObject>::Static_Reset( PendingAODObject );
+                TSharedPtr<SharedObject>::Static_Reset( reinterpret_cast<SharedObject*>( PendingAODObject->TargetSharedPointer ) );
             }
 
-            TLSContext->Flags.bIsAnyDispatchInProgress = false;
+            TLSContext->Flags.bIsAnySharedDispatchInProgress = false;
 
-            TSharedPtr<AODObject>::Static_Reset( this );
+            TSharedPtr<SharedObject>::Static_Reset( reinterpret_cast<SharedObject*>( TargetSharedPointer ) );
         }                
 
         return true;
     }
 
-    bool AODObject::DelayTask( IAODTask* InTask ) noexcept
+    bool SharedObject::DelayTask( IAODSharedObjectTask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
@@ -126,10 +219,21 @@ namespace SKL
         if( FALSE == TLSData.bScheduleAODDelayedTasks )
         {
             // Push task
-            TLSData.DelayedTasks.push( InTask );
+            TLSData.DelayedSharedObjectTasks.push( InTask );
             return true;
         }
 
         return ScheduleTask( TLSData, InTask );
+    }
+}
+
+namespace SKL
+{
+    void IAODSharedObjectTask::SetParent( AOD::SharedObject* InObject )noexcept
+    {
+        // Increment ref count for self (the reinterpret_cast should not affect the end result, the pointer is used as base to jump to the control block only)
+        // The type here is used only to tell the shared ptr that we have an object not an array
+        TSharedPtr<AOD::SharedObject>::Static_IncrementReference( reinterpret_cast<AOD::SharedObject*>( InObject->TargetSharedPointer ) );
+        Parent.Pointer = InObject;
     }
 }

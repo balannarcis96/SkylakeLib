@@ -29,7 +29,7 @@ namespace SKL
         }
 
     protected:
-        alignas(SKL_CACHE_LINE_SIZE) AODObject AODObjectInterface{};
+        alignas(SKL_CACHE_LINE_SIZE) AOD::StaticObject AODObjectInterface{};
 
         friend ServerInstance;
     };

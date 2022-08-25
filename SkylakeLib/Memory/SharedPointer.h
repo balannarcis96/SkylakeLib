@@ -215,7 +215,7 @@ namespace SKL
     private:
         TObjectDecay* Pointer { nullptr };
 
-        friend struct IAODTask;
+        friend struct IAODSharedObjectTask;
     };
 
     template<typename TObject>
