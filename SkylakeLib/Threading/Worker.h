@@ -19,6 +19,7 @@ namespace SKL
         ~Worker() noexcept
         {
             SKL_ASSERT( false == GetIsRunning() );
+            Clear();
         }
 
         //! Set the functor to be executed as the workers main [ void( ASD_CDECL *)( Worker&, WorkerGroup& ) noexcept ]
@@ -44,6 +45,8 @@ namespace SKL
             {
                 Thread.join();
             }
+
+            Clear();
         }
 
         //! Get the time point at which the worker started 
@@ -72,6 +75,7 @@ namespace SKL
 
     private:
         void RunImpl() noexcept;
+        void Clear() noexcept;
                 
         TaskQueue                           DelayedTasks                {};          //!< Single consummer multiple producers queue for delayed tasks 
         AODTaskQueue                        AODSharedObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 

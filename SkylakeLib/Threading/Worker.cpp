@@ -72,4 +72,25 @@ namespace SKL
             Skylake_TerminateLibrary_Thread();
         }
     }
+
+    void Worker::Clear() noexcept
+    {
+        // Clear global delayed tasks
+        while( auto* Task{ DelayedTasks.Pop() })
+        {
+            TSharedPtr<ITask>::Static_Reset( Task );
+        }
+
+        // Clear AOD shared object delayed tasks
+        while( auto* Task{ AODSharedObjectDelayedTasks.Pop() })
+        {
+            TSharedPtr<IAODSharedObjectTask>::Static_Reset( reinterpret_cast<IAODSharedObjectTask*>( Task ) );
+        }
+
+        // Clear AOD static object delayed tasks
+        while( auto* Task{ AODStaticObjectDelayedTasks.Pop() })
+        {
+            TSharedPtr<IAODStaticObjectTask>::Static_Reset( reinterpret_cast<IAODStaticObjectTask*>( Task ) );
+        }
+    }
 }

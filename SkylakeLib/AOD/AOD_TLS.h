@@ -38,23 +38,18 @@ namespace SKL
         SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
-        TLSManagedPriorityQueue<IAODSharedObjectTask*> DelayedSharedObjectTasks {};
-        TLSManagedPriorityQueue<IAODStaticObjectTask*> DelayedStaticObjectTasks {};
-        TLSManagedQueue<AOD::SharedObject*>            PendingAOD_SharedObjects {};
-        TLSManagedQueue<AOD::StaticObject*>            PendingAOD_StaticObjects {};
-        TEpochTimePoint                                CurrentLoopBeginTick     { 0 };
-        TEpochTimePoint                                TickCount                { 0 };
-        TEpochTimePoint                                BeginTick                { 0 };
-        uint16_t                                       bScheduleAODDelayedTasks { FALSE };
-        ThreadFlags                                    Flags                    { 0 };
-        uint16_t                                       RRLastIndex              { 0 };
-        uint16_t                                       RRLastIndex2             { 0 };
-
-    private:
-        ServerInstance*                               SourceServerInstance          { nullptr };
-        ServerInstanceFlags                           ServerFlags                   {};
-        WorkerGroupTag                                ParentWorkerGroup             {};
-        std::vector<std::shared_ptr<WorkerGroup>>     DeferredAODTasksHandlingGroups{};
-        char                                          NameBuffer[512]               { 0 };
+        TLSManagedPriorityQueue<IAODSharedObjectTask*> DelayedSharedObjectTasks      {};          //!< Priority queue of AOD Shared Object delayed tasks
+        TLSManagedPriorityQueue<IAODStaticObjectTask*> DelayedStaticObjectTasks      {};          //!< Priority queue of AOD Static Object delayed tasks
+        TLSManagedQueue<AOD::SharedObject*>            PendingAOD_SharedObjects      {};          //!< Queue of pending AOD Shared Objects to be dispatched by the consumer
+        TLSManagedQueue<AOD::StaticObject*>            PendingAOD_StaticObjects      {};          //!< Queue of pending AOD Static Objects to be dispatched by the consumer
+        uint16_t                                       bScheduleAODDelayedTasks      { FALSE };   //!< Should attempt to scheduler tasks to other workers 
+        ThreadFlags                                    Flags                         { 0 };       //!< Flags
+        uint16_t                                       RRLastIndex                   { 0 };       //!< Round-Robin index   [for scheduling tasks to other workers]
+        uint16_t                                       RRLastIndex2                  { 0 };       //!< Round-Robin index 2 [for scheduling tasks to other workers]
+        ServerInstance*                                SourceServerInstance          { nullptr }; //!< ServerInstance cached pointer
+        ServerInstanceFlags                            ServerFlags                   {};          //!< ServerInstanceFlags cached
+        WorkerGroupTag                                 ParentWorkerGroup             {};          //!< Cached tag of this thread's parent worker group
+        std::vector<std::shared_ptr<WorkerGroup>>      DeferredAODTasksHandlingGroups{};          //!< Cached list of working groups that can handle deferred AOD tasks
+        char                                           NameBuffer[512]               { 0 };       //!< Name buffer
     };
 }
