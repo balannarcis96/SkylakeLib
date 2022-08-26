@@ -25,7 +25,7 @@ namespace SKL
         using const_reference = const T&;
 
         using propagate_on_container_move_assignment           = std::true_type;
-        using is_always_equal _CXX20_DEPRECATE_IS_ALWAYS_EQUAL = std::true_type;
+        //using is_always_equal _CXX20_DEPRECATE_IS_ALWAYS_EQUAL = std::true_type;
 
         constexpr STLAllocator() noexcept {}
         constexpr STLAllocator( const STLAllocator& ) noexcept = default;
@@ -85,7 +85,7 @@ namespace SKL
         using const_reference = const T&;
 
         using propagate_on_container_move_assignment           = std::true_type;
-        using is_always_equal _CXX20_DEPRECATE_IS_ALWAYS_EQUAL = std::true_type;
+        //using is_always_equal _CXX20_DEPRECATE_IS_ALWAYS_EQUAL = std::true_type;
 
         constexpr STLTLSAllocator() noexcept {}
         constexpr STLTLSAllocator( const STLTLSAllocator& ) noexcept = default;

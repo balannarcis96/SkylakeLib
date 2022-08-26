@@ -37,33 +37,36 @@ namespace SKL
         
         { 
             // mark as running
-            bIsRunning.exchange( true );
+            bIsRunning.exchange( TRUE );
 
             // save approx start time
             StartedAt.exchange( GetSystemUpTickCount() );
         
-            // notice the group
-            if( false == Group->OnWorkerStarted( *this ) )
+            if ( true == Group->IsRunning() )
             {
-                Group->GetServerInstance()->SignalToStop( true );
-                return;
-            }
+                // notice the group
+                if ( true == Group->OnWorkerStarted(*this) )
+                {
+                    // dispatch main task
+                    SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
+                    OnRun.Dispatch( *this, *Group );
+                }
+                else
+                {
+                    Group->GetServerInstance()->SignalToStop( true );
+                }
         
-            if( false == Group->IsRunning() )
-            {
-                SKL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
-                return;
-            }
+                // mark as stopped
+                bIsRunning.exchange( FALSE );
 
-            // dispatch main task
-            SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
-            OnRun.Dispatch( *this, *Group );
-        
-            // mark as stopped
-            bIsRunning.exchange( false );
-        
-            // notice the group
-            Group->OnWorkerStopped( *this );
+                // notice the group
+                Group->OnWorkerStopped( *this );
+            }
+            else
+            {
+                bIsRunning.exchange( FALSE );
+                SKL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
+            }
         }
         
         if( false == IsMaster() )

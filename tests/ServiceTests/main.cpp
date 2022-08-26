@@ -148,7 +148,7 @@ namespace AODTests
     
             void OnServerStopped() noexcept override
             {
-                SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
+                //SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
             void OnServerStopSignaled() noexcept override
@@ -221,6 +221,7 @@ namespace AODTests
     
             void OnServerStopSignaled() noexcept override
             {
+                SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
                 SKL_ASSERT_ALLWAYS( CWorkersCount == DoneCount.load_acquire() );
             }
 
@@ -233,7 +234,13 @@ namespace AODTests
             //! [Callback] Each time a worker stopped
             void OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
             {
-                SKL_ASSERT_ALLWAYS( CIterCount == TLSCounter::GetValue() );
+                const auto Value{ TLSCounter::GetValue() };
+                if ( CIterCount != Value )
+                {
+                    SKL_BREAK();
+                }
+
+                SKL_ASSERT_ALLWAYS( CIterCount == Value );
                 TLSCounter::SetValue( 0 );
             }
 
@@ -241,14 +248,26 @@ namespace AODTests
             void OnTickWorker( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
             {
                 const auto LastValue{ TLSCounter::GetValue() };
-                TLSCounter::SetValue( LastValue + 1 );
+
+                std::this_thread::yield();
+                std::this_thread::yield();
+
+                SKL_ASSERT_ALLWAYS( LastValue == TLSCounter::GetValue() );
+
                 if( CIterCount == LastValue + 1 )
                 {
+                    TLSCounter::SetValue( LastValue + 1 );
                     if( CWorkersCount == DoneCount.increment() + 1 )
                     {
                         GetServerInstance().SignalToStop( true );
                     }
                 }
+                else
+                {
+                    SKL_ASSERT_ALLWAYS( LastValue + 1 <= CIterCount );
+                    TLSCounter::SetValue( LastValue + 1 );
+                }
+
             }
 
             int32_t                     SeqCounter{ 0 };

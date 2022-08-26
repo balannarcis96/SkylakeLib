@@ -659,7 +659,7 @@ namespace SKL::MemoryDeallocation
         {
             if constexpr( true == std::is_array_v<TObject> )
             {
-                auto Result{ MyMemoryPolicyApplier::TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result.first )
                 {
                     GlobalMemoryManager::Deallocate( Result.first, Result.second );
@@ -667,7 +667,7 @@ namespace SKL::MemoryDeallocation
             }
             else
             {
-                auto Result{ MyMemoryPolicyApplier::TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result )
                 {
                     GlobalMemoryManager::Deallocate( Result, sizeof( TObject ) );

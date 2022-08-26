@@ -14,3 +14,5 @@ target_link_libraries(SkylakeLibAODTests PUBLIC SkylakeLibTestsSharedLib)
 set_property(TARGET SkylakeLibAODTests PROPERTY CXX_STANDARD 20)
 
 set_target_properties(SkylakeLibAODTests PROPERTIES FOLDER Tests)
+
+add_test(NAME TEST_SkylakeLibAODTests COMMAND SkylakeLibAODTests)

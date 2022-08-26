@@ -138,6 +138,7 @@ namespace SKL
                 return RFail;
             }
 
+            ( void )TotalWorkers.increment();
             Temp.emplace_back( std::move( NewWorker ) );
         }
     
@@ -517,7 +518,7 @@ namespace SKL
 
     bool WorkerGroup::OnWorkerStarted( Worker& Worker ) noexcept
     {
-        const auto NewRunningWorkersCount { RunningWorkers.increment() };
+        const auto NewRunningWorkersCount { RunningWorkers.increment() + 1 };
 
         if( false == Manager->OnWorkerStarted( Worker, *this ) )
         {
@@ -547,7 +548,7 @@ namespace SKL
 
     bool WorkerGroup::OnWorkerStopped( Worker& Worker ) noexcept
     {
-        const auto NewRunningWorkersCount { RunningWorkers.decrement() };
+        const auto NewRunningWorkersCount { RunningWorkers.decrement() - 1 };
 
         if ( false == Manager->OnWorkerStopped( Worker, *this ) )
         {

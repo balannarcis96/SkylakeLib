@@ -18,6 +18,7 @@ namespace SKL
         ServerInstance() noexcept = default;
         virtual ~ServerInstance() noexcept  
         {
+            JoinAllGroups();
             SKL_ASSERT( false == IsAnyWorkerGroupRunning() );
         }
 

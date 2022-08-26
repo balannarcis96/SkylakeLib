@@ -58,7 +58,7 @@ namespace SKL
                         const auto* TLSValue = reinterpret_cast<T*>( PlatformTLS::GetTlsValue( TLSIndex ) );
                         if( nullptr != TLSValue )
                         {
-                            psnip_trap();
+                            SKL_BREAK();
                         }
             
                         SKL_ASSERT( TLSValue == nullptr );

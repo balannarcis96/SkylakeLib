@@ -27,6 +27,13 @@ namespace SKL
         }
         ~WorkerGroup() noexcept
         {
+            Join();
+
+            if( 0 != GetNumberOfRunningWorkers() )
+            {
+                SKL_BREAK();
+            }
+
             SKL_ASSERT_ALLWAYS( 0 == GetNumberOfRunningWorkers() );
         }
 
