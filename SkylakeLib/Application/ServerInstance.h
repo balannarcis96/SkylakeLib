@@ -226,30 +226,12 @@ namespace SKL
         bool AddService( ActiveService* InService ) noexcept;
         bool AddService( WorkerService* InService ) noexcept;
         
-        //! Issue a new TLS sync task on worker groups that support TLS Sync [bSupportsTLSSync=true]
-        template<typename TFunctor>
-        void SyncTSLOnAllWorkerGroups( TFunctor&& InFunctor ) noexcept
-        {
-            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
+        uint32_t GetTotalGroupsCount() const noexcept { return TotalWorkerGroups.load_relaxed(); }
+        uint32_t GetTotalNumberOfRunningWorkers() const noexcept { return TotalNumberOfRunningWorkers.load_relaxed(); }
 
-            for( size_t i = 0; i < TLSSyncHandlingGroup.size(); ++i )
-            {
-                const bool bIsLast{ i == TLSSyncHandlingGroup.size() - 1 };
-                if( true == bIsLast )
-                {
-                    TLSSyncHandlingGroup[ i ]->SyncTSL( std::forward<TFunctor>( InFunctor ) );
-                }
-                else
-                {
-                    auto FunctorCopy{ InFunctor };
-                    TLSSyncHandlingGroup[ i ]->SyncTSL( std::move( FunctorCopy ) );
-                }
-            }
-        }
-        
         //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id
         template<typename TFunctor>
-        SKL_FORCEINLINE void SyncTSLOnGroupById( uint16_t GroupId, const TFunctor& InFunctor ) noexcept
+        SKL_FORCEINLINE void SyncTSLOnGroupById( uint16_t GroupId, TFunctor&& InFunctor ) noexcept
         {
             SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
             auto* GroupPtr{ GetWorkerGroupById( GroupId ) };
@@ -261,7 +243,7 @@ namespace SKL
         
         //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id as index
         template<typename TFunctor>
-        SKL_FORCEINLINE void SyncTSLOnGroupByIdAsIndex( uint16_t GroupId, const TFunctor& InFunctor ) noexcept
+        SKL_FORCEINLINE void SyncTSLOnGroupByIdAsIndex( uint16_t GroupId, TFunctor&& InFunctor ) noexcept
         {
             SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
             auto* GroupPtr{ GetWorkerGroupWithIdAsIndex( GroupId ) };
@@ -299,6 +281,7 @@ namespace SKL
         std::vector<WorkerGroup*>                   DeferredAODTasksHandlingGroups {};          //!< All active worker groups marked with [bSupportsAOD=true]
         std::vector<WorkerGroup*>                   TLSSyncHandlingGroup           {};          //!< All worker groups marked with [bSupportsTLSSync=true]
         std::relaxed_value<uint32_t>                bIsRunning                     { FALSE };   //!< Is the server running
+        std::relaxed_value<uint32_t>                TotalNumberOfRunningWorkers    { 0 };   //!< Total number of running workers
         ServerInstanceConfig                        Config                         {};          //!< Config
         std::vector<std::unique_ptr<SimpleService>> SimpleServices                 {};          //!< All simple service instances
         std::vector<std::unique_ptr<AODService>>    AODServices                    {};          //!< All AOD service instances

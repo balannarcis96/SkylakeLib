@@ -195,6 +195,8 @@ namespace SKL
             return { Workers };
         }
 
+        TLSSyncSystem* GetTLSSyncSystem() const noexcept { return MyTLSSyncSystem.get(); }
+
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;
 

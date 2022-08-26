@@ -54,15 +54,15 @@ namespace SKL
         {
             const uint64_t TaskIndex   { Head.increment() };
             auto*          ShouldBeNull{ Items[ TaskIndex & Mask ].exchange( InTask ) };
-            SKL_ASSERT( nullptr == ShouldBeNull );
+            SKL_ASSERT_MSG( nullptr == ShouldBeNull, "To many tasks at once, increase the TLSSync Tasks queue size!" );
         }
 
         //! Pop tail for the front element for the calling thread
         void TLSPop() noexcept
         {
-            const uint64_t TaskIndex   { ThreadIndex::GetValue() };
-            auto*          ShouldBeNull{ Items[ TaskIndex & Mask ].exchange( nullptr ) };
-            SKL_ASSERT( nullptr == ShouldBeNull );
+            const uint64_t TaskIndex      { ThreadIndex::GetValue() };
+            auto*          ShouldNotBeNull{ Items[ TaskIndex & Mask ].exchange( nullptr ) };
+            SKL_ASSERT( nullptr != ShouldNotBeNull );
         }
 
         //! Get the front element for the calling thread
@@ -73,10 +73,10 @@ namespace SKL
         }
 
         //! Pop next element for the calling thread
-        SKL_NODISCARD TObject* TLSPopNext() noexcept
+        SKL_NODISCARD TObject* TLSNext() noexcept
         {
             const uint64_t TaskIndex{ ThreadIndex::GetValue() + 1 };
-            auto*          Result   { Items[ TaskIndex & Mask ].exchange( nullptr ) };
+            auto*          Result   { Items[ TaskIndex & Mask ].load_acquire() };
             ThreadIndex::SetValue( TaskIndex );
             return Result;
         }

@@ -66,5 +66,5 @@ namespace SKL
     /*------------------------------------------------------------
         Thread local MemoryManager
       ------------------------------------------------------------*/
-    constexpr size_t CTLSSyncSystem_QueueSize = 4096; //!< Max number of TLSSyncTasks in the TLSSync tasks queue at once
+    constexpr size_t CTLSSyncSystem_QueueSize = 524288; //!< [ 1024 * 512 ] Max number of TLSSyncTasks in the TLSSync tasks queue at once
 }

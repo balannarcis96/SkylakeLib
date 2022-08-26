@@ -97,11 +97,13 @@ namespace SKL
 
         if( nullptr == ThreadLocalMemoryManager::GetInstance() )
         {
-            if( RSuccess != SKL::ThreadLocalMemoryManager::Create() )
+            if( RSuccess != ThreadLocalMemoryManager::Create() )
             {
                 SKL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
                 return RSuccess;
             }
+
+            SKL_VER( "Skylake_InitializeLibrary_Thread() Created ThreadLocalMemoryManager." );
         }
 
         SkylakeLibInitPerThread::SetValue( true );

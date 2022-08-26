@@ -15,12 +15,12 @@
     #define SKL_ASSERT(expression)
     #define SKL_ASSERT_MSG(expression, msg)
 #else
-    #define SKL_ASSERT(expression) assert(expression)
-    #define SKL_ASSERT_MSG(expression, msg) assert(expression && msg)
+    #define SKL_ASSERT(expression) assert(expression); if( !( expression ) ) { SKL_BREAK(); }
+    #define SKL_ASSERT_MSG(expression, msg) assert(expression && msg); if( !( expression ) ) { SKL_BREAK(); }
 #endif
 
 #if not defined(SKL_NO_ASSERTS)
-    #define SKL_ASSERT_ALLWAYS(expression) assert(expression)
-    #define SKL_ASSERT_ALLWAYS_MSG(expression, msg) assert(expression && msg)
+    #define SKL_ASSERT_ALLWAYS(expression) assert(expression); if( !( expression ) ) { SKL_BREAK(); }
+    #define SKL_ASSERT_ALLWAYS_MSG(expression, msg) assert(expression && msg); if( !( expression ) ) { SKL_BREAK(); }
 #endif
 

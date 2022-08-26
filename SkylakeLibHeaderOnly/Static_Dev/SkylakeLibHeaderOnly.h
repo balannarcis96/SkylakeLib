@@ -29,9 +29,6 @@
 //! Base Types
 #include "Types.h"
 
-//! Assert 
-#include "SkylakeAssert.h"
-
 #if !defined(SKL_BUILD_SHIPPING)
 #include "DebugTrap.h"
 #define SKL_BREAK() psnip_trap()
@@ -39,3 +36,5 @@
 #define SKL_BREAK() 
 #endif
 
+//! Assert 
+#include "SkylakeAssert.h"

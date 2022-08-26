@@ -34,7 +34,7 @@ namespace SKL
             TLSSlot( ) noexcept
             {
                 TLSIndex = PlatformTLS::AllocTlsSlot( );
-                SKL_ASSERT( PlatformTLS::IsValidTlsSlot( TLSIndex ) );
+                SKL_ASSERT( true == PlatformTLS::IsValidTlsSlot( TLSIndex ) );
 
                 if constexpr( false == bIsClassType )
                 {

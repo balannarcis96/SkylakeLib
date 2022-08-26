@@ -50,15 +50,18 @@ namespace SKL
 					//Dispatch again to signal that the task was finalized
 					Task->Dispatch( InWorker, InGroup, true );
 
-					//Destruct and deallocate
-					MemoryStrategy::SharedMemoryStrategy<ITLSSyncTask>::DestructDeallocator::Deallocate( Task );
-
 					//Pop task
 					Queue.TLSPop();
+
+					//Destruct
+					GDestructNothrow( Task );
+
+					//Deallocate
+					GlobalMemoryManager::Deallocate( &ControlBlock, ControlBlock.BlockSize );
 				}
 
-				//Try pop next task for this thread
-				Task = Queue.TLSPopNext();
+				//Advance to next task on this thread
+				Task = Queue.TLSNext();
 			}
 		}
 

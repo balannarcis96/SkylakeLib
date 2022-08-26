@@ -111,7 +111,7 @@ namespace SKL
                 return false;
             }
 
-            if ( true == bIsActive && true == bHandlesTasks && false == bCallTickHandler )
+            if ( true == bIsActive && true == bHandlesTasks && false == bCallTickHandler && false == bHandlesTimerTasks && false == bSupportsAOD )
             {
                 SKL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bHandlesTasks=true;bCallTickHandler=false] Recommended to use a reactive worker group instead!", Name );
             }

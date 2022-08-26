@@ -238,9 +238,9 @@ namespace SKL
                     SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
                     return false;
                 }   
+
+                SKL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
             }
-    
-            SKL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         
             if( true == InGroup.GetTag().bPreallocateAllThreadLocalPools )
             {
@@ -270,7 +270,9 @@ namespace SKL
             Service->OnWorkerStarted( InWorker, InGroup );
         }
 
-        SKL_INF_FMT("[WorkerGroup:%ws] worker started!", InGroup.GetTag().Name );
+        TotalNumberOfRunningWorkers.increment();
+
+        SKL_INF_FMT("[WorkerGroup:%ws] Worker started! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
     
@@ -298,7 +300,9 @@ namespace SKL
             SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         }
 
-        SKL_VER_FMT( "[WorkerGroup:%ws] worker stopped!", InGroup.GetTag().Name );
+        TotalNumberOfRunningWorkers.decrement();
+
+        SKL_VER_FMT( "[WorkerGroup:%ws] worker stopped! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
 
