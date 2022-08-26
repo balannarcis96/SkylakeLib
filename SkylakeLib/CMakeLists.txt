@@ -20,7 +20,7 @@ file( GLOB_RECURSE _Task_files                   LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _Tuning_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Tuning/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Tuning/*.h" )
 file( GLOB_RECURSE _Types_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Types/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Types/*.h" )
 file( GLOB_RECURSE _Threading_files              LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Threading/*.cpp"              "${SKYLAKE_SRC_ROOT}/Threading/*.h" )
-file( GLOB_RECURSE _ThreadLocalStorage_files     LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/ThreadLocalStorage/*.cpp"     "${SKYLAKE_SRC_ROOT}/ThreadLocalStorage/*.h" )
+file( GLOB_RECURSE _TLSSync_files                LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/TLSSync/*.cpp"                "${SKYLAKE_SRC_ROOT}/TLSSync/*.h" )
 file( GLOB_RECURSE _Utils_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Utils/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Utils/*.h" )
 
 add_library (SkylakeLib STATIC  
@@ -41,7 +41,7 @@ add_library (SkylakeLib STATIC
     ${_Tuning_files}                 
     ${_Types_files}                 
     ${_Threading_files}             
-    ${_ThreadLocalStorage_files}     
+    ${_TLSSync_files}     
     ${_Utils_files}
 )
             
@@ -62,7 +62,7 @@ source_group("Task"                   FILES ${_Task_files}                  )
 source_group("Tuning"                 FILES ${_Tuning_files}                )
 source_group("Types"                  FILES ${_Types_files}                 )
 source_group("Threading"              FILES ${_Threading_files}             )
-source_group("ThreadLocalStorage"     FILES ${_ThreadLocalStorage_files}    )
+source_group("TLSSync"                FILES ${_TLSSync_files}               )
 source_group("Utils"                  FILES ${_Utils_files}                 )
 
 # Set C++20

@@ -182,7 +182,24 @@ namespace SKL
                 return MemoryPolicy::GetMetaBlockSizeForObject();
             }
         }
-
+        
+        //! 
+        //! Set the reference count (use only while initializing the object/array)
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static consteval size_t Static_SetReferenceCount( TObjectDecay* InPtr, uint32_t InWorkesCount ) noexcept
+        {
+            if constexpr( std::is_array_v<TObject> )
+            {
+                return MemoryPolicy::SetReferenceCountForArray( InWorkesCount );
+            }
+            else
+            {
+                return MemoryPolicy::SetReferenceCountForObject( InWorkesCount );
+            }
+        }
+        
         //! 
         //! Increment the reference count for InPtr
         //! 

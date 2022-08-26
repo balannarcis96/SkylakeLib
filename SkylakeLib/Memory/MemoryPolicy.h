@@ -303,6 +303,18 @@ namespace SKL::MemoryPolicy
             CBlock.AddReference();
         }
 
+        SKL_FORCEINLINE static void SetReferenceCountForObject( void* InPtr, uint32_t InRefCount ) noexcept
+        {
+            auto& CBlock{ GetControlBlockForObject( InPtr ) };
+            CBlock.ReferenceCount.store( InRefCount, std::memory_order_relaxed );
+        }
+
+        SKL_FORCEINLINE static void SetReferenceCountForArray( void* InPtr, uint32_t InRefCount ) noexcept
+        {
+            auto& CBlock{ GetControlBlockForArray( InPtr ) };
+            CBlock.ReferenceCount.store( InRefCount, std::memory_order_relaxed );
+        }
+
         SKL_FORCEINLINE static uint32_t GetReferenceCountForObject( void* InPtr ) noexcept
         {
             return GetControlBlockForObject( InPtr ).ReferenceCount.load( std::memory_order_relaxed );

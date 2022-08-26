@@ -197,7 +197,6 @@ namespace SKL
         bool HandleTasks_Reactive() noexcept;
         bool HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept;
         bool HandleTask( TCompletionKey InCompletionKey ) noexcept;
-        bool HandleTLSSync( Worker& Worker ) noexcept;
         bool HandleAODDelayedTasks_Local( Worker& Worker ) noexcept;
         bool HandleTimerTasks_Local( Worker& Worker ) noexcept;
         bool HandleAODDelayedTasks_Global( Worker& Worker ) noexcept;
@@ -216,6 +215,7 @@ namespace SKL
         std::synced_value<uint32_t>               TotalWorkers        { 0 };       //!< Count of total workers registered in the group
         std::synced_value<uint32_t>               bIsRunning          { FALSE };   //!< Is the group marked as active
         std::shared_ptr<Worker>                   MasterWorker        {};          //!< Cached pointer to the master worker [if any]
+        std::unique_ptr<TLSSyncSystem>            MyTLSSyncSystem     { nullptr }; //!< Instance of the TLSSyncSystem [if activated]
 
         friend Worker;    
         friend ServerInstance;    

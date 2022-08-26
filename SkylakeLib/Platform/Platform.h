@@ -155,19 +155,19 @@ namespace SKL
     //! Get the system l1 cache line size
     size_t GetL1CacheLineSize() noexcept;
 
-	struct PlatformTLS
-	{
-		static constexpr TLSSlot INVALID_SLOT_ID = 0xFFFFFFFF;
+    struct PlatformTLS
+    {
+        static constexpr TLSSlot INVALID_SLOT_ID = 0xFFFFFFFF;
 
-		/**
-		 * \brief Return false if InSlotIndex is an invalid TLS slot
-		 * \param InSlotIndex the TLS index to check
-		 * \return true if InSlotIndex looks like a valid slot
-		 */
-		SKL_FORCEINLINE static bool IsValidTlsSlot( TLSSlot InSlotIndex ) noexcept
-		{
-			return InSlotIndex != INVALID_SLOT_ID;
-		}
+        /**
+         * \brief Return false if InSlotIndex is an invalid TLS slot
+         * \param InSlotIndex the TLS index to check
+         * \return true if InSlotIndex looks like a valid slot
+         */
+        SKL_FORCEINLINE static bool IsValidTlsSlot( TLSSlot InSlotIndex ) noexcept
+        {
+            return InSlotIndex != INVALID_SLOT_ID;
+        }
         
         //! \brief Get the calling thread id
         static uint32_t GetCurrentThreadId() noexcept;
@@ -197,27 +197,27 @@ namespace SKL
     //Shutdown socket
     bool ShutdownSocket( TSocket InSocket ) noexcept;
 
-	//Convert ip v4 address string to binary
-	uint32_t IPv4FromStringA( const char* InIpString )noexcept;
+    //Convert ip v4 address string to binary
+    uint32_t IPv4FromStringA( const char* InIpString )noexcept;
 
-	//Convert ip v4 address wide string to binary
-	uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
+    //Convert ip v4 address wide string to binary
+    uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
 
-	//UTF16 -> UTF8
-	template<size_t N>
-	inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept;
+    //UTF16 -> UTF8
+    template<size_t N>
+    inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept;
 
-	//UTF8 -> UTF16
-	template<size_t N>
-	bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept;
+    //UTF8 -> UTF16
+    template<size_t N>
+    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept;
 
-	//UTF16 -> UTF8
-	template<size_t N, size_t M>
-	bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept;
+    //UTF16 -> UTF8
+    template<size_t N, size_t M>
+    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept;
 
-	//UTF8 -> UTF16
-	template<size_t N, size_t M>
-	bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept;
+    //UTF8 -> UTF16
+    template<size_t N, size_t M>
+    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept;
 }
 
 #include "TLSValue.h"

@@ -62,4 +62,9 @@ namespace SKL
         static constexpr bool    bAlignAllMemoryBlocksToTheCacheLine = false;
         static constexpr size_t  MaxAllocationSize                   = CMemoryManager_MaxAllocSize;
     };
+
+    /*------------------------------------------------------------
+        Thread local MemoryManager
+      ------------------------------------------------------------*/
+    constexpr size_t CTLSSyncSystem_QueueSize = 4096; //!< Max number of TLSSyncTasks in the TLSSync tasks queue at once
 }

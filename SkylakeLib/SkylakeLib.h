@@ -157,14 +157,14 @@ namespace SKL
 //! Platform
 #include "Platform/Platform.h"
 
-//! Thread Local Storage
-#include "ThreadLocalStorage/TLS.h"
-
 //! Spin Lock
 #include "Utils/SpinLock.h"
 
 //! Memory abstractions
 #include "Memory/Memory.h"
+
+//! TLS Sync System
+#include "TLSSync/TLSSync.h"
 
 //! Task
 #include "Task/Task.h"

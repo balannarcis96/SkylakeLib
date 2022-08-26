@@ -629,25 +629,25 @@ namespace SKL
     RStatus EnableConsoleANSIColorSupport() noexcept
     {
         // Set output mode to handle virtual terminal sequences
-		HANDLE hOut { ::GetStdHandle( STD_OUTPUT_HANDLE ) };
-		if( hOut == INVALID_HANDLE_VALUE )
-		{
-			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
-		}
+        HANDLE hOut { ::GetStdHandle( STD_OUTPUT_HANDLE ) };
+        if( hOut == INVALID_HANDLE_VALUE )
+        {
+            return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+        }
 
-		DWORD dwMode { 0 };
-		if( FALSE == ::GetConsoleMode( hOut, &dwMode ) )
-		{
-			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
-		}
+        DWORD dwMode { 0 };
+        if( FALSE == ::GetConsoleMode( hOut, &dwMode ) )
+        {
+            return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+        }
 
-		dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-		if( FALSE == ::SetConsoleMode( hOut, dwMode ) )
-		{
-			return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
-		}
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if( FALSE == ::SetConsoleMode( hOut, dwMode ) )
+        {
+            return RSTATUS_FROM_NUMERIC( ::GetLastError( ) );
+        }
 
-		return RSuccess;
+        return RSuccess;
     }
 
     TEpochTimePoint GetSystemUpTickCount() noexcept
@@ -809,24 +809,24 @@ namespace SKL
         //source: https://github.com/NickStrupat/CacheLineSize/blob/master/CacheLineSize.c
 
         size_t lineSize = 0;
-	    DWORD bufferSize = 0;
-	    DWORD i = 0;
-	    SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
+        DWORD bufferSize = 0;
+        DWORD i = 0;
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
 
-	    GetLogicalProcessorInformation(0, &bufferSize);
-	    buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) malloc(bufferSize);
+        GetLogicalProcessorInformation(0, &bufferSize);
+        buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) malloc(bufferSize);
         SKL_ASSERT(nullptr != buffer);
-	    GetLogicalProcessorInformation(&buffer[0], &bufferSize);
+        GetLogicalProcessorInformation(&buffer[0], &bufferSize);
 
-	    for (i = 0; i != bufferSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
-		    if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
-			    lineSize = buffer[i].Cache.LineSize;
-			    break;
-		    }
-	    }
+        for (i = 0; i != bufferSize / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+            if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+                lineSize = buffer[i].Cache.LineSize;
+                break;
+            }
+        }
 
-	    free(buffer);
-	    return lineSize;
+        free(buffer);
+        return lineSize;
     }
 }
 

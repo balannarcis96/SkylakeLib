@@ -22,8 +22,16 @@ namespace SKL
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
             auto&      WorkerServices      { InGroup.GetServerInstance()->GetAllWorkerServices() };
+            auto&      OnWorkerTick        { InGroup.OnWorkerTick };
+            auto*      MyTLSSyncSystem     { InGroup.MyTLSSyncSystem.get() };
             
             PreciseSleep_WaitableTimer::Create();
+
+            if constexpr( true == bSupportsTLSSync )
+            {
+                SKL_ASSERT( nullptr != MyTLSSyncSystem );
+                MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
+            }
 
             while( InGroup.IsRunning() ) SKL_LIKELY
             {
@@ -81,24 +89,25 @@ namespace SKL
                     WorkerServices[ i ]->OnTickWorker( InWorker, InGroup );
                 }
 
-                if constexpr( true == bHasTickHandler )
-                {
-                    InGroup.OnWorkerTick.Dispatch( InWorker, InGroup );
-                }
-
                 if constexpr( true == bSupportsTLSSync )
                 {
-                    const bool bShouldTermiante{ InGroup.HandleTLSSync( InWorker ) };
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
+                    MyTLSSyncSystem->TLSTick( InWorker, InGroup );
+                }
+
+                if constexpr( true == bHasTickHandler )
+                {
+                    OnWorkerTick.Dispatch( InWorker, InGroup );
                 }
 
                 if constexpr( false == bHandlesTasks )
                 {
                     PreciseSleep( SecondsToSleep );
                 }
+            }
+            
+            if constexpr( true == bSupportsTLSSync )
+            {
+                MyTLSSyncSystem->TLSShutdown();
             }
 
             PreciseSleep_WaitableTimer::Destroy();
@@ -109,12 +118,19 @@ namespace SKL
     template<bool bSupportsTLSSync>
     struct WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false>
     {
-        SKL_FORCEINLINE static void Run( Worker& Worker, WorkerGroup& InGroup ) noexcept
+        SKL_FORCEINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { Tag.SyncTLSTickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
+            auto*      MyTLSSyncSystem     { InGroup.MyTLSSyncSystem.get() };
+            
+            if constexpr( true == bSupportsTLSSync )
+            {
+                SKL_ASSERT( nullptr != MyTLSSyncSystem );
+                MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
+            }
 
             while( InGroup.IsRunning() ) SKL_LIKELY
             {
@@ -137,12 +153,13 @@ namespace SKL
 
                 if constexpr( true == bSupportsTLSSync )
                 {
-                    const bool bShouldTermiante{ InGroup.HandleTLSSync( Worker ) };
-                    if ( true == bShouldTermiante ) SKL_UNLIKELY
-                    {
-                        break;
-                    }
+                    MyTLSSyncSystem->TLSTick( InWorker, InGroup );
                 }
+            }
+            
+            if constexpr( true == bSupportsTLSSync )
+            {
+                MyTLSSyncSystem->TLSShutdown();
             }
         }
     };

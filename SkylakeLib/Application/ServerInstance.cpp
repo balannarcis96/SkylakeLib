@@ -290,27 +290,27 @@ namespace SKL
             SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         }
 
-        SKL_INF_FMT( "[WorkerGroup:%ws] worker stopped!", InGroup.GetTag().Name );
+        SKL_VER_FMT( "[WorkerGroup:%ws] worker stopped!", InGroup.GetTag().Name );
         return true;
     }
 
     bool ServerInstance::OnAllWorkersStarted( WorkerGroup& Group ) noexcept
     {
-        SKL_INF_FMT( "[WorkerGroup:%ws] all workers started!", Group.GetTag().Name );
+        SKL_VER_FMT( "[WorkerGroup:%ws] all workers started!", Group.GetTag().Name );
         SKL_ASSERT( Group.GetTotalNumberOfWorkers() == Group.GetNumberOfRunningWorkers() );
         return true;
     }
     
     bool ServerInstance::OnAllWorkersStopped( WorkerGroup& Group ) noexcept
     {
-        SKL_INF_FMT( "[WorkerGroup:%ws] all workers stopped!", Group.GetTag().Name );
+        SKL_VER_FMT( "[WorkerGroup:%ws] all workers stopped!", Group.GetTag().Name );
         SKL_ASSERT( 0 == Group.GetNumberOfRunningWorkers() );
         return true;
     }
 
     bool ServerInstance::OnWorkerGroupStarted( WorkerGroup& Group ) noexcept
     {
-        SKL_INF_FMT("[WorkerGroup:%ws] started!", Group.GetTag().Name );
+        SKL_VER_FMT("[WorkerGroup:%ws] started!", Group.GetTag().Name );
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.increment() + 1 };
         if( NewActiveWorkerGroupsCount == TotalWorkerGroups.load_relaxed() )
@@ -323,7 +323,7 @@ namespace SKL
     
     bool ServerInstance::OnWorkerGroupStopped( WorkerGroup& Group ) noexcept
     {
-        SKL_INF_FMT("[WorkerGroup:%ws] stopped!", Group.GetTag().Name );
+        SKL_VER_FMT("[WorkerGroup:%ws] stopped!", Group.GetTag().Name );
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.decrement() - 1 };
         if( NewActiveWorkerGroupsCount == 0 )
@@ -352,7 +352,7 @@ namespace SKL
             return false;
         }
 
-        SKL_INF_FMT("[ServerInstance:%ws] All worker groups started!", Config.Name );
+        SKL_VER_FMT("[ServerInstance:%ws] All worker groups started!", Config.Name );
         return true;
     }
     
@@ -363,8 +363,7 @@ namespace SKL
             SKL_ERR_FMT("[ServerInstance:%ws] OnServerStopped() Failed!", Config.Name );
         }
 
-        SKL_INF_FMT("[ServerInstance:%ws] All worker groups stopped!", Config.Name );
-
+        SKL_VER_FMT("[ServerInstance:%ws] All worker groups stopped!", Config.Name );
         return true;
     }
 
@@ -429,7 +428,6 @@ namespace SKL
     bool ServerInstance::OnBeforeStopServer() noexcept
     {
         SKL_VER_FMT( "[ServerInstance:%ws] Will stop!", Config.Name );
-
         return true;
     }
     

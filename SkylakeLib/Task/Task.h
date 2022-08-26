@@ -96,9 +96,7 @@ namespace SKL
         Task() noexcept = default;
         ~Task() noexcept = default;
         
-        //! 
         //! Set the functor for this task
-        //! 
         template<typename TFunctor>
         SKL_FORCEINLINE void operator+=( TFunctor&& InFunctor ) noexcept
         {
@@ -106,9 +104,7 @@ namespace SKL
             OnDispatch += std::forward<TFunctor>( InFunctor );
         }
 
-        //! 
         //! Set the functor for this task
-        //! 
         template<typename TFunctor>
         SKL_FORCEINLINE void SetDispatch( TFunctor&& InFunctor ) noexcept
         {

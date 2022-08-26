@@ -98,7 +98,13 @@ namespace SKL
 
         if( true == Tag.bSupportsTLSSync )
         {
-            //@TODO
+            MyTLSSyncSystem.reset( new TLSSyncSystem() );
+            SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
+            if ( nullptr == MyTLSSyncSystem )
+            {
+                SKL_ERR_FMT( "WorkerGroup::Build() Failed to allocate the TLSSyncSystem! GroupId[%ws]", Tag.Name );
+                return RFail;
+            }
         }
 
         return CreateWorkers( bIncludeMaster );
@@ -199,38 +205,38 @@ namespace SKL
             {
                 ActiveWorkerVariant<false, false, false, false, false, true>::Run( Worker, *this );
             }
-            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	, true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	,false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	, true )
+            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    ,false    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    ,false    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    ,false    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    ,false    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    , true    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    , true    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    , true    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    ,false    , true    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    ,false    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    ,false    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    ,false    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    ,false    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    , true    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    , true    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    , true    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false    , true    , true    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    , true    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    , true    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    , true    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    ,false    , true    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    ,false    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    ,false    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    ,false    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    ,false    , true    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    , true    ,false    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    , true    ,false    , true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    , true    , true    ,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN(  true    , true    , true    , true    , true )
         }
         else
         {
@@ -242,38 +248,38 @@ namespace SKL
             {
                 ActiveWorkerVariant<false, false, false, false, false, false>::Run( Worker, *this );
             }
-            //SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	,false	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	,false	, true	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	,false	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false	, true	, true	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	,false	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	,false	, true	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	,false	, true	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	,false	, true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	,false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true	, true	, true	, true	, true )
+            //SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    ,false    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    ,false    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    ,false    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    ,false    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    , true    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    , true    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    , true    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    ,false    , true    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    ,false    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    ,false    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    ,false    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    ,false    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    , true    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    , true    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    , true    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false    , true    , true    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    ,false    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    , true    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    , true    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    , true    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    ,false    , true    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    ,false    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    ,false    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    ,false    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    ,false    , true    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    , true    ,false    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    , true    ,false    , true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    , true    , true    ,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN(  true    , true    , true    , true    , true )
         }
     }
     
@@ -387,12 +393,6 @@ namespace SKL
         return false;
     }
 
-    bool WorkerGroup::HandleTLSSync( Worker& Worker ) noexcept
-    {
-        //@TODO
-        return  false;
-    }
-    
     bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& Worker ) noexcept
     {
         auto& TLSContext{ *AODTLSContext::GetInstance() };
