@@ -104,7 +104,7 @@ namespace SKL
             return RFail;
         }
 
-        for( auto& Group: WorkerGroups )
+        for( auto* Group: WorkerGroups )
         {
             if( nullptr == Group ) { continue; }
             if( RSuccess != Group->Start() )
@@ -131,11 +131,14 @@ namespace SKL
         return RSuccess;
 
     fail_case:
-        for( auto& Group: WorkerGroups )
+        for( auto* Group: WorkerGroups )
         {
             if( nullptr == Group ) { continue; }
             Group->Stop();
+
+            delete Group;
         }
+        WorkerGroups.clear();
 
         return RFail;
     }
@@ -166,7 +169,7 @@ namespace SKL
             SKL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
         }
 
-        for( auto& Group: WorkerGroups )
+        for( auto* Group: WorkerGroups )
         {
             if( nullptr == Group ) { continue; }
             Group->SignalToStop();
@@ -175,7 +178,7 @@ namespace SKL
 
     bool ServerInstance::CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept
     {
-        auto NewGroup { std::make_shared<WorkerGroup>( Config.Tag, this ) };
+        auto NewGroup { std::make_unique<WorkerGroup>( Config.Tag, this ) };
 
         // set worker tick handler
         NewGroup->SetWorkerTickHandler( Config.OnWorkerTick );
@@ -199,21 +202,26 @@ namespace SKL
         if( true == bCreateMaster )
         {
             MasterWorker = NewGroup->GetTheMasterWorker();
-            SKL_ASSERT_ALLWAYS( nullptr != MasterWorker.get() );
+            SKL_ASSERT_ALLWAYS( nullptr != MasterWorker );
         }
         
         if( true == NewGroup->GetTag().bHandlesTimerTasks )
         {
-            DeferredTasksHandlingGroups.push_back( NewGroup );
+            DeferredTasksHandlingGroups.push_back( NewGroup.get() );
         }
         
         if( true == NewGroup->GetTag().bSupportsAOD && true == NewGroup->GetTag().bIsActive )
         {
-            DeferredAODTasksHandlingGroups.push_back( NewGroup );
+            DeferredAODTasksHandlingGroups.push_back( NewGroup.get() );
+        }
+        
+        if( true == NewGroup->GetTag().bSupportsTLSSync )
+        {
+            TLSSyncHandlingGroup.push_back( NewGroup.get() );
         }
 
         // save
-        WorkerGroups.emplace_back( std::move( NewGroup ) );
+        WorkerGroups.emplace_back( NewGroup.release() );
         ( void )TotalWorkerGroups.increment();
 
         return true;

@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkyalakeLib_Workers_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibWorkersTests main.cpp)
+add_test(NAME "TEST_SkylakeLibWorkersTests" COMMAND SkylakeLibWorkersTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 target_link_libraries(SkylakeLibWorkersTests PUBLIC SkylakeLib)
 
 # Link Google Test

@@ -92,12 +92,12 @@ namespace WorkersTests
             auto Result = Manager.Initialize( std::move( Config ) );
             ASSERT_TRUE( RSuccess == Result );
 
-            auto QueryResult = Manager.GetWorkerGroupById( 1 );
-            ASSERT_TRUE( nullptr != QueryResult.get() );
+            auto* QueryResult = Manager.GetWorkerGroupById( 1 );
+            ASSERT_TRUE( nullptr != QueryResult );
             ASSERT_TRUE( 1 == QueryResult->GetTag().Id );
 
             QueryResult = Manager.GetWorkerGroupById( 2 );
-            ASSERT_TRUE( nullptr != QueryResult.get() );
+            ASSERT_TRUE( nullptr != QueryResult );
             ASSERT_TRUE( 2 == QueryResult->GetTag().Id );
 
             Manager.StartServer();

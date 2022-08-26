@@ -29,6 +29,11 @@ namespace SKL
 			//Queue.TLSShutdown();
 		}
 
+		SKL_FORCEINLINE void PushTask( ITLSSyncTask* InTask ) noexcept
+		{
+			Queue.Push( InTask );
+		}
+
 		void TLSTick( Worker& InWorker, WorkerGroup& InGroup ) noexcept
 		{
 			//Check if a new task was published for this thread

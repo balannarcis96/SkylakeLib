@@ -35,6 +35,8 @@ namespace SKL
             }
 
             SKL_ASSERT_ALLWAYS( 0 == GetNumberOfRunningWorkers() );
+
+            MasterWorker = nullptr;
         }
 
         //! Set functor to be called each time a worker ticks [void( SKL_CDECL* )( Worker&, WorkerGroup& ) noexcept]
@@ -107,10 +109,10 @@ namespace SKL
         const WorkerGroupTag& GetTag() const noexcept { return Tag; }
 
         //! Get the master worker [if any]
-        std::shared_ptr<Worker> GetTheMasterWorker() noexcept { return MasterWorker; }
+        Worker* GetTheMasterWorker() noexcept { return MasterWorker; }
 
         //! Is this group the master workers group 
-        bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker.get(); };
+        bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker; };
 
         //! Defer functor exectuion to the a worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
         template<typename TFunctor>
@@ -120,6 +122,19 @@ namespace SKL
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );
         }
     
+        //! Issue a new TLS sync task on the workers of this group
+        template<typename TFunctor>
+        void SyncTSL( TFunctor&& InFunctor ) noexcept
+        {
+            SKL_ASSERT( true == Tag.bSupportsTLSSync );
+            SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
+            
+            auto* Task{ MakeTLSSyncTaskRaw( GetNumberOfRunningWorkers(), std::forward<TFunctor>( InFunctor ) ) };
+            SKL_ASSERT( nullptr != Task );
+            
+            MyTLSSyncSystem->PushTask( Task );
+        }
+        
         //! Create new tcp async acceptor on this instance
         RStatus AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept;
 
@@ -175,7 +190,7 @@ namespace SKL
         const ServerInstance* GetServerInstance() const noexcept { return Manager; }
 
         //! Get workers 
-        std::span<std::shared_ptr<Worker>> GetWorkers() noexcept
+        std::span<std::unique_ptr<Worker>> GetWorkers() noexcept
         {
             return { Workers };
         }
@@ -192,7 +207,7 @@ namespace SKL
         bool OnAllWorkersStopped() noexcept;
 
         RStatus HandleSlaveWorker( Worker& Worker ) noexcept;
-        RStatus HandleMasterWorker( std::shared_ptr<Worker> MasterWorker ) noexcept;
+        RStatus HandleMasterWorker( Worker* MasterWorker ) noexcept;
         bool HandleTasks_Proactive( uint32_t MillisecondsToSleep ) noexcept;
         bool HandleTasks_Reactive() noexcept;
         bool HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept;
@@ -203,18 +218,18 @@ namespace SKL
         bool HandleTimerTasks_Global( Worker& Worker ) noexcept;
 
     private:
-        const WorkerGroupTag                      Tag                 {};          //!< Worker group tag
+        std::synced_value<uint32_t>               bIsRunning          { FALSE };   //!< Is the group marked as active
         AsyncIO                                   AsyncIOAPI          {};          //!< Async IO interface
+        const WorkerGroupTag                      Tag                 {};          //!< Worker group tag
         WorkerTickTask                            OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
         WorkerTask                                OnWorkerStartTask   {};          //!< Task to be executed each time a worker starts
         WorkerTask                                OnWorkerStopTask    {};          //!< Task to be executed each time a worker stoppes
         std::vector<std::unique_ptr<TCPAcceptor>> TCPAcceptors        {};          //!< All tcp async acceptors in the group
-        std::vector<std::shared_ptr<Worker>>      Workers             {};          //!< All workers registered in the group
+        std::vector<std::unique_ptr<Worker>>      Workers             {};          //!< All workers registered in the group
         ServerInstance*                           Manager             { nullptr }; //!< Manager of this group
         std::synced_value<uint32_t>               RunningWorkers      { 0 };       //!< Count of active running workers
         std::synced_value<uint32_t>               TotalWorkers        { 0 };       //!< Count of total workers registered in the group
-        std::synced_value<uint32_t>               bIsRunning          { FALSE };   //!< Is the group marked as active
-        std::shared_ptr<Worker>                   MasterWorker        {};          //!< Cached pointer to the master worker [if any]
+        Worker*                                   MasterWorker        { nullptr }; //!< Cached pointer to the master worker [if any]
         std::unique_ptr<TLSSyncSystem>            MyTLSSyncSystem     { nullptr }; //!< Instance of the TLSSyncSystem [if activated]
 
         friend Worker;    

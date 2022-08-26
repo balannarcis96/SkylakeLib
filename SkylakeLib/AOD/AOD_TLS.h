@@ -35,7 +35,7 @@ namespace SKL
         SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
         SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
         SKL_FORCEINLINE WorkerGroupTag GetWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
-        SKL_FORCEINLINE std::span<std::shared_ptr<WorkerGroup>> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
+        SKL_FORCEINLINE std::span<WorkerGroup*> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
         TLSManagedPriorityQueue<IAODSharedObjectTask*> DelayedSharedObjectTasks      {};          //!< Priority queue of AOD Shared Object delayed tasks
@@ -49,7 +49,7 @@ namespace SKL
         ServerInstance*                                SourceServerInstance          { nullptr }; //!< ServerInstance cached pointer
         ServerInstanceFlags                            ServerFlags                   {};          //!< ServerInstanceFlags cached
         WorkerGroupTag                                 ParentWorkerGroup             {};          //!< Cached tag of this thread's parent worker group
-        std::vector<std::shared_ptr<WorkerGroup>>      DeferredAODTasksHandlingGroups{};          //!< Cached list of working groups that can handle deferred AOD tasks
+        std::vector<WorkerGroup*>                      DeferredAODTasksHandlingGroups{};          //!< Cached list of working groups that can handle deferred AOD tasks
         char                                           NameBuffer[512]               { 0 };       //!< Name buffer
     };
 }

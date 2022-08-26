@@ -20,6 +20,15 @@ namespace SKL
         {
             JoinAllGroups();
             SKL_ASSERT( false == IsAnyWorkerGroupRunning() );
+
+            for( auto* Group : WorkerGroups )
+            {
+                if( Group != nullptr )
+                {
+                   delete Group;
+                }
+            }
+            WorkerGroups.clear();
         }
 
         //! Initialize the server instance
@@ -31,7 +40,7 @@ namespace SKL
         //! Join all worker groups
         void JoinAllGroups() noexcept
         {
-            for( auto& Group : WorkerGroups )
+            for( auto* Group : WorkerGroups )
             {
                 if( nullptr == Group ) { continue; }
                 Group->Join();
@@ -42,9 +51,9 @@ namespace SKL
         const ServerInstanceConfig& GetConfig() const noexcept { return Config; }
 
         //! Get worker group by id
-        std::shared_ptr<WorkerGroup> GetWorkerGroupById( uint16_t Id ) noexcept 
+        WorkerGroup* GetWorkerGroupById( uint16_t Id ) const noexcept 
         {
-            for( auto& Group: WorkerGroups )
+            for( auto* Group: WorkerGroups )
             {
                 if( nullptr == Group ) { continue; }
                 if( Group->GetTag().Id == Id )
@@ -53,35 +62,14 @@ namespace SKL
                 }
             }
 
-            return { nullptr };
-        }
-    
-        //! Get worker group by using the Id as index 
-        std::shared_ptr<WorkerGroup> GetWorkerGroupWithIdAsIndex( uint16_t Id ) noexcept 
-        {
-            SKL_ASSERT( WorkerGroups.size() > Id );
-            return WorkerGroups[ Id ];
-        }
-    
-        //! Get worker group by using the Id as index 
-        WorkerGroup* GetWorkerGroupWithIdAsIndexRaw( uint16_t Id ) noexcept 
-        {
-            SKL_ASSERT( WorkerGroups.size() > Id );
-            return WorkerGroups[ Id ].get();
+            return nullptr;
         }
 
         //! Get worker group by using the Id as index 
-        const std::shared_ptr<WorkerGroup> GetWorkerGroupWithIdAsIndex( uint16_t Id ) const noexcept 
+        WorkerGroup* GetWorkerGroupWithIdAsIndex( uint16_t Id ) const noexcept 
         {
             SKL_ASSERT( WorkerGroups.size() > Id );
             return WorkerGroups[ Id ];
-        }
-    
-        //! Get worker group by using the Id as index 
-        const WorkerGroup* GetWorkerGroupWithIdAsIndexRaw( uint16_t Id ) const noexcept 
-        {
-            SKL_ASSERT( WorkerGroups.size() > Id );
-            return WorkerGroups[ Id ].get();
         }
 
         //! Signal all worker groups to stop
@@ -90,7 +78,7 @@ namespace SKL
         //! Is any woker group running now
         bool IsAnyWorkerGroupRunning() const noexcept   
         {
-            for( auto& Group: WorkerGroups )
+            for( auto* Group: WorkerGroups )
             {
                 if( nullptr == Group ) { continue; }
                 if( true == Group->IsRunning() )
@@ -110,7 +98,7 @@ namespace SKL
 
         //! Get server flags
         ServerInstanceFlags GetFlags() const noexcept { return ServerBuiltFlags; }
-
+        
         //! Get service API
         const std::vector<std::unique_ptr<SimpleService>>& GetAllSimpleServices() const noexcept { return SimpleServices; }
         const std::vector<std::unique_ptr<AODService>>&    GetAllAODServices() const noexcept { return AODServices; }
@@ -312,6 +300,51 @@ namespace SKL
         bool AddService( AODService* InService ) noexcept;
         bool AddService( ActiveService* InService ) noexcept;
         bool AddService( WorkerService* InService ) noexcept;
+        
+        //! Issue a new TLS sync task on worker groups that support TLS Sync [bSupportsTLSSync=true]
+        template<typename TFunctor>
+        void SyncTSLOnAllWorkerGroups( TFunctor&& InFunctor ) noexcept
+        {
+            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
+
+            for( size_t i = 0; i < TLSSyncHandlingGroup.size(); ++i )
+            {
+                const bool bIsLast{ i == TLSSyncHandlingGroup.size() - 1 };
+                if( true == bIsLast )
+                {
+                    TLSSyncHandlingGroup[ i ]->SyncTSL( std::forward<TFunctor>( InFunctor ) );
+                }
+                else
+                {
+                    auto FunctorCopy{ InFunctor };
+                    TLSSyncHandlingGroup[ i ]->SyncTSL( std::move( FunctorCopy ) );
+                }
+            }
+        }
+        
+        //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id
+        template<typename TFunctor>
+        SKL_FORCEINLINE void SyncTSLOnGroupById( uint16_t GroupId, const TFunctor& InFunctor ) noexcept
+        {
+            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
+            auto* GroupPtr{ GetWorkerGroupById( GroupId ) };
+            SKL_ASSERT( nullptr != GroupPtr );
+            SKL_ASSERT( true == GroupPtr->GetTag().bSupportsTLSSync );
+
+            GroupPtr->SyncTSL( std::forward<TFunctor>( InFunctor ) );
+        }
+        
+        //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id as index
+        template<typename TFunctor>
+        SKL_FORCEINLINE void SyncTSLOnGroupByIdAsIndex( uint16_t GroupId, const TFunctor& InFunctor ) noexcept
+        {
+            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
+            auto* GroupPtr{ GetWorkerGroupWithIdAsIndex( GroupId ) };
+            SKL_ASSERT( nullptr != GroupPtr );
+            SKL_ASSERT( true == GroupPtr->GetTag().bSupportsTLSSync );
+
+            GroupPtr->SyncTSL( std::forward<TFunctor>( InFunctor ) );
+        }
 
     protected:
         virtual bool OnAddServices() noexcept { return true; }
@@ -332,20 +365,21 @@ namespace SKL
         bool CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept;
 
     private:
-        std::vector<std::shared_ptr<WorkerGroup>>   WorkerGroups                   {};        //!< List of all workers groups
-        std::shared_ptr<Worker>                     MasterWorker                   {};        //!< Cached pointer to the master worker
-        std::synced_value<uint32_t>                 ActiveWorkerGroups             { 0 };     //!< Number of running worker groups
-        std::synced_value<uint32_t>                 TotalWorkerGroups              { 0 };     //!< Total number of worker groups
-        std::relaxed_value<uint32_t>                bIsRunning                     { FALSE }; //!< Is the server running
-        ServerInstanceFlags                         ServerBuiltFlags               {};
-        std::vector<std::shared_ptr<WorkerGroup>>   DeferredTasksHandlingGroups    {};        //!< All active worker groups marked with [bHandlesTimerTasks=true]
-        std::vector<std::shared_ptr<WorkerGroup>>   DeferredAODTasksHandlingGroups {};        //!< All active worker groups marked with [bSupportsAOD=true]
-        ServerInstanceConfig                        Config                         {};        //!< Config
-        std::vector<std::unique_ptr<SimpleService>> SimpleServices                 {};        //!< All simple service instances
-        std::vector<std::unique_ptr<AODService>>    AODServices                    {};        //!< All AOD service instances
-        std::vector<std::unique_ptr<ActiveService>> ActiveServices                 {};        //!< All Active service instances
-        std::vector<std::unique_ptr<WorkerService>> WorkerServices                 {};        //!< All Worker service instances
-        std::vector<IService*>                      AllServices                    {};        //!< Base interface pointer to all services
+        std::vector<WorkerGroup*>                   WorkerGroups                   {};          //!< List of all workers groups
+        Worker*                                     MasterWorker                   { nullptr }; //!< Cached pointer to the master worker
+        ServerInstanceFlags                         ServerBuiltFlags               {};          //!< Server instance flags
+        std::synced_value<uint32_t>                 ActiveWorkerGroups             { 0 };       //!< Number of running worker groups
+        std::synced_value<uint32_t>                 TotalWorkerGroups              { 0 };       //!< Total number of worker groups
+        std::vector<WorkerGroup*>                   DeferredTasksHandlingGroups    {};          //!< All active worker groups marked with [bHandlesTimerTasks=true]
+        std::vector<WorkerGroup*>                   DeferredAODTasksHandlingGroups {};          //!< All active worker groups marked with [bSupportsAOD=true]
+        std::vector<WorkerGroup*>                   TLSSyncHandlingGroup           {};          //!< All worker groups marked with [bSupportsTLSSync=true]
+        std::relaxed_value<uint32_t>                bIsRunning                     { FALSE };   //!< Is the server running
+        ServerInstanceConfig                        Config                         {};          //!< Config
+        std::vector<std::unique_ptr<SimpleService>> SimpleServices                 {};          //!< All simple service instances
+        std::vector<std::unique_ptr<AODService>>    AODServices                    {};          //!< All AOD service instances
+        std::vector<std::unique_ptr<ActiveService>> ActiveServices                 {};          //!< All Active service instances
+        std::vector<std::unique_ptr<WorkerService>> WorkerServices                 {};          //!< All Worker service instances
+        std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
 
         friend class Worker;
         friend class WorkerGroup;

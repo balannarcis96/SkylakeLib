@@ -147,6 +147,8 @@ if(SKL_BUILD_TYPE STREQUAL "Full")
     add_subdirectory("SkylakeLib")
 
     if(SKL_BUILD_TESTS)
+        enable_testing()
+
         # google test lib
         add_subdirectory("googletest")    
         

@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkyalakeLib_AsyncIO_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibAsyncIOTests main.cpp)
+add_test(NAME "TEST_SkylakeLibAsyncIOTests" COMMAND SkylakeLibAsyncIOTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 target_link_libraries(SkylakeLibAsyncIOTests PUBLIC SkylakeLib)
 
 # Link Google Test

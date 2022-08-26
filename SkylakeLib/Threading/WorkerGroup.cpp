@@ -114,16 +114,16 @@ namespace SKL
     {
         SKL_ASSERT_ALLWAYS( Tag.WorkersCount > 0 );
 
-        std::vector<std::shared_ptr<Worker>> Temp;
+        std::vector<std::unique_ptr<Worker>> Temp{};
         Temp.reserve( static_cast<size_t>( Tag.WorkersCount ) + 1 );
         Temp.emplace_back( nullptr ); //index zero is not valid!
 
-        std::shared_ptr<Worker> MasterWorker { nullptr };
+        Worker* MasterWorker{ nullptr };
 
         for( uint16_t i = 0; i < Tag.WorkersCount; ++i )
         {
             // allocate new woker
-            auto NewWorker = std::make_shared<Worker>( this );
+            auto NewWorker = std::make_unique<Worker>( this );
             if( nullptr == NewWorker )
             {
                 SKL_ERR_FMT( "[WorkerGroup:%ws] Failed to allocate new Worker!", Tag.Name );
@@ -131,10 +131,10 @@ namespace SKL
             }
 
             // check if this worker must be the master worker
-            const bool bIsSelectedAsMasterWorker { true == bIncludeMaster && i == Tag.WorkersCount - 1 };
+            const bool bIsSelectedAsMasterWorker{ true == bIncludeMaster && i == Tag.WorkersCount - 1 };
             if( true == bIsSelectedAsMasterWorker )
             {
-                MasterWorker = NewWorker;
+                MasterWorker = NewWorker.get();
             }
             
             // init as slave worker
@@ -154,7 +154,7 @@ namespace SKL
         if( nullptr != MasterWorker )
         {
             // promote to master worker
-            return HandleMasterWorker( std::move( MasterWorker ) );
+            return HandleMasterWorker( MasterWorker );
         }
 
         return RSuccess;
@@ -180,7 +180,7 @@ namespace SKL
         return RSuccess;
     }
 
-    RStatus WorkerGroup::HandleMasterWorker( std::shared_ptr<Worker> InMasterWorker ) noexcept
+    RStatus WorkerGroup::HandleMasterWorker( Worker* InMasterWorker ) noexcept
     {
         // marsk as master
         InMasterWorker->bIsMasterThread.exchange( TRUE ); 
