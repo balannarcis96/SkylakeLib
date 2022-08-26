@@ -106,7 +106,14 @@ namespace SKL
         const std::vector<std::unique_ptr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
         const std::vector<IService*>&                      GetAllServices() const noexcept { return AllServices; }
 
-        IService* GetServiceById( uint32_t UID ) noexcept
+        template<typename TService = IService>
+        TService* GetServiceById( uint32_t UID ) const noexcept requires( 
+               std::is_same_v<IService, TService> 
+            || std::is_base_of_v<SimpleService, TService> 
+            || std::is_base_of_v<AODService, TService> 
+            || std::is_base_of_v<ActiveService, TService> 
+            || std::is_base_of_v<WorkerService, TService> 
+        )
         {
             SKL_ASSERT( 0 != UID );
             for( auto* Service : AllServices )
@@ -114,28 +121,15 @@ namespace SKL
                 if( nullptr == Service ){ continue; }
                 if( UID == Service->GetUID() )
                 {
-                    return Service;
-                }
-            }
-
-            return nullptr;
-        }
-        const IService* GetServiceById( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID );
-            for( auto* Service : AllServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return Service;
+                    return static_cast<TService*>( Service );
                 }
             }
 
             return nullptr;
         }
 
-        SimpleService* GetSimpleServiceById( uint32_t UID ) noexcept
+        template<typename TService = SimpleService>
+        SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept requires( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> )
         {
             SKL_ASSERT( 0 != UID );
             for( auto& Service : SimpleServices )
@@ -143,28 +137,15 @@ namespace SKL
                 if( nullptr == Service ){ continue; }
                 if( UID == Service->GetUID() )
                 {
-                    return Service.get();
-                }
-            }
-
-            return nullptr;
-        }
-        const SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID );
-            for( const auto& Service : SimpleServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return Service.get();
+                    return static_cast<TService*>( Service.get() );
                 }
             }
 
             return nullptr;
         }
 
-        AODService* GetAODServiceById( uint32_t UID ) noexcept
+        template<typename TService = AODService>
+        AODService* GetAODServiceById( uint32_t UID ) const noexcept requires( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> )
         {
             SKL_ASSERT( 0 != UID );
             for( auto& Service : AODServices )
@@ -172,28 +153,15 @@ namespace SKL
                 if( nullptr == Service ){ continue; }
                 if( UID == Service->GetUID() )
                 {
-                    return Service.get();
-                }
-            }
-
-            return nullptr;
-        }
-        const AODService* GetAODServiceById( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID );
-            for( const auto& Service : AODServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return Service.get();
+                    return static_cast<TService*>( Service.get() );
                 }
             }
 
             return nullptr;
         }
 
-        ActiveService* GetActiveServiceById( uint32_t UID ) noexcept
+        template<typename TService = ActiveService>
+        TService* GetActiveServiceById( uint32_t UID ) const noexcept requires( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> )
         {
             SKL_ASSERT( 0 != UID );
             for( auto& Service : ActiveServices )
@@ -201,28 +169,15 @@ namespace SKL
                 if( nullptr == Service ){ continue; }
                 if( UID == Service->GetUID() )
                 {
-                    return Service.get();
-                }
-            }
-
-            return nullptr;
-        }
-        const ActiveService* GetActiveServiceById( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID );
-            for( const auto& Service : ActiveServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return Service.get();
+                    return static_cast<TService*>( Service.get() );
                 }
             }
 
             return nullptr;
         }
 
-        WorkerService* GetWorkerServiceById( uint32_t UID ) noexcept
+        template<typename TService = WorkerService>
+        TService* GetWorkerServiceById( uint32_t UID ) const noexcept requires( std::is_same_v<TService, WorkerService> || std::is_base_of_v<WorkerService, TService> )
         {
             SKL_ASSERT( 0 != UID );
             for( auto& Service : WorkerServices )
@@ -230,69 +185,39 @@ namespace SKL
                 if( nullptr == Service ){ continue; }
                 if( UID == Service->GetUID() )
                 {
-                    return Service.get();
-                }
-            }
-
-            return nullptr;
-        }
-        const WorkerService* GetWorkerServiceById( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID );
-            for( const auto& Service : WorkerServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return Service.get();
+                    return static_cast<TService*>( Service.get() );
                 }
             }
 
             return nullptr;
         }
 
-        SKL_FORCEINLINE SimpleService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) noexcept
+        template<typename TService = SimpleService>
+        SKL_FORCEINLINE TService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) const noexcept requires( std::is_same_v<TService, SimpleService> || std::is_base_of_v<SimpleService, TService> )
         {
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( SimpleServices.size() ) );
-            return SimpleServices[ UID ].get();
-        }
-        SKL_FORCEINLINE const SimpleService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( SimpleServices.size() ) );
-            return SimpleServices[ UID ].get();
+            return static_Cast<TService*>( SimpleServices[ UID ].get() );
         }
 
-        SKL_FORCEINLINE AODService* GetAODServiceWithIdAsIndex( uint32_t UID ) noexcept
+        template<typename TService = AODService>
+        SKL_FORCEINLINE TService* GetAODServiceWithIdAsIndex( uint32_t UID ) const noexcept requires( std::is_same_v<TService, AODService> || std::is_base_of_v<AODService, TService> )
         {
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( AODServices.size() ) );
-            return AODServices[ UID ].get();
-        }
-        SKL_FORCEINLINE const AODService* GetAODServiceWithIdAsIndex( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( AODServices.size() ) );
-            return AODServices[ UID ].get();
+            return static_Cast<TService*>( SimpleServices[ UID ].get() );
         }
 
-        SKL_FORCEINLINE ActiveService* GetActiveServiceWithIdAsIndex( uint32_t UID ) noexcept
+        template<typename TService = ActiveService>
+        SKL_FORCEINLINE TService* GetActiveServiceWithIdAsIndex( uint32_t UID ) const noexcept requires( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> )
         {
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( ActiveServices.size() ) );
-            return ActiveServices[ UID ].get();
-        }
-        SKL_FORCEINLINE const ActiveService* GetActiveServiceWithIdAsIndex( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( ActiveServices.size() ) );
-            return ActiveServices[ UID ].get();
+            return static_Cast<TService*>( SimpleServices[ UID ].get() );
         }
 
-        SKL_FORCEINLINE WorkerService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) noexcept
+        template<typename TService = WorkerService>
+        SKL_FORCEINLINE TService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) const noexcept requires( std::is_same_v<TService, WorkerService> || std::is_base_of_v<WorkerService, TService> )
         {
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( WorkerServices.size() ) );
-            return WorkerServices[ UID ].get();
-        }
-        SKL_FORCEINLINE const WorkerService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) const noexcept
-        {
-            SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( WorkerServices.size() ) );
-            return WorkerServices[ UID ].get();
+            return static_Cast<TService*>( SimpleServices[ UID ].get() );
         }
 
         //! ADD service API

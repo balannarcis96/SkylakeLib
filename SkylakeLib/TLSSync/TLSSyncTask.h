@@ -99,6 +99,7 @@ namespace SKL
         using TaskType = TLSSyncTask<sizeof( TFunctor )>;
         // allocate
         auto* NewTask { MakeSharedRaw<TaskType>() };
+        SKL_ASSERT( nullptr != NewTask );
         
         TSharedPtr<TaskType>::Static_SetReferenceCount( NewTask, WorkersCount );
 
