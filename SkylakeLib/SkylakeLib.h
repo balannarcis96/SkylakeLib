@@ -190,6 +190,9 @@ namespace SKL
 //! Application
 #include "Application/Application.h"
 
+//! ECS
+#include "ECS/ECS.h"
+
 namespace SKL
 {
     //! Initialize the SkylakeLibrary

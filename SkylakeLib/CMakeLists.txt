@@ -7,6 +7,7 @@ file( GLOB_RECURSE _AdvancedSingleDispatch_files LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _Application_files            LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Application/*.cpp"            "${SKYLAKE_SRC_ROOT}/Application/*.h" )
 file( GLOB_RECURSE _AOD_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/AOD/*.cpp"                    "${SKYLAKE_SRC_ROOT}/AOD/*.h" )
 file( GLOB_RECURSE _Diagnostics_files            LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Diagnostics/*.cpp"            "${SKYLAKE_SRC_ROOT}/Diagnostics/*.h" )
+file( GLOB_RECURSE _ECS_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/ECS/*.cpp"                    "${SKYLAKE_SRC_ROOT}/ECS/*.h" )
 file( GLOB_RECURSE _Enums_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Enums/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Enums/*.h" )
 file( GLOB_RECURSE _Macros_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Macros/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Macros/*.h" )
 file( GLOB_RECURSE _Memory_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Memory/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Memory/*.h" )
@@ -27,7 +28,8 @@ add_library (SkylakeLib STATIC
     ${_AdvancedSingleDispatch_files}
     ${_Application_files}
     ${_AOD_files}                 
-    ${_Diagnostics_files}             
+    ${_Diagnostics_files}               
+    ${_ECS_files}              
     ${_Enums_files}                 
     ${_Macros_files}                 
     ${_Memory_files}                 
@@ -49,6 +51,7 @@ source_group("AdvancedSingleDispatch" FILES ${_AdvancedSingleDispatch_files})
 source_group("Application"            FILES ${_Application_files}           )
 source_group("AOD"                    FILES ${_AOD_files}                   )
 source_group("Diagnostics"            FILES ${_Diagnostics_files}           )
+source_group("ECS"                    FILES ${_ECS_files}                   )
 source_group("Enums"                  FILES ${_Enums_files}                 )
 source_group("Macros"                 FILES ${_Macros_files}                )
 source_group("Memory"                 FILES ${_Memory_files}                )

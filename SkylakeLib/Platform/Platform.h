@@ -104,13 +104,16 @@ namespace SKL
         //! \return RFail on failure
         RStatus QueueAsyncWork( TCompletionKey InCompletionKey ) noexcept;
 
+        //! Associate the socket to this async IO API
+        RStatus AssociateToTheAPI( TSocket InSocket ) noexcept;
+
         //! \brief Start an async receive request on InSocket
         //! \param InSocket target stream socket to receive from
         //! \param InBuffer buffer to receive into 
         //! \param InOpaqueObject opaque object instance
         //! \return RSuccess on success
         //! \return RFail on failure
-        RStatus ReceiveAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept;
+        static RStatus ReceiveAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept;
 
         //! \brief Start an async send request on InSocket
         //! \param InSocket target stream socket to send to
@@ -118,24 +121,21 @@ namespace SKL
         //! \param InOpaqueObject opaque object instance
         //! \return RSuccess on success
         //! \return RFail on failure
-        RStatus SendAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept;
+        static RStatus SendAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept;
 
         //! \brief Start an async send request on InSocket
         //! \param InSocket target stream socket to receive from
         //! \param InAsyncIOTask the send async IO task
         //! \return RSuccess on success
         //! \return RFail on failure
-        RStatus SendAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
+        static RStatus SendAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
 
         //! \brief Start an async receive request on InSocket
         //! \param InSocket target stream socket to receive from
         //! \param InAsyncIOTask the send async IO task
         //! \return RSuccess on success
         //! \return RFail on failure
-        RStatus ReceiveAsync(TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
-
-        //! Associate the socket to this async IO API
-        RStatus AssociateToTheAPI( TSocket InSocket ) noexcept;
+        static RStatus ReceiveAsync(TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept;
 
     private:
         std::relaxed_value<THandle> QueueHandle  { 0 };

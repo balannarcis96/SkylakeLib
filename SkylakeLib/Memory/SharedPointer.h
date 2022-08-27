@@ -54,10 +54,8 @@ namespace SKL
         }
 
         // stl compatible API
-        SKL_FORCEINLINE          TObjectDecay* get()                              noexcept { return Pointer; }
-        SKL_FORCEINLINE const    TObjectDecay* get()                        const noexcept { return Pointer; }
-        SKL_FORCEINLINE          TObjectDecay* operator->()                       noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
-        SKL_FORCEINLINE const    TObjectDecay* operator->()                 const noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
+        SKL_FORCEINLINE          TObjectDecay* get()                        const noexcept { return Pointer; }
+        SKL_FORCEINLINE          TObjectDecay* operator->()                 const noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
         SKL_FORCEINLINE          TObjectDecay& operator*()                        noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
         SKL_FORCEINLINE const    TObjectDecay& operator*()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
         SKL_FORCEINLINE          size_t        use_count()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return static_cast<size_t>( Static_GetReferenceCount( Pointer ) ); }
@@ -233,8 +231,132 @@ namespace SKL
         TObjectDecay* Pointer { nullptr };
 
         friend struct IAODSharedObjectTask;
+
+        template<typename TObject, typename TDeallocator>
+        friend struct TLockedSharedPtr;
     };
 
     template<typename TObject>
     using TSharedPtrNoDestruct = TSharedPtr<TObject, typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::Deallocator>;
+
+    template<typename TObject, typename TDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::DestructDeallocator>
+    struct TLockedSharedPtr
+    {
+        using SharedPtrType         = TSharedPtr<TObject, TDeallocator>;
+        using TObjectDecay          = std::remove_all_extents_t<TObject>;
+        using element_type          = TObjectDecay;
+        using MemoryPolicy          = typename TDeallocator::MyMemoryPolicy;
+        using MyMemoryPolicyApplier = typename TDeallocator::MyMemoryPolicyApplier;
+
+        TLockedSharedPtr() noexcept : Pointer{ nullptr } {}
+        TLockedSharedPtr( TObjectDecay* InPointer ) noexcept : Pointer{ InPointer } {}
+        TLockedSharedPtr( const TLockedSharedPtr& Other ) noexcept = delete;
+        TLockedSharedPtr( TLockedSharedPtr&& Other ) noexcept = delete;
+        TLockedSharedPtr& operator=( const TLockedSharedPtr& Other ) noexcept = delete;
+        TLockedSharedPtr& operator=( TLockedSharedPtr&& Other ) noexcept = delete;
+        ~TLockedSharedPtr() noexcept = default;
+
+        //! Read the raw pointer without acquiring a lock
+        SKL_FORCEINLINE TObjectDecay* get_unguarded() noexcept
+        {
+            return Pointer.get();
+        }
+
+        //! Acquire new ref without acquiring a lock
+        SKL_FORCEINLINE SharedPtrType new_ref_unguarded() noexcept
+        {
+            return { Pointer.NewRefRaw() };
+        }
+
+        //! Acquire new raw ref without acquiring a lock
+        SKL_FORCEINLINE TObjectDecay* new_raw_ref_unguarded() noexcept
+        {
+            return Pointer.NewRefRaw();
+        }
+
+        //! Safely swap the existing ref with the given ref
+        SharedPtrType swap_ref( TObjectDecay* InRawRef ) noexcept
+        {
+            SharedPtrType Result;
+
+            {
+                std::unique_lock Guard{ Lock };
+
+                Result.Pointer  = Pointer.Pointer;
+                Pointer.Pointer = InRawRef;
+            }
+
+            return Result;
+        }
+
+        //! Safely swap the existing ref with the given ref
+        TObjectDecay* swap_ref_raw( TObjectDecay* InRawRef ) noexcept
+        {
+            TObjectDecay* Result;
+
+            {
+                std::unique_lock Guard{ Lock };
+
+                Result          = Pointer.Pointer;
+                Pointer.Pointer = InRawRef;
+            }
+
+            return Result;
+        }
+
+        //! Acquire new ref
+        SharedPtrType new_ref() noexcept
+        {
+            std::shared_lock Guard{ Lock };
+            return { Pointer.NewRefRaw() };
+        }
+
+        //! Acquire new raw ref
+        TObjectDecay* new_raw_ref() noexcept
+        {
+            std::shared_lock Guard{ Lock };
+            return Pointer.NewRefRaw();
+        }
+
+        //! Release the ref
+        SharedPtrType release() noexcept
+        {
+            SharedPtrType Result;
+
+            {
+                std::unique_lock Guard{ Lock };
+
+                Result.Pointer  = Pointer.Pointer;
+                Pointer.Pointer = nullptr;
+            }
+
+            return Result;
+        }
+
+        //! Release the ref raw
+        TObjectDecay* release_raw() noexcept
+        {
+            TObjectDecay* Result;
+
+            {
+                std::unique_lock Guard{ Lock };
+
+                Result          = Pointer.Pointer;
+                Pointer.Pointer = nullptr;
+            }
+
+            return Result;
+        }
+
+        //! Reset this pointer
+        void reset() noexcept
+        {
+            std::unique_lock Guard{ Lock };
+            Pointer.reset();
+        }
+
+    private:
+        std::shared_mutex Lock{};
+        SharedPtrType     Pointer{};
+    };
 }
