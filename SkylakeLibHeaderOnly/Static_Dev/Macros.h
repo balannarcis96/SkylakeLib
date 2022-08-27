@@ -51,3 +51,23 @@
 #define TCLOCK_MICROS( x ) std::chrono::microseconds( x )
 #define TCLOCK_SLEEP_FOR_MILLIS( int_value ) std::this_thread::sleep_for( TCLOCK_MILLIS( int_value ) )
 #define TCLOCK_SLEEP_FOR_MICROS( int_value ) std::this_thread::sleep_for( TCLOCK_MICROS( int_value ) )
+
+#if defined(_MSC_VER)
+	#define SKL_STRCPY( InDest, InSrc, InSizeInBytes ) ::strcpy_s( InDest, InSizeInBytes, InSrc )
+	#define SKL_WSTRCPY( InDest, InSrc, InSizeInWords ) ::wcscpy_s( InDest, InSizeInWords, InSrc )
+	
+	#define SKL_STRLEN( InStr, InSizeInBytes ) ::strnlen_s( InStr, InSizeInBytes )
+	#define SKL_WSTRLEN( InStr, InSizeInWords ) ::wcsnlen_s( InStr, InSizeInWords  )
+
+	#define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strncmp( InStr1, InStr2, InMaxSizeInBytes )
+	#define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcsncmp( InStr1, InStr2, InMaxSizeInWords )
+#else
+	#define SKL_STRCPY( InDest, InSrc, InSizeInBytes ) ::strcpy( InDest, InSrc )
+	#define SKL_WSTRCPY( InDest, InSrc, InSizeInWords ) ::wcscpy( InDest, InSrc )
+
+	#define SKL_STRLEN( InStr, InSizeInBytes ) ::strlen( InStr )
+	#define SKL_WSTRLEN( InStr, InSizeInWords ) ::wcslen( InStr )
+
+	#define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strcmp( InStr1, InStr2 )
+	#define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcscmp( InStr1, InStr2 )
+#endif

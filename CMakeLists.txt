@@ -14,6 +14,7 @@ option(SKL_GUARD_ALLOC_SIZE         "Cap allocation sizes to a max value"  ON)
 option(SKL_USE_PRECISE_SLEEP        "${SKL_USE_PRECISE_SLEEP_DESC}"        ON)
 option(SKL_CACHE_LINE_MEM_MANAGER   "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
 option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"  ON)
+option(SKL_BUILD_DB                 "Build the DB library"                 ON)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -145,6 +146,10 @@ add_subdirectory("SkylakeLib/MiMalloc")
 
 if(SKL_BUILD_TYPE STREQUAL "Full")
     add_subdirectory("SkylakeLib")
+
+    if(SKL_BUILD_DB)
+        add_subdirectory("SkylakeLibDB")
+    endif()
 
     if(SKL_BUILD_TESTS)
         enable_testing()

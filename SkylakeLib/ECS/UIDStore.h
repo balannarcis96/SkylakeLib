@@ -19,8 +19,9 @@ namespace SKL
 
         void Activate() noexcept
         {
-            for( TUIDType i = IdentityValue + 1; i < MaxUIDValue; ++i )
+            for( TUIDType i = MaxUIDValue; i > IdentityValue; --i )
             {
+                SKL_ASSERT( i != IdentityValue );
                 FreeIndices.push( i );            
             }
 
