@@ -35,6 +35,9 @@
 #include <shared_mutex>
 #include <span>
 #include <sstream>
+#include <istream>
+#include <fstream>
+#include <ostream>
 #include <stack>
 #include <thread>
 
