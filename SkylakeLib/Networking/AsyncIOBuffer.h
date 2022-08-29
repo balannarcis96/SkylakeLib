@@ -21,7 +21,7 @@ namespace SKL
         using TDispatchFunctionPtr = void( ASD_CDECL* )( IAsyncIOTask&, uint32_t ) noexcept;
         using TDispatchProto       = ASD::UniqueFunctorWrapper<CTaskMinimumSize, TDispatchFunctionPtr>;
 
-        IAsyncIOTask( IBuffer BufferInterface ) noexcept : BufferInterface { BufferInterface }
+        IAsyncIOTask( IBuffer BufferInterface ) noexcept : Stream { 0, BufferInterface.Length, BufferInterface.Buffer, true }
         {
             memset( &OsOpaqueType, 0, sizeof( AsyncIOOpaqueType ) );
         }
@@ -31,46 +31,74 @@ namespace SKL
         }
 
         //! Dispatch this task
-        ASD_FORCEINLINE void Dispatch( uint32_t NumberOfBytesTransferred ) noexcept
+        SKL_FORCEINLINE void Dispatch( uint32_t NumberOfBytesTransferred ) noexcept
         {
             SKL_ASSERT( false == CastSelfToProto().IsNull() );
             CastSelfToProto().Dispatch( *this, NumberOfBytesTransferred );
         }
         
         //! Is this task valid
-        ASD_FORCEINLINE bool IsNull() const noexcept
+        SKL_FORCEINLINE bool IsNull() const noexcept
         {
             return CastSelfToProto().IsNull();
         }
 
         //! Clear the underlying functor
-        ASD_FORCEINLINE void Clear() noexcept
+        SKL_FORCEINLINE void Clear() noexcept
         {
             CastSelfToProto().Destroy();
         }
 
         //! Get the interface to the internal buffer reference
-        ASD_FORCEINLINE const IBuffer& GetInterface() const noexcept 
+        SKL_FORCEINLINE const IBuffer& GetInterface() const noexcept 
         { 
-            return BufferInterface;
+            return Stream.Buffer;
         }
 
         //! Get the interface to the internal buffer reference
-        ASD_FORCEINLINE IBuffer& GetInterface() noexcept 
+        SKL_FORCEINLINE IBuffer& GetInterface() noexcept 
         { 
-            return BufferInterface;
+            return Stream.Buffer;
         }
 
         //! Cast self to Os opaque type
-        ASD_FORCEINLINE AsyncIOOpaqueType* ToOSOpaqueObject() noexcept
+        SKL_FORCEINLINE AsyncIOOpaqueType* ToOSOpaqueObject() noexcept
         {
             return reinterpret_cast<AsyncIOOpaqueType*>( this );
         }
 
         //! Construct span for the internal buffer
-        ASD_FORCEINLINE std::span<uint8_t> get_span() noexcept
+        SKL_FORCEINLINE std::span<uint8_t> get_span() noexcept
         {
             return { GetInterface().Buffer, static_cast<size_t>( GetInterface().Length ) };
+        }
+
+        //! Construct a new stream interface for this async IO buffer
+        SKL_FORCEINLINE BufferStreamInterface GetStream() noexcept
+        {
+            return BufferStreamInterface{ &Stream };
+        }
+
+        //! Construct stream transaction interface into this buffer at the current position
+        SKL_FORCEINLINE BufferStreamTransaction NewTransaction() noexcept
+        {
+            return BufferStreamTransaction{ &Stream };
+        }
+
+        SKL_FORCEINLINE uint32_t GetPosition() const noexcept
+        {
+            return Stream.Position;
+        }
+
+        //! Construct write interface into this buffer at the InExactBaseOffset position
+        SKL_FORCEINLINE BufferStreamTransaction NewTransaction( uint32_t InExactBaseOffset ) noexcept
+        {
+            const auto OldPosition{ Stream.Position };
+            Stream.Position = InExactBaseOffset;
+            auto Result { BufferStreamTransaction{ &Stream } };
+            Stream.Position = OldPosition;
+
+            return Result;
         }
 
     protected:
@@ -89,7 +117,7 @@ namespace SKL
         }
 
         AsyncIOOpaqueType OsOpaqueType;    //!< Opaque object needed internally by the OS to perform the async IO operation
-        IBuffer           BufferInterface; //!< Cached buffer interface
+        IStreamBase       Stream;          //!< Cached buffer data and manipulation info
     };
 
     template<uint32_t BufferSize, size_t CompletionTaskSize = 16> 
@@ -100,20 +128,20 @@ namespace SKL
         using TDispatch = ASD::UniqueFunctorWrapper<CompletionTaskSize, typename IAsyncIOTask::TDispatchFunctionPtr>;
         
         AsyncIOBuffer() noexcept 
-            : IAsyncIOTask( IBuffer{ .Length = BufferSize, .Buffer = Buffer } ), OnDispatch{} {}
+            : IAsyncIOTask( IBuffer{ BufferSize, Buffer } ), OnDispatch{} {}
 
         ~AsyncIOBuffer() noexcept = default;
 
         //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( IAsyncIOTask&, uint32_t ) noexcept]
         template<typename TFunctor>
-        ASD_FORCEINLINE void operator+=( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE void operator+=( TFunctor&& InFunctor ) noexcept
         {
             OnDispatch += std::forward<TFunctor>( InFunctor );
         }
 
         //! Set the functor to be executed when the async IO operation is completed [void( ASD_CDECL* )( IAsyncIOTask&, uint32_t ) noexcept]
         template<typename TFunctor>
-        ASD_FORCEINLINE void SetCompletionHandler( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE void SetCompletionHandler( TFunctor&& InFunctor ) noexcept
         {
             OnDispatch += std::forward<TFunctor>( InFunctor );
         }
@@ -122,4 +150,7 @@ namespace SKL
         TDispatch OnDispatch;           //!< The functor to dispatch when the async IO operation is completed
         uint8_t   Buffer[ BufferSize ]; //!< The buffer to carry the data
     };
+
+    #define SKL_ASYNCIO_BUFFER_TRANSACTION( BufferPtr )          \
+    if( auto Transaction{ NewTask->NewTransaction() }; true )
 }

@@ -37,6 +37,30 @@ namespace SKL
 
 namespace SKL
 {
+    struct IBuffer
+    {
+        IBuffer() noexcept = default;
+        IBuffer( uint32_t BufferSize, uint8_t* Buffer ) noexcept
+            : Length{ BufferSize }, Buffer{ Buffer } {}
+        ~IBuffer() noexcept = default;
+
+        uint32_t Length { 0 };
+        //uint32_t Padding;
+        uint8_t* Buffer { nullptr };
+    };
+
+    struct IStreamBase
+    {
+        IStreamBase( uint32_t Position, uint32_t BufferSize, uint8_t* Buffer, bool bOwnsBuffer = false ) noexcept
+            :Position{ Position }, bOwnsBuffer{ static_cast<uint32_t>( bOwnsBuffer ) }, Buffer{ BufferSize, Buffer } {}
+
+        ~IStreamBase() noexcept = default;
+
+        uint32_t Position   { 0 };
+        uint32_t bOwnsBuffer{ FALSE };
+        IBuffer  Buffer     {};
+    };
+
     union ServerInstanceFlags
     {
         struct

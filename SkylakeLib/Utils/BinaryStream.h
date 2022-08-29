@@ -9,32 +9,59 @@
 
 namespace SKL
 {
-    struct IStreamBase
-    {
-        IStreamBase( uint32_t Position, uint32_t BufferSize, uint8_t* Buffer ) noexcept
-            : Position{ Position }, BufferSize{ BufferSize }, Buffer{ Buffer } {}
-        ~IStreamBase() noexcept = default;
-
-        uint32_t Position  { 0 };
-        uint32_t BufferSize{ 0 };
-        uint8_t* Buffer    { nullptr };
-    };
-
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject = true>
     struct IStreamReader;
+    
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject = true>
     struct IStreamWriter;
+    
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject = true>
     struct IBinaryStream;
-    struct BufferStream;
 
+    struct BufferStream;
+    struct BufferStreamInterface;
+    struct BufferStreamTransaction;
+
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct alignas( SKL_ALIGNMENT ) IStreamReader
     {
-        //! Cast &Buffer[ CurrentPosition ] to const T& and return copy of T
-        template<typename T>
-        SKL_FORCEINLINE T ReadT( ) noexcept
+        //! Get the target data this interface operates on
+        SKL_FORCEINLINE IStreamBase& GetInterface() noexcept
         {
-            constexpr auto TSize{ static_cast<uint32_t>( sizeof( T ) ) };
-            Forward( TSize );
-            return *reinterpret_cast< const T * >( GetFront( ) - TSize );
+            if constexpr( true == bIsBase_StreamObjectOrPtrToStreamObject )
+            {
+                return *reinterpret_cast<IStreamBase*>( this );
+            }
+            else
+            {
+                return **reinterpret_cast<IStreamBase**>( this );
+            }
         }
+
+        //! Get the target data this interface operates on
+        SKL_FORCEINLINE const IStreamBase& GetInterface() const noexcept
+        {
+            if constexpr( true == bIsBase_StreamObjectOrPtrToStreamObject )
+            {
+                return *reinterpret_cast<const IStreamBase*>( this );
+            }
+            else
+            {
+                return **reinterpret_cast<const IStreamBase* const *>( this );
+            }
+        }
+
+        //! Does this instance own its buffer
+        SKL_FORCEINLINE bool OwnsBuffer() const noexcept { return TRUE == GetInterface().bOwnsBuffer; }
+
+        //! Get buffer 
+        SKL_FORCEINLINE const uint8_t* GetBuffer() const noexcept { return GetInterface().Buffer.Buffer; }
+
+        //! Get buffer size
+        SKL_FORCEINLINE uint32_t GetBufferSize() const noexcept { return GetInterface().Buffer.Length; }
+
+        //! Get the current stream position (offset)
+        SKL_FORCEINLINE uint32_t GetPosition() const noexcept { return GetInterface().Position; }
 
         //! Push the stream position forward (asserts that GetRemainingSize() >= InAmount)
         SKL_FORCEINLINE void ForwardToEnd( uint32_t InEndOffset = 0 ) noexcept 
@@ -51,7 +78,7 @@ namespace SKL
             SKL_ASSERT( Result <= GetBufferSize() );
             GetInterface().Position = Result;
         }
-        
+
         //! Try to push the stream position forward (fails if GetRemainingSize() < InAmount)
         SKL_FORCEINLINE bool TryForward( uint32_t InAmount ) noexcept 
         { 
@@ -62,7 +89,7 @@ namespace SKL
 
             return bFits;
         }
-        
+
         //! Try to push the stream position forward (if GetRemainingSize() < InAmount then in forwards to the end)
         SKL_FORCEINLINE bool ForwardTruncate( uint32_t InAmount ) noexcept 
         { 
@@ -71,13 +98,13 @@ namespace SKL
             const auto bShouldTruncate{ Result >= GetBufferSize() };
 
             GetInterface().Position += ( InAmount * static_cast<uint32_t>( !bShouldTruncate ) ) 
-                                     + ( Delta     * static_cast<uint32_t>(  bShouldTruncate ) );
+                                     + ( Delta    * static_cast<uint32_t>(  bShouldTruncate ) );
 
             return bShouldTruncate;
         }
-       
+
         //! Get buffer at the current stream position 
-        SKL_FORCEINLINE const uint8_t* GetFront() const noexcept { return &GetInterface().Buffer[ GetPosition() ]; }
+        SKL_FORCEINLINE const uint8_t* GetFront() const noexcept { return &GetInterface().Buffer.Buffer[ GetPosition() ]; }
 
         //! Get buffer at the current stream position as a string ptr
         SKL_FORCEINLINE const char* GetFrontAsString() const noexcept { return reinterpret_cast<const char*>( GetFront() ); }
@@ -91,15 +118,6 @@ namespace SKL
         //! Get wstrlen( buffer at the current stream position as a wide string ptr )
         SKL_FORCEINLINE uint32_t GetFrontAsWString_Size() const noexcept { return static_cast<uint32_t>( SKL_WSTRLEN( GetFrontAsWString(), GetRemainingSize() / 2 ) ); }
 
-        //! Get buffer 
-        SKL_FORCEINLINE const uint8_t* GetBuffer() const noexcept { return GetInterface().Buffer; }
-        
-        //! Get buffer size
-        SKL_FORCEINLINE uint32_t GetBufferSize() const noexcept { return GetInterface().BufferSize; }
-        
-        //! Get the current stream position (offset)
-        SKL_FORCEINLINE uint32_t GetPosition() const noexcept { return GetInterface().Position; }
-        
         //! Set the current stream position (offset)
         SKL_FORCEINLINE void SetPosition( uint32_t InPosition ) noexcept 
         { 
@@ -118,6 +136,15 @@ namespace SKL
 
         //! Get the remaining size of the buffer that
         SKL_FORCEINLINE uint32_t GetRemainingSize() const noexcept { return GetBufferSize() - GetPosition(); }
+
+        //! Cast &Buffer[ CurrentPosition ] to const T& and return copy of T
+        template<typename T>
+        SKL_FORCEINLINE T ReadT( ) noexcept
+        {
+            constexpr auto TSize{ static_cast<uint32_t>( sizeof( T ) ) };
+            Forward( TSize );
+            return *reinterpret_cast< const T * >( GetFront( ) - TSize );
+        }
 
         //! Has the stream position reached the end of the buffer
         SKL_FORCEINLINE bool IsEOS() const noexcept { return 0 == GetRemainingSize(); }
@@ -163,44 +190,63 @@ namespace SKL
             return *reinterpret_cast<TObject*>( GetFront() );
         }
 
-        //! Get the target data this interface operates on
-        SKL_FORCEINLINE IStreamBase& GetInterface() noexcept
-        {
-            return *reinterpret_cast<IStreamBase*>( this );
-        }
-
-        //! Get the target data this interface operates on
-        SKL_FORCEINLINE const IStreamBase& GetInterface() const noexcept
-        {
-            return *reinterpret_cast<const IStreamBase*>( this );
-        }
-
         //! Save the underlying buffer to a file
-        bool SaveToFile( const char* InFileName, bool bAppendInsteadOfTruncate = true, bool bPositionAsSize = true, bool bSaveAsText = false ) const noexcept;
+        bool SaveToFile( const char* InFileName, bool bAppendInsteadOfTruncate = true, bool bPositionAsSize = true, bool bSaveAsText = false ) const noexcept
+        {
+            const auto WriteSize{ ( GetPosition( ) * bPositionAsSize ) + ( GetBufferSize() * !bPositionAsSize ) };
+            if( 0 == WriteSize )
+            {
+                return false;
+            }
+
+            auto File{ std::ofstream( InFileName
+                                     , ( std::ofstream::binary * !bSaveAsText ) 
+                                     | ( std::ofstream::app    *  bAppendInsteadOfTruncate ) 
+                                     | ( std::ofstream::trunc  * !bAppendInsteadOfTruncate ) ) };
+            if( false == File.is_open( ) )
+            {
+                SKL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
+                return false;
+            }
+
+            File.write( reinterpret_cast< const char * >( GetBuffer( ) ), WriteSize );
+
+            const auto Result{ File.good() };
+            if( false == Result )
+            {
+                SKL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to write bytesCount:%u to file %s ", WriteSize, InFileName );
+            }
+
+            File.close();
+
+            return Result;
+        }
 
     private:
         IStreamReader() noexcept = default;
         IStreamReader( const uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
         {
             auto& Interface{ GetInterface() };
-            Interface.Position   = InPosition;
-            Interface.BufferSize = InSize;
-            Interface.Buffer     = const_cast<uint8_t*>( InBuffer );
+            Interface.Position      = InPosition;
+            Interface.Buffer.Length = InSize;
+            Interface.Buffer.Buffer = const_cast<uint8_t*>( InBuffer );
         }
 
-        friend IStreamWriter;
+        template<bool bIsBase_StreamObjectOrPtrToStreamObject>
+        friend struct IStreamWriter;
     };
 
-    struct alignas( SKL_ALIGNMENT ) IStreamWriter: public IStreamReader
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
+    struct alignas( SKL_ALIGNMENT ) IStreamWriter: public IStreamReader<bIsBase_StreamObjectOrPtrToStreamObject>
     {
         //! Can fit InAmount bytes into the stream starting at the current stream position
-        SKL_FORCEINLINE bool CanFit( uint32_t InAmount ) const noexcept { return GetRemainingSize() >= InAmount; }
+        SKL_FORCEINLINE bool CanFit( uint32_t InAmount ) const noexcept { return this->GetRemainingSize() >= InAmount; }
 
         //! Get buffer at the current stream position 
-        SKL_FORCEINLINE uint8_t* GetFront() const noexcept { return &GetInterface().Buffer[ GetPosition() ]; }
+        SKL_FORCEINLINE uint8_t* GetFront() const noexcept { return &this->GetInterface().Buffer.Buffer[ this->GetPosition() ]; }
 
         //! Get buffer 
-        SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return GetInterface().Buffer; }
+        SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return this->GetInterface().Buffer.Buffer; }
         
         //! Get the buffer at the current position as a ref to TObject class type
         template<typename TObject> requires( std::is_class_v<TObject> )
@@ -214,11 +260,11 @@ namespace SKL
         {
             SKL_ASSERT( nullptr != InBuffer );
             SKL_ASSERT( 0 != InWriteSize );
-            SKL_ASSERT( nullptr != GetBuffer() );
+            SKL_ASSERT( nullptr != this->GetBuffer() );
 
-            if( IsEOS() ) { return true; }
+            if( this->IsEOS() ) { return true; }
 
-            const auto RemainingSize       { GetRemainingSize() };
+            const auto RemainingSize       { this->GetRemainingSize() };
             const auto bHasRequestedAmount{ InWriteSize <= RemainingSize };
 
             if( false == bHasRequestedAmount && false == bTruncate )
@@ -234,7 +280,7 @@ namespace SKL
             const auto* Result{ memcpy( GetFront(), InBuffer, ActualWriteSize ) };
             SKL_ASSERT( GetFront() == Result );
 
-            Forward( ActualWriteSize );
+            this->Forward( ActualWriteSize );
 
             return true;
         }
@@ -244,7 +290,7 @@ namespace SKL
         SKL_FORCEINLINE void WriteT( T InValue ) noexcept
         {
              *reinterpret_cast<T*>( GetFront() ) = InValue;
-            Forward( static_cast<uint32_t>( sizeof( T ) ) );
+             this->Forward( static_cast<uint32_t>( sizeof( T ) ) );
         }
         
         //! Write string into buffer at current stream position, with a maximum of MaxCount of characters
@@ -282,32 +328,73 @@ namespace SKL
         //! Zero the whole buffer
         SKL_FORCEINLINE void ZeroBuffer() noexcept 
         { 
-            SKL_ASSERT( nullptr != GetBuffer() );
-            SKL_ASSERT( 0 != GetBufferSize() );
-            memset( GetBuffer(), 0, GetBufferSize() );
+            SKL_ASSERT( nullptr != this->GetBuffer() );
+            SKL_ASSERT( 0 != this->GetBufferSize() );
+            memset( GetBuffer(), 0, this->GetBufferSize() );
         }
 
         //! Zero the the remaining portion of the buffer (does nothing if IsEOS() == true)
         SKL_FORCEINLINE void ZeroRemainingBuffer() noexcept 
         { 
-            SKL_ASSERT( nullptr != GetBuffer() );
-            SKL_ASSERT( 0 != GetBufferSize() );
-            if( true == IsEOS() ){ return; }
-            memset( GetFront(), 0, GetRemainingSize() );
+            SKL_ASSERT( nullptr != this->GetBuffer() );
+            SKL_ASSERT( 0 != this->GetBufferSize() );
+            if( true == this->IsEOS() ){ return; }
+            memset( GetFront(), 0, this->GetRemainingSize() );
         }
 
         //! Fill the buffer with bytes read from file (if bTruncate == true, reads at most GetBufferSize(), otherwise returns false)
-        bool ReadFromFile( const char* InFileName, bool bTruncate = false ) noexcept;
+        bool ReadFromFile( const char* InFileName, bool bTruncate = false ) noexcept
+        {
+            auto File{ std::ifstream( InFileName, std::ifstream::binary ) };
+            if( false == File.is_open( ) )
+            {
+                SKL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to open file %s", InFileName );
+                return false;
+            } 
+
+            File.seekg( 0, std::ifstream::end );
+            const uint32_t ReadSize{ static_cast< uint32_t >( File.tellg( ) ) };
+            File.seekg( 0, std::ifstream::beg );
+
+            if( 0 == ReadSize ) SKL_UNLIKELY
+            {
+                SKL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Empty file %s", InFileName );
+            File.close();
+            return false;
+            }
+
+            const auto bItFits{ this->CanFit( ReadSize ) };
+            if( false == bItFits && false == bTruncate )
+            {
+                SKL_VER_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
+                File.close();
+                return false;
+            }
+
+            File.read( reinterpret_cast<char*>( this->GetFront() ), ReadSize );
+
+            const auto Result{ File.good() };
+            if( false == Result )
+            {
+                SKL_WRN_FMT( "IStreamReader::ReadFromFile(InFileName) Failed to read bytesCount:%u to file %s ", ReadSize, InFileName );
+            }
+
+            File.close();
+
+            return Result;
+        }
 
     private:
         IStreamWriter() noexcept = default;
         IStreamWriter( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
             : IStreamReader{ InBuffer, InSize, InPosition } {}
 
-        friend IBinaryStream;
+        template<bool bIsBase_StreamObjectOrPtrToStreamObject>
+        friend struct IBinaryStream;
     };
 
-    struct alignas( SKL_ALIGNMENT ) IBinaryStream: public IStreamWriter
+    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
+    struct alignas( SKL_ALIGNMENT ) IBinaryStream: public IStreamWriter<bIsBase_StreamObjectOrPtrToStreamObject>
     {
     private:
         IBinaryStream() noexcept = default;
@@ -315,17 +402,19 @@ namespace SKL
             : IStreamWriter{ InBuffer, InSize, InPosition } {}
 
         friend BufferStream;
+        friend BufferStreamInterface;
+        friend BufferStreamTransaction;
     };
 
-    struct alignas( SKL_ALIGNMENT ) BufferStream : public IBinaryStream
+    struct alignas( SKL_ALIGNMENT ) BufferStream : public IBinaryStream<true>
     {
         BufferStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
-            : IBinaryStream{}, Base{ InPosition, InSize, InBuffer }, bOwnsBuffer{ false } {}
+            : IBinaryStream{}, Base{ InPosition, InSize, InBuffer, false } {}
         BufferStream( uint32_t InSize, uint32_t InPosition = 0 ) noexcept
-            : IBinaryStream{}, Base{ InPosition, InSize, nullptr }, bOwnsBuffer{ true } 
+            : IBinaryStream{}, Base{ InPosition, InSize, nullptr, true }
         {
-            Base.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( InSize, SKL_ALIGNMENT ) );
-            SKL_ASSERT( nullptr != Base.Buffer ); 
+            Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( InSize, SKL_ALIGNMENT ) );
+            SKL_ASSERT( nullptr != Base.Buffer.Buffer ); 
         }
         ~BufferStream() noexcept
         {
@@ -333,13 +422,13 @@ namespace SKL
         }
 
         BufferStream( const BufferStream& Other ) noexcept
-            : Base{ Other.Base }, bOwnsBuffer{ Other.bOwnsBuffer }
+            : Base{ Other.Base }
         {
-            if( true == bOwnsBuffer )
+            if( true == OwnsBuffer() )
             {
-                Base.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.BufferSize, SKL_ALIGNMENT ) );
-                SKL_ASSERT( nullptr != Base.Buffer );
-                memcpy( Base.Buffer, Other.Base.Buffer, Base.BufferSize );
+                Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.Buffer.Length, SKL_ALIGNMENT ) );
+                SKL_ASSERT( nullptr != Base.Buffer.Buffer );
+                memcpy( Base.Buffer.Buffer, Other.Base.Buffer.Buffer, Base.Buffer.Length );
             }
         }
         BufferStream& operator=( const BufferStream& Other ) noexcept
@@ -348,25 +437,24 @@ namespace SKL
 
             Clear();
 
-            Base        = Other.Base;
-            bOwnsBuffer = Other.bOwnsBuffer;
+            Base = Other.Base;
 
-            if( true == bOwnsBuffer )
+            if( true == OwnsBuffer() )
             {
-                Base.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.BufferSize, SKL_ALIGNMENT ) );
-                SKL_ASSERT( nullptr != Base.Buffer );
-                memcpy( Base.Buffer, Other.Base.Buffer, Base.BufferSize );
+                Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.Buffer.Length, SKL_ALIGNMENT ) );
+                SKL_ASSERT( nullptr != Base.Buffer.Buffer );
+                memcpy( Base.Buffer.Buffer, Other.Base.Buffer.Buffer, Base.Buffer.Length );
             }
 
             return *this;
         }
         BufferStream( BufferStream&& Other ) noexcept
-            : Base{ Other.Base }, bOwnsBuffer{ Other.bOwnsBuffer }
+            : Base{ Other.Base }
         {
-            Other.Base.Position   = 0;
-            Other.Base.BufferSize = 0;
-            Other.Base.Buffer     = nullptr;
-            Other.bOwnsBuffer     = false;
+            Other.Base.Position      = 0;
+            Other.Base.Buffer.Length = 0;
+            Other.Base.Buffer.Buffer = nullptr;
+            Other.Base.bOwnsBuffer   = false;
         }
         BufferStream& operator=( BufferStream&& Other ) noexcept
         {
@@ -374,12 +462,11 @@ namespace SKL
 
             Clear();
 
-            Base                  = Other.Base;
-            bOwnsBuffer           = Other.bOwnsBuffer;
-            Other.Base.Position   = 0;
-            Other.Base.BufferSize = 0;
-            Other.Base.Buffer     = nullptr;
-            Other.bOwnsBuffer     = false;
+            Base                     = Other.Base;
+            Other.Base.Position      = 0;
+            Other.Base.Buffer.Length = 0;
+            Other.Base.Buffer.Buffer = nullptr;
+            Other.Base.bOwnsBuffer   = false;
 
             return *this;
         }
@@ -389,18 +476,110 @@ namespace SKL
         //! Clear this buffer stream, deallocates buffer is bOwnsBuffer == true
         void Clear() noexcept
         {
-            if( true == bOwnsBuffer && nullptr != Base.Buffer )
+            if( true == OwnsBuffer() && nullptr != Base.Buffer.Buffer )
             {
-                SKL_FREE_SIZE_ALIGNED( Base.Buffer, Base.BufferSize, SKL_ALIGNMENT );
+                SKL_FREE_SIZE_ALIGNED( Base.Buffer.Buffer, Base.Buffer.Length, SKL_ALIGNMENT );
             }
 
-            Base.Position   = 0;
-            Base.BufferSize = 0;
-            Base.Buffer     = nullptr;
+            Base.Position      = 0;
+            Base.Buffer.Length = 0;
+            Base.Buffer.Buffer = nullptr;
+            Base.bOwnsBuffer   = FALSE;
         }
 
     private:
         IStreamBase Base;
-        bool        bOwnsBuffer;
+    };
+
+    struct alignas( SKL_ALIGNMENT ) BufferStreamInterface : public IBinaryStream<false>
+    {
+        BufferStreamInterface( IStreamBase* SourceStream ) noexcept
+            : IBinaryStream{}, SourceBase{ SourceStream } {}
+        ~BufferStreamInterface() noexcept = default;
+
+        BufferStreamInterface( const BufferStreamInterface& Other ) noexcept
+            : SourceBase{ Other.SourceBase } {}
+        BufferStreamInterface& operator=( const BufferStreamInterface& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+            SourceBase = Other.SourceBase;
+            return *this;
+        }
+
+    private:
+        IStreamBase* SourceBase;
+    };
+
+    struct alignas( SKL_ALIGNMENT ) BufferStreamTransaction : public IBinaryStream<true>
+    {
+        BufferStreamTransaction( IStreamBase* SourceStream ) noexcept
+            : IBinaryStream{}, Base{ *SourceStream }, SourceBase{ SourceStream }
+        {
+            Base.bOwnsBuffer   = FALSE;
+            Base.Buffer.Length = GetRemainingSize();
+            Base.Buffer.Buffer = GetFront();
+            Base.Position      = 0;
+        }
+        ~BufferStreamTransaction() noexcept
+        {
+            Commit();
+            Release();
+        }
+
+        BufferStreamTransaction( const BufferStreamTransaction& Other ) noexcept
+            : Base{ Other.Base }, SourceBase{ Other.SourceBase }
+        {
+            SKL_ASSERT( false == Other.OwnsBuffer() );
+        }
+        BufferStreamTransaction& operator=( const BufferStreamTransaction& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+            Base       = Other.Base;
+            SourceBase = Other.SourceBase;
+            SKL_ASSERT( false == Other.OwnsBuffer() );
+            return *this;
+        }
+
+        //!
+        //! "Commits" changes to the underlying Stream
+        //! 
+        //! \remarks After Commiting, the Buffer(ptr) is pushed forward by the committed amount and the Position is reset to 0 (rebased)
+        //! 
+        void CommitAndRebase() noexcept
+        {
+            // Commit to base 
+            SourceBase->Position += GetPosition();
+
+            // Rebase
+            Base.Buffer.Length    = GetRemainingSize();
+            Base.Buffer.Buffer   += GetPosition();
+            Base.Position         = 0;
+        }
+
+        //! "Commits" changes to the underlying Stream
+        SKL_FORCEINLINE void Commit() noexcept
+        {
+            // Commit to base 
+            SourceBase->Position += GetPosition();
+        }
+
+        //! "Rolls back" changes by resetting the Position to 0
+        SKL_FORCEINLINE void Rollback( ) noexcept
+        {
+            Base.Position = 0;
+        }
+
+        //! Release the underlying stream
+        void Release() noexcept
+        {
+            Base.Position      = 0;
+            Base.Buffer.Length = 0;
+            Base.Buffer.Buffer = nullptr;
+            SourceBase         = nullptr;
+        }
+
+    private:
+        IStreamBase  Base;
+        IStreamBase* SourceBase;
     };
 }

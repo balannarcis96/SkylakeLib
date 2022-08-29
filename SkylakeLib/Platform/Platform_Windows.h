@@ -25,12 +25,6 @@ namespace SKL
         }
     };
 
-    struct IBuffer
-    {
-        uint32_t Length { 0 };
-        uint8_t *Buffer { nullptr };
-    };
-
     struct Timer
     {   
         Timer() = default;

@@ -117,6 +117,83 @@ namespace TaskTests
         NewTask->Clear();
         ASSERT_TRUE( SPtr.use_count() == 1 );
     }
+
+    TEST( TaskTests, AsyncIoTask_Stream_API )
+    {
+        using BufferType = SKL::AsyncIOBuffer<1024, 32>;
+        auto NewTask { SKL::MakeShared<BufferType>() };
+        ASSERT_TRUE( nullptr != NewTask.get() );
+
+        auto Interface{ NewTask->GetInterface() };
+        auto Stream   { NewTask->GetStream() };
+
+        ASSERT_TRUE( Interface.Buffer == Stream.GetBuffer() );
+        ASSERT_TRUE( Interface.Length == Stream.GetBufferSize() );
+        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream.GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+
+        Stream.ForwardToEnd();
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetBufferSize() );
+        ASSERT_TRUE( 0 == Stream.GetRemainingSize() );
+        ASSERT_TRUE( true == Stream.IsEOS() );
+
+        Stream.ForwardToEnd( Stream.GetBufferSize() );
+        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream.GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+        ASSERT_TRUE( false == Stream.IsEOS() );
+
+        Stream.Reset();
+        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream.GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+
+        Stream.WriteT( uint32_t( 5 ) );
+        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+        ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
+
+        Stream.Reset();
+        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream.GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+
+        ASSERT_TRUE( 5 == Stream.ReadT<uint32_t>() );
+        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+        ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
+    }
+
+    TEST( TaskTests, AsyncIoTask_Transaction_API )
+    {
+        using BufferType = SKL::AsyncIOBuffer<128, 32>;
+        auto NewTask { SKL::MakeShared<BufferType>() };
+        ASSERT_TRUE( nullptr != NewTask.get() );
+
+        SKL_ASYNCIO_BUFFER_TRANSACTION( NewTask )
+        {
+            ASSERT_TRUE( 0 == Transaction.GetPosition() );
+            Transaction.WriteT( uint32_t( 5 ) );
+            ASSERT_TRUE( sizeof( uint32_t ) == Transaction.GetPosition() );
+            Transaction.Rollback();
+        }
+
+        ASSERT_TRUE( 0 == NewTask->GetPosition() );
+
+        SKL_ASYNCIO_BUFFER_TRANSACTION( NewTask )
+        {
+            ASSERT_TRUE( 0 == Transaction.GetPosition() );
+            Transaction.WriteT( uint32_t( 5 ) );
+            ASSERT_TRUE( sizeof( uint32_t ) == Transaction.GetPosition() );
+        }
+
+        ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
+
+        {
+            auto Stream{ NewTask->GetStream() };
+            ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+        }
+    }
 }
 
 int main( int argc, char** argv )
