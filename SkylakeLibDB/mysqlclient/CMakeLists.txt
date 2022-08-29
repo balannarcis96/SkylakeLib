@@ -13,7 +13,7 @@ file(
 
 add_library (mysql INTERFACE)
 			
-source_group("public"   FILES ${_public_files})
+source_group("public" FILES ${_public_files})
 
 # Set C++20
 set_property(TARGET mysql PROPERTY CXX_STANDARD 20)

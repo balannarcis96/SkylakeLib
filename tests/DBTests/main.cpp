@@ -4,6 +4,19 @@
 
 namespace SkylakeDBTests
 {
+    class SkylakeDBTestsFixture: public ::testing::Test
+    {
+        void SetUp() override
+        {
+            EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
+        }
+
+        void TearDown() override
+        {
+            EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
+        }
+    };
+
     TEST( SkylakeDBTests, DBString_BasicAPI )
     {
         {
@@ -67,6 +80,11 @@ namespace SkylakeDBTests
             Str.CopyUtf8Into( Buffer2, 64 );
             ASSERT_TRUE( ( 0 == SKL_STRCMP( Buffer2, "TEST_STR", 64 ) ) );
         }
+    }
+
+    TEST_F( SkylakeDBTestsFixture, DBConnection_BasicAPI )
+    {
+        
     }
 }
 

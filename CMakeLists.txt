@@ -148,6 +148,7 @@ if(SKL_BUILD_TYPE STREQUAL "Full")
     add_subdirectory("SkylakeLib")
 
     if(SKL_BUILD_DB)
+        add_subdirectory("SkylakeLibDB/mysqlclient")
         add_subdirectory("SkylakeLibDB")
     endif()
 

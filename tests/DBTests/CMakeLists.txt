@@ -3,6 +3,7 @@ project ("SkyalakeLib_DB_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibDBTests main.cpp)
 add_test(NAME "TEST_SkylakeLibDBTests" COMMAND SkylakeLibDBTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+target_link_libraries(SkylakeLibDBTests PUBLIC mysql)
 target_link_libraries(SkylakeLibDBTests PUBLIC SkylakeLibDB)
 
 # Link Google Test

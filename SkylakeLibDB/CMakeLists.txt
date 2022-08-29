@@ -14,8 +14,5 @@ set_property(TARGET SkylakeLibDB PROPERTY CXX_STANDARD 20)
 
 target_include_directories(SkylakeLibDB PUBLIC "${SKYLAKE_SRC_ROOT}/include/")
 
-target_link_libraries(SkylakeLibDB PUBLIC SkylakeLib)
-
-add_subdirectory(mysqlclient)
-
 target_link_libraries(SkylakeLibDB PUBLIC mysql)
+target_link_libraries(SkylakeLibDB PUBLIC SkylakeLib)
