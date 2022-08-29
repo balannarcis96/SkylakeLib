@@ -138,13 +138,13 @@ namespace std
 
         //@TODO math and logic operators
 
-        // Decrease the value by 1 and return the value after the decrement.
+        // Decrease the value by 1 and return the value before the decrement.
         SKL_FORCEINLINE TOutType decrement( ) noexcept
         {
             return AtomicWrappedValue.fetch_sub( 1, std::memory_order_acq_rel );
         }
 
-        // Increments the value by 1 and return the value after the increment.
+        // Increments the value by 1 and return the value before the increment.
         SKL_FORCEINLINE TOutType increment( ) noexcept
         {
             return AtomicWrappedValue.fetch_add( 1, std::memory_order_acq_rel );
