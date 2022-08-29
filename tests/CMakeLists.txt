@@ -17,6 +17,7 @@ add_subdirectory(AODTests)
 add_subdirectory(ServiceTests)
 add_subdirectory(TLSSyncTests)
 add_subdirectory(ECSTEsts)
+add_subdirectory(UtilsTests)
 
 if(SKL_BUILD_DB)
     add_subdirectory(DBTests)

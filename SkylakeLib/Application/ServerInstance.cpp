@@ -229,6 +229,8 @@ namespace SKL
 
     bool ServerInstance::OnWorkerStarted( Worker& InWorker, WorkerGroup& InGroup ) noexcept
     {
+        TRand::InitializeThread();
+
         if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
         {   
             if( nullptr == ThreadLocalMemoryManager::GetInstance() )
@@ -299,6 +301,8 @@ namespace SKL
             ThreadLocalMemoryManager::Destroy();
             SKL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         }
+
+        TRand::ShutdownThread();
 
         TotalNumberOfRunningWorkers.decrement();
 
