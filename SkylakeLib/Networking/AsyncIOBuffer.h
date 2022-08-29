@@ -85,20 +85,30 @@ namespace SKL
             return BufferStreamTransaction{ &Stream };
         }
 
+        //! Has reached buffer end (is end of buffer)
+        SKL_FORCEINLINE bool IsEOS() const noexcept
+        {
+            return Stream.Position == Stream.Buffer.Length;
+        }
+
+        //! Get current stream position
         SKL_FORCEINLINE uint32_t GetPosition() const noexcept
         {
             return Stream.Position;
         }
 
-        //! Construct write interface into this buffer at the InExactBaseOffset position
-        SKL_FORCEINLINE BufferStreamTransaction NewTransaction( uint32_t InExactBaseOffset ) noexcept
+        //! Set current stream position
+        SKL_FORCEINLINE void SetPosition( uint32_t InPosition ) noexcept
         {
-            const auto OldPosition{ Stream.Position };
-            Stream.Position = InExactBaseOffset;
-            auto Result { BufferStreamTransaction{ &Stream } };
-            Stream.Position = OldPosition;
+            SKL_ASSERT( InPosition < Stream.Buffer.Length );
+            Stream.Position = InPosition;
+        }
 
-            return Result;
+        //! Forward current stream position by InAmount
+        SKL_FORCEINLINE void Forward( uint32_t InAmount ) noexcept
+        {
+            SKL_ASSERT( Stream.Position + InAmount <= Stream.Buffer.Length );
+            Stream.Position += InAmount;
         }
 
     protected:

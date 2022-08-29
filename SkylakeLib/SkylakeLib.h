@@ -24,8 +24,8 @@ extern void _mi_assert_fail(const char* assertion, const char* fname, unsigned l
 
 #include "Heading.h"
 
-//! Platform
-#include "Platform/Platform.h"
+//! Os specific port
+#include "Port/Port.h"
 
 //! Spin Lock
 #include "Utils/SpinLock.h"

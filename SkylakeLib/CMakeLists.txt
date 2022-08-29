@@ -13,7 +13,7 @@ file( GLOB_RECURSE _Macros_files                 LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _Memory_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Memory/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Memory/*.h" )
 file( GLOB_RECURSE _Math_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Math/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Math/*.h" )
 file( GLOB_RECURSE _Networking_files             LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Networking/*.cpp"             "${SKYLAKE_SRC_ROOT}/Networking/*.h" )
-file( GLOB_RECURSE _Platform_files               LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Platform/*.cpp"               "${SKYLAKE_SRC_ROOT}/Platform/*.h" )
+file( GLOB_RECURSE _Port_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Port/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Port/*.h" )
 file( GLOB         _Root_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/*.cpp"                        "${SKYLAKE_SRC_ROOT}/*.h" )
 file( GLOB_RECURSE _Service_files                LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Service/*.cpp"                "${SKYLAKE_SRC_ROOT}/Service/*.h" )
 file( GLOB_RECURSE _Std_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Std/*.cpp"                    "${SKYLAKE_SRC_ROOT}/Std/*.h" )
@@ -35,7 +35,7 @@ add_library (SkylakeLib STATIC
     ${_Memory_files}                 
     ${_Math_files}                   
     ${_Networking_files}                   
-    ${_Platform_files}                 
+    ${_Port_files}                 
     ${_Root_files}                     
     ${_Service_files}                     
     ${_Std_files}     
@@ -57,7 +57,7 @@ source_group("Macros"                 FILES ${_Macros_files}                )
 source_group("Memory"                 FILES ${_Memory_files}                )
 source_group("Math"                   FILES ${_Math_files}                  )
 source_group("Networking"             FILES ${_Networking_files}            )
-source_group("Platform"               FILES ${_Platform_files}              )
+source_group("Port"                   FILES ${_Port_files}                  )
 source_group("/"                      FILES ${_Root_files}                  )
 source_group("Service"                FILES ${_Service_files}               )
 source_group("Std"                    FILES ${_Std_files}                   )
