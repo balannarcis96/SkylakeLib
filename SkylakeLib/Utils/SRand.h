@@ -72,7 +72,7 @@ namespace SKL
     };
 
     //! Thread local rand facillity
-    struct TRand: private ITLSSingleton<TRand>
+    struct TRand final: private ITLSSingleton<TRand>
     {
         static void InitializeThread() noexcept
         {
@@ -88,36 +88,39 @@ namespace SKL
         SKL_FORCEINLINE static uint32_t NextRandom() noexcept
         {
             SKL_ASSERT( nullptr != GetInstance() );
-            return GetInstance()->NextRandom();
+            return GetInstance()->Rand.NextRandom();
         }
 
         //! Generate pseudo random value in interval [InMin, InMax]
         SKL_FORCEINLINE static uint32_t NextRandomInRange( uint32_t InMin, uint32_t InMax ) noexcept
         {
             SKL_ASSERT( nullptr != GetInstance() );
-            return GetInstance()->NextRandomInRange( InMin, InMax );
+            return GetInstance()->Rand.NextRandomInRange( InMin, InMax );
         }
 
         //! Generate pseudo random value in interval (0.0f, 1.0f]
         SKL_FORCEINLINE static float NextRandomF() noexcept
         {
             SKL_ASSERT( nullptr != GetInstance() );
-            return GetInstance()->NextRandomF();
+            return GetInstance()->Rand.NextRandomF();
         }
         
         //! Generate pseudo random value in interval (0.0, 1.0]
         SKL_FORCEINLINE static double NextRandomD() noexcept
         {
             SKL_ASSERT( nullptr != GetInstance() );
-            return GetInstance()->NextRandomD();
+            return GetInstance()->Rand.NextRandomD();
         }
 
         RStatus Initialize( ) noexcept override { return RSuccess; }
         const char *GetName( ) const noexcept override { return "[TRand]"; }
+
+    private:
+        Squirrel3Rand Rand{};
     };
 
-    //! Globa, thread safe, rand facillity
-    struct GRand
+    //! Global, thread safe, rand facillity
+    struct GRand final
     {
         //! Generate pseudo random value in interval [0, UINT32_MAX]
         SKL_FORCEINLINE static uint32_t NextRandom() noexcept

@@ -59,17 +59,22 @@ namespace SKL::AOD
         while( true )
         {
             auto* Task{ reinterpret_cast<IAODStaticObjectTask*>( TaskQueue.Pop() ) };
-            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
-           
-            Task->Dispatch();
-
-            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
-
-            TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
-
-            if( 1 == RemainingTasksCount.decrement() )
+            if( nullptr != Task ) SKL_LIKELY
             {
-                break;
+                Task->Dispatch();
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+
+                TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
+
+                if( 1 == RemainingTasksCount.decrement() )
+                {
+                    break;
+                }
+            }
+            else
+            {
+                // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }
         }
     }
@@ -79,13 +84,17 @@ namespace SKL::AOD
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
 
-        TaskQueue.Push( InTask );
-        
-        if( RemainingTasksCount.increment() != 0 )
+        if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
         {
+            // Queue the task (must be done only after the count increment
+            TaskQueue.Push( InTask ); // RefPoint [1]
+
             // There is a consumer present, just bail
             return false;
         }
+
+        // Queue the task (must be done only after the count increment
+        TaskQueue.Push( InTask ); // RefPoint [2]
 
         // This thread is the new consumer for this AODStaticObject instance, dispatch all available tasks.
 
@@ -148,17 +157,22 @@ namespace SKL::AOD
         while( true )
         {
             auto* Task{ reinterpret_cast<IAODSharedObjectTask*>( TaskQueue.Pop() ) };
-            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
-           
-            Task->Dispatch();
-
-            SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
-
-            TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
-
-            if( 1 == RemainingTasksCount.decrement() )
+            if( nullptr != Task ) SKL_LIKELY
             {
-                break;
+                Task->Dispatch();
+
+                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+
+                TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
+
+                if( 1 == RemainingTasksCount.decrement() )
+                {
+                    break;
+                }
+            }
+            else
+            {
+                // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }
         }
     }
@@ -167,14 +181,18 @@ namespace SKL::AOD
     {
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
-
-        TaskQueue.Push( InTask );
         
-        if( RemainingTasksCount.increment() != 0 )
+        if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
         {
+            // Queue the task (must be done only after the count increment
+            TaskQueue.Push( InTask ); // RefPoint [1]
+
             // There is a consumer present, just bail
             return false;
         }
+
+        // Queue the task (must be done only after the count increment
+        TaskQueue.Push( InTask ); // RefPoint [2]
 
         // This thread is the new consumer for this AODObject instance, dispatch all available tasks.
 
