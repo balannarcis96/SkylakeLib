@@ -19,8 +19,12 @@
 //! Logging
 #include "Diagnostics/Log.h"
 
-extern void _mi_assert_fail(const char* assertion, const char* fname, unsigned line, const char* func );
-#define mi_assert(expr)     ((expr) ? (void)0 : _mi_assert_fail(#expr,__FILE__,__LINE__,__func__))
+#if defined(SKL_DEBUG)
+    extern void _mi_assert_fail(const char* assertion, const char* fname, unsigned line, const char* func );
+    #define mi_assert(expr)     ((expr) ? (void)0 : _mi_assert_fail(#expr,__FILE__,__LINE__,__func__))
+#else
+    #define mi_assert(expr)
+#endif
 
 #include "Heading.h"
 
