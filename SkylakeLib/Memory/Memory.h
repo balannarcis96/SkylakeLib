@@ -7,15 +7,6 @@
 //! 
 #pragma once
 
-#include <mimalloc.h>
-
-#define SKL_MALLOC( InSize ) mi_malloc( InSize )
-#define SKL_MALLOC_ALIGNED( InSize, InAlignemnt ) mi_malloc_aligned( InSize, InAlignemnt )
-
-#define SKL_FREE( InPtr ) mi_free( InPtr )
-#define SKL_FREE_ALIGNED( InPtr, InAlignemnt ) mi_free_aligned( InPtr, InAlignemnt )
-#define SKL_FREE_SIZE_ALIGNED( InPtr, InSize, InAlignemnt ) mi_free_size_aligned( InPtr, InSize, InAlignemnt )
-
 namespace SKL
 {
     template<size_t BlockSize>
