@@ -110,7 +110,7 @@ namespace SKL
 
         SKL_FORCEINLINE constexpr TEntityIdBase GetId() const noexcept { return Id; };
         SKL_FORCEINLINE constexpr bool IsValid() const noexcept { return CInvalidEntityType != GetType();  }
-        SKL_FORCEINLINE constexpr bool IsNone() const noexcept { return CInvalidEntityId != Id; }
+        SKL_FORCEINLINE constexpr bool IsNone() const noexcept { return CInvalidEntityId == Id; }
         SKL_FORCEINLINE constexpr bool IsOfType( TEntityType InType ) const noexcept { return GetType() == InType;  }
         SKL_FORCEINLINE constexpr TEntityType GetType() const noexcept
         { 
@@ -128,14 +128,31 @@ namespace SKL
         { 
             if constexpr( true == bExtendedIndex )
             {
-                const auto Desc{ ReadAsDescription() };
-                const uint32_t FirstPart{ *reinterpret_cast<const uint32_t*>( &Desc.Id ) };
-                const uint32_t Index    { ( FirstPart & CExtendedIdMask ) >> 8 };
-                return Index;
+                if constexpr ( true == bAtomic )
+                {
+                    const auto Desc{ ReadAsDescription() };
+                    const uint32_t FirstPart{ *reinterpret_cast<const uint32_t*>( &Desc.Id ) };
+                    const uint32_t Index    { ( FirstPart & CExtendedIdMask ) >> 8 };
+                    return Index;
+                }
+                else
+                {
+                    const uint32_t FirstPart{ *reinterpret_cast<const uint32_t*>( &Id ) };
+                    const uint32_t Index    { ( FirstPart & CExtendedIdMask ) >> 8 };
+                    return Index;
+                }
             }
             else
             {
-                return GetDescription().BasicIndexPart;
+                if constexpr ( true == bAtomic )
+                {
+                    const auto Desc{ ReadAsDescription() };
+                    return Desc.BasicIndexPart;
+                }
+                else
+                {
+                    return GetDescription().BasicIndexPart;
+                }
             }
         } 
         SKL_FORCEINLINE constexpr Variant GetVariant() const noexcept

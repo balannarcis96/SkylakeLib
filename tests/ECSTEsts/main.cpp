@@ -116,8 +116,8 @@ namespace ECSTests
         {
             PlayerId               pId { 1, PlayerId::CBasicIdMaxValue, PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
             AtomicPlayerId         pId2{ 1, PlayerId::CBasicIdMaxValue, PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
-            ExtendedPlayerId       pId3{ 1, PlayerId::CExtendedIdMask,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
-            ExtendedAtomicPlayerId pId4{ 1, PlayerId::CExtendedIdMask,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+            ExtendedPlayerId       pId3{ 1, PlayerId::CExtendedIdMaxValue,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+            ExtendedAtomicPlayerId pId4{ 1, PlayerId::CExtendedIdMaxValue,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
                                                                         
             ASSERT_TRUE( false == pId.IsNone()   );
             ASSERT_TRUE( true  == pId.IsValid()  );
@@ -136,11 +136,16 @@ namespace ECSTests
             ASSERT_TRUE( 121 == pId3.GetVariant().Value2 );
             ASSERT_TRUE( 32  == pId4.GetVariant().Value1 );
             ASSERT_TRUE( 121 == pId4.GetVariant().Value2 );
+
+            ASSERT_TRUE( 1 == pId.GetType() );
+            ASSERT_TRUE( 1 == pId2.GetType() );
+            ASSERT_TRUE( 1 == pId3.GetType() );
+            ASSERT_TRUE( 1 == pId4.GetType() );
                               
             ASSERT_TRUE( PlayerId::CBasicIdMaxValue ==  pId.GetIndex() );
             ASSERT_TRUE( PlayerId::CBasicIdMaxValue == pId2.GetIndex() );
-            ASSERT_TRUE( PlayerId::CExtendedIdMask  == pId3.GetIndex() );
-            ASSERT_TRUE( PlayerId::CExtendedIdMask  == pId4.GetIndex() );
+            ASSERT_TRUE( PlayerId::CExtendedIdMaxValue  == pId3.GetIndex() );
+            ASSERT_TRUE( PlayerId::CExtendedIdMaxValue  == pId4.GetIndex() );
         }
     }
 }
