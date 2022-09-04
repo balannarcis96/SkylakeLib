@@ -6,13 +6,13 @@ namespace TCPAcceptorTests
 {
     TEST( TCPAcceptorTests, SkylakeLib_Initialize_And_Termiante )
     {
-        ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );     
-        ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+        ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );     
+        ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
     }
 
     TEST( TCPAcceptorTests, DISABLED_AcceptAsync_Start_Stop )
     {
-        ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );     
+        ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );     
 
         SKL::ServerInstanceConfig::ServerInstanceConfig AppWorkersConfig{ L"AcceptAsync_Start_Stop_App_WorkersGroups" };
         SKL::ServerInstanceConfig::WorkerGroupConfig    WGConfig        {};
@@ -52,11 +52,11 @@ namespace TCPAcceptorTests
         AppWorkersConfig.AddNewGroup( std::move( WGConfig ) );
 
         SKL::ServerInstance WGManager { };
-        ASSERT_TRUE( RSuccess == WGManager.Initialize( std::move( AppWorkersConfig ) ) );
+        ASSERT_TRUE( SKL::RSuccess == WGManager.Initialize( std::move( AppWorkersConfig ) ) );
 
-        ASSERT_TRUE( RSuccess == WGManager.StartServer() );
+        ASSERT_TRUE( SKL::RSuccess == WGManager.StartServer() );
 
-        ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+        ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
     }
 }
 

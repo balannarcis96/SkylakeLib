@@ -14,10 +14,10 @@ namespace AODTests
             MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -55,12 +55,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -73,10 +73,10 @@ namespace AODTests
             MyService() noexcept: SKL::AODService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -117,12 +117,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -135,10 +135,10 @@ namespace AODTests
             MyService() noexcept: SKL::ActiveService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -179,12 +179,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -202,10 +202,10 @@ namespace AODTests
             MyService() noexcept: SKL::WorkerService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -286,12 +286,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 

@@ -9,7 +9,3 @@
 
 //! std dependencies 
 #include "StdDependencies.h"
-
-//! Atomic value
-#include "Std/AtomicValue.h"
-

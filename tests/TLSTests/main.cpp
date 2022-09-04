@@ -117,9 +117,9 @@ namespace TLSSingletonTests
 {
     struct MyTSLSingletonType : SKL::ITLSSingleton<MyTSLSingletonType>
     {
-        RStatus Initialize( ) noexcept override 
+        SKL::RStatus Initialize( ) noexcept override 
         {
-            return RSuccess;
+            return SKL::RSuccess;
         }
 
         const char *GetName( ) const noexcept override 
@@ -134,7 +134,7 @@ namespace TLSSingletonTests
         ASSERT_TRUE( nullptr == ptr );
 
         const auto Result = MyTSLSingletonType::Create();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         std::jthread OtherThread{ []()
         {
@@ -142,7 +142,7 @@ namespace TLSSingletonTests
             ASSERT_TRUE( nullptr == ptr );
 
             const auto Result = MyTSLSingletonType::Create();
-            ASSERT_TRUE( RSuccess == Result );
+            ASSERT_TRUE( SKL::RSuccess == Result );
 
             ptr = MyTSLSingletonType::GetInstance();
             ASSERT_TRUE( nullptr != ptr );

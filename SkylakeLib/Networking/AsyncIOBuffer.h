@@ -126,8 +126,8 @@ namespace SKL
             );
         }
 
-        AsyncIOOpaqueType OsOpaqueType;    //!< Opaque object needed internally by the OS to perform the async IO operation
-        IStreamBase       Stream;          //!< Cached buffer data and manipulation info
+        AsyncIOOpaqueType OsOpaqueType; //!< Opaque object needed internally by the OS to perform the async IO operation
+        StreamBase       Stream;        //!< Cached buffer data and manipulation info
     };
 
     template<uint32_t BufferSize, size_t CompletionTaskSize = 16> 

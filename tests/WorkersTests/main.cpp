@@ -90,7 +90,7 @@ namespace WorkersTests
             Config.AddNewGroup( std::move( Group2 ) );
 
             auto Result = Manager.Initialize( std::move( Config ) );
-            ASSERT_TRUE( RSuccess == Result );
+            ASSERT_TRUE( SKL::RSuccess == Result );
 
             auto* QueryResult = Manager.GetWorkerGroupById( 1 );
             ASSERT_TRUE( nullptr != QueryResult );
