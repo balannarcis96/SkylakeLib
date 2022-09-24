@@ -43,8 +43,15 @@ namespace SKL
         //! [Callback] When server shutdown
         virtual void OnServerStopped() noexcept = 0;
 
+        //! [Callback] When service is signaled to shutdown
+        virtual RStatus OnStopService() noexcept = 0;
+
+        //! [Callback] When service is finally shutdown
+        void OnServiceStopped( RStatus InStatus ) noexcept;
+
+    private:
         //! [Callback] When server is signaled to shutdown
-        virtual void OnServerStopSignaled() noexcept = 0;
+        void OnServerStopSignaled() noexcept;
 
     private:
         uint32_t        UID{ 0 };

@@ -204,23 +204,14 @@ namespace SKL
             , InOpcode
             , PacketBuildContext_BuildFlags<EPacketContextFlags::WriteHeader, EPacketContextFlags::HasCustomWriteMethod, static_cast<EPacketContextFlags>( InAdditionalFlags )>()>;
 
-        //! InSupper must implement this:
-        // SKL_FORCEINLINE constexpr TPacketSize CalculateBodySize() const noexcept
-        // {
-        //     return //Caclulate need packet size
-        // }
+        //! Calculate the body size for this packet
+        virtual TPacketSize CalculateBodySize() const noexcept = 0;
 
-        //! InSupper must implement this:
-        // SKL_FORCEINLINE constexpr RStatus WritePacket( StreamBase& InStream ) const noexcept
-        // {
-        //     // write dynamic packet
-        // }
+        //! Custom write method
+        virtual RStatus WritePacket( StreamBase& InStream ) const noexcept = 0;
 
-        //! InSupper must implement this:
-        // SKL_FORCEINLINE constexpr RStatus ReadPacket( StreamBase& InStream ) const noexcept
-        // {
-        //     // write dynamic packet
-        // }
+        //! Custom read method
+        virtual RStatus ReadPacket( StreamBase& InStream ) noexcept = 0;
 
         SKL_FORCEINLINE static constexpr RStatus BuildFromStream( StreamBase& InStream ) noexcept
         {
@@ -345,17 +336,16 @@ namespace SKL
 #define PAKCET_ReadPacket() \
     SKL_FORCEINLINE SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept 
 
-
 #define DEFINE_DYNAMIC_PACKET_EX( Name, PacketOpcode, Prerequisites, CalculateRequiredSizeStub, WriteStub, ReadStub ) \
-    struct Name##_Packet : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    struct Name##_Packet final : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
     {   \
         struct \
         Prerequisites; \
-        SKL_FORCEINLINE SKL::TPacketSize CalculateBodySize() const noexcept \
+        SKL::TPacketSize CalculateBodySize() const noexcept override \
         CalculateRequiredSizeStub \
-        SKL_FORCEINLINE SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept \
+        SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept override \
         WriteStub \
-        SKL_FORCEINLINE SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept \
+        SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept override \
         ReadStub \
     }; \
     static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 

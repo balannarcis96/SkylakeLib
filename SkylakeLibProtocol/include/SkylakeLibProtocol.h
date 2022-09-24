@@ -12,9 +12,3 @@
 #include "Shared.h"
 #include "Packet.h"
 #include "PacketBuilder.h"
-
-namespace SKL
-{
-    
-
-}

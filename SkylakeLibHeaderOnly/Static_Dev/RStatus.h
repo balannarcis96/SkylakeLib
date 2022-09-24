@@ -30,6 +30,7 @@ namespace SKL
         , ExecutedSync
         , NotSupported
         , ServerInstanceFinalized
+        , Pending
 
         , MAX
     };
@@ -62,6 +63,7 @@ namespace SKL
     constexpr RStatus RSuccessAsyncIORequestCancelled   { RStatus::SuccessAsyncIORequestCancelled };
     constexpr RStatus RNotSupported                     { RStatus::NotSupported };
     constexpr RStatus RServerInstanceFinalized          { RStatus::ServerInstanceFinalized };
+    constexpr RStatus RPending                          { RStatus::Pending };
 
     SKL_FORCEINLINE bool operator!( const RStatus &Status ) noexcept
     {

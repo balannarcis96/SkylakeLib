@@ -268,6 +268,8 @@ namespace SKL
         virtual bool OnBeforeStopServer() noexcept;
         virtual bool OnServerStopped() noexcept;
         virtual bool OnAfterServerStopped() noexcept;
+        virtual void OnServiceStopped( IService* InService, RStatus InStatus ) noexcept;
+        virtual void OnAllServiceStopped() noexcept;
 
         bool CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept;
 
@@ -288,10 +290,12 @@ namespace SKL
         std::vector<std::unique_ptr<ActiveService>> ActiveServices                 {};          //!< All Active service instances
         std::vector<std::unique_ptr<WorkerService>> WorkerServices                 {};          //!< All Worker service instances
         std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
+        std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
 
         friend class Worker;
         friend class WorkerGroup;
         friend class ServerInstance;
+        friend class IService;
         friend struct AODTLSContext;
         friend struct ServerInstanceTLSContext;
     };

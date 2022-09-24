@@ -30,9 +30,9 @@ namespace TLSSyncTests
             
             }
 
-            void OnServerStopSignaled() noexcept override 
+            SKL::RStatus OnStopService() noexcept override 
             {
-            
+                return SKL::RSuccess;
             }
 
             void OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override

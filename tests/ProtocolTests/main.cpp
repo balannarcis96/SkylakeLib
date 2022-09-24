@@ -26,7 +26,7 @@ namespace SkylakePROTOCOLTests
         uint32_t B;
         uint32_t C;
     };
-    struct DYNAMIC_LENGTH_PACKET_1_Packet: SKL::DynamicLengthPacketBuildContext<DYNAMIC_LENGTH_PACKET_1_Packet, static_cast<SKL::TPacketOpcode>( MyOpcodes::DYNAMIC_LENGTH_PACKET_1 )>
+    struct DYNAMIC_LENGTH_PACKET_1_Packet final : SKL::DynamicLengthPacketBuildContext<DYNAMIC_LENGTH_PACKET_1_Packet, static_cast<SKL::TPacketOpcode>( MyOpcodes::DYNAMIC_LENGTH_PACKET_1 )>
     {
         uint32_t A;
         uint32_t B;
@@ -34,7 +34,15 @@ namespace SkylakePROTOCOLTests
         const char *String{ nullptr };
         const wchar_t *WString{ nullptr };
 
-        SKL_FORCEINLINE SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept
+        SKL::TPacketSize CalculateBodySize() const noexcept override
+        {
+            SKL::TPacketSize Result{ 0 };
+            Result += static_cast<SKL::TPacketSize>( sizeof( uint32_t ) ) * 3;
+            Result += CalculateNullableStringNeededSize( String , 128 );
+            Result += CalculateNullableWStringNeededSize( WString , 128 );
+            return Result;
+        }
+        SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept override
         {
             auto Writer{ SKL::IStreamWriter<true>::FromStreamBase( InStream ) };
 
@@ -62,7 +70,7 @@ namespace SkylakePROTOCOLTests
 
             return SKL::RSuccess;
         }
-        SKL_FORCEINLINE SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept
+        SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept override
         {
             auto Reader{ SKL::IStreamReader<true>::FromStreamBase( InStream ) };
 
@@ -73,15 +81,6 @@ namespace SkylakePROTOCOLTests
             WString = Reader->GetFrontAsWStringAndAdvance();
 
             return SKL::RSuccess;
-        }
-
-        SKL_FORCEINLINE SKL::TPacketSize CalculateBodySize() const noexcept
-        {
-            SKL::TPacketSize Result{ 0 };
-            Result += static_cast<SKL::TPacketSize>( sizeof( uint32_t ) ) * 3;
-            Result += CalculateNullableStringNeededSize( String , 128 );
-            Result += CalculateNullableWStringNeededSize( WString , 128 );
-            return Result;
         }
     };
 
@@ -263,7 +262,11 @@ namespace SkylakePROTOCOLTests
         auto Buffer = std::make_unique<uint8_t[]>( 1024 );
         SKL::BinaryStream Stream{ Buffer.get(), 1024U, 0U, false };
 
-        DYNAMIC_LENGTH_PACKET_1_Packet Packet{ .A = 55, .B = 23, .C = 11 };
+        DYNAMIC_LENGTH_PACKET_1_Packet Packet{};
+        Packet.A = 55;
+        Packet.B = 23;
+        Packet.C = 11;
+
         ASSERT_EQ( SKL::RSuccess, Packet.BuildPacket( Stream.GetStream() ) );
 
         const SKL::TPacketSize ExpectedWrittenSize{ static_cast<SKL::TPacketSize>( Packet.CalculateBodySize() + SKL::CPacketHeaderSize ) };
@@ -294,7 +297,13 @@ namespace SkylakePROTOCOLTests
         auto Buffer = std::make_unique<uint8_t[]>( 1024 );
         SKL::BinaryStream Stream{ Buffer.get(), 1024U, 0U, false };
 
-        DYNAMIC_LENGTH_PACKET_1_Packet Packet{ .A = 55, .B = 23, .C = 11, .String = "ASDASDASDASD", .WString = L"ASDASDASDASD" };
+        DYNAMIC_LENGTH_PACKET_1_Packet Packet{};
+        Packet.A = 55;
+        Packet.B = 23;
+        Packet.C = 11;
+        Packet.String = "ASDASDASDASD";
+        Packet.WString = L"ASDASDASDASD";
+
         ASSERT_EQ( SKL::RSuccess, Packet.BuildPacket( Stream.GetStream() ) );
 
         const SKL::TPacketSize ExpectedWrittenSize{ static_cast<SKL::TPacketSize>( Packet.CalculateBodySize() + SKL::CPacketHeaderSize ) };
