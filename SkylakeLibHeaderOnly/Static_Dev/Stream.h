@@ -259,9 +259,9 @@ namespace SKL
             Interface.Buffer.Buffer = const_cast<uint8_t*>( InBuffer );
         }
 
-        SKL_FORCEINLINE static IStreamReader<true>& FromStreamBase( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE static IStreamReader<true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
-            return *reinterpret_cast<IStreamReader<true>*>( &InStream );
+            return reinterpret_cast<IStreamReader<true>*>( &InStream );
         }
     };
 
@@ -417,9 +417,9 @@ namespace SKL
         IStreamWriter( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
             : IStreamReader{ InBuffer, InSize, InPosition } {}
 
-        SKL_FORCEINLINE static IStreamWriter<true>& FromStreamBase( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE static IStreamWriter<true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
-            return *reinterpret_cast<IStreamWriter<true>*>( &InStream );
+            return reinterpret_cast<IStreamWriter<true>*>( &InStream );
         }
     };
 
@@ -429,6 +429,11 @@ namespace SKL
         IBinaryStream() noexcept = default;
         IBinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
             : IStreamWriter{ InBuffer, InSize, InPosition } {}
+
+        SKL_FORCEINLINE static IBinaryStream<true>* FromStreamBase( StreamBase& InStream ) noexcept
+        {
+            return reinterpret_cast<IBinaryStream<true>*>( &InStream );
+        }
     };
 
     struct alignas( SKL_ALIGNMENT ) BinaryStream: public IBinaryStream<true>

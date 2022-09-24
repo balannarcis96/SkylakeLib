@@ -114,11 +114,11 @@ namespace AsyncIOTests
         Result = Instance.Start( 2 );
         ASSERT_TRUE( SKL::RSuccess == Result );
 
-        SKL::AsyncIOOpaqueType* OpaqueInstance             {};
+        SKL::AsyncIOOpaqueType* OpaqueInstance           {};
         uint32_t                NumberOfBytesTransferred { 0 };
-        SKL::TCompletionKey     CompletionKey             { nullptr };
+        SKL::TCompletionKey     CompletionKey            { nullptr };
 
-        std::jthread stopThread([&Instance](){
+        std::jthread stopThread( [&Instance](){
             std::this_thread::sleep_for( TCLOCK_MILLIS( 10 ) );
         
             auto* ptr = new CustomWorkType { 10 };
@@ -126,7 +126,7 @@ namespace AsyncIOTests
 
             const auto Result = Instance.QueueAsyncWork( reinterpret_cast<SKL::TCompletionKey>( ptr ) );
             ASSERT_TRUE( SKL::RSuccess == Result );
-        });    
+        } );    
 
         Result = Instance.GetCompletedAsyncRequest( &OpaqueInstance, &NumberOfBytesTransferred, &CompletionKey );
         ASSERT_TRUE( SKL::RSuccess == Result );

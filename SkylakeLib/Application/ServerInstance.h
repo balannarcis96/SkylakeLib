@@ -281,7 +281,7 @@ namespace SKL
         std::vector<WorkerGroup*>                   DeferredAODTasksHandlingGroups {};          //!< All active worker groups marked with [bSupportsAOD=true]
         std::vector<WorkerGroup*>                   TLSSyncHandlingGroup           {};          //!< All worker groups marked with [bSupportsTLSSync=true]
         std::relaxed_value<uint32_t>                bIsRunning                     { FALSE };   //!< Is the server running
-        std::relaxed_value<uint32_t>                TotalNumberOfRunningWorkers    { 0 };   //!< Total number of running workers
+        std::relaxed_value<uint32_t>                TotalNumberOfRunningWorkers    { 0 };       //!< Total number of running workers
         ServerInstanceConfig                        Config                         {};          //!< Config
         std::vector<std::unique_ptr<SimpleService>> SimpleServices                 {};          //!< All simple service instances
         std::vector<std::unique_ptr<AODService>>    AODServices                    {};          //!< All AOD service instances

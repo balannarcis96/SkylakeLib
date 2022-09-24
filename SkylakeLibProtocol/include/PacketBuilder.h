@@ -311,6 +311,8 @@ namespace SKL
                                       , InOpcode
                                       , PacketBuildContext_BuildFlags<EPacketContextFlags::WriteHeader, EPacketContextFlags::HeaderOnly>()>;
 
+        HeaderOnlyPacketBuildContext() = delete;
+
         SKL_FORCEINLINE static constexpr RStatus BuildPacket( StreamBase& InStream ) noexcept
         {
             Base::WritePacketHeader( InStream, CalculateBodySize() );
@@ -321,4 +323,41 @@ namespace SKL
             return CPacketHeaderSize;
         }
     };
+
+#define DEFINE_HEADER_ONLY_PACKET( Name, PacketOpcode ) \
+    struct Name##_Packet : SKL::HeaderOnlyPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> {};
+
+#define DEFINE_FIXED_LENGTH_PACKET( Name, PacketOpcode, Body ) \
+    struct Name##_Packet : SKL::FixedLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    Body; \
+    static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
+
+#define DEFINE_DYNAMIC_PACKET( Name, PacketOpcode, Body ) \
+    struct Name##_Packet : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    Body
+
+#define PAKCET_CalculateBodySize() \
+    SKL_FORCEINLINE SKL::TPacketSize CalculateBodySize() const noexcept 
+
+#define PAKCET_WritePacket() \
+    SKL_FORCEINLINE SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept 
+
+#define PAKCET_ReadPacket() \
+    SKL_FORCEINLINE SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept 
+
+
+#define DEFINE_DYNAMIC_PACKET_EX( Name, PacketOpcode, Prerequisites, CalculateRequiredSizeStub, WriteStub, ReadStub ) \
+    struct Name##_Packet : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    {   \
+        struct \
+        Prerequisites; \
+        SKL_FORCEINLINE SKL::TPacketSize CalculateBodySize() const noexcept \
+        CalculateRequiredSizeStub \
+        SKL_FORCEINLINE SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept \
+        WriteStub \
+        SKL_FORCEINLINE SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept \
+        ReadStub \
+    }; \
+    static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
+
 }

@@ -3,7 +3,7 @@
 #include <SkylakeLib.h>
 #include <ApplicationSetup.h>
 
-namespace AODTests
+namespace ServicesTests
 {
     class SimpleService_TestsFixture : public ::testing::Test, public TestApplication
     {

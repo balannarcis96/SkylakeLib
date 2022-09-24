@@ -14,14 +14,15 @@ namespace SKL
     using TPacketOffset    = TPacketSize;
     using TPacketStringRef = TPacketOffset;
 
-    constexpr TPacketOpcode CInvalidOpcode = 0;
-    constexpr TPacketOpcode CRoutedPacketOpcode = 1; 
-
     struct PacketHeader
     {
         TPacketSize   Size;
         TPacketOpcode Opcode;
     };
+
+    constexpr TPacketOpcode CInvalidOpcode = 0;
+    constexpr TPacketOpcode CRoutedPacketOpcode = 1; 
+    constexpr auto          CPacketAlignment = sizeof( PacketHeader );
 
     constexpr TPacketSize CPacketHeaderSize = static_cast<TPacketSize>( sizeof( PacketHeader ) );
     constexpr TPacketSize CPacketMaximumSize = static_cast<TPacketSize>( std::numeric_limits<TPacketSize>::max() );
