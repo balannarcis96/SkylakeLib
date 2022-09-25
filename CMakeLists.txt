@@ -16,6 +16,7 @@ option(SKL_CACHE_LINE_MEM_MANAGER   "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
 option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"  ON)
 option(SKL_BUILD_DB                 "Build the DB library"                OFF)
 option(SKL_BUILD_PROTOCOL           "Build the Protocol library"           ON)
+option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"             ON)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -163,8 +164,10 @@ if(SKL_BUILD_TYPE STREQUAL "Full")
     if(SKL_BUILD_TESTS)
         enable_testing()
 
-        # google test lib
-        add_subdirectory("googletest")    
+        if(SKL_ADD_TEST_LIBS)
+            # google test lib
+            add_subdirectory("googletest")    
+        endif()
         
         # SKL tests 
         add_subdirectory ("tests")
