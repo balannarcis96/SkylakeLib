@@ -236,11 +236,20 @@ namespace SKL
     {
         TRand::InitializeThread();
 
+        if( nullptr == StringUtils::GetInstance() )
+        {
+            if( RSuccess != StringUtils::Create() )
+            {
+                SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create StringUtils", InGroup.GetTag().Name );
+                return false;
+            }
+        }
+
         if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
         {   
             if( nullptr == ThreadLocalMemoryManager::GetInstance() )
             {
-                if ( RSuccess != ThreadLocalMemoryManager::Create() )
+                if( RSuccess != ThreadLocalMemoryManager::Create() )
                 {
                     SKL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
                     return false;
@@ -308,6 +317,8 @@ namespace SKL
         }
 
         TRand::ShutdownThread();
+
+        StringUtils::Destroy();
 
         TotalNumberOfRunningWorkers.decrement();
 

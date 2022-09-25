@@ -43,6 +43,9 @@
 //! Binary Stream
 #include "Utils/BufferStream.h"
 
+//! String Stream
+#include "Utils/StringUtils.h"
+
 //! Memory abstractions
 #include "Memory/Memory.h"
 

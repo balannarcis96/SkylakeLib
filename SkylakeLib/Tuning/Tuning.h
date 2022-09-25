@@ -78,4 +78,9 @@ namespace SKL
     constexpr uint32_t Squirrel3_2D_PRIME  = 1913646613U;
     constexpr uint32_t Squirrel3_3D_PRIME1 = 1206686359U;
     constexpr uint32_t Squirrel3_3D_PRIME2 = 1589711413U;
+    
+    /*------------------------------------------------------------
+        String Utils
+      ------------------------------------------------------------*/
+    constexpr uint32_t CStringUtilsWorkBenchBufferSize = 8192;
 }

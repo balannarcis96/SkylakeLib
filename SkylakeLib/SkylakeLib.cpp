@@ -95,12 +95,21 @@ namespace SKL
             return RSuccess;
         }
 
+        if( nullptr == StringUtils::GetInstance() )
+        {
+            if( RSuccess != StringUtils::Create() )
+            {
+                SKL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
+                return RFail;
+            }
+        }
+
         if( nullptr == ThreadLocalMemoryManager::GetInstance() )
         {
             if( RSuccess != ThreadLocalMemoryManager::Create() )
             {
-                SKL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
-                return RSuccess;
+                SKL_ERR( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
+                return RFail;
             }
 
             SKL_VER( "Skylake_InitializeLibrary_Thread() Created ThreadLocalMemoryManager." );
@@ -124,6 +133,8 @@ namespace SKL
             SKL::ThreadLocalMemoryManager::FreeAllPools();
             SKL::ThreadLocalMemoryManager::Destroy();
         }
+
+        StringUtils::Destroy();
 
         SkylakeLibInitPerThread::SetValue( false );
 

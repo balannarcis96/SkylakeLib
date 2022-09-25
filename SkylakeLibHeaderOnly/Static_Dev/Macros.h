@@ -73,3 +73,8 @@
 	#define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strcmp( InStr1, InStr2 )
 	#define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcscmp( InStr1, InStr2 )
 #endif
+
+namespace SKL
+{
+	constexpr uint16_t CPlatformCacheLineSize = static_cast<uint16_t>( SKL_CACHE_LINE_SIZE );
+}

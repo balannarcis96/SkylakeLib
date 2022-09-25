@@ -31,9 +31,9 @@ add_library (SkylakeLib STATIC
     ${_Diagnostics_files}               
     ${_ECS_files}              
     ${_Enums_files}                 
+    ${_Math_files}                   
     ${_Macros_files}                 
     ${_Memory_files}                 
-    ${_Math_files}                   
     ${_Networking_files}                   
     ${_Port_files}                 
     ${_Root_files}                     

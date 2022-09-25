@@ -33,6 +33,11 @@ namespace SKL
 
 namespace SKL
 {
+    static_assert( OS_ERROR_NET_TIMEOUT == WSAETIMEDOUT, "Invalid [NET_TIMEOUT] value!" );
+}
+
+namespace SKL
+{
     bool Timer::Init() noexcept
     {
         if( FALSE == ::QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &I ) ) ) SKL_UNLIKELY
@@ -100,6 +105,24 @@ namespace SKL
         }
         
         return Result;
+    }
+
+    bool TCPConnectIPv4( TSocket InSocket, TIPv4Address InAddress, TNetPort InPort ) noexcept
+    {
+        sockaddr_in Target;
+		Target.sin_port		   = htons( InPort );
+		Target.sin_family	   = AF_INET;
+		Target.sin_addr.s_addr = InAddress;
+
+        const int32_t ConnectResult{ connect( InSocket
+            , reinterpret_cast<const sockaddr*>( &Target )
+            , static_cast<int32_t>( sizeof( Target ) ) ) };
+        if (SOCKET_ERROR == ConnectResult)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -608,7 +631,7 @@ namespace SKL
         return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaqueObject() );
     }
 
-    RStatus AsyncIO::AssociateToTheAPI( TSocket InSocket ) noexcept
+    RStatus AsyncIO::AssociateToTheAPI( TSocket InSocket ) const noexcept
     {
         const auto Result = ::CreateIoCompletionPort( reinterpret_cast<HANDLE>( InSocket )
                                                     , reinterpret_cast<HANDLE>( QueueHandle.load_relaxed() )
@@ -740,6 +763,11 @@ namespace SKL
     {
         return ( int32_t )GetLastError( );
     }
+    
+    int32_t GGetNetworkLastError( ) noexcept
+    {
+        return ( int32_t )WSAGetLastError( );
+    }
 
     bool IsValidSocket( TSocket InSocket ) noexcept
     {
@@ -829,4 +857,44 @@ namespace SKL
         free(buffer);
         return lineSize;
     }
+}
+
+// String Utils
+namespace SKL
+{
+	const char* StringUtils::IpV4AddressToString( TIPv4Address InAddress ) noexcept
+	{
+		auto* Instance{ StringUtils::GetInstance() };
+		SKL_ASSERT( nullptr != Instance );
+
+		auto& Buffer{ Instance->WorkBenchBuffer };
+
+        if ( nullptr != InetNtopA( AF_INET
+            , &InAddress
+            , reinterpret_cast<PSTR>( Buffer.GetBuffer() )
+            , Buffer.GetBufferSize() ) )
+        {
+            return reinterpret_cast<const char*>( Buffer.GetBuffer() );
+        }
+
+        return "[Invalid IPv4Address]";
+	}
+
+	const wchar_t* StringUtils::IpV4AddressToWString( TIPv4Address InAddress ) noexcept
+	{
+		auto* Instance{ StringUtils::GetInstance() };
+		SKL_ASSERT( nullptr != Instance );
+
+		auto& Buffer{ Instance->WorkBenchBuffer };
+
+        if ( nullptr != InetNtopW( AF_INET
+            , &InAddress
+            , reinterpret_cast<PWSTR>( Buffer.GetBuffer() )
+            , Buffer.GetBufferSize() ) )
+        {
+            return reinterpret_cast<const wchar_t*>( Buffer.GetBuffer() );
+        }
+
+        return L"[Invalid IPv4Address]";
+	}
 }

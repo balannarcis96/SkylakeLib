@@ -112,5 +112,4 @@ namespace SKL
             Base.bOwnsBuffer   = FALSE;
         }
     };
-
 }

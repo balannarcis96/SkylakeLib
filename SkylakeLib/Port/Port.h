@@ -17,6 +17,9 @@ namespace SKL
 
     //! Platform specific, opaque type, for the async IO API
     struct AsyncIOOpaqueType;
+
+    //! Platform specific frequency based timer
+    struct Timer;
     
     //! Platform specific buffer type for async IO requests
     struct IBuffer;
@@ -30,17 +33,31 @@ namespace SKL
     //! Type for the TLS slot
     using TLSSlot = uint32_t;
 
+    //! Type for ipv4 address
+    using TIPv4Address = uint32_t;
+
+    //! Type for network port
+    using TNetPort = uint16_t;
+
+    //! Type for os error value
+    using TOSError = int32_t;
+
     //! Platform specific async IO API
     struct AsyncIO;
 }
 
 namespace SKL
 {
+    constexpr TSocket CInvalidSocket = (TSocket)(~0);
+
     //! Allocate new ipv4 tcp socket ( returns 0 on failure )
     TSocket AllocateNewIPv4TCPSocket( bool bAsync = true ) noexcept;
 
     //! Allocate new ipv4 udp socket ( returns 0 on failure )
     TSocket AllocateNewIPv4UDPSocket( bool bAsync = true ) noexcept;
+    
+    //! Perform a TCP connect on socket to address and port
+    bool TCPConnectIPv4( TSocket InSocket, TIPv4Address InAddress, TNetPort InPort ) noexcept;
 }
 
 #include "TCPAsyncAccepter.h"
@@ -105,7 +122,7 @@ namespace SKL
         RStatus QueueAsyncWork( TCompletionKey InCompletionKey ) noexcept;
 
         //! Associate the socket to this async IO API
-        RStatus AssociateToTheAPI( TSocket InSocket ) noexcept;
+        RStatus AssociateToTheAPI( TSocket InSocket ) const noexcept;
 
         //! \brief Start an async receive request on InSocket
         //! \param InSocket target stream socket to receive from
@@ -185,39 +202,63 @@ namespace SKL
         static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
     };
 
-    //Very precise sleep
+    //! Very precise sleep
     void PreciseSleep( double InSeconds ) noexcept;
 
-    //Is socket valid
+    //! Is socket valid
     bool IsValidSocket( TSocket InSocket ) noexcept;
 
-    //Close socket
+    //! Close socket
     bool CloseSocket( TSocket InSocket ) noexcept;
     
     //Shutdown socket
     bool ShutdownSocket( TSocket InSocket ) noexcept;
+    
+    //! Get last OS error code
+    int32_t GGetLastError( ) noexcept;
+    
+    //! Get last OS network operation related error code
+    int32_t GGetNetworkLastError( ) noexcept;
 
-    //Convert ip v4 address string to binary
+    //! Convert ip v4 address string to binary
     uint32_t IPv4FromStringA( const char* InIpString )noexcept;
 
-    //Convert ip v4 address wide string to binary
+    //! Convert ip v4 address wide string to binary
     uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
 
-    //UTF16 -> UTF8
+    //! UTF16 -> UTF8
+    bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept;
+
+    //! UTF8 -> UTF16
+    bool GMultiByteToWideChar( const char * InBuffer, size_t InBufferSize, wchar_t* OutBuffer, int32_t InOutBufferSize ) noexcept;
+
+    //! UTF16 -> UTF8
     template<size_t N>
-    inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept;
+    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept
+    {
+        return GWideCharToMultiByte( InBuffer, N, OutBuffer, OutBufferSize );
+    }
 
-    //UTF8 -> UTF16
+    //! UTF8 -> UTF16
     template<size_t N>
-    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept;
+    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept
+    {
+        return GMultiByteToWideChar( InBuffer, N, OutBuffer, OutBufferSize );
+    }
 
-    //UTF16 -> UTF8
+    //! UTF16 -> UTF8
     template<size_t N, size_t M>
-    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept;
+    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept
+    {
+        return GWideCharToMultiByte( InBuffer, N, OutBuffer, M );
+    }
 
-    //UTF8 -> UTF16
+    //! UTF8 -> UTF16
     template<size_t N, size_t M>
-    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept;
+    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept
+    {
+        return GMultiByteToWideChar( InBuffer, N, OutBuffer, M );
+    }
 }
 
 #include "TLSValue.h"
@@ -243,13 +284,16 @@ namespace SKL
 
 #if defined(SKL_BUILD_WINDOWS)
     #define SKL_PLATFORM_NAME "Windows"
+    #define SKL_WIN32_PLATFROM 1
     #include "Port_Windows.h"
 #elif defined(SKL_BUILD_FREEBSD)
     #define SKL_PLATFORM_NAME "FreeBSD"
+    #define SKL_FREEBSD_PLATFROM 1
     #include "Port_Unix.h"
     #include "Port_FreeBSD.h"
 #elif defined(SKL_BUILD_UBUNTU)
     #define SKL_PLATFORM_NAME "Ubuntu"
+    #define SKL_UBUNTU_PLATFROM 1
     #include "Port_Unix.h"
     #include "Port_Ubuntu.h"
 #else
