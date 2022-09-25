@@ -28,6 +28,7 @@ namespace SKL
     static_assert( sizeof( int64_t ) == sizeof( LARGE_INTEGER ), "Timer must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TEpochTimePoint>, "TEpochTimePoint must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TSystemTimePoint>, "TSystemTimePoint must be updated!" );
+    static_assert( CInvalidSocket == INVALID_SOCKET, "Invalid [invlid] socket value!" );
 }
 
 namespace SKL

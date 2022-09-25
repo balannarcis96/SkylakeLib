@@ -9,6 +9,8 @@
 
 namespace SKL
 {
+    constexpr TSocket CInvalidSocket = (TSocket)(~0);
+
     struct AsyncIOOpaqueType
     {
         AsyncIOOpaqueType() 
