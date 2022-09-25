@@ -49,6 +49,39 @@ set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
 set(SKL_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process")
 set_property(CACHE SKL_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
+################################################################
+
+add_subdirectory("SkylakeLibHeaderOnly")
+
+add_subdirectory("SkylakeLib/MiMalloc")
+
+if(SKL_BUILD_TYPE STREQUAL "Full")
+    add_subdirectory("SkylakeLib")
+
+    if(SKL_BUILD_PROTOCOL)
+        add_subdirectory("SkylakeLibProtocol")
+    endif()
+
+    if(SKL_BUILD_DB)
+        add_subdirectory("SkylakeLibDB/mysqlclient")
+        add_subdirectory("SkylakeLibDB")
+    endif()
+
+    if(SKL_BUILD_TESTS)
+        enable_testing()
+
+        if(SKL_ADD_TEST_LIBS)
+            # google test lib
+            add_subdirectory("googletest")    
+        endif()
+        
+        # SKL tests 
+        add_subdirectory ("tests")
+    endif()
+endif()
+
+################################################################
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DSKL_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSKL_DEBUG")
 
@@ -66,7 +99,7 @@ else()
 endif()
 
 if(SKL_NO_NAMESPACE)
-    add_compile_definitions(SKL_NO_NAMESPACE)
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_NO_NAMESPACE)
 endif()
 
 if(SKL_REAL_TYPE STREQUAL "Single")
@@ -146,35 +179,4 @@ elseif(SKL_LOG_LEVEL STREQUAL WRN)
     add_compile_definitions(SKL_LOG_LEVEL=3)
 elseif(SKL_LOG_LEVEL STREQUAL INF)
     add_compile_definitions(SKL_LOG_LEVEL=4)
-endif()
-
-################################################################
-
-add_subdirectory("SkylakeLibHeaderOnly")
-
-add_subdirectory("SkylakeLib/MiMalloc")
-
-if(SKL_BUILD_TYPE STREQUAL "Full")
-    add_subdirectory("SkylakeLib")
-
-    if(SKL_BUILD_PROTOCOL)
-        add_subdirectory("SkylakeLibProtocol")
-    endif()
-
-    if(SKL_BUILD_DB)
-        add_subdirectory("SkylakeLibDB/mysqlclient")
-        add_subdirectory("SkylakeLibDB")
-    endif()
-
-    if(SKL_BUILD_TESTS)
-        enable_testing()
-
-        if(SKL_ADD_TEST_LIBS)
-            # google test lib
-            add_subdirectory("googletest")    
-        endif()
-        
-        # SKL tests 
-        add_subdirectory ("tests")
-    endif()
 endif()
