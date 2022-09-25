@@ -53,7 +53,7 @@ namespace UtilsTests
         SKL::BufferStream Stream{ CBufferSize };
         ASSERT_TRUE( nullptr != Stream.GetBuffer() );
         ASSERT_TRUE( Stream.GetFront() == Stream.GetBuffer() );
-        ASSERT_TRUE( reinterpret_cast<void*>( &Stream.GetInterface() ) == &Stream );
+        ASSERT_TRUE( reinterpret_cast<void*>( &Stream.GetStream() ) == &Stream );
         ASSERT_TRUE( false == Stream.IsEOS() );
         ASSERT_TRUE( 0 == Stream.GetPosition() );
         ASSERT_TRUE( Stream.GetBufferSize() == CBufferSize );

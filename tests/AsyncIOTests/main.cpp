@@ -7,41 +7,41 @@ namespace AsyncIOTests
     TEST( AsyncIOTests, InitializeSystem_And_ShutdownSystem )
     {
         auto Result = SKL::AsyncIO::InitializeSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         
         Result = SKL::AsyncIO::ShutdownSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
     TEST( AsyncIOTests, Start_Stop_Instance )
     {
         auto Result = SKL::AsyncIO::InitializeSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         
         SKL::AsyncIO Instance;
 
         Result = Instance.Start( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = Instance.Stop();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::ShutdownSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
     TEST( AsyncIOTests, Timeout_TryGetCompletedAsyncRequest_Instance )
     {
         auto Result = SKL::SetOsTimeResolution( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::InitializeSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         
         SKL::AsyncIO Instance;
 
         Result = Instance.Start( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         SKL::AsyncIOOpaqueType* OpaqueInstance             {};
         uint32_t                NumberOfBytesTransferred { 0 };
@@ -50,31 +50,31 @@ namespace AsyncIOTests
         const auto Before = SKL::GetSystemUpTickCount();
 
         Result = Instance.TryGetCompletedAsyncRequest( &OpaqueInstance, &NumberOfBytesTransferred, &CompletionKey, 10 );
-        ASSERT_TRUE( RTimeout == Result );
+        ASSERT_TRUE( SKL::RTimeout == Result );
 
         const auto After = SKL::GetSystemUpTickCount();
         const auto Diff = After - Before;
         ASSERT_TRUE( Diff <= 10 + 18 );
 
         Result = Instance.Stop();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::ShutdownSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
     TEST( AsyncIOTests, Block_GetCompletedAsyncRequest_Instance )
     {
         auto Result = SKL::SetOsTimeResolution( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::InitializeSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         
         SKL::AsyncIO Instance;
 
         Result = Instance.Start( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         SKL::AsyncIOOpaqueType* OpaqueInstance             {};
         uint32_t                NumberOfBytesTransferred { 0 };
@@ -83,17 +83,17 @@ namespace AsyncIOTests
         std::jthread stopThread([&Instance](){
             std::this_thread::sleep_for( TCLOCK_MILLIS( 10 ) );
             const auto Result = Instance.Stop();
-            ASSERT_TRUE( RSuccess == Result );
+            ASSERT_TRUE( SKL::RSuccess == Result );
         });    
 
         Result = Instance.GetCompletedAsyncRequest( &OpaqueInstance, &NumberOfBytesTransferred, &CompletionKey );
-        ASSERT_TRUE( RSystemFailure == Result );
+        ASSERT_TRUE( SKL::RSystemFailure == Result );
 
         Result = Instance.Stop();
-        ASSERT_TRUE( RAlreadyPerformed == Result );
+        ASSERT_TRUE( SKL::RAlreadyPerformed == Result );
 
         Result = SKL::AsyncIO::ShutdownSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
     TEST( AsyncIOTests, Block_GetCompletedAsyncRequest_ValidWork )
@@ -104,32 +104,32 @@ namespace AsyncIOTests
         };
 
         auto Result = SKL::SetOsTimeResolution( 1 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::InitializeSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         
         SKL::AsyncIO Instance;
 
         Result = Instance.Start( 2 );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
-        SKL::AsyncIOOpaqueType* OpaqueInstance             {};
+        SKL::AsyncIOOpaqueType* OpaqueInstance           {};
         uint32_t                NumberOfBytesTransferred { 0 };
-        SKL::TCompletionKey     CompletionKey             { nullptr };
+        SKL::TCompletionKey     CompletionKey            { nullptr };
 
-        std::jthread stopThread([&Instance](){
+        std::jthread stopThread( [&Instance](){
             std::this_thread::sleep_for( TCLOCK_MILLIS( 10 ) );
         
             auto* ptr = new CustomWorkType { 10 };
             ASSERT_TRUE( nullptr != ptr );
 
             const auto Result = Instance.QueueAsyncWork( reinterpret_cast<SKL::TCompletionKey>( ptr ) );
-            ASSERT_TRUE( RSuccess == Result );
-        });    
+            ASSERT_TRUE( SKL::RSuccess == Result );
+        } );    
 
         Result = Instance.GetCompletedAsyncRequest( &OpaqueInstance, &NumberOfBytesTransferred, &CompletionKey );
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
         ASSERT_TRUE( nullptr != CompletionKey );
 
         auto* ptr = reinterpret_cast<CustomWorkType*>( CompletionKey );
@@ -137,10 +137,10 @@ namespace AsyncIOTests
         delete ptr;
 
         Result = Instance.Stop();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
 
         Result = SKL::AsyncIO::ShutdownSystem();
-        ASSERT_TRUE( RSuccess == Result );
+        ASSERT_TRUE( SKL::RSuccess == Result );
     }
 }
 

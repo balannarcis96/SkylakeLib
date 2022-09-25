@@ -3,7 +3,7 @@
 #include <SkylakeLib.h>
 #include <ApplicationSetup.h>
 
-namespace AODTests
+namespace ServicesTests
 {
     class SimpleService_TestsFixture : public ::testing::Test, public TestApplication
     {
@@ -14,10 +14,10 @@ namespace AODTests
             MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -35,9 +35,10 @@ namespace AODTests
                 SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
-            void OnServerStopSignaled() noexcept override
+            SKL::RStatus OnStopService() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
+                return SKL::RSuccess;
             }
 
             int32_t SeqCounter{ 0 };
@@ -55,12 +56,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -73,10 +74,10 @@ namespace AODTests
             MyService() noexcept: SKL::AODService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -97,9 +98,10 @@ namespace AODTests
                 SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
-            void OnServerStopSignaled() noexcept override
+            SKL::RStatus OnStopService() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
+                return SKL::RSuccess;
             }
 
             int32_t SeqCounter{ 0 };
@@ -117,12 +119,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -135,10 +137,10 @@ namespace AODTests
             MyService() noexcept: SKL::ActiveService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -151,9 +153,10 @@ namespace AODTests
                 //SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
-            void OnServerStopSignaled() noexcept override
+            SKL::RStatus OnStopService() noexcept override
             {
                 //SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
+                return SKL::RSuccess;
             }
 
             void OnTick() noexcept override
@@ -179,12 +182,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -202,10 +205,10 @@ namespace AODTests
             MyService() noexcept: SKL::WorkerService{ 1 }{ }
 
         protected:
-            RStatus Initialize() noexcept override
+            SKL::RStatus Initialize() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
@@ -219,10 +222,12 @@ namespace AODTests
                 SKL_ASSERT_ALLWAYS( CWorkersCount == DoneCount.load_acquire() );
             }
     
-            void OnServerStopSignaled() noexcept override
+            SKL::RStatus OnStopService() noexcept override
             {
                 SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
                 SKL_ASSERT_ALLWAYS( CWorkersCount == DoneCount.load_acquire() );
+
+                return SKL::RSuccess;
             }
 
             //! [Callback] Each time a worker started
@@ -235,12 +240,7 @@ namespace AODTests
             void OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
             {
                 const auto Value{ TLSCounter::GetValue() };
-                if ( CIterCount != Value )
-                {
-                    SKL_BREAK();
-                }
-
-                SKL_ASSERT_ALLWAYS( CIterCount == Value );
+                SKL_ASSERT_ALLWAYS( CIterCount <= Value );
                 TLSCounter::SetValue( 0 );
             }
 
@@ -264,10 +264,8 @@ namespace AODTests
                 }
                 else
                 {
-                    SKL_ASSERT_ALLWAYS( LastValue + 1 <= CIterCount );
                     TLSCounter::SetValue( LastValue + 1 );
                 }
-
             }
 
             int32_t                     SeqCounter{ 0 };
@@ -286,12 +284,80 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+    };
+    
+    class SimpleService_AsyncShutdown_TestsFixture : public ::testing::Test, public TestApplication
+    {
+    public:
+        class MySimpleService: public SKL::SimpleService
+        {
+        public:
+            MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }
+
+        protected:
+            SKL::RStatus Initialize() noexcept override
+            {
+                SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
+                return SKL::RSuccess;
+            }
+
+            void OnServerStarted() noexcept override
+            {
+                SKL_ASSERT_ALLWAYS( 2 == ++SeqCounter );
+
+                SKL::DeferTask([ this ]( SKL::ITask* ) noexcept -> void 
+                {
+                    GetServerInstance().SignalToStop();
+                });
+            }
+    
+            void OnServerStopped() noexcept override
+            {
+                SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
+            }
+    
+            SKL::RStatus OnStopService() noexcept override
+            {
+                SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
+                
+                SKL::DeferTask( [ this ]( SKL::ITask* ) noexcept -> void 
+                {
+                    // finally signal that the service was stopped
+                    OnServiceStopped( SKL::RSuccess  );
+                } );
+
+                // signal that we need to perform async operation to stop
+                return SKL::RPending;
+            }
+
+            int32_t SeqCounter{ 0 };
+        };
+
+        SimpleService_AsyncShutdown_TestsFixture()
+            : ::testing::Test(),
+              TestApplication( L"AOD_TESTS_APP" ) {}      
+  
+        bool OnAddServices() noexcept override
+        {
+            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            return true;
+        }
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -417,6 +483,37 @@ namespace AODTests
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+    }
+
+    TEST_F( SimpleService_AsyncShutdown_TestsFixture, SimpleService_AsyncShutdown )
+    {
+        const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 30, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 2,
+            .bIsActive                       = true,
+            .bHandlesTasks                   = false,
+            .bSupportsAOD                    = true,
+            .bHandlesTimerTasks              = true,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = true,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"SimpleService_AsyncShutdown_ACTIVE"
+        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+
+        ASSERT_TRUE( true == Start( true ) );
+        JoinAllGroups();
+
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore + 2 == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore + 2 == TotalDeallocationsAfter );
     }
 }
 

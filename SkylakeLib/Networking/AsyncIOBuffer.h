@@ -74,9 +74,15 @@ namespace SKL
         }
 
         //! Construct a new stream interface for this async IO buffer
-        SKL_FORCEINLINE BufferStreamInterface GetStream() noexcept
+        SKL_FORCEINLINE BufferStreamInterface GetStreamInterface() noexcept
         {
             return BufferStreamInterface{ &Stream };
+        }
+
+        //! Construct a new binary stream interface for this async IO buffer
+        SKL_FORCEINLINE IBinaryStream<true>* GetStream() noexcept
+        {
+            return IBinaryStream<true>::FromStreamBase( Stream );
         }
 
         //! Construct stream transaction interface into this buffer at the current position
@@ -126,8 +132,8 @@ namespace SKL
             );
         }
 
-        AsyncIOOpaqueType OsOpaqueType;    //!< Opaque object needed internally by the OS to perform the async IO operation
-        IStreamBase       Stream;          //!< Cached buffer data and manipulation info
+        AsyncIOOpaqueType OsOpaqueType; //!< Opaque object needed internally by the OS to perform the async IO operation
+        StreamBase       Stream;        //!< Cached buffer data and manipulation info
     };
 
     template<uint32_t BufferSize, size_t CompletionTaskSize = 16> 
@@ -161,6 +167,6 @@ namespace SKL
         uint8_t   Buffer[ BufferSize ]; //!< The buffer to carry the data
     };
 
-    #define SKL_ASYNCIO_BUFFER_TRANSACTION( BufferPtr )          \
+#define SKL_ASYNCIO_BUFFER_TRANSACTION( BufferPtr )          \
     if( auto Transaction{ NewTask->NewTransaction() }; true )
 }

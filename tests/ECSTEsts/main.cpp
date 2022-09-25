@@ -80,6 +80,74 @@ namespace ECSTests
 
         ASSERT_TRUE( 1 == Counter );
     }
+
+    TEST( ECSTests, EntityId_API )
+    {
+        struct PlayerIdDescription
+        {
+            uint16_t Value1;
+            uint16_t Value2;
+        };
+
+        using PlayerId = SKL::EntityId<PlayerIdDescription, false, false>;
+        using AtomicPlayerId = SKL::EntityId<PlayerIdDescription, false, true>;
+        using ExtendedPlayerId = SKL::EntityId<PlayerIdDescription, true, false>;
+        using ExtendedAtomicPlayerId = SKL::EntityId<PlayerIdDescription, true, true>;
+
+        {
+            PlayerId               pId{ 0 };
+            AtomicPlayerId         pId2{ 0 };
+            ExtendedPlayerId       pId3{ 0 };
+            ExtendedAtomicPlayerId pId4{ 0 };
+
+            ASSERT_TRUE( true  == pId.IsNone() );
+            ASSERT_TRUE( false == pId.IsValid() );
+        
+            ASSERT_TRUE( true  == pId2.IsNone() );
+            ASSERT_TRUE( false == pId2.IsValid() );
+        
+            ASSERT_TRUE( true  == pId3.IsNone() );
+            ASSERT_TRUE( false == pId3.IsValid() );
+        
+            ASSERT_TRUE( true  == pId4.IsNone() );
+            ASSERT_TRUE( false == pId4.IsValid() );
+        }
+        
+        {
+            PlayerId               pId { 1, PlayerId::CBasicIdMaxValue, PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+            AtomicPlayerId         pId2{ 1, PlayerId::CBasicIdMaxValue, PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+            ExtendedPlayerId       pId3{ 1, PlayerId::CExtendedIdMaxValue,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+            ExtendedAtomicPlayerId pId4{ 1, PlayerId::CExtendedIdMaxValue,  PlayerIdDescription{ .Value1 = 32, .Value2 = 121 } };
+                                                                        
+            ASSERT_TRUE( false == pId.IsNone()   );
+            ASSERT_TRUE( true  == pId.IsValid()  );
+            ASSERT_TRUE( false == pId2.IsNone()  );
+            ASSERT_TRUE( true  == pId2.IsValid() );
+            ASSERT_TRUE( false == pId3.IsNone()  );
+            ASSERT_TRUE( true  == pId3.IsValid() );
+            ASSERT_TRUE( false == pId4.IsNone()  );
+            ASSERT_TRUE( true  == pId4.IsValid() );
+                              
+            ASSERT_TRUE( 32  ==  pId.GetVariant().Value1 );
+            ASSERT_TRUE( 121 ==  pId.GetVariant().Value2 );
+            ASSERT_TRUE( 32  == pId2.GetVariant().Value1 );
+            ASSERT_TRUE( 121 == pId2.GetVariant().Value2 );
+            ASSERT_TRUE( 32  == pId3.GetVariant().Value1 );
+            ASSERT_TRUE( 121 == pId3.GetVariant().Value2 );
+            ASSERT_TRUE( 32  == pId4.GetVariant().Value1 );
+            ASSERT_TRUE( 121 == pId4.GetVariant().Value2 );
+
+            ASSERT_TRUE( 1 == pId.GetType() );
+            ASSERT_TRUE( 1 == pId2.GetType() );
+            ASSERT_TRUE( 1 == pId3.GetType() );
+            ASSERT_TRUE( 1 == pId4.GetType() );
+                              
+            ASSERT_TRUE( PlayerId::CBasicIdMaxValue ==  pId.GetIndex() );
+            ASSERT_TRUE( PlayerId::CBasicIdMaxValue == pId2.GetIndex() );
+            ASSERT_TRUE( PlayerId::CExtendedIdMaxValue  == pId3.GetIndex() );
+            ASSERT_TRUE( PlayerId::CExtendedIdMaxValue  == pId4.GetIndex() );
+        }
+    }
 }
 
 int main( int argc, char** argv )

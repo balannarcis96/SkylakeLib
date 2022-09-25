@@ -15,9 +15,9 @@ namespace TLSSyncTests
         {
             MyService() noexcept : SKL::WorkerService{ 1 } {}
 
-            RStatus Initialize() noexcept override 
+            SKL::RStatus Initialize() noexcept override 
             {
-                return RSuccess;
+                return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override 
@@ -30,9 +30,9 @@ namespace TLSSyncTests
             
             }
 
-            void OnServerStopSignaled() noexcept override 
+            SKL::RStatus OnStopService() noexcept override 
             {
-            
+                return SKL::RSuccess;
             }
 
             void OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
@@ -107,12 +107,12 @@ namespace TLSSyncTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -154,12 +154,12 @@ namespace TLSSyncTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
         std::relaxed_value<uint32_t> Counter{ 0 };

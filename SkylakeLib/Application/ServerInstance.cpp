@@ -87,6 +87,8 @@ namespace SKL
                 SKL_ERR_FMT( "ServerInstance[%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
                 return RFail;
             }
+
+            TotalNumberOfInitServices.increment();
         }
 
         return RSuccess;
@@ -151,13 +153,7 @@ namespace SKL
             SKL_VER_FMT( "[ServerInstance:%ws] SignalToStop() Already signaled!", Config.Name );
             return;
         }
-
-        // notice all services
-        for( auto* Service : AllServices )
-        {
-            Service->OnServerStopSignaled();
-        }
-
+        
         if( false == OnBeforeStopServer() )
         {
             if( false == bForce )
@@ -169,10 +165,19 @@ namespace SKL
             SKL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
         }
 
-        for( auto* Group: WorkerGroups )
+        if( 0 != TotalNumberOfInitServices.load_acquire() )
         {
-            if( nullptr == Group ) { continue; }
-            Group->SignalToStop();
+            SKL_VER_FMT( "Stopping %u services...", TotalNumberOfInitServices.load_relaxed() );
+
+            // notice all services
+            for( auto* Service : AllServices )
+            {
+                Service->OnServerStopSignaled();
+            }
+        }
+        else
+        {
+            OnAllServiceStopped();
         }
     }
 
@@ -468,6 +473,37 @@ namespace SKL
         SKL_VER_FMT( "[ServerInstance:%ws] Stopped final!", Config.Name );
         return true;
     }
+    
+    void ServerInstance::OnServiceStopped( IService* InService, RStatus InStatus ) noexcept
+    {   
+        SKL_VER_FMT( "Service %u %s! Status[%d]"
+            , InService->GetUID()
+            , RSuccess == InStatus ? "stopped successfully" : "failed to stop"
+            , RSTATUS_TO_NUMERIC( InStatus ) );
+
+        if( RSuccess != InStatus )
+        {
+            // do smth?
+        }
+
+        if( 1 == TotalNumberOfInitServices.decrement() )
+        {
+            // all services stopped, continue with the shutdown
+            OnAllServiceStopped();
+        }
+    } 
+    
+    void ServerInstance::OnAllServiceStopped() noexcept
+    {   
+        SKL_VER( "All services stopped!" ); 
+
+        SKL_VER( "Stopping all worker groups!" ); 
+        for( auto* Group: WorkerGroups )
+        {
+            if( nullptr == Group ) { continue; }
+            Group->SignalToStop();
+        }
+    } 
 
     bool ServerInstance::AddService( SimpleService* InService ) noexcept
     {

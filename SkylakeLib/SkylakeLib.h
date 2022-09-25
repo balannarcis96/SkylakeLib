@@ -40,8 +40,8 @@
 //! Short-GUID
 #include "Utils/SGUID.h"
 
-//! BinaryStream
-#include "Utils/BinaryStream.h"
+//! Binary Stream
+#include "Utils/BufferStream.h"
 
 //! Memory abstractions
 #include "Memory/Memory.h"

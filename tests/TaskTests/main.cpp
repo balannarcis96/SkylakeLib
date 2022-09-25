@@ -127,40 +127,40 @@ namespace TaskTests
         auto Interface{ NewTask->GetInterface() };
         auto Stream   { NewTask->GetStream() };
 
-        ASSERT_TRUE( Interface.Buffer == Stream.GetBuffer() );
-        ASSERT_TRUE( Interface.Length == Stream.GetBufferSize() );
-        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+        ASSERT_TRUE( Interface.Buffer == Stream->GetBuffer() );
+        ASSERT_TRUE( Interface.Length == Stream->GetBufferSize() );
+        ASSERT_TRUE( Interface.Length == Stream->GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream->GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetPosition() );
 
-        Stream.ForwardToEnd();
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetBufferSize() );
-        ASSERT_TRUE( 0 == Stream.GetRemainingSize() );
-        ASSERT_TRUE( true == Stream.IsEOS() );
+        Stream->ForwardToEnd();
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetBufferSize() );
+        ASSERT_TRUE( 0 == Stream->GetRemainingSize() );
+        ASSERT_TRUE( true == Stream->IsEOS() );
 
-        Stream.ForwardToEnd( Stream.GetBufferSize() );
-        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
-        ASSERT_TRUE( false == Stream.IsEOS() );
+        Stream->ForwardToEnd( Stream->GetBufferSize() );
+        ASSERT_TRUE( Interface.Length == Stream->GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream->GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetPosition() );
+        ASSERT_TRUE( false == Stream->IsEOS() );
 
-        Stream.Reset();
-        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+        Stream->Reset();
+        ASSERT_TRUE( Interface.Length == Stream->GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream->GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetPosition() );
 
-        Stream.WriteT( uint32_t( 5 ) );
-        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+        Stream->WriteT( uint32_t( 5 ) );
+        ASSERT_TRUE( sizeof( uint32_t ) == Stream->GetPosition() );
         ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
 
-        Stream.Reset();
-        ASSERT_TRUE( Interface.Length == Stream.GetRemainingSize() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( NewTask->GetPosition() == Stream.GetPosition() );
+        Stream->Reset();
+        ASSERT_TRUE( Interface.Length == Stream->GetRemainingSize() );
+        ASSERT_TRUE( 0 == Stream->GetPosition() );
+        ASSERT_TRUE( NewTask->GetPosition() == Stream->GetPosition() );
 
-        ASSERT_TRUE( 5 == Stream.ReadT<uint32_t>() );
-        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+        ASSERT_TRUE( 5 == Stream->ReadT<uint32_t>() );
+        ASSERT_TRUE( sizeof( uint32_t ) == Stream->GetPosition() );
         ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
     }
 
@@ -191,7 +191,7 @@ namespace TaskTests
 
         {
             auto Stream{ NewTask->GetStream() };
-            ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
+            ASSERT_TRUE( sizeof( uint32_t ) == Stream->GetPosition() );
         }
     }
 }

@@ -6,3 +6,5 @@ static_assert( sizeof( void* ) == 8, "64bit build Only!" );
 #include <utility>
 #include <chrono>
 #include <limits>
+#include <fstream>
+#include <atomic>

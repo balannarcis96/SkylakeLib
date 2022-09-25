@@ -13,18 +13,18 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
 
             ServerInstanceConfig.AddNewGroup( SKL::WorkerGroupTag{  .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } );        
-            ASSERT_TRUE( RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
+            ASSERT_TRUE( SKL::RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
 
-            ASSERT_TRUE( RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ 
+            ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ 
                 .Id = 1, 
                 .WorkersCount = 1, 
                 .bHandlesTasks = true, 
                 .Name = L"TEMP" 
             } ) );
-            ASSERT_TRUE( RSuccess == SKL::AODTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::AODTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } ) );
         }
 
         void TearDown() override
@@ -35,7 +35,7 @@ namespace AODTests
             SKL::AODTLSContext::Destroy();
             SKL::ServerInstanceTLSContext::Destroy();
 
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
         SKL::ServerInstanceConfig::ServerInstanceConfig ServerInstanceConfig;
@@ -51,12 +51,12 @@ namespace AODTests
   
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
     };
 
@@ -72,12 +72,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
         bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
@@ -118,12 +118,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
         bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
@@ -176,12 +176,12 @@ namespace AODTests
 
         void SetUp() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
         }
 
         void TearDown() override
         {
-            ASSERT_TRUE( RSuccess == SKL::Skylake_TerminateLibrary() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
         bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
@@ -197,7 +197,7 @@ namespace AODTests
 
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
-                    SKL_ASSERT_ALLWAYS( RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
+                    SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObj );
                         if( 0 == --Self.Counter )           
@@ -359,7 +359,7 @@ namespace AODTests
             {
                 bHasCreatedTask.exchange( TRUE );
 
-                ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
+                ASSERT_TRUE( SKL::RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                 {
                     auto& Self = reinterpret_cast<MyObject&>( InObject );
                     SKL_INF( "################# stop #################" );
@@ -422,7 +422,7 @@ namespace AODTests
 
                 for( auto i = 0; i < 2000; ++i )
                 {
-                    ASSERT_TRUE( RSuccess == Ptr->DoAsyncAfter( 5, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
+                    ASSERT_TRUE( SKL::RSuccess == Ptr->DoAsyncAfter( 5, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObject );
                         if( 1 == Self.Counter.decrement() )

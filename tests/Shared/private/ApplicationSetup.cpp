@@ -4,7 +4,7 @@ bool TestApplication::Start( bool bIncludeCallignThread ) noexcept
 {
     ServerInstanceConfig.SetWillCaptureCallingThread( bIncludeCallignThread );
     SKL::ServerInstanceConfig::ServerInstanceConfig ConfigCopy{ ServerInstanceConfig };
-    if( RSuccess != Initialize( std::move( ConfigCopy ) ) )
+    if( SKL::RSuccess != Initialize( std::move( ConfigCopy ) ) )
     {
         return false;
     }
@@ -14,7 +14,7 @@ bool TestApplication::Start( bool bIncludeCallignThread ) noexcept
         return false;
     }
     
-    return StartServer() == ( bIncludeCallignThread ? RServerInstanceFinalized : RSuccess );
+    return StartServer() == ( bIncludeCallignThread ? SKL::RServerInstanceFinalized : SKL::RSuccess );
 }
 
 bool TestApplication::Stop() noexcept

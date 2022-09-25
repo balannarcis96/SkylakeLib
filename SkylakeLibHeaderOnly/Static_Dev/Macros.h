@@ -22,8 +22,10 @@
 
 #if ( defined(_MSC_VER) || defined(__INTEL_COMPILER) ) && !defined(SKL_BUILD_SHIPPING)
 	#define SKL_ALLOCATOR_FUNCTION __declspec(allocator)
+	#define SKL_NOVTABLE __declspec(novtable)
 #else
 	#define SKL_ALLOCATOR_FUNCTION 
+	#define SKL_NOVTABLE
 #endif
 
 #define SKL_ALIGNMENT       sizeof( void* ) 

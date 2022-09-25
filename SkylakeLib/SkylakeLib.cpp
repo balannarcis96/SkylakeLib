@@ -149,3 +149,25 @@ namespace SKL
     SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::TotalAllocations       { 0 } );
     SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED std::atomic<size_t> SkylakeGlobalMemoryManager::TotalDeallocations     { 0 } );
 }
+
+//IService
+namespace SKL
+{
+    void IService::OnServiceStopped( RStatus InStatus ) noexcept
+    {
+        MyServerInstance->OnServiceStopped( this, InStatus );
+    }
+
+    void IService::OnServerStopSignaled() noexcept
+    {
+        const auto Result{ OnStopService() };
+        if( Result != RPending )
+        {
+            OnServiceStopped( Result );
+        }
+        else
+        {
+            SKL_VER_FMT( "Service %u is pending to stop.", GetUID() );
+        }
+    }
+}

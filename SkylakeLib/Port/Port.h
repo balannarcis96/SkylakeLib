@@ -1,5 +1,5 @@
 //!
-//! \file Platform.h
+//! \file Port.h
 //! 
 //! \brief Platform abstraction layer for SkylakeLib
 //! 

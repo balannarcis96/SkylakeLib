@@ -22,3 +22,7 @@ add_subdirectory(UtilsTests)
 if(SKL_BUILD_DB)
     add_subdirectory(DBTests)
 endif()
+
+if(SKL_BUILD_PROTOCOL)
+    add_subdirectory(ProtocolTests)
+endif()
