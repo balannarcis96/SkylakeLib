@@ -165,10 +165,10 @@ namespace SKL
             SKL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
         }
 
-        SKL_VER_FMT( "Stopping %u services...", TotalNumberOfInitServices.load_relaxed() );
-        
         if( 0 != TotalNumberOfInitServices.load_acquire() )
         {
+            SKL_VER_FMT( "Stopping %u services...", TotalNumberOfInitServices.load_relaxed() );
+
             // notice all services
             for( auto* Service : AllServices )
             {
