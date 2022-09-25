@@ -96,3 +96,7 @@ namespace SKL
     //! Is the skylake library init and ready to use for the calling thread
     bool Skylake_IsTheLibraryInitialize_Thread() noexcept;
 }
+
+#if defined(SKL_NO_NAMESPACE)
+    using namespace SKL;
+#endif

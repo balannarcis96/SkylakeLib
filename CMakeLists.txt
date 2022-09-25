@@ -17,6 +17,7 @@ option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"  ON)
 option(SKL_BUILD_DB                 "Build the DB library"                OFF)
 option(SKL_BUILD_PROTOCOL           "Build the Protocol library"           ON)
 option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"             ON)
+option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"          OFF)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -62,6 +63,10 @@ if(SKL_BUILD_TESTS)
     add_compile_definitions(SKL_TEST_ENABLED=1)
 else()
     add_compile_definitions(SKL_TEST_ENABLED=0)
+endif()
+
+if(SKL_NO_NAMESPACE)
+    add_compile_definitions(SKL_NO_NAMESPACE)
 endif()
 
 if(SKL_REAL_TYPE STREQUAL "Single")
