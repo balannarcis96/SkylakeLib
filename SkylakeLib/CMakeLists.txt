@@ -35,8 +35,8 @@ add_library (SkylakeLib STATIC
     ${_Macros_files}                 
     ${_Memory_files}                 
     ${_Networking_files}                   
-    ${_Port_files}                 
     ${_Root_files}                     
+    ${_Port_files}                 
     ${_Service_files}                     
     ${_Std_files}     
     ${_Task_files}

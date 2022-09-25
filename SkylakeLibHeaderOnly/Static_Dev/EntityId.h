@@ -9,10 +9,10 @@
 
 namespace SKL
 {
-    using TEntityType                        = uint8_t;
-    using TEntityIdBase                      = uint64_t;
-    constexpr TEntityIdBase CInvalidEntityId = 0;
-    constexpr TEntityType CInvalidEntityType = 0;
+    using TEntityType                          = uint8_t;
+    using TEntityIdBase                        = uint64_t;
+    constexpr TEntityIdBase CInvalidEntityId   = 0;
+    constexpr TEntityType   CInvalidEntityType = 0; 
 
     template<typename Variant, bool bExtendedIndex = false, bool bAtomic = false>
     struct EntityId

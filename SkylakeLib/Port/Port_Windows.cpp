@@ -110,9 +110,9 @@ namespace SKL
     bool TCPConnectIPv4( TSocket InSocket, TIPv4Address InAddress, TNetPort InPort ) noexcept
     {
         sockaddr_in Target;
-		Target.sin_port		   = htons( InPort );
-		Target.sin_family	   = AF_INET;
-		Target.sin_addr.s_addr = InAddress;
+        Target.sin_port           = htons( InPort );
+        Target.sin_family       = AF_INET;
+        Target.sin_addr.s_addr = InAddress;
 
         const int32_t ConnectResult{ connect( InSocket
             , reinterpret_cast<const sockaddr*>( &Target )
@@ -862,12 +862,12 @@ namespace SKL
 // String Utils
 namespace SKL
 {
-	const char* StringUtils::IpV4AddressToString( TIPv4Address InAddress ) noexcept
-	{
-		auto* Instance{ StringUtils::GetInstance() };
-		SKL_ASSERT( nullptr != Instance );
+    const char* StringUtils::IpV4AddressToString( TIPv4Address InAddress ) noexcept
+    {
+        auto* Instance{ StringUtils::GetInstance() };
+        SKL_ASSERT( nullptr != Instance );
 
-		auto& Buffer{ Instance->WorkBenchBuffer };
+        auto& Buffer{ Instance->WorkBenchBuffer };
 
         if ( nullptr != InetNtopA( AF_INET
             , &InAddress
@@ -878,14 +878,14 @@ namespace SKL
         }
 
         return "[Invalid IPv4Address]";
-	}
+    }
 
-	const wchar_t* StringUtils::IpV4AddressToWString( TIPv4Address InAddress ) noexcept
-	{
-		auto* Instance{ StringUtils::GetInstance() };
-		SKL_ASSERT( nullptr != Instance );
+    const wchar_t* StringUtils::IpV4AddressToWString( TIPv4Address InAddress ) noexcept
+    {
+        auto* Instance{ StringUtils::GetInstance() };
+        SKL_ASSERT( nullptr != Instance );
 
-		auto& Buffer{ Instance->WorkBenchBuffer };
+        auto& Buffer{ Instance->WorkBenchBuffer };
 
         if ( nullptr != InetNtopW( AF_INET
             , &InAddress
@@ -896,5 +896,5 @@ namespace SKL
         }
 
         return L"[Invalid IPv4Address]";
-	}
+    }
 }

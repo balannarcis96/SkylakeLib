@@ -10,3 +10,4 @@
 #include "MultiArray.h"
 #include "DODSymmetricStore.h"
 #include "UIDStore.h"
+#include "EntityStore.h"

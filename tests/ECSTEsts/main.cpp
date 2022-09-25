@@ -15,15 +15,32 @@ namespace ECSTests
         int c{ 1 };
     };
 
+    using MyStaticStore = SKL::StaticSymmetricStore<uint16_t
+                                      , 1024
+                                      , Component1
+                                      , Component2>;
+                                      
     using MyStore = SKL::SymmetricStore<uint16_t
                                       , 1024
                                       , Component1
                                       , Component2>;
+    TEST( ECSTests, ECS_StaticSymmetricStore )
+    {
+       MyStaticStore Store{};
+       
+       ASSERT_TRUE( 1024 == MyStaticStore::Traits::EntitiesCount );
 
+       for( uint16_t i = 0; i < 1024; ++i )
+       {
+            ASSERT_TRUE( 1 == Store.GetComponent<Component2>( i ).c );
+       }
+    }
+    
     TEST( ECSTests, ECS_SymmetricStore )
     {
        MyStore Store{};
        
+       ASSERT_TRUE( true == Store.IsValid() );
        ASSERT_TRUE( 1024 == MyStore::Traits::EntitiesCount );
 
        for( uint16_t i = 0; i < 1024; ++i )
