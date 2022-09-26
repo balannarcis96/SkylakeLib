@@ -68,7 +68,14 @@ namespace SKL
 
                 for( size_t i = 0; i < Count; ++i )
                 {
-                    GConstructNothrow<Type>( &Array[i] );
+                    if constexpr( std::is_nothrow_default_constructible_v<Type> )
+                    {
+                        GConstructNothrow<Type>( &Array[i] );
+                    }
+                    else
+                    {
+                        GConstruct<Type>( &Array[i] );
+                    }
                 }
             }
         }

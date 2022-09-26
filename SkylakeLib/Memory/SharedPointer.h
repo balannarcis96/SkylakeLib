@@ -9,9 +9,13 @@
 
 namespace SKL
 {
+    template<typename TSharedPtrType>
+    struct EnditSharedPtr;
+
     template<typename TObject, typename TDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::DestructDeallocator>
     struct TSharedPtr
     {
+        using MyType                = TSharedPtr<TObject, TDeallocator>;
         using TObjectDecay          = std::remove_all_extents_t<TObject>;
         using element_type          = TObjectDecay;
         using MemoryPolicy          = typename TDeallocator::MyMemoryPolicy;
@@ -234,6 +238,8 @@ namespace SKL
 
         template<typename TObject, typename TDeallocator>
         friend struct TLockedSharedPtr;
+
+        friend EnditSharedPtr<MyType>;
     };
 
     template<typename TObject>
@@ -358,5 +364,16 @@ namespace SKL
     private:
         std::shared_mutex Lock{};
         SharedPtrType     Pointer{};
+    };
+
+    template<typename TSharedPtrType>
+    struct EnditSharedPtr
+    {
+        using TRawPtr = typename TSharedPtrType::TObjectDecay *;
+
+        SKL_FORCEINLINE static void SetRawPtr( TSharedPtrType& InSharedPtr, TRawPtr InPtr ) noexcept
+        {
+            InSharedPtr.Pointer = InPtr;
+        }
     };
 }

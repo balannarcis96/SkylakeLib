@@ -14,7 +14,7 @@ namespace SKL
     constexpr TEntityIdBase CInvalidEntityId   = 0;
     constexpr TEntityType   CInvalidEntityType = 0; 
 
-    template<typename Variant, bool bExtendedIndex = false, bool bAtomic = false>
+    template<typename TVariant, bool bExtendedIndex = false, bool bAtomic = false>
     struct EntityId
     {
         using TIndexType = std::conditional_t<true == bExtendedIndex, uint32_t, uint16_t>;
@@ -22,7 +22,9 @@ namespace SKL
         static constexpr TIndexType CBasicIdMaxValue  = 0xFFFFU;
         static constexpr uint32_t CExtendedIdMask     = 0xFFFFFF00U;
         static constexpr uint32_t CExtendedIdMaxValue = 0x00FFFFFFU;
+        static constexpr bool CExtendexIndex          = bExtendedIndex;
         using TBaseType  = std::conditional_t<true == bAtomic, std::relaxed_value<TEntityIdBase>, TEntityIdBase>;
+        using Variant = TVariant;
 
         static_assert( sizeof( Variant ) == sizeof( uint32_t ) );
         
@@ -97,15 +99,43 @@ namespace SKL
         constexpr EntityId& operator=( const EntityId& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
-            Id = Other.Id;
+            if constexpr( true == bAtomic )
+            {
+                Id.store( Other.Id.load() );
+            }
+            else
+            {
+                Id = Other.Id;
+            }
+
             return *this;
         }
 
         SKL_FORCEINLINE constexpr bool operator==( const EntityId& Other ) const noexcept { return Id == Other.Id; }
         SKL_FORCEINLINE constexpr bool operator!=( const EntityId& Other ) const noexcept { return Id != Other.Id; }
         SKL_FORCEINLINE constexpr void operator=( TEntityIdBase InId ) noexcept { return Id = InId; }
-        SKL_FORCEINLINE constexpr operator TEntityIdBase() const noexcept { return Id; }
-        SKL_FORCEINLINE constexpr operator EntityId<Variant, bExtendedIndex, !bAtomic>() const noexcept { return { Id }; }
+        SKL_FORCEINLINE constexpr operator TEntityIdBase() const noexcept
+        { 
+            if constexpr( true == bAtomic )
+            {
+               return Id.load(); 
+            }
+            else
+            {
+               return Id; 
+            }
+        }
+        SKL_FORCEINLINE constexpr operator EntityId<Variant, bExtendedIndex, !bAtomic>() const noexcept 
+        { 
+            if constexpr( true == bAtomic )
+            {
+               return { Id.load() }; 
+            }
+            else
+            {
+               return { Id }; 
+            }
+        }
         SKL_FORCEINLINE constexpr operator bool() const noexcept { return false == IsNone(); }
 
         SKL_FORCEINLINE constexpr TEntityIdBase GetId() const noexcept { return Id; };
@@ -168,6 +198,13 @@ namespace SKL
             }
         }
 
+        SKL_FORCEINLINE constexpr void SetVariant( Variant InVariant ) noexcept
+        {
+            auto Desc{ ReadAsDescription() };
+            Desc.Component = InVariant;
+            SetIdFromDescription( Desc );
+        }
+
     private:
         SKL_FORCEINLINE constexpr Description ReadAsDescription() const noexcept { return Description{ Id }; }
         SKL_FORCEINLINE constexpr const Description& GetDescription() const noexcept 
@@ -180,7 +217,7 @@ namespace SKL
             SKL_ASSERT_ALLWAYS( false == bAtomic );
             return *reinterpret_cast<Description*>( &Id );
         }
-        SKL_FORCEINLINE constexpr Description SetIdDescriptionFromDescription( Description InDescription ) const noexcept 
+        SKL_FORCEINLINE constexpr void SetIdFromDescription( Description InDescription ) noexcept 
         { 
             Id = InDescription.Id;
         }

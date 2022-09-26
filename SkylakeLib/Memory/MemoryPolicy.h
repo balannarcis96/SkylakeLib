@@ -27,10 +27,8 @@ namespace SKL::MemoryPolicy
               BlockSize{ BlockSize } 
         {}
 
-        /**
-         * \brief Adds 1 to the reference count of this instance.
-         * \remarks Only call this function while holding a valid reference to this instance.
-         */
+        //! Adds 1 to the reference count of this instance
+        //! \remarks Only call this function while holding a valid reference to this instance
         SKL_FORCEINLINE void AddReference() noexcept
         {
             uint32_t RefCountValue{ ReferenceCount.load( std::memory_order_relaxed ) };
@@ -41,18 +39,22 @@ namespace SKL::MemoryPolicy
                                                                         , std::memory_order_relaxed ) ) { }
         }
 
+        //! Removes 1 from the reference count of this instance
+        //! \remarks Only call this function while holding a valid reference to this instance
         SKL_FORCEINLINE void ReleaseReferenceChecked() noexcept
         {
             ( void )--ReferenceCount;
         }
 
+        //! Removes 1 from the reference count of this instance
+        //! \returns true if last ref count reached 0
         SKL_FORCEINLINE bool ReleaseReference() noexcept
         {
             return 0 == --ReferenceCount;
         }
 
-        std::atomic<uint32_t>  ReferenceCount { 0 };
-        const uint32_t         BlockSize      { 0 };
+        std::atomic<uint32_t>  ReferenceCount{ 0 }; //!< ref count
+        const uint32_t         BlockSize     { 0 }; //!< total size of the shared memory block
     };
 
     struct UniqueMemoryPolicy final

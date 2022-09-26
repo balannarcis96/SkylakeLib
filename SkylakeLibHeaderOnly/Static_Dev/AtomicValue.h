@@ -120,6 +120,7 @@ namespace std
         template< typename TOther, bool _bDefaultTo_Relaxed_AcquireRelease >
         SKL_FORCEINLINE MyType &operator=( const interlocked_value< TOther, _bDefaultTo_Relaxed_AcquireRelease > &Other ) noexcept
         {
+            SKL_ASSERT( this != &Other );
             store( static_cast< TOutType >( Other.load( ) ) );
             return *this;
         }

@@ -17,46 +17,57 @@ namespace SKL
         UIDStore() noexcept = default;
         ~UIDStore() noexcept = default;
 
+        //! activate the store
         void Activate() noexcept
         {
+            // clear the stack
+            while( false == FreeIds.empty() ){ FreeIds.pop(); }
+
+            // populate the stack with all possible values
             for( TUIDType i = MaxUIDValue; i > IdentityValue; --i )
             {
                 SKL_ASSERT( i != IdentityValue );
-                FreeIndices.push( i );            
+                FreeIds.push( i );            
             }
 
+            // set active
             bIsActive.exchange( TRUE );
         }
+        
+        //! deactivate the store, when all ids are freed the callback is called
         void Deactivate() noexcept
         {
             bIsActive.exchange( FALSE );
         }
 
+        //! allocate new id
         TUIDType Allocate() noexcept
         {
             TUIDType Result{ IdentityValue };
 
             if( TRUE == bIsActive )
             {
-                SpinLockScopeGuard Guard{ IndicesLock };
-                if( FALSE == FreeIndices.empty() )
+                SpinLockScopeGuard Guard{ IdsLock };
+                if( FALSE == FreeIds.empty() )
                 {
-                    Result = FreeIndices.top();
-                    FreeIndices.pop();
+                    Result = FreeIds.top();
+                    FreeIds.pop();
                 }
             }
 
             return Result;
         }
+        
+        //! deallocate id
         void Deallocate( TUIDType InUID ) noexcept
         {
             bool bDeallocatedAll{ false };
 
             {
-                SpinLockScopeGuard Guard{ IndicesLock };
-                FreeIndices.push( InUID );
+                SpinLockScopeGuard Guard{ IdsLock };
+                FreeIds.push( InUID );
 
-                bDeallocatedAll = FreeIndices.size() == MaxUIDValue;
+                bDeallocatedAll = FreeIds.size() == MaxUIDValue;
             }
 
             if( FALSE == bIsActive.load_relaxed() && true == bDeallocatedAll && false == OnAllFreed.IsNull() )
@@ -65,22 +76,27 @@ namespace SKL
             }
         }
 
+        //! get view into all ids
         std::span<TUIDType> GetView() const noexcept
         {
             SKL_ASSERT( FALSE == bIsActive.load_relaxed() );
-            return { FreeIndices };
+            return { FreeIds };
         }
 
+        //! set the functor to be dispatched when all ids are dellocated and the store is not active
         template<typename TFunctor>
         void SetOnAllFreed( TFunctor&& InFunctor ) noexcept
         {
             OnAllFreed += std::forward<TFunctor>( InFunctor );
         }
 
+        //! is the store active
+        bool IsActive() const noexcept{ return TRUE == bIsActive.load_relaxed(); }
+
     private:
-        std::relaxed_value<int32_t>                 bIsActive{ FALSE };
-        SpinLock                                    IndicesLock{};
-        std::stack<TUIDType, std::vector<TUIDType>> FreeIndices{};
-        OnAllFreedTask                              OnAllFreed;
+        std::relaxed_value<int32_t>                 bIsActive { FALSE }; //!< is the store active
+        SpinLock                                    IdsLock   {};        //!< spin lock to guard the FreeIds stack
+        std::stack<TUIDType, std::vector<TUIDType>> FreeIds   {};        //!< stack of free ids
+        OnAllFreedTask                              OnAllFreed{};        //!< functor to dispatch when all ids are freed and the store is not active
     };
 }

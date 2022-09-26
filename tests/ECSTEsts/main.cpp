@@ -165,6 +165,252 @@ namespace ECSTests
             ASSERT_TRUE( PlayerId::CExtendedIdMaxValue  == pId4.GetIndex() );
         }
     }
+
+    TEST( ECSTests, EntityStore_API )
+    {
+        struct RootComponentData
+        {
+             RootComponentData() noexcept = default;
+             ~RootComponentData() noexcept = default;
+
+             uint32_t A { 55 };
+        };
+        struct OtherComponent
+        {
+             OtherComponent() noexcept = default;
+             ~OtherComponent() noexcept = default;
+
+             int32_t A{ 123 };
+        };
+
+        constexpr TEntityType CMyEntityType = 1;
+
+        using MyEntityId = EntityId<uint32_t>;
+        using MyEntityStore = EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
+
+        MyEntityStore Store{};
+
+        int32_t Counter = 0;
+
+        Store.SetOnAllFreed( [&Counter]() noexcept -> void 
+        {
+            ++Counter;
+        } );
+
+        {
+            ASSERT_TRUE( true == Store.IsValid() );
+            ASSERT_TRUE( RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( false == Store.IsActive() );
+
+            const auto InactiveAllocResult{ Store.AllocateEntity( 56 ) };
+            ASSERT_TRUE( nullptr == InactiveAllocResult.get() );
+
+            Store.Activate();
+            ASSERT_TRUE( true == Store.IsActive() );
+
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+             auto AllocResult2{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult2.get() );
+            ASSERT_TRUE( 2 == AllocResult2->GetId().GetIndex() );
+
+            auto AllocResult3{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult3.get() );
+            ASSERT_TRUE( 3 == AllocResult3->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 141 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            const auto CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            ASSERT_TRUE( nullptr != CB );
+            ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
+
+            ASSERT_TRUE( 1 == MyEntitySharedPtr::Static_GetReferenceCount( AllocResult.get() ) );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 142 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( CMyEntityType == AllocResult->GetId().GetType() );
+            ASSERT_TRUE( 142 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            auto& RawEntity{ Store.GetEntityRaw( AllocResult->GetId() ) };
+            ASSERT_TRUE( &RawEntity == AllocResult.get() );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            auto& OComponent{ AllocResult->GetComponent<OtherComponent>() };
+            ASSERT_TRUE( 123 == OComponent.A );
+
+            auto& OComponent2{ Store.GetComponent<OtherComponent>( AllocResult->GetId() ) };
+            ASSERT_TRUE( 123 == OComponent2.A );
+        }
+
+        ASSERT_TRUE( 0 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            Store.Deactivate();
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr == AllocResult.get() );
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+    }
+
+    TEST( ECSTests, EntityStore_ExtendedId_API )
+    {
+        struct RootComponentData
+        {
+             RootComponentData() noexcept = default;
+             ~RootComponentData() noexcept = default;
+
+             uint32_t A { 55 };
+        };
+        struct OtherComponent
+        {
+             OtherComponent() noexcept = default;
+             ~OtherComponent() noexcept = default;
+
+             int32_t A{ 123 };
+        };
+
+        constexpr TEntityType CMyEntityType = 2;
+
+        using MyEntityId = EntityId<uint32_t, true, true>;
+        using MyEntityStore = EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
+
+        MyEntityStore Store{};
+
+        int32_t Counter = 0;
+
+        Store.SetOnAllFreed( [&Counter]() noexcept -> void 
+        {
+            ++Counter;
+        } );
+
+        {
+            ASSERT_TRUE( true == Store.IsValid() );
+            ASSERT_TRUE( RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( false == Store.IsActive() );
+
+            const auto InactiveAllocResult{ Store.AllocateEntity( 56 ) };
+            ASSERT_TRUE( nullptr == InactiveAllocResult.get() );
+
+            Store.Activate();
+            ASSERT_TRUE( true == Store.IsActive() );
+
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+             auto AllocResult2{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult2.get() );
+            ASSERT_TRUE( 2 == AllocResult2->GetId().GetIndex() );
+
+            auto AllocResult3{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult3.get() );
+            ASSERT_TRUE( 3 == AllocResult3->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 141 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            const auto CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            ASSERT_TRUE( nullptr != CB );
+            ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
+
+            ASSERT_TRUE( 1 == MyEntitySharedPtr::Static_GetReferenceCount( AllocResult.get() ) );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 142 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( CMyEntityType == AllocResult->GetId().GetType() );
+            ASSERT_TRUE( 142 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            auto& RawEntity{ Store.GetEntityRaw( AllocResult->GetId() ) };
+            ASSERT_TRUE( &RawEntity == AllocResult.get() );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            auto& OComponent{ AllocResult->GetComponent<OtherComponent>() };
+            ASSERT_TRUE( 123 == OComponent.A );
+
+            auto& OComponent2{ Store.GetComponent<OtherComponent>( AllocResult->GetId() ) };
+            ASSERT_TRUE( 123 == OComponent2.A );
+        }
+
+        ASSERT_TRUE( 0 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            Store.Deactivate();
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr == AllocResult.get() );
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+    }
 }
 
 int main( int argc, char** argv )
