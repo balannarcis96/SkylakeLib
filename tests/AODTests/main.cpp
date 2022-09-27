@@ -166,7 +166,7 @@ namespace AODTests
             ~MyObject() noexcept
             {
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
-                SKL_INF( "AODTestsFixture4::MyObject::~MyObject()" );
+                SKLL_INF( "AODTestsFixture4::MyObject::~MyObject()" );
             }
         };
         
@@ -362,7 +362,7 @@ namespace AODTests
                 ASSERT_TRUE( SKL::RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                 {
                     auto& Self = reinterpret_cast<MyObject&>( InObject );
-                    SKL_INF( "################# stop #################" );
+                    SKLL_INF( "################# stop #################" );
                     Self.bShouldStop.exchange( TRUE );
                 } ) );
             }
@@ -427,7 +427,7 @@ namespace AODTests
                         auto& Self = reinterpret_cast<MyObject&>( InObject );
                         if( 1 == Self.Counter.decrement() )
                         {
-                            SKL_INF( "############# LAST DECREMENT #############" );
+                            SKLL_INF( "############# LAST DECREMENT #############" );
                         }
                     } ) );
                 }
@@ -480,7 +480,7 @@ namespace AODTests
 
                 SKL::DeferTask( [ &InGroup ]( SKL::ITask* Self ) noexcept -> void 
                 {
-                    SKL_INF( "FROM TASK" );
+                    SKLL_INF( "FROM TASK" );
                     InGroup.GetServerInstance()->SignalToStop( true );
                 } );
             }

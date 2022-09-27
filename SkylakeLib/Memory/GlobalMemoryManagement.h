@@ -55,36 +55,36 @@ namespace SKL
         {
             if( RSuccess != Pool1::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool1" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool1" );
                 return RFail;
             }
             if( RSuccess != Pool2::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool2" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool2" );
                 return RFail;
             }
             if( RSuccess != Pool3::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool3" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool3" );
                 return RFail;
             }
             if( RSuccess != Pool4::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool4" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool4" );
                 return RFail;
             }
             if( RSuccess != Pool5::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool5" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool5" );
                 return RFail;
             }
             if( RSuccess != Pool6::TObjectPool::Preallocate() )
             {
-                SKL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool6" );
+                SKLL_ERR( "SkylakeGlobalMemoryManager::Preallocate() -> Failed to Preallocate Pool6" );
                 return RFail;
             }
 
-            SKL_INF( "SkylakeGlobalMemoryManager ALL POOLS PREALLOCATED!" );
+            SKLL_INF( "SkylakeGlobalMemoryManager ALL POOLS PREALLOCATED!" );
 
             return RSuccess;
         }
@@ -173,7 +173,7 @@ namespace SKL
 
             if( SKL_GUARD_ALLOC_SIZE_ON && ( AllocateSize > CMemoryManager_MaxAllocSize ) ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "SkylakeGlobalMemoryManager::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocateSize );
+                SKLL_ERR_FMT( "SkylakeGlobalMemoryManager::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocateSize );
                 return Result;
             }
             
@@ -364,44 +364,44 @@ namespace SKL
         static void LogStatistics( ) noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
-            SKL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
-            SKL_INF_FMT( "Pool1:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
+            SKLL_INF_FMT( "Pool1:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool1::TObjectPool::GetTotalAllocations( ),
                     Pool1::TObjectPool::GetTotalDeallocations( ),
                     Pool1::TObjectPool::GetTotalOSAllocations( ),
                     Pool1::TObjectPool::GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool2:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool2:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool2::TObjectPool::GetTotalAllocations( ),
                     Pool2::TObjectPool::GetTotalDeallocations( ),
                     Pool2::TObjectPool::GetTotalOSAllocations( ),
                     Pool2::TObjectPool::GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool3:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool3:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool3::TObjectPool::GetTotalAllocations( ),
                     Pool3::TObjectPool::GetTotalDeallocations( ),
                     Pool3::TObjectPool::GetTotalOSAllocations( ),
                     Pool3::TObjectPool::GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool4:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",  
+            SKLL_INF_FMT( "Pool4:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",  
                     Pool4::TObjectPool::GetTotalAllocations( ), 
                     Pool4::TObjectPool::GetTotalDeallocations( ), 
                     Pool4::TObjectPool::GetTotalOSAllocations( ), 
                     Pool4::TObjectPool::GetTotalOSDeallocations( ) );                                                                
-            SKL_INF_FMT( "Pool5:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool5:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool5::TObjectPool::GetTotalAllocations( ),
                     Pool5::TObjectPool::GetTotalDeallocations( ),
                     Pool5::TObjectPool::GetTotalOSAllocations( ),
                     Pool5::TObjectPool::GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool6:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool6:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool6::TObjectPool::GetTotalAllocations( ),
                     Pool6::TObjectPool::GetTotalDeallocations( ),
                     Pool6::TObjectPool::GetTotalOSAllocations( ),
                     Pool6::TObjectPool::GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "CustomSize(OS Blocks):\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
+            SKLL_INF_FMT( "CustomSize(OS Blocks):\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
                     CustomSizeAllocations.load( ),
                     CustomSizeDeallocations.load( ) );
-            SKL_INF_FMT( "GAllocate:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
+            SKLL_INF_FMT( "GAllocate:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
                     TotalAllocations.load( ),
                     TotalDeallocations.load( ) );
-            SKL_INF_FMT( "Total Allocation:%lld\n\tTotal Deallocations:%lld\n\tTotal OSAllocations:%lld\n\tTotal OSDeallocations:%lld",
+            SKLL_INF_FMT( "Total Allocation:%lld\n\tTotal Deallocations:%lld\n\tTotal OSAllocations:%lld\n\tTotal OSDeallocations:%lld",
                     Pool1::TObjectPool::GetTotalAllocations( ) 
                         + Pool1::TObjectPool::GetTotalAllocations( ) 
                         + Pool2::TObjectPool::GetTotalAllocations( ) 
@@ -431,9 +431,9 @@ namespace SKL
                         + Pool4::TObjectPool::GetTotalOSDeallocations( ) 
                         + Pool5::TObjectPool::GetTotalOSDeallocations( )
                     );
-            SKL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
+            SKLL_INF( "SkylakeGlobalMemoryManager ###############################################################" );
 #else
-            SKL_WRN( "SkylakeGlobalMemoryManager::LogStatistics()\n\t\tTried to log memory statistics, but the SkylakeGlobalMemoryManager has the statistics turned off!" );
+            SKLL_WRN( "SkylakeGlobalMemoryManager::LogStatistics()\n\t\tTried to log memory statistics, but the SkylakeGlobalMemoryManager has the statistics turned off!" );
 #endif
         }
 

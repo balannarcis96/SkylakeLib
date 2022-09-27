@@ -60,7 +60,7 @@ namespace SKL
             );
             if( nullptr == Array )
             {
-                SKL_WRN( "MultiArrayBase::MultiArrayBase() Failed to allocate array!" );
+                SKLL_WRN( "MultiArrayBase::MultiArrayBase() Failed to allocate array!" );
             }
             else
             {

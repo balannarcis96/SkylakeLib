@@ -91,56 +91,56 @@ namespace SKL
 
             if ( 0 == Id )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %u!", Name, Id );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %u!", Name, Id );
                 return false;
             }
 
             // tick rate 0 means no delay
             //if ( true == bIsActive && 0 == TickRate )
             //{
-            //    SKL_ERR_FMT( "WorkerGroupTag[%ws] Invalid TickRate %u!", Name, TickRate );
+            //    SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid TickRate %u!", Name, TickRate );
             //    return false;
             //}
 
             if ( false == bIsActive && false == bHandlesTasks )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] All inactive worker groups must marked [bIsActive=false;bHandlesTasks=true]!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] All inactive worker groups must marked [bIsActive=false;bHandlesTasks=true]!", Name );
                 return false;
             }
 
             if ( true == bIsActive && true == bHandlesTasks && false == bCallTickHandler && false == bHandlesTimerTasks && false == bSupportsAOD )
             {
-                SKL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bHandlesTasks=true;bCallTickHandler=false] Recommended to use a reactive worker group instead!", Name );
+                SKLL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bHandlesTasks=true;bCallTickHandler=false] Recommended to use a reactive worker group instead!", Name );
             }
 
             // tick rate 0 means no delay or relay on TickRate
             //if ( true == bSupportsTLSSync && 0 == SyncTLSTickRate )
             //{
-            //    SKL_ERR_FMT( "WorkerGroupTag[%ws] Invalid SyncTLSTickRate %u!", Name, SyncTLSTickRate );
+            //    SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid SyncTLSTickRate %u!", Name, SyncTLSTickRate );
             //    return false;
             //}
 
             if( true == bPreallocateAllThreadLocalPools && false == bHasThreadLocalMemoryManager )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bPreallocateAllThreadLocalPools == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bPreallocateAllThreadLocalPools == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
                 return false;
             }
 
             if( true == bSupportsAOD && ( false == bHasThreadLocalMemoryManager ) )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
                 return false;
             }
 
             if( true == bSupportesTCPAsyncAcceptors && false == bHandlesTasks )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bHandlesTasks = true!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bHandlesTasks = true!", Name );
                 return false;
             }
 
             if( true == bHandlesTimerTasks && false == bIsActive )
             {
-                SKL_ERR_FMT( "WorkerGroupTag[%ws] [bHandlesTimerTasks == true] requires -> bIsActive = true!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bHandlesTimerTasks == true] requires -> bIsActive = true!", Name );
                 return false;
             }
 

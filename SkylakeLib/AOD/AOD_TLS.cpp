@@ -46,6 +46,12 @@ namespace SKL
             TSharedPtr<IAODSharedObjectTask>::Static_Reset( DelayedSharedObjectTasks.top() );
             DelayedSharedObjectTasks.pop();
         }
+        
+        while( false == DelayedCustomObjectTasks.empty() )
+        {
+            TSharedPtr<IAODCustomObjectTask>::Static_Reset( DelayedCustomObjectTasks.top() );
+            DelayedCustomObjectTasks.pop();
+        }
 
         while( false == DelayedStaticObjectTasks.empty() )
         {
@@ -60,7 +66,7 @@ namespace SKL
 
         if( nullptr == SourceServerInstance )   
         {
-            SKL_WRN( "AODTLSContext::Reset() no server instance specified!" );
+            SKLL_WRN( "AODTLSContext::Reset() no server instance specified!" );
             return;
         }
 

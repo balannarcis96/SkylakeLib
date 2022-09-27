@@ -19,7 +19,7 @@ namespace SKL
         const auto L1CacheLineSize { GetL1CacheLineSize() };
         if ( SKL_CACHE_LINE_SIZE != L1CacheLineSize )
         {
-            SKL_ERR_FMT( "Expected L1 cache line size to be %d but it is %llu, PLATFORM NOT SUPPORTED, REBUILD!", static_cast<int32_t>( SKL_CACHE_LINE_SIZE ), L1CacheLineSize );
+            SKLL_ERR_FMT( "Expected L1 cache line size to be %d but it is %llu, PLATFORM NOT SUPPORTED, REBUILD!", static_cast<int32_t>( SKL_CACHE_LINE_SIZE ), L1CacheLineSize );
         }
 
         SKL_ASSERT_ALLWAYS_MSG( SKL_CACHE_LINE_SIZE == L1CacheLineSize, "Unsupported l1 cache line size!" );
@@ -31,7 +31,7 @@ namespace SKL
 
         if( TRUE == GIsInit.load_relaxed() )
         {
-            SKL_WRN( "The SkylakeLib was already initialized" );
+            SKLL_WRN( "The SkylakeLib was already initialized" );
             return RSuccess;
         }
 
@@ -44,14 +44,14 @@ namespace SKL
         auto Result = AsyncIO::InitializeSystem();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKL_ERR( "Failed to initialize the async io system!" );
+            SKLL_ERR( "Failed to initialize the async io system!" );
             return Result;
         }
 
         Result = Skylake_InitializeLibrary_Thread();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKL_ERR( "Failed to initialize the SkylakeLibrary for the main thread!" );
+            SKLL_ERR( "Failed to initialize the SkylakeLibrary for the main thread!" );
             return Result;
         }
 
@@ -63,21 +63,21 @@ namespace SKL
     {
         if( FALSE == GIsInit.load_relaxed() )
         {
-            SKL_WRN( "The SkylakeLib was already terminated" );
+            SKLL_WRN( "The SkylakeLib was already terminated" );
             return RSuccess;
         }
 
         auto Result = AsyncIO::ShutdownSystem();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKL_ERR( "Failed to shutdown the async io system!" );
+            SKLL_ERR( "Failed to shutdown the async io system!" );
             return Result;
         }
 
         Result = Skylake_TerminateLibrary_Thread();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKL_ERR( "Failed to terminate the SkylakeLibrary for the main thread!" );
+            SKLL_ERR( "Failed to terminate the SkylakeLibrary for the main thread!" );
             return Result;
         }
 
@@ -91,7 +91,7 @@ namespace SKL
     {
         if( true == SkylakeLibInitPerThread::GetValue() )
         {
-            SKL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
+            SKLL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
             return RSuccess;
         }
 
@@ -99,7 +99,7 @@ namespace SKL
         {
             if( RSuccess != StringUtils::Create() )
             {
-                SKL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
+                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
                 return RFail;
             }
         }
@@ -108,11 +108,11 @@ namespace SKL
         {
             if( RSuccess != ThreadLocalMemoryManager::Create() )
             {
-                SKL_ERR( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
+                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
                 return RFail;
             }
 
-            SKL_VER( "Skylake_InitializeLibrary_Thread() Created ThreadLocalMemoryManager." );
+            SKLL_VER( "Skylake_InitializeLibrary_Thread() Created ThreadLocalMemoryManager." );
         }
 
         SkylakeLibInitPerThread::SetValue( true );
@@ -124,7 +124,7 @@ namespace SKL
     {
         if( false == SkylakeLibInitPerThread::GetValue() )
         {
-            SKL_INF( "[Skylake_TerminateLibrary_Thread()] The SkylakeLib was already terminated on this thread!" );
+            SKLL_INF( "[Skylake_TerminateLibrary_Thread()] The SkylakeLib was already terminated on this thread!" );
             return RSuccess;
         }
 
@@ -166,11 +166,15 @@ namespace SKL
 {
     void IService::OnServiceStopped( RStatus InStatus ) noexcept
     {
+        SKLL_TRACE();
+
         MyServerInstance->OnServiceStopped( this, InStatus );
     }
 
     void IService::OnServerStopSignaled() noexcept
     {
+        SKLL_TRACE();
+
         const auto Result{ OnStopService() };
         if( Result != RPending )
         {
@@ -178,7 +182,7 @@ namespace SKL
         }
         else
         {
-            SKL_VER_FMT( "Service %u is pending to stop.", GetUID() );
+            SKLL_VER_FMT( "Service %u is pending to stop.", GetUID() );
         }
     }
 }

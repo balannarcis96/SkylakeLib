@@ -233,7 +233,7 @@ namespace SKL
                                      | ( std::ofstream::trunc  * !bAppendInsteadOfTruncate ) ) };
             if( false == File.is_open( ) )
             {
-                //SKL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
+                //SKLL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
                 return false;
             }
 
@@ -242,7 +242,7 @@ namespace SKL
             const auto Result{ File.good() };
             if( false == Result )
             {
-                //SKL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to write bytesCount:%u to file %s ", WriteSize, InFileName );
+                //SKLL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to write bytesCount:%u to file %s ", WriteSize, InFileName );
             }
 
             File.close();
@@ -377,7 +377,7 @@ namespace SKL
             auto File{ std::ifstream( InFileName, std::ifstream::binary ) };
             if( false == File.is_open( ) )
             {
-                //SKL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to open file %s", InFileName );
+                //SKLL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to open file %s", InFileName );
                 return false;
             } 
 
@@ -387,7 +387,7 @@ namespace SKL
 
             if( 0 == ReadSize ) SKL_UNLIKELY
             {
-                //SKL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Empty file %s", InFileName );
+                //SKLL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Empty file %s", InFileName );
                 File.close();
                 return false;
             }
@@ -395,7 +395,7 @@ namespace SKL
             const auto bItFits{ this->CanFit( ReadSize ) };
             if( false == bItFits && false == bTruncate )
             {
-                //SKL_VER_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
+                //SKLL_VER_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
                 File.close();
                 return false;
             }
@@ -405,7 +405,7 @@ namespace SKL
             const auto Result{ File.good() };
             if( false == Result )
             {
-                //SKL_WRN_FMT( "IStreamReader::ReadFromFile(InFileName) Failed to read bytesCount:%u to file %s ", ReadSize, InFileName );
+                //SKLL_WRN_FMT( "IStreamReader::ReadFromFile(InFileName) Failed to read bytesCount:%u to file %s ", ReadSize, InFileName );
             }
 
             File.close();

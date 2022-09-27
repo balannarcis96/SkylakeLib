@@ -235,3 +235,135 @@ namespace SKL
         TDispatch OnDispatch; //!< The functor to dispatch for this task
     };
 }
+
+//AODCustomObjectTask
+namespace SKL
+{
+    namespace AOD
+    {
+        struct CustomObject;
+
+        struct CustomObjectDeallocator
+        {
+            using TDecayObject          = CustomObject;
+            using MyMemoryPolicy        = MemoryPolicy::SharedMemoryPolicy;
+            using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
+
+            SKL_FORCEINLINE void operator()( CustomObject* InPtr ) const noexcept
+            {
+                Deallocate( InPtr );
+            }
+
+            static void Deallocate( CustomObject* InPtr ) noexcept;
+        };
+    }
+
+    using TCustomObjectSharedPtr = TSharedPtr<AOD::CustomObject, AOD::CustomObjectDeallocator>;
+
+    //! 
+    //! \brief Single level dispatched task
+    //! 
+    //! \important Do not temper! Any modifications that will affect sizeof(ITask) will break the task abstraction.
+    //! 
+    struct IAODCustomObjectTask : IAODTaskBase
+    {   
+        using TDispatchFunctionPtr = void( SKL_CDECL* )( AOD::CustomObject& ) noexcept;
+        using TDispatchProto       = ASD::UniqueFunctorWrapper<CAODTaskMinimumSize, TDispatchFunctionPtr>;
+
+        IAODCustomObjectTask() = default;
+        ~IAODCustomObjectTask() noexcept 
+        {
+            Clear();
+        }
+
+        //! \brief Dispatch this task
+        SKL_FORCEINLINE void Dispatch() noexcept
+        {
+            SKL_ASSERT( false == IsNull() );
+            SKL_ASSERT( nullptr != Parent.get() );
+
+            CastSelfToProto().Dispatch( *Parent );
+        }
+        
+        //! Is this task valid
+        SKL_FORCEINLINE bool IsNull() const noexcept
+        {
+            return CastSelfToProto().IsNull();
+        }
+
+        //! Clear the underlying functor
+        SKL_FORCEINLINE void Clear() noexcept
+        {
+            CastSelfToProto().Destroy();
+        }
+
+        //! Set parent AOD Object
+        void SetParent( AOD::CustomObject* InObject )noexcept;
+
+        //! Set due time
+        SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
+        {
+            Due = GetSystemUpTickCount() + AfterMilliseconds;
+        }
+
+        //! Is this task due
+        SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
+        {
+            return InNow >= Due;
+        }
+
+        //! A > B
+        SKL_FORCEINLINE bool operator>( const IAODCustomObjectTask& Other ) noexcept    
+        {
+            return Due > Other.Due;
+        }
+
+    protected:
+        SKL_FORCEINLINE const TDispatchProto& CastSelfToProto() const noexcept
+        {
+            return *reinterpret_cast<const TDispatchProto*>( 
+                reinterpret_cast<const uint8_t*>( this ) + sizeof( IAODCustomObjectTask )
+            );
+        }
+
+        SKL_FORCEINLINE TDispatchProto& CastSelfToProto() noexcept
+        {
+            return *reinterpret_cast<TDispatchProto*>( 
+                reinterpret_cast<uint8_t*>( this ) + sizeof( IAODCustomObjectTask )
+            );
+        }
+
+        TCustomObjectSharedPtr Parent{ nullptr }; //!< Parent object ref, the AOD object, this task will be dispatched on
+        TEpochTimePoint        Due   { 0 };       //!< Used for when this task is delayed
+
+        friend struct AODTaskQueue;
+    };
+
+    template<size_t TaskSize>
+    struct AODCustomObjectTask: IAODCustomObjectTask
+    {
+        using TDispatch = ASD::UniqueFunctorWrapper<TaskSize, typename IAODCustomObjectTask::TDispatchFunctionPtr>;
+
+        AODCustomObjectTask() noexcept = default;
+        ~AODCustomObjectTask() noexcept = default;
+        
+        //! Set the functor for this task
+        template<typename TFunctor>
+        SKL_FORCEINLINE void operator+=( TFunctor&& InFunctor ) noexcept
+        {
+            // set the dispatch functor
+            OnDispatch += std::forward<TFunctor>( InFunctor );
+        }
+
+        //! Set the functor for this task
+        template<typename TFunctor>
+        SKL_FORCEINLINE void SetDispatch( TFunctor&& InFunctor ) noexcept
+        {
+            // set the dispatch functor
+            OnDispatch += std::forward<TFunctor>( InFunctor );
+        }
+
+    private:
+        TDispatch OnDispatch; //!< The functor to dispatch for this task
+    };
+}

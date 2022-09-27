@@ -31,7 +31,7 @@ namespace SKL
             {
                 return RStatus::AllocationFailed;
             }
-
+            
             if( const auto InitializeResult = NewObject->Initialize( std::forward<TArgs>( Args )... ); InitializeResult != RSuccess )
             {
                 return InitializeResult;
@@ -39,6 +39,8 @@ namespace SKL
 
             SKL_ASSERT( TLSSingletonType::GetValuePtr( ) == nullptr );
             TLSSingletonType::SetValuePtr( NewObject );
+            
+            SKLL_VER_FMT( "[TLSSingleton] %s Created!", NewObject->GetName() );
 
             return RSuccess;
         }
@@ -55,6 +57,7 @@ namespace SKL
         {
             if( const auto *Instance = TLSSingletonType::GetValuePtr( ) )
             {
+                SKLL_VER_FMT( "[TLSSingleton] %s Destroyed!", Instance->GetName() );
                 delete Instance;
             }
 

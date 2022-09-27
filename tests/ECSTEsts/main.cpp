@@ -183,10 +183,10 @@ namespace ECSTests
              int32_t A{ 123 };
         };
 
-        constexpr TEntityType CMyEntityType = 1;
+        constexpr SKL::TEntityType CMyEntityType = 1;
 
-        using MyEntityId = EntityId<uint32_t>;
-        using MyEntityStore = EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntityId = SKL::EntityId<uint32_t>;
+        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
 
         MyEntityStore Store{};
@@ -200,7 +200,7 @@ namespace ECSTests
 
         {
             ASSERT_TRUE( true == Store.IsValid() );
-            ASSERT_TRUE( RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( SKL::RSuccess == Store.Initialize( ) );
             ASSERT_TRUE( false == Store.IsActive() );
 
             const auto InactiveAllocResult{ Store.AllocateEntity( 56 ) };
@@ -237,7 +237,7 @@ namespace ECSTests
             ASSERT_TRUE( 55 == AllocResult->A );
             ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
 
-            const auto CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            const auto CB{ reinterpret_cast<SKL::MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
             ASSERT_TRUE( nullptr != CB );
             ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
 
@@ -306,10 +306,10 @@ namespace ECSTests
              int32_t A{ 123 };
         };
 
-        constexpr TEntityType CMyEntityType = 2;
+        constexpr SKL::TEntityType CMyEntityType = 2;
 
-        using MyEntityId = EntityId<uint32_t, true, true>;
-        using MyEntityStore = EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntityId = SKL::EntityId<uint32_t, true, true>;
+        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
 
         MyEntityStore Store{};
@@ -323,7 +323,7 @@ namespace ECSTests
 
         {
             ASSERT_TRUE( true == Store.IsValid() );
-            ASSERT_TRUE( RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( SKL::RSuccess == Store.Initialize( ) );
             ASSERT_TRUE( false == Store.IsActive() );
 
             const auto InactiveAllocResult{ Store.AllocateEntity( 56 ) };
@@ -360,7 +360,7 @@ namespace ECSTests
             ASSERT_TRUE( 55 == AllocResult->A );
             ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
 
-            const auto CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            const auto CB{ reinterpret_cast<SKL::MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
             ASSERT_TRUE( nullptr != CB );
             ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
 

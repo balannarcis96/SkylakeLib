@@ -72,6 +72,12 @@ namespace SKL
         {
             AODStaticObjectDelayedTasks.Push( InTask );
         }
+        
+        //! Defer AOD task execution on this worker
+        SKL_FORCEINLINE void Defer( IAODCustomObjectTask* InTask ) noexcept
+        {
+            AODCustomObjectDelayedTasks.Push( InTask );
+        }
 
     private:
         void RunImpl() noexcept;
@@ -80,6 +86,7 @@ namespace SKL
         TaskQueue                           DelayedTasks                {};          //!< Single consummer multiple producers queue for delayed tasks 
         AODTaskQueue                        AODSharedObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
         AODTaskQueue                        AODStaticObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
+        AODTaskQueue                        AODCustomObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
         std::synced_value<uint32_t>         bIsRunning                  { FALSE };   //!< Is this worker signaled to run
         std::synced_value<uint32_t>         bIsMasterThread             { FALSE };   //!< Is this a master worker
         std::relaxed_value<TEpochTimePoint> StartedAt                   { 0 };       //!< Time point when the worker started

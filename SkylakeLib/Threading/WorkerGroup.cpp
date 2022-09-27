@@ -15,7 +15,7 @@ namespace SKL
     {
         if( TRUE == bIsRunning.exchange( true ) )
         {
-            SKL_INF_FMT( "[WorkerGroup::Start()][Group:%ws] Already started!", Tag.Name );
+            SKLL_INF_FMT( "[WorkerGroup::Start()][Group:%ws] Already started!", Tag.Name );
             return RSuccess;
         }
         
@@ -30,7 +30,7 @@ namespace SKL
 
             if( RSuccess != Worker->Start() )
             {
-                SKL_INF_FMT( "[WorkerGroup::Start()][Group:%ws] Failed to start worker!", Tag.Name );
+                SKLL_INF_FMT( "[WorkerGroup::Start()][Group:%ws] Failed to start worker!", Tag.Name );
                 return RFail;
             }
         }
@@ -42,7 +42,7 @@ namespace SKL
     {
         if( false == bIsRunning.exchange( false ) )
         {
-            SKL_INF_FMT( "[WorkerGroup::SignalToStop()][Group:%ws] Already signaled to stop!", Tag.Name );
+            SKLL_INF_FMT( "[WorkerGroup::SignalToStop()][Group:%ws] Already signaled to stop!", Tag.Name );
             return;
         }
 
@@ -53,7 +53,7 @@ namespace SKL
         {
             if( RSuccess != AsyncIOAPI.Stop() )
             {
-                SKL_ERR_FMT( "[WorkerGroup::SignalToStop()][Group:%ws] Failed to stop the Aasync IO system!", Tag.Name );
+                SKLL_ERR_FMT( "[WorkerGroup::SignalToStop()][Group:%ws] Failed to stop the Aasync IO system!", Tag.Name );
             }
         }
     }
@@ -83,7 +83,7 @@ namespace SKL
     {
         if( false == Tag.IsValid() ) SKL_UNLIKELY
         {
-            SKL_ERR( "WorkerGroup::Build() Invalid Tag!" );
+            SKLL_ERR( "WorkerGroup::Build() Invalid Tag!" );
             return RInvalidParamters;
         }        
 
@@ -91,7 +91,7 @@ namespace SKL
         {
             if ( RSuccess != AsyncIOAPI.Start( Tag.WorkersCount ) )
             {
-                SKL_ERR_FMT( "WorkerGroup::Build() Failed to init the async IO API! GroupId[%ws]", Tag.Name );
+                SKLL_ERR_FMT( "WorkerGroup::Build() Failed to init the async IO API! GroupId[%ws]", Tag.Name );
                 return RFail;
             }
         }
@@ -102,7 +102,7 @@ namespace SKL
             SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
             if ( nullptr == MyTLSSyncSystem )
             {
-                SKL_ERR_FMT( "WorkerGroup::Build() Failed to allocate the TLSSyncSystem! GroupId[%ws]", Tag.Name );
+                SKLL_ERR_FMT( "WorkerGroup::Build() Failed to allocate the TLSSyncSystem! GroupId[%ws]", Tag.Name );
                 return RFail;
             }
         }
@@ -126,7 +126,7 @@ namespace SKL
             auto NewWorker = std::make_unique<Worker>( this );
             if( nullptr == NewWorker )
             {
-                SKL_ERR_FMT( "[WorkerGroup:%ws] Failed to allocate new Worker!", Tag.Name );
+                SKLL_ERR_FMT( "[WorkerGroup:%ws] Failed to allocate new Worker!", Tag.Name );
                 return RAllocationFailed;
             }
 
@@ -140,7 +140,7 @@ namespace SKL
             // init as slave worker
             if( RSuccess != HandleSlaveWorker( *NewWorker ) )
             {
-                SKL_ERR_FMT( "[WorkerGroup:%ws] Failed init slave Worker!", Tag.Name );
+                SKLL_ERR_FMT( "[WorkerGroup:%ws] Failed init slave Worker!", Tag.Name );
                 return RFail;
             }
 
@@ -312,7 +312,7 @@ namespace SKL
         {
             if( RSystemFailure ==  Result )
             {
-                SKL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+                SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
             }
         
             // signal to termiante the worker group
@@ -340,7 +340,7 @@ namespace SKL
         {
             if( RSystemFailure ==  Result )
             {
-                SKL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+                SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
             }
         
             // signal to termiante the worker group
@@ -401,11 +401,39 @@ namespace SKL
         //Shared Object tasks
         while( false == TLSContext.DelayedSharedObjectTasks.empty() )
         {
-            if( true == TLSContext.DelayedSharedObjectTasks.top()->IsDue( Now ) )
+            auto* Task{ TLSContext.DelayedSharedObjectTasks.top() };
+            SKL_ASSERT( nullptr != Task );
+
+            if( true == Task->IsDue( Now ) )
             {
-                TLSContext.DelayedSharedObjectTasks.top()->Dispatch();
-                TSharedPtr<IAODSharedObjectTask>::Static_Reset( TLSContext.DelayedSharedObjectTasks.top() );
                 TLSContext.DelayedSharedObjectTasks.pop();
+
+                Task->Dispatch();
+
+                TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        //Update now
+        Now = GetSystemUpTickCount();
+
+        //Custom Object tasks
+        while( false == TLSContext.DelayedCustomObjectTasks.empty() )
+        {
+            auto* Task{ TLSContext.DelayedCustomObjectTasks.top() };
+            SKL_ASSERT( nullptr != Task );
+
+            if( true == Task->IsDue( Now ) )
+            {
+                TLSContext.DelayedCustomObjectTasks.pop();
+
+                Task->Dispatch();
+
+                TSharedPtr<IAODCustomObjectTask>::Static_Reset( Task );
             }
             else
             {
@@ -419,11 +447,16 @@ namespace SKL
         //Static Object tasks
         while( false == TLSContext.DelayedStaticObjectTasks.empty() )
         {
-            if( true == TLSContext.DelayedStaticObjectTasks.top()->IsDue( Now ) )
+            auto* Task{ TLSContext.DelayedStaticObjectTasks.top() };
+            SKL_ASSERT( nullptr != Task );
+
+            if( true == Task->IsDue( Now ) )
             {
-                TLSContext.DelayedStaticObjectTasks.top()->Dispatch();
-                TSharedPtr<IAODStaticObjectTask>::Static_Reset( TLSContext.DelayedStaticObjectTasks.top() );
                 TLSContext.DelayedStaticObjectTasks.pop();
+             
+                Task->Dispatch();
+
+                TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
             }
             else
             {
@@ -456,6 +489,23 @@ namespace SKL
         //Update now
         Now = GetSystemUpTickCount();
 
+        //Custom Object tasks
+        while( auto* NewTask{ reinterpret_cast<IAODCustomObjectTask*>( Worker.AODCustomObjectDelayedTasks.Pop() ) } )
+        {
+            if( true == NewTask->IsDue( Now ) )
+            {
+                NewTask->Dispatch();
+                TSharedPtr<IAODCustomObjectTask>::Static_Reset( NewTask );
+            }
+            else
+            {
+                TLSContext.DelayedCustomObjectTasks.push( NewTask );
+            }
+        }
+
+        //Update now
+        Now = GetSystemUpTickCount();
+
         //Static Object tasks
         while( auto* NewTask{ reinterpret_cast<IAODStaticObjectTask*>( Worker.AODStaticObjectDelayedTasks.Pop() ) } )
         {
@@ -480,11 +530,19 @@ namespace SKL
 
         while( false == TLSContext.DelayedTasks.empty() )
         {
-            if( true == TLSContext.DelayedTasks.top()->IsDue( Now ) )
+            auto* Task{ TLSContext.DelayedTasks.top() };
+            SKL_ASSERT( nullptr != Task );
+
+            if( true == Task->IsDue( Now ) )
             {
-                TLSContext.DelayedTasks.top()->Dispatch();
-                TSharedPtr<ITask>::Static_Reset( TLSContext.DelayedTasks.top() );
+                // pop the task first so if the dispatch 
+                // adds new task to the delayed tasks 
+                // we dont remove the new one
                 TLSContext.DelayedTasks.pop();
+
+                Task->Dispatch();
+
+                TSharedPtr<ITask>::Static_Reset( Task );
             }
             else
             {
@@ -599,7 +657,7 @@ namespace SKL
 
             if ( RSuccess != Acceptor->StartAcceptingAsync() )
             {
-                SKL_ERR_FMT( "[WG:%ws] Failed to start async acceptor ip[%d] port[%hu] id[%u]"
+                SKLL_ERR_FMT( "[WG:%ws] Failed to start async acceptor ip[%d] port[%hu] id[%u]"
                            , GetTag().Name
                            , Acceptor->GetConfig().IpAddress
                            , Acceptor->GetConfig().Port
@@ -610,7 +668,7 @@ namespace SKL
             }
         }
     
-        SKL_VER_FMT( "[WG:%ws] Started all tcp async acceptors!", GetTag().Name );
+        SKLL_VER_FMT( "[WG:%ws] Started all tcp async acceptors!", GetTag().Name );
 
         return true;
     }
@@ -624,33 +682,33 @@ namespace SKL
             Acceptor->StopAcceptingAsync();
         }
     
-        SKL_VER_FMT( "[WG:%ws] Stopped all tcp async acceptors!", GetTag().Name );
+        SKLL_VER_FMT( "[WG:%ws] Stopped all tcp async acceptors!", GetTag().Name );
     }
 
     RStatus WorkerGroup::AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept
     {
         if( false == Tag.bSupportesTCPAsyncAcceptors )
         {
-            SKL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Async TCP acceptors are not supported on this workers group.[bSupportesTCPAsyncAcceptors == false]!", Tag.Name );
+            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Async TCP acceptors are not supported on this workers group.[bSupportesTCPAsyncAcceptors == false]!", Tag.Name );
             return RNotSupported;
         }
 
         if( nullptr != GetTCPAcceptorById( Config.Id ) )
         {
-            SKL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() A tcp async acceptor with same id found id[%u]!", Tag.Name, Config.Id );
+            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() A tcp async acceptor with same id found id[%u]!", Tag.Name, Config.Id );
             return RInvalidParamters;
         }
         
         if( nullptr != GetTCPAcceptor( Config.IpAddress, Config.Port ) )
         {
-            SKL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() A tcp async acceptor with same ip and port found id[%u] port[%hu]!", Tag.Name, Config.Id, Config.Port );
+            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() A tcp async acceptor with same ip and port found id[%u] port[%hu]!", Tag.Name, Config.Id, Config.Port );
             return RInvalidParamters;
         }
 
         auto NewTCPAcceptor = std::make_unique<TCPAcceptor>( Config, &AsyncIOAPI );
         if( nullptr == NewTCPAcceptor ) SKL_UNLIKELY
         {
-            SKL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Failed to allocate! id[%u] ip[%hu] port[%hu]!", Tag.Name, Config.Id, Config.IpAddress, Config.Port );
+            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Failed to allocate! id[%u] ip[%hu] port[%hu]!", Tag.Name, Config.Id, Config.IpAddress, Config.Port );
             return RInvalidParamters;
         }
 

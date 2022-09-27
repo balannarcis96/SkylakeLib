@@ -235,6 +235,7 @@ namespace SKL
         TObjectDecay* Pointer { nullptr };
 
         friend struct IAODSharedObjectTask;
+        friend struct IAODCustomObjectTask;
 
         template<typename TObject, typename TDeallocator>
         friend struct TLockedSharedPtr;

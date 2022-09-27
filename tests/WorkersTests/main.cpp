@@ -44,13 +44,13 @@ namespace WorkersTests
             using TT = ASD::CopyFunctorWrapper<16, void(*)(void)> ;        
 
             Group1.SetWorkerStartHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> bool {
-                SKL_INF( "Worker Group1 WORKER STARTED!" );
+                SKLL_INF( "Worker Group1 WORKER STARTED!" );
                 return true;
             } ); 
 
             Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
             {
-                SKL_INF( "Worker Group1 Tick()" );
+                SKLL_INF( "Worker Group1 Tick()" );
 
                 if( Worker.GetAliveTime() < 1000 )
                 {
@@ -58,7 +58,7 @@ namespace WorkersTests
                 }
 
                 Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* Self ) noexcept {
-                    SKL_INF( "From TASK" );
+                    SKLL_INF( "From TASK" );
                     Manager.SignalToStop();
                 } );
             
@@ -85,7 +85,7 @@ namespace WorkersTests
             };
             Group2.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
             {
-                SKL_INF( "Worker Group2 Tick()" );
+                SKLL_INF( "Worker Group2 Tick()" );
             } );
             Config.AddNewGroup( std::move( Group2 ) );
 

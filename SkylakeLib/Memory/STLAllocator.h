@@ -61,7 +61,7 @@ namespace SKL
             auto AllocResult{ GlobalMemoryManager::Allocate( AllocateSize ) };
             if( false == AllocResult.IsValid() ) SKL_UNLIKELY
             {
-                SKL_WRN_FMT( "STLAllocator<T>::Allocate() Failed to allocate %u bytes (%llu items)", AllocateSize, InCount );
+                SKLL_WRN_FMT( "STLAllocator<T>::Allocate() Failed to allocate %u bytes (%llu items)", AllocateSize, InCount );
                 return nullptr;
             }
             
@@ -121,7 +121,7 @@ namespace SKL
             auto AllocResult{ ThreadLocalMemoryManager::Allocate( AllocateSize ) };
             if( false == AllocResult.IsValid() ) SKL_UNLIKELY
             {
-                SKL_WRN_FMT( "STLTLSAllocator<T>::Allocate() Failed to allocate %u bytes (%llu items)", AllocateSize, InCount );
+                SKLL_WRN_FMT( "STLTLSAllocator<T>::Allocate() Failed to allocate %u bytes (%llu items)", AllocateSize, InCount );
                 return nullptr;
             }
             

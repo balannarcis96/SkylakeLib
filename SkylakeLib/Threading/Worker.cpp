@@ -25,7 +25,7 @@ namespace SKL
     {
         if( nullptr == Group || false == Group->IsRunning() )
         {
-            SKL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group ? Group->GetTag().Name : L"UNKNOWN" );
+            SKLL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group ? Group->GetTag().Name : L"UNKNOWN" );
             return;
         }
 
@@ -65,7 +65,7 @@ namespace SKL
             else
             {
                 bIsRunning.exchange( FALSE );
-                SKL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
+                SKLL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
             }
         }
         
@@ -88,6 +88,12 @@ namespace SKL
         while( auto* Task{ AODSharedObjectDelayedTasks.Pop() })
         {
             TSharedPtr<IAODSharedObjectTask>::Static_Reset( reinterpret_cast<IAODSharedObjectTask*>( Task ) );
+        }
+        
+        // Clear AOD custom object delayed tasks
+        while( auto* Task{ AODCustomObjectDelayedTasks.Pop() })
+        {
+            TSharedPtr<IAODCustomObjectTask>::Static_Reset( reinterpret_cast<IAODCustomObjectTask*>( Task ) );
         }
 
         // Clear AOD static object delayed tasks

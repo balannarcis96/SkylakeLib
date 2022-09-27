@@ -32,7 +32,7 @@ namespace SKL::AOD
         SharedObject( void* TargetSharedPointer ) noexcept : TargetSharedPointer { TargetSharedPointer ? TargetSharedPointer : this } {}
         ~SharedObject() noexcept = default;
 
-        //! Execute the functor thread safe relative to the object [void(AODObject&)noexcept]
+        //! Execute the functor thread safe relative to the object [void( AOD::SharedObject& ) noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
@@ -41,7 +41,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKL_ERR( "SharedObject::DoAsync() Failed to allocate task!" );
+                SKLL_ERR( "SharedObject::DoAsync() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -56,7 +56,7 @@ namespace SKL::AOD
             return RSuccess;
         }
 
-        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void(AODObject&)noexcept]
+        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::SharedObject& ) noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
@@ -65,7 +65,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKL_ERR( "SharedObject::DoAsyncAfter() Failed to allocate task!" );
+                SKLL_ERR( "SharedObject::DoAsyncAfter() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -107,7 +107,7 @@ namespace SKL::AOD
         StaticObject() noexcept = default;
         ~StaticObject() noexcept = default;
 
-        //! Execute the functor thread safe relative to the object [void(AODObject&)noexcept]
+        //! Execute the functor thread safe relative to the object [void() noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
@@ -116,7 +116,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKL_ERR( "StaticObject::DoAsync() Failed to allocate task!" );
+                SKLL_ERR( "StaticObject::DoAsync() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -130,7 +130,7 @@ namespace SKL::AOD
             return RSuccess;
         }
 
-        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void(AODObject&)noexcept]
+        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void() noexcept]
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
@@ -139,7 +139,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKL_ERR( "StaticObject::DoAsyncAfter() Failed to allocate task!" );
+                SKLL_ERR( "StaticObject::DoAsyncAfter() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -158,5 +158,76 @@ namespace SKL::AOD
         void Flush() noexcept;
         bool Dispatch( IAODStaticObjectTask* InTask ) noexcept;
         bool DelayTask( IAODStaticObjectTask* InTask ) noexcept;
+    };
+}
+
+//CustomObject
+namespace SKL::AOD
+{
+    struct CustomObject : public Object
+    {
+        using ObjectDeleter = ASD::FnPtr<void(SKL_CDECL*)( CustomObject* ) noexcept>;
+
+        CustomObject( ObjectDeleter Deleter ) noexcept : Deleter{ Deleter } {}
+        ~CustomObject() noexcept = default;
+        
+        //! Execute the functor thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
+        {
+            using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;
+            
+            TaskType* NewTask{ MakeSharedRaw<TaskType>() };
+            if( nullptr == NewTask ) SKL_UNLIKELY
+            {   
+                SKLL_ERR( "CustomObject::DoAsync() Failed to allocate task!" );
+                return RAllocationFailed;
+            }
+
+            NewTask->SetParent( this );
+            NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
+
+            if( Dispatch( NewTask ) )
+            {
+                return RExecutedSync;
+            }
+        
+            return RSuccess;
+        }
+
+        //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
+        template<typename TFunctor>
+        SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
+        {
+            using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;
+            
+            TaskType* NewTask{ MakeSharedRaw<TaskType>() };
+            if( nullptr == NewTask ) SKL_UNLIKELY
+            {   
+                SKLL_ERR( "CustomObject::DoAsyncAfter() Failed to allocate task!" );
+                return RAllocationFailed;
+            }
+
+            NewTask->SetParent( this );
+            NewTask->SetDue( AfterMilliseconds );
+            NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
+
+            if ( false == DelayTask( NewTask ) ) SKL_UNLIKELY
+            {
+                return RFail;
+            }
+
+            return RSuccess;
+        }
+
+    private:
+        void Flush() noexcept;
+        bool Dispatch( IAODCustomObjectTask* InTask ) noexcept;
+        bool DelayTask( IAODCustomObjectTask* InTask ) noexcept;
+
+        ObjectDeleter Deleter{ nullptr };
+
+        friend IAODCustomObjectTask;
+        friend CustomObjectDeallocator;
     };
 }

@@ -40,7 +40,7 @@ namespace SKL
         
         if( HandleTries > MaxTries ) SKL_UNLIKELY
         {
-            SKL_ERR( "::ScheduleTask() Failed to schedule task to workers!" );
+            SKLL_ERR( "::ScheduleTask() Failed to schedule task to workers!" );
             TSharedPtr<ITask>::Static_Reset( InTask );
             return false;
         }

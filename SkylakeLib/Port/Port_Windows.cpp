@@ -81,7 +81,7 @@ namespace SKL
                              , bAsync ? WSA_FLAG_OVERLAPPED : 0 ) };
         if( Result == INVALID_SOCKET )
         {
-            SKL_VER_FMT( "AllocateNewTCPSocket() Failed with WSAError:%d", WSAGetLastError() );
+            SKLL_VER_FMT( "AllocateNewTCPSocket() Failed with WSAError:%d", WSAGetLastError() );
             Result = 0;
         }
         
@@ -100,7 +100,7 @@ namespace SKL
                              , bAsync ? WSA_FLAG_OVERLAPPED : 0 ) };
         if( Result == INVALID_SOCKET )
         {
-            SKL_VER_FMT( "AllocateNewTCPSocket() Failed with WSAError:%d", WSAGetLastError() );
+            SKLL_VER_FMT( "AllocateNewTCPSocket() Failed with WSAError:%d", WSAGetLastError() );
             Result = 0;
         }
         
@@ -163,13 +163,13 @@ namespace SKL
     {
         if( true == IsAccepting() )
         {
-            SKL_VER( "TCPAccepter::StartAcceptingAsync() Already accepting!" );
+            SKLL_VER( "TCPAccepter::StartAcceptingAsync() Already accepting!" );
             return RSuccess;
         }
 
         if( false == IsValid() )
         {
-            SKL_ERR( "TCPAccepter::StartAcceptingAsync() Failed, invalid config!" );
+            SKLL_ERR( "TCPAccepter::StartAcceptingAsync() Failed, invalid config!" );
             return RInvalidParamters;
         }   
 
@@ -180,7 +180,7 @@ namespace SKL
         const TSocket NewSocket { AllocateNewIPv4TCPSocket( true ) };
         if( 0 == NewSocket )
         {
-            SKL_ERR( "TCPAccepter::StartAcceptingAsync() Failed to create new tcp socket!" );
+            SKLL_ERR( "TCPAccepter::StartAcceptingAsync() Failed to create new tcp socket!" );
             return RFail;
         }
 
@@ -195,7 +195,7 @@ namespace SKL
 
         if ( RSuccess != AsyncIOAPI->AssociateToTheAPI( NewSocket ) )
         {
-            SKL_ERR( "TCPAccepter::StartAcceptingAsync() Failed enable async io on socket!" );
+            SKLL_ERR( "TCPAccepter::StartAcceptingAsync() Failed enable async io on socket!" );
             closesocket( NewSocket );
             Socket.exchange( 0 );
             return RFail;
@@ -204,7 +204,7 @@ namespace SKL
         LPFN_ACCEPTEX AcceptExPtr { Win32_AcquireAcceptEx( NewSocket ) };
         if( nullptr == AcceptExPtr )
         {
-            SKL_ERR_FMT( "TCPAccepter::StartAcceptingAsync() Failed acquire AcceptEx on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
+            SKLL_ERR_FMT( "TCPAccepter::StartAcceptingAsync() Failed acquire AcceptEx on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
             CloseSocket();
             return RFail;
         }
@@ -217,7 +217,7 @@ namespace SKL
 
         if( false == BeginAcceptAsync() )
         {
-            SKL_ERR_FMT( "TCPAccepter::StartAcceptingAsync() Failed start AcceptEx on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
+            SKLL_ERR_FMT( "TCPAccepter::StartAcceptingAsync() Failed start AcceptEx on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
             CloseSocket();
             CustomHandle.exchange( nullptr );
 
@@ -240,7 +240,7 @@ namespace SKL
             AcceptTask = MakeSharedRaw<AsyncAcceptTask>();
             if( nullptr == AcceptTask ) SKL_UNLIKELY
             {
-                SKL_VER( "TCPAccepter::BeginAcceptAsync() Failed to allocate task!" );
+                SKLL_VER( "TCPAccepter::BeginAcceptAsync() Failed to allocate task!" );
                 return false;
             }
         }
@@ -269,7 +269,7 @@ namespace SKL
                                                 , sizeof( TSocket ) ) };
             if( SOCKET_ERROR == UpdateResult  ) SKL_UNLIKELY
             {
-                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to accept WSAError:%d!", WSAGetLastError() );
+                SKLL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to accept WSAError:%d!", WSAGetLastError() );
                 closesocket( AcceptSocket );
                 StopAcceptingAsync();
                 return;        
@@ -277,7 +277,7 @@ namespace SKL
 
             if ( RSuccess != AsyncIOAPI->AssociateToTheAPI( AcceptSocket ) ) SKL_UNLIKELY
             {
-                SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to associate to the AsyncIO API WSAError:%d!", WSAGetLastError() );
+                SKLL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to associate to the AsyncIO API WSAError:%d!", WSAGetLastError() );
                 closesocket( AcceptSocket );
                 StopAcceptingAsync();
                 return;
@@ -292,7 +292,7 @@ namespace SKL
                 const auto AcceptResult { BeginAcceptAsync( &Self ) };
                 if ( false == AcceptResult )
                 {
-                    SKL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to start to accept again WSAError:%d!", WSAGetLastError() );
+                    SKLL_VER_FMT( "TCPAccepter [AsyncIOCompletionHandler]:: Failed to start to accept again WSAError:%d!", WSAGetLastError() );
                     return;
                 }
             }
@@ -319,7 +319,7 @@ namespace SKL
             const auto WSALastError{ WSAGetLastError() };
             if( WSA_IO_PENDING != WSALastError ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "TCPAccepter::BeginAcceptAsync() Failed to AcceptEx WSAError:%d!", WSALastError );
+                SKLL_ERR_FMT( "TCPAccepter::BeginAcceptAsync() Failed to AcceptEx WSAError:%d!", WSALastError );
                 closesocket( AcceptSocket );
                 TSharedPtr<AsyncAcceptTask>::Static_Reset( AcceptTask );
                 return false;
@@ -333,7 +333,7 @@ namespace SKL
     {
         if( false == bIsRunning.exchange( false ) )
         {
-            SKL_VER( "TCPAccepter::StopAcceptingAsync() Already stopped!" );
+            SKLL_VER( "TCPAccepter::StopAcceptingAsync() Already stopped!" );
             return;
         }
 
@@ -366,7 +366,7 @@ namespace SKL
                               ,  sizeof( Address ) ) };
         if( SOCKET_ERROR == Result )
         {
-            SKL_ERR_FMT( "TCPAccepter::Bind() Failed to BIND on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
+            SKLL_ERR_FMT( "TCPAccepter::Bind() Failed to BIND on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
             return false;
         }
         
@@ -374,7 +374,7 @@ namespace SKL
                        , static_cast<int32_t>( Config.Backlog ) );
         if( SOCKET_ERROR == Result )
         {
-            SKL_ERR_FMT( "TCPAccepter::Bind() Failed to LISTEN on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
+            SKLL_ERR_FMT( "TCPAccepter::Bind() Failed to LISTEN on address[%08x] port[%hu] WSAErr:%d", Config.IpAddress, Config.Port, WSAGetLastError() );
             return false;
         }
 
@@ -390,7 +390,7 @@ namespace SKL
     {
         if ( const int32_t WSAStartupResult = ::WSAStartup( MAKEWORD( 2, 2 ), &GWSAData ); WSAStartupResult )
         {
-            SKL_ERR_FMT( "AsyncIO::Initialize() Failed to WSAStartup() returned [%d] WSAERROR: %d", WSAStartupResult, ::WSAGetLastError() );
+            SKLL_ERR_FMT( "AsyncIO::Initialize() Failed to WSAStartup() returned [%d] WSAERROR: %d", WSAStartupResult, ::WSAGetLastError() );
             return RFail;
         }
 
@@ -401,7 +401,7 @@ namespace SKL
     {
         if ( const int32_t WSACleanupResult = ::WSACleanup( ); WSACleanupResult )
         {
-            SKL_ERR_FMT( "Win32AsyncIO::SkylakeCore_Shutdown() Failed to WSAStartup() returned [%d] WSAERROR: %d", WSACleanupResult, ::WSAGetLastError() );
+            SKLL_ERR_FMT( "Win32AsyncIO::SkylakeCore_Shutdown() Failed to WSAStartup() returned [%d] WSAERROR: %d", WSACleanupResult, ::WSAGetLastError() );
             return RFail;
         }
 
@@ -417,7 +417,7 @@ namespace SKL
         if( nullptr == Result ) SKL_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError();
-            SKL_ERR_FMT( "Win32AsyncIO::Start() Failed to create IOCP Handle WSAERROR[%d]", LastWSAError );
+            SKLL_ERR_FMT( "Win32AsyncIO::Start() Failed to create IOCP Handle WSAERROR[%d]", LastWSAError );
             return RFail;
         }
     
@@ -559,7 +559,7 @@ namespace SKL
         if( FALSE == Result ) SKL_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError( );
-            SKL_ERR_FMT( "AsyncIO::QueueAsyncWork() failed with WSAERROR[%d]", LastWSAError );
+            SKLL_ERR_FMT( "AsyncIO::QueueAsyncWork() failed with WSAERROR[%d]", LastWSAError );
             return RFail;
         }
 
@@ -586,7 +586,7 @@ namespace SKL
             const auto LastWSAError = WSAGetLastError( );
             if( LastWSAError != WSA_IO_PENDING ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "AsyncIO::ReceiveAsync() failed with WSAERROR[%d]", LastWSAError );
+                SKLL_ERR_FMT( "AsyncIO::ReceiveAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
         }
@@ -613,7 +613,7 @@ namespace SKL
             const auto LastWSAError = WSAGetLastError( );
             if( LastWSAError != WSA_IO_PENDING ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
+                SKLL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
         }
@@ -640,7 +640,7 @@ namespace SKL
         if( nullptr == Result ) SKL_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError();
-            SKL_ERR_FMT( "Win32AsyncIO::AssociateToTheAPI() Failed to associate socket to the IOCP Handle WSAERROR[%d]", LastWSAError );
+            SKLL_ERR_FMT( "Win32AsyncIO::AssociateToTheAPI() Failed to associate socket to the IOCP Handle WSAERROR[%d]", LastWSAError );
             return RFail;
         }
 

@@ -79,7 +79,7 @@ namespace SKL
             auto File{ std::ifstream( InFileName, std::ifstream::binary ) };
             if( false == File.is_open( ) )
             {
-                SKL_WRN_FMT( "BufferStream::OpenFile(InFileName) Failed to open file %s", InFileName );
+                SKLL_WRN_FMT( "BufferStream::OpenFile(InFileName) Failed to open file %s", InFileName );
                 return {};
             } 
 

@@ -304,31 +304,42 @@ namespace ServicesTests
         protected:
             SKL::RStatus Initialize() noexcept override
             {
+                SKLL_TRACE();
+
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
                 return SKL::RSuccess;
             }
 
             void OnServerStarted() noexcept override
             {
+                SKLL_TRACE();
+
                 SKL_ASSERT_ALLWAYS( 2 == ++SeqCounter );
 
                 SKL::DeferTask([ this ]( SKL::ITask* ) noexcept -> void 
                 {
+                    SKLL_TRACE_MSG( "STOP!" );
                     GetServerInstance().SignalToStop();
                 });
             }
     
             void OnServerStopped() noexcept override
             {
+                SKLL_TRACE();
+
                 SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
             SKL::RStatus OnStopService() noexcept override
             {
+                SKLL_TRACE();
+
                 SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
                 
                 SKL::DeferTask( [ this ]( SKL::ITask* ) noexcept -> void 
                 {
+                    SKLL_TRACE();
+
                     // finally signal that the service was stopped
                     OnServiceStopped( SKL::RSuccess  );
                 } );
@@ -367,8 +378,8 @@ namespace ServicesTests
         class MySimpleService: public SKL::SimpleService
         {
         public:
-            using MyEntityId = EntityId<uint32_t>;
-            static constexpr TEntityType MyEntityType = 1;
+            using MyEntityId = SKL::EntityId<uint32_t>;
+            static constexpr SKL::TEntityType MyEntityType = 1;
 
             struct RootComponentData
             {
@@ -379,7 +390,7 @@ namespace ServicesTests
                 int32_t b { 55 };
             };
 
-            using MyEntityStore = EntityStore<MyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
             using TEntityPtr = MyEntityStore::TEntitySharedPtr;
 
 
@@ -388,16 +399,16 @@ namespace ServicesTests
         protected:
             SKL::RStatus Initialize() noexcept override
             {
-                if( RSuccess != Store.Initialize() )
+                if( SKL::RSuccess != Store.Initialize() )
                 {
-                    return RFail;
+                    return SKL::RFail;
                 }
 
                 Store.Activate();
 
                 Store.SetOnAllFreed( [this]() noexcept -> void 
                 {
-                    SKL_VER( "All entities freed!" );
+                    SKLL_VER( "All entities freed!" );
                     OnServiceStopped( SKL::RSuccess  );
                 } );
 
@@ -436,6 +447,106 @@ namespace ServicesTests
         };
 
         SimpleService_AsyncShutdown_EntityStore_TestsFixture()
+            : ::testing::Test(),
+              TestApplication( L"AOD_TESTS_APP" ) {}      
+  
+        bool OnAddServices() noexcept override
+        {
+            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            return true;
+        }
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+    };
+    
+    class SimpleService_AsyncShutdown_EntityStore_AOD_TestsFixture : public ::testing::Test, public TestApplication
+    {
+    public:
+        class MySimpleService: public SKL::SimpleService
+        {
+        public:
+            using MyEntityId = SKL::EntityId<uint32_t>;
+            static constexpr SKL::TEntityType MyEntityType = 1;
+
+            struct RootComponentData
+            {
+                int32_t a { 5 };
+            };
+            struct OtherComponent
+            {
+                int32_t b { 55 };
+            };
+
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+            using TEntityPtr = MyEntityStore::TEntitySharedPtr;
+
+            MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }
+
+        protected:
+            SKL::RStatus Initialize() noexcept override
+            {
+                if( SKL::RSuccess != Store.Initialize() )
+                {
+                    return SKL::RFail;
+                }
+
+                Store.Activate();
+
+                Store.SetOnAllFreed( [this]() noexcept -> void 
+                {
+                    SKLL_VER( "All entities freed!" );
+                    OnServiceStopped( SKL::RSuccess  );
+                } );
+
+                AllocatedPtr = Store.AllocateEntity( 151 );
+                SKL_ASSERT( nullptr != AllocatedPtr.get() );
+
+                return SKL::RSuccess;
+            }
+
+            void OnServerStarted() noexcept override
+            {
+                AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& SelfObj ) noexcept -> void
+                {
+                    SKLL_TRACE_MSG( "DO ASYNC" );
+
+                    SKL::DeferTask( [ this ]( SKL::ITask* ) noexcept -> void 
+                    {
+                        SKLL_TRACE_MSG( "STOP" );
+                        GetServerInstance().SignalToStop( true );
+                    } );
+                } );
+            }
+    
+            void OnServerStopped() noexcept override
+            {
+            }
+    
+            SKL::RStatus OnStopService() noexcept override
+            {
+                Store.Deactivate();
+
+                SKL::DeferTask([ this ]( SKL::ITask* ) noexcept -> void 
+                {
+                    AllocatedPtr.reset();
+                });
+
+                return SKL::RPending;
+            }
+
+            TEntityPtr    AllocatedPtr{ nullptr };
+            MyEntityStore Store       {};
+        };
+
+        SimpleService_AsyncShutdown_EntityStore_AOD_TestsFixture()
             : ::testing::Test(),
               TestApplication( L"AOD_TESTS_APP" ) {}      
   
@@ -640,6 +751,37 @@ namespace ServicesTests
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 2 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 2 == TotalDeallocationsAfter );
+    }
+
+    TEST_F( SimpleService_AsyncShutdown_EntityStore_AOD_TestsFixture, SimpleService_EntityStore_AOD_AsyncShutdown )
+    {
+        const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 30, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 2,
+            .bIsActive                       = true,
+            .bHandlesTasks                   = false,
+            .bSupportsAOD                    = true,
+            .bHandlesTimerTasks              = true,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = true,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"SimpleService_EntityStore_AOD_AsyncShutdown_ACTIVE"
+        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+
+        ASSERT_TRUE( true == Start( true ) );
+        JoinAllGroups();
+
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore + 3 == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore + 3 == TotalDeallocationsAfter );
     }
 }
 

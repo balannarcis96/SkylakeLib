@@ -44,7 +44,7 @@ namespace SKL
         static_assert( std::is_unsigned_v<IndexType> );
         static_assert( TMaxEntities <= static_cast<size_t>( std::numeric_limits<IndexType>::max() ) );
 
-        struct RootComponent : TRootComponentData
+        struct RootComponentInternalData
         {
             //! get the id of this entity
             SKL_FORCEINLINE NonAtomicEntityId GetId() const noexcept { return Id; }
@@ -78,8 +78,20 @@ namespace SKL
             }
 
         private:
-            TEntityId Id;                 //!< entity id
-            MyType*   MyStore{ nullptr }; //!< ptr to owning store
+            TEntityId Id;      //!< entity id
+            MyType*   MyStore; //!< ptr to owning store
+
+            friend MyType;
+            friend SharedEntityDeallocator<MyType>;
+        };
+
+        struct RootComponent : AOD::CustomObject, RootComponentInternalData, TRootComponentData
+        {
+            RootComponent() noexcept
+                : AOD::CustomObject( &CustomObjectDeleter )
+                , RootComponentInternalData{}
+                , TRootComponentData{} {}
+            ~RootComponent() noexcept = default;
 
             friend MyType;
             friend SharedEntityDeallocator<MyType>;
@@ -171,7 +183,7 @@ namespace SKL
                 }
                 else
                 {
-                    SKL_VER( "EntityStore::AllocateEntity() Reached max entities!" );
+                    SKLL_VER( "EntityStore::AllocateEntity() Reached max entities!" );
                 }
             }
 
@@ -262,6 +274,16 @@ namespace SKL
             return static_cast<RootComponent&>( RComponent );
         }
         
+    private:
+        static void CustomObjectDeleter( AOD::CustomObject* InCustomObject ) noexcept
+        {
+            auto* RC   { reinterpret_cast<RootComponent*>( InCustomObject ) };
+            auto& Store{ RC->GetEntityStore() };
+            SKL_ASSERT( true == Store.IsValid() );
+
+            Store.DeallocateEntity( RC );
+        }
+
     private:
         MyStore        Store;      //!< entities store   
         MyIdStore      IdStore;    //!< ids store

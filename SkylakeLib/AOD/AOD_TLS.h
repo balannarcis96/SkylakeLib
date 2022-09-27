@@ -18,6 +18,7 @@ namespace SKL
                 uint8_t bIsInitialized : 1;
                 uint8_t bIsAnyStaticDispatchInProgress : 1;
                 uint8_t bIsAnySharedDispatchInProgress : 1;
+                uint8_t bIsAnyCustomDispatchInProgress : 1;
             };
             uint16_t Flags = { 0 };
         };
@@ -38,8 +39,10 @@ namespace SKL
         SKL_FORCEINLINE std::span<WorkerGroup*> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
+        TLSManagedPriorityQueue<IAODCustomObjectTask*> DelayedCustomObjectTasks      {};          //!< Priority queue of AOD Custom Object delayed tasks
         TLSManagedPriorityQueue<IAODSharedObjectTask*> DelayedSharedObjectTasks      {};          //!< Priority queue of AOD Shared Object delayed tasks
         TLSManagedPriorityQueue<IAODStaticObjectTask*> DelayedStaticObjectTasks      {};          //!< Priority queue of AOD Static Object delayed tasks
+        TLSManagedQueue<AOD::CustomObject*>            PendingAOD_CustomObjects      {};          //!< Queue of pending AOD Custom Objects to be dispatched by the consumer
         TLSManagedQueue<AOD::SharedObject*>            PendingAOD_SharedObjects      {};          //!< Queue of pending AOD Shared Objects to be dispatched by the consumer
         TLSManagedQueue<AOD::StaticObject*>            PendingAOD_StaticObjects      {};          //!< Queue of pending AOD Static Objects to be dispatched by the consumer
         uint16_t                                       bScheduleAODDelayedTasks      { FALSE };   //!< Should attempt to scheduler tasks to other workers 

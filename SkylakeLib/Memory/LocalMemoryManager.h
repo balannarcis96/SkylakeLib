@@ -56,36 +56,36 @@ namespace SKL
         {
             if( RSuccess != Pool1.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool1", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool1", Name );
                 return RFail;
             }
             if( RSuccess != Pool2.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool2", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool2", Name );
                 return RFail;
             }
             if( RSuccess != Pool3.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool3", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool3", Name );
                 return RFail;
             }
             if( RSuccess != Pool4.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool4", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool4", Name );
                 return RFail;
             }
             if( RSuccess != Pool5.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool5", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool5", Name );
                 return RFail;
             }
             if( RSuccess != Pool6.Pool.Preallocate() ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool6", Name );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Preallocate() -> Failed to Preallocate Pool6", Name );
                 return RFail;
             }
 
-            SKL_INF_FMT( "LocalMemoryManager[%ws] ALL POOLS PREALLOCATED!", Name );
+            SKLL_INF_FMT( "LocalMemoryManager[%ws] ALL POOLS PREALLOCATED!", Name );
 
             return RSuccess;
         }
@@ -196,7 +196,7 @@ namespace SKL
 
             if( SKL_GUARD_ALLOC_SIZE_ON && ( AllocateSize > StaticConfig::MaxAllocationSize ) ) SKL_UNLIKELY
             {
-                SKL_ERR_FMT( "LocalMemoryManager[%ws]::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", Name, StaticConfig::MaxAllocationSize, AllocateSize );
+                SKLL_ERR_FMT( "LocalMemoryManager[%ws]::Allocate( AllocateSize ) Cannot alloc more than %llu. Attempted %llu!", Name, StaticConfig::MaxAllocationSize, AllocateSize );
                 return Result;
             }
          
@@ -427,44 +427,44 @@ namespace SKL
         void LogStatistics( ) noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
-            SKL_INF_FMT( "LocalMemoryManager[%ws] ###############################################################", Name );
-            SKL_INF_FMT( "Pool1:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "LocalMemoryManager[%ws] ###############################################################", Name );
+            SKLL_INF_FMT( "Pool1:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool1.Pool.GetTotalAllocations( ),
                     Pool1.Pool.GetTotalDeallocations( ),
                     Pool1.Pool.GetTotalOSAllocations( ),
                     Pool1.Pool.GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool2:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool2:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool2.Pool.GetTotalAllocations( ),
                     Pool2.Pool.GetTotalDeallocations( ),
                     Pool2.Pool.GetTotalOSAllocations( ),
                     Pool2.Pool.GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool3:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool3:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool3.Pool.GetTotalAllocations( ),
                     Pool3.Pool.GetTotalDeallocations( ),
                     Pool3.Pool.GetTotalOSAllocations( ),
                     Pool3.Pool.GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool4:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",  
+            SKLL_INF_FMT( "Pool4:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",  
                     Pool4.Pool.GetTotalAllocations( ), 
                     Pool4.Pool.GetTotalDeallocations( ), 
                     Pool4.Pool.GetTotalOSAllocations( ), 
                     Pool4.Pool.GetTotalOSDeallocations( ) );                                                                
-            SKL_INF_FMT( "Pool5:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool5:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool5.Pool.GetTotalAllocations( ),
                     Pool5.Pool.GetTotalDeallocations( ),
                     Pool5.Pool.GetTotalOSAllocations( ),
                     Pool5.Pool.GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "Pool6:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
+            SKLL_INF_FMT( "Pool6:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld\n\t\tOSAllocations:%lld\n\t\tOSDeallocations:%lld",
                     Pool6.Pool.GetTotalAllocations( ),
                     Pool6.Pool.GetTotalDeallocations( ),
                     Pool6.Pool.GetTotalOSAllocations( ),
                     Pool6.Pool.GetTotalOSDeallocations( ) );
-            SKL_INF_FMT( "CustomSize(OS Blocks):\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
+            SKLL_INF_FMT( "CustomSize(OS Blocks):\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
                     CustomSizeAllocations.load( ),
                     CustomSizeDeallocations.load( ) );
-            SKL_INF_FMT( "GAllocate:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
+            SKLL_INF_FMT( "GAllocate:\n\t\tAllocations:%lld\n\t\tDeallocations:%lld",
                     TotalAllocations.load( ),
                     TotalDeallocations.load( ) );
-            SKL_INF_FMT( "Total Allocation:%lld\n\tTotal Deallocations:%lld\n\tTotal OSAllocations:%lld\n\tTotal OSDeallocations:%lld",
+            SKLL_INF_FMT( "Total Allocation:%lld\n\tTotal Deallocations:%lld\n\tTotal OSAllocations:%lld\n\tTotal OSDeallocations:%lld",
                     Pool1.Pool.GetTotalAllocations( ) 
                         + Pool1.Pool.GetTotalAllocations( ) 
                         + Pool2.Pool.GetTotalAllocations( ) 
@@ -494,9 +494,9 @@ namespace SKL
                         + Pool4.Pool.GetTotalOSDeallocations( ) 
                         + Pool5.Pool.GetTotalOSDeallocations( )
                     );
-            SKL_INF_FMT( "LocalMemoryManager[%ws] ###############################################################", Name );
+            SKLL_INF_FMT( "LocalMemoryManager[%ws] ###############################################################", Name );
 #else
-            SKL_INF_FMT( "LocalMemoryManager[%ws]::LogStatistics()\n\t\tTried to log memory statistics, but the LocalMemoryManager has the statistics turned off!", Name );
+            SKLL_INF_FMT( "LocalMemoryManager[%ws]::LogStatistics()\n\t\tTried to log memory statistics, but the LocalMemoryManager has the statistics turned off!", Name );
 #endif
         }
         
