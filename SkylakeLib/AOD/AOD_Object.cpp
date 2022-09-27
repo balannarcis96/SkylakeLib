@@ -84,7 +84,6 @@ namespace SKL::AOD
 
     bool StaticObject::Dispatch( IAODStaticObjectTask* InTask ) noexcept
     {
-        SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
 
         if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
@@ -157,8 +156,6 @@ namespace SKL::AOD
 {
     void SharedObject::Flush() noexcept
     {
-        SKLL_TRACE();
-
         while( true )
         {
             auto* Task{ reinterpret_cast<IAODSharedObjectTask*>( TaskQueue.Pop() ) };
@@ -184,8 +181,6 @@ namespace SKL::AOD
 
     bool SharedObject::Dispatch( IAODSharedObjectTask* InTask ) noexcept
     {
-        SKLL_TRACE();
-
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
         
@@ -238,8 +233,6 @@ namespace SKL::AOD
 
     bool SharedObject::DelayTask( IAODSharedObjectTask* InTask ) noexcept
     {
-        SKLL_TRACE();
-
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
 
@@ -258,8 +251,6 @@ namespace SKL::AOD
 {
     void CustomObject::Flush() noexcept
     {
-        SKLL_TRACE();
-
         while( true )
         {
             auto* Task{ reinterpret_cast<IAODCustomObjectTask*>( TaskQueue.Pop() ) };
@@ -285,8 +276,6 @@ namespace SKL::AOD
 
     bool CustomObject::Dispatch( IAODCustomObjectTask* InTask ) noexcept
     {
-        SKLL_TRACE();
-
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
         
@@ -339,8 +328,6 @@ namespace SKL::AOD
 
     bool CustomObject::DelayTask( IAODCustomObjectTask* InTask ) noexcept
     {
-        SKLL_TRACE();
-
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
 
@@ -356,8 +343,6 @@ namespace SKL::AOD
 
     void CustomObjectDeallocator::Deallocate( CustomObject* InPtr ) noexcept
     {
-        SKLL_TRACE();
-
         auto* CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( TSharedPtr<CustomObject>::Static_GetBlockPtr( InPtr ) ) };
         if( true == CB->ReleaseReference() )
         {
@@ -370,8 +355,6 @@ namespace SKL
 {
     void IAODSharedObjectTask::SetParent( AOD::SharedObject* InObject )noexcept
     {
-        SKLL_TRACE();
-
         // Increment ref count for self (the reinterpret_cast should not affect the end result, the pointer is used as base to jump to the control block only)
         // The type here is used only to tell the shared ptr that we have an object not an array
         TSharedPtr<AOD::SharedObject>::Static_IncrementReference( reinterpret_cast<AOD::SharedObject*>( InObject->TargetSharedPointer ) );
@@ -380,8 +363,6 @@ namespace SKL
 
     void IAODCustomObjectTask::SetParent( AOD::CustomObject* InObject )noexcept
     {
-        SKLL_TRACE();
-
         // Increment ref count for self (the reinterpret_cast should not affect the end result, the pointer is used as base to jump to the control block only)
         // The type here is used only to tell the shared ptr that we have an object not an array
         TSharedPtr<AOD::CustomObject>::Static_IncrementReference( InObject );

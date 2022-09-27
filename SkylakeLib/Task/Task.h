@@ -148,8 +148,6 @@ namespace SKL
     template<typename TFunctor>
     bool DeferTask( TFunctor&& InFunctor ) noexcept
     {
-        SKLL_TRACE();
-
         // allocate
         auto* NewTask { MakeSharedRaw<Task<sizeof( TFunctor )>>() };
         

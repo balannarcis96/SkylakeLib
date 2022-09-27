@@ -27,15 +27,7 @@ namespace SKL
     {
     protected:
         template<typename Type>
-        SKL_FORCEINLINE Type *GetArray( ) noexcept
-        {
-            using TargetType = StaticMultiArrayBase<Count, Type>;
-            auto *MyBase{ static_cast<TargetType*>( this ) };
-            return MyBase->Array;
-        }
-
-        template<typename Type>
-        SKL_FORCEINLINE const Type *GetArray( ) const noexcept
+        SKL_FORCEINLINE Type *GetArray( ) const noexcept
         {
             using TargetType = StaticMultiArrayBase<Count, Type>;
             auto *MyBase{ static_cast<const TargetType*>( this ) };
@@ -103,17 +95,8 @@ namespace SKL
         }
 
     protected:
-
         template<typename Type>
-        SKL_FORCEINLINE Type *GetArray( ) noexcept
-        {
-            using TargetType = MultiArrayBase<Count, Type>;
-            auto *MyBase{ static_cast<TargetType*>( this ) };
-            return MyBase->Array;
-        }
-
-        template<typename Type>
-        SKL_FORCEINLINE const Type *GetArray( ) const noexcept
+        SKL_FORCEINLINE Type *GetArray( ) const noexcept
         {
             using TargetType = MultiArrayBase<Count, Type>;
             auto *MyBase{ static_cast<const TargetType*>( this ) };

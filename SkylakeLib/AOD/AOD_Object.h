@@ -168,6 +168,7 @@ namespace SKL::AOD
     {
         using ObjectDeleter = ASD::FnPtr<void(SKL_CDECL*)( CustomObject* ) noexcept>;
 
+        //! \param Deleter void(SKL_CDECL*)( CustomObject* )
         CustomObject( ObjectDeleter Deleter ) noexcept : Deleter{ Deleter } {}
         ~CustomObject() noexcept = default;
         

@@ -213,6 +213,81 @@ namespace AODTests
             return true;
         }
     };
+    
+    class AODTestsFixture_CustomObject : public ::testing::Test, public TestApplication
+    {
+    public:
+        static constexpr uint64_t IterCount{ 10000 };
+
+        struct MyObject;
+
+        static void DeleteMyObject( SKL::AOD::CustomObject* InPtr ) noexcept;
+
+        struct MyObject : SKL::AOD::CustomObject
+        {
+            int Counter { IterCount };
+
+            MyObject() noexcept : SKL::AOD::CustomObject{ &DeleteMyObject } 
+            {
+                SKLL_TRACE();
+            }
+            ~MyObject() noexcept
+            {
+                SKLL_TRACE();
+                SKL_ASSERT_ALLWAYS( 0 == Counter );
+            }
+        };
+        
+        AODTestsFixture_CustomObject()
+            : ::testing::Test(),
+              TestApplication( L"AOD_TESTS_APP" ) {}      
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+
+        bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
+        {
+            if ( false == TestApplication::OnAllWorkersStarted( InGroup ) )
+            {
+                return false;
+            }
+
+            if( false == InGroup.GetTag().bIsActive )
+            {
+                auto obj = SKL::MakeShared<MyObject>();
+
+                for( uint64_t i = 0; i < IterCount; ++i )
+                {
+                    SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::CustomObject& InObj ) noexcept -> void 
+                    {
+                        auto& Self = reinterpret_cast<MyObject&>( InObj );
+                        if( 0 == --Self.Counter )           
+                        {
+                            InGroup.GetServerInstance()->SignalToStop( true );
+                        }
+                    } ) );
+                }
+
+                obj.reset();
+            }
+
+            return true;
+        }
+    };
+
+    void AODTestsFixture_CustomObject::DeleteMyObject( SKL::AOD::CustomObject* InPtr ) noexcept
+    {
+        SKLL_TRACE();
+        auto Data{ SKL::TSharedPtr<SKL::AOD::CustomObject>::Static_GetBlockPtrAndMetaBlockSize( InPtr ) };
+        SKL::GlobalMemoryManager::Deallocate( Data.first, Data.second );
+    }
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread )
     {
@@ -657,6 +732,52 @@ namespace AODTests
     }
 
     TEST_F( AODTestsFixture4, AODObjectReactiveAndActiveWorkers_AODDeferredFromReactive )
+    {
+        const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 24, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 2,
+            .bIsActive                       = false,
+            .bHandlesTasks                   = true,
+            .bSupportsAOD                    = true,
+            .bHandlesTimerTasks              = false,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = true,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 30, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 2,
+            .WorkersCount                    = 2,
+            .bIsActive                       = true,
+            .bHandlesTasks                   = false,
+            .bSupportsAOD                    = true,
+            .bHandlesTimerTasks              = true,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = true,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == Start( true ) );
+
+        JoinAllGroups();
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore + IterCount + 1 == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore + IterCount + 1 == TotalDeallocationsAfter );
+    }
+    
+    TEST_F( AODTestsFixture_CustomObject, AODObjectReactiveAndActiveWorkers_AODDeferredFromReactive_CustomObject )
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
