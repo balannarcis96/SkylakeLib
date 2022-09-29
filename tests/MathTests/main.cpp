@@ -4,10 +4,20 @@
 
 namespace MathTests
 {
-    TEST( MathTests, GRand_API )
+    TEST( MathTests, SVector )
     {
-        
+        {
+            SKL::SVector Vec;
+            ASSERT_TRUE( CRealZero == Vec.X );
+            ASSERT_TRUE( CRealZero == Vec.X );
+            ASSERT_TRUE( CRealZero == Vec.X );
+
+            ASSERT_TRUE( true == Vec.IsZero() );
+            ASSERT_TRUE( true == Vec.IsNearlyZero() );
+        }
     }
+
+    //@TODO more math abstractions tests
 }
 
 int main( int argc, char** argv )

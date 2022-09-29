@@ -55,6 +55,19 @@
 #define THRESH_ZERO_NORM_SQUARED ( SKL_REAL_VALUE( 0.0001 ) )   /* Size of a unit normal that is considered "zero", squared */
 #define THRESH_VECTORS_ARE_PARALLEL ( SKL_REAL_VALUE( 0.02 ) )  /* Vectors are parallel if dot product varies less than this */
 
+constexpr skReal CRealZero     = SK_REAL_ZERO;
+constexpr skReal CRealUnit     = SK_REAL_ONE;
+constexpr skReal CPI           = PI;
+constexpr skReal CSmallNumber  = SMALL_NUMBER;
+constexpr skReal CBigNumber    = BIG_NUMBER;
+constexpr skReal CEulersNumber = EULERS_NUMBER;
+constexpr skReal CRadToUnit    = RadToUnit;
+constexpr skReal CUnitToRad    = UnitToRad;
+constexpr skReal CDegToUnit    = DegToUnit;
+constexpr skReal CUnitToDeg    = UnitToDeg;
+constexpr skReal CRadToDeg     = RadToDeg;
+constexpr skReal CDegToRad     = DegToRad;
+
 #if defined(SKL_USE_SSE)
 	#include <emmintrin.h>
 #endif

@@ -238,7 +238,7 @@ namespace WorkersTests
         { 
             SKLL_TRACE();
 
-            EXPECT_TRUE( 1 == ++SequenceCount );
+            EXPECT_TRUE( 1 == ( SequenceCount.increment() + 1 ) );
             
             return true; 
         }
@@ -246,7 +246,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 2 == ++SequenceCount );
+            EXPECT_TRUE( 2 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnBeforeStartServer() )
             {
@@ -259,7 +259,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 3 <= ++SequenceCount );
+            EXPECT_TRUE( 3 <= ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnWorkerStarted( InWorker, Group ) )
             {
@@ -272,7 +272,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 19 == ++SequenceCount );
+            EXPECT_TRUE( 19 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAllWorkersStarted( Group ) )
             {
@@ -285,7 +285,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 20 == ++SequenceCount );
+            EXPECT_TRUE( 20 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnWorkerGroupStarted( Group ) )
             {
@@ -298,7 +298,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 21 == ++SequenceCount );
+            EXPECT_TRUE( 21 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAllWorkerGroupsStarted() )
             {
@@ -311,7 +311,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 22 == ++SequenceCount );
+            EXPECT_TRUE( 22 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnServerStarted() )
             {
@@ -328,7 +328,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 23 == ++SequenceCount );
+            EXPECT_TRUE( 23 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnBeforeStopServer() )
             {
@@ -341,7 +341,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
 
-            EXPECT_TRUE( 24 == ++SequenceCount );
+            EXPECT_TRUE( 24 == ( SequenceCount.increment() + 1 ) );
             
             TestApplication::OnAllServiceStopped();
         }
@@ -349,7 +349,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 25 <= ++SequenceCount );
+            EXPECT_TRUE( 25 <= ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnWorkerStopped( InWorker, Group ) )
             {
@@ -362,7 +362,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 41 == ++SequenceCount );
+            EXPECT_TRUE( 41 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAllWorkersStopped( Group ) )
             {
@@ -375,7 +375,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 42 == ++SequenceCount );
+            EXPECT_TRUE( 42 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnWorkerGroupStopped( Group ) )
             {
@@ -388,7 +388,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 43 == ++SequenceCount );
+            EXPECT_TRUE( 43 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAllWorkerGroupsStopped() )
             {
@@ -401,7 +401,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 44 == ++SequenceCount );
+            EXPECT_TRUE( 44 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnServerStopped() )
             {
@@ -414,7 +414,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 45 == ++SequenceCount );
+            EXPECT_TRUE( 45 == ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAfterServerStopped() )
             {
@@ -439,7 +439,7 @@ namespace WorkersTests
             ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
-        uint32_t SequenceCount{ 0 };
+        std::relaxed_value<uint32_t> SequenceCount{ 0 };
         std::latch StartLath{ 2 };
     };
     
