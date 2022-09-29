@@ -31,3 +31,7 @@ endif()
 if(SKL_BUILD_PROTOCOL)
     add_subdirectory(ProtocolTests)
 endif()
+
+if(SKL_BUILD_DATACENTER)
+    add_subdirectory(DatacenterTests)
+endif()

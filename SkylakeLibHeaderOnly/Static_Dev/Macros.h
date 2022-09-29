@@ -64,8 +64,8 @@
     #define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strncmp( InStr1, InStr2, InMaxSizeInBytes )
     #define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcsncmp( InStr1, InStr2, InMaxSizeInWords )
 
-    #define SKL_MEMCPY( InSrc, InSrcSize, InDest, InDestSize ) ::memcpy_s( InSrc, InSrcSize, InDest, InDestSize )
-    #define SKL_MEMMOVE( InSrc, InSrcSize, InDest, InDestSize ) ::memmove_s( InSrc, InSrcSize, InDest, InDestSize )
+    #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy_s( InDest, InDestSize, InSrc, InSrcSize )
+    #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove_s( InDest, InDestSize,InSrc, InSrcSize )
 #else
     #define SKL_STRCPY( InDest, InSrc, InSizeInBytes ) ::strcpy( InDest, InSrc )
     #define SKL_WSTRCPY( InDest, InSrc, InSizeInWords ) ::wcscpy( InDest, InSrc )
@@ -76,8 +76,8 @@
     #define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strcmp( InStr1, InStr2 )
     #define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcscmp( InStr1, InStr2 )
     
-    #define SKL_MEMCPY( InSrc, InSrcSize, InDest, InDestSize ) ::memcpy( InSrc, InDest, InDestSize )
-    #define SKL_MEMMOVE( InSrc, InSrcSize, InDest, InDestSize ) ::memmove( InSrc, InDest, InDestSize )
+    #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy( InDest, InSrc, InDestSize )
+    #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove( InDest, InSrc, InDestSize )
 #endif
 
 namespace SKL

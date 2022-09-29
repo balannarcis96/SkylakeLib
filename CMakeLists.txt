@@ -16,6 +16,7 @@ option(SKL_CACHE_LINE_MEM_MANAGER   "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"   ON)
 option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"  ON)
 option(SKL_BUILD_DB                 "Build the DB library"                OFF)
 option(SKL_BUILD_PROTOCOL           "Build the Protocol library"           ON)
+option(SKL_BUILD_DATACENTER         "Build the Datacenter library"         ON)
 option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"             ON)
 option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"          OFF)
 option(SKL_MATH                     "Enable SkylakeLib Math abstractions"  ON)
@@ -73,6 +74,10 @@ add_subdirectory("SkylakeLib/MiMalloc")
 
 if(SKL_BUILD_TYPE STREQUAL "Full")
     add_subdirectory("SkylakeLib")
+
+    if(SKL_BUILD_DATACENTER)
+        add_subdirectory("SkylakeDatacenterLib")
+    endif()
 
     if(SKL_BUILD_PROTOCOL)
         add_subdirectory("SkylakeLibProtocol")

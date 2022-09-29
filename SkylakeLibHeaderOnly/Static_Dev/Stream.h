@@ -445,6 +445,9 @@ namespace SKL
         BinaryStream( const BinaryStream& ) noexcept = default;
         BinaryStream& operator=( const BinaryStream& ) noexcept = default;
 
+        SKL_FORCEINLINE StreamBase& GetStreamBase() noexcept { return Base; }
+        SKL_FORCEINLINE const StreamBase& GetStreamBase() const noexcept { return Base; }
+
     protected:
         StreamBase Base;
     };
