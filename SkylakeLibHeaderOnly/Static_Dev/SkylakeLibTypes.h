@@ -1,5 +1,5 @@
 //!
-//! \file Types.h
+//! \file SkylakeLibTypes.h
 //! 
 //! \brief Base types for SkylakeLibHeaderOnly
 //! 
@@ -22,9 +22,9 @@ namespace SKL
     using BOOL   = int32_t;
     using UBOOL  = uint32_t;
 
-    constexpr TObjectId   TObjectIdNone    = 0;
-    constexpr TObjectId   TObjectIdMax     = std::numeric_limits< uint32_t >::max( );
-    constexpr TDatabaseId CDatabaseId_None = 0;
-
+    constexpr TObjectId   TObjectIdNone     = 0;
+    constexpr TObjectId   TObjectIdMax      = std::numeric_limits< uint32_t >::max( );
+    constexpr TDatabaseId CDatabaseId_None  = 0;
+    constexpr TDuration   CDurationInfinite = 8888888;
 }
 

@@ -106,10 +106,10 @@ namespace ECSTests
             uint16_t Value2;
         };
 
-        using PlayerId = SKL::EntityId<PlayerIdDescription, false, false>;
-        using AtomicPlayerId = SKL::EntityId<PlayerIdDescription, false, true>;
-        using ExtendedPlayerId = SKL::EntityId<PlayerIdDescription, true, false>;
-        using ExtendedAtomicPlayerId = SKL::EntityId<PlayerIdDescription, true, true>;
+        using PlayerId = SKL::TEntityId<PlayerIdDescription, false, false>;
+        using AtomicPlayerId = SKL::TEntityId<PlayerIdDescription, false, true>;
+        using ExtendedPlayerId = SKL::TEntityId<PlayerIdDescription, true, false>;
+        using ExtendedAtomicPlayerId = SKL::TEntityId<PlayerIdDescription, true, true>;
 
         {
             PlayerId               pId{ 0 };
@@ -185,7 +185,7 @@ namespace ECSTests
 
         constexpr SKL::TEntityType CMyEntityType = 1;
 
-        using MyEntityId = SKL::EntityId<uint32_t>;
+        using MyEntityId = SKL::TEntityId<uint32_t>;
         using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
 
@@ -308,7 +308,7 @@ namespace ECSTests
 
         constexpr SKL::TEntityType CMyEntityType = 2;
 
-        using MyEntityId = SKL::EntityId<uint32_t, true, true>;
+        using MyEntityId = SKL::TEntityId<uint32_t, true, true>;
         using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
 

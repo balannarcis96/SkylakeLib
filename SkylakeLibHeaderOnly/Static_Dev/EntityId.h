@@ -1,5 +1,5 @@
 //!
-//! \file EntityId.h
+//! \file TEntityId.h
 //! 
 //! \brief Entity Id abstraction
 //! 
@@ -15,7 +15,7 @@ namespace SKL
     constexpr TEntityType   CInvalidEntityType = 0; 
 
     template<typename TVariant, bool bExtendedIndex = false, bool bAtomic = false>
-    struct EntityId
+    struct TEntityId
     {
         using TIndexType = std::conditional_t<true == bExtendedIndex, uint32_t, uint16_t>;
         static constexpr uint32_t CBasicIdMask        = 0xFFFF0000U;
@@ -47,13 +47,13 @@ namespace SKL
             };
         };
 
-        constexpr EntityId() noexcept : Id{ 0 }  {}
-        constexpr EntityId( TEntityIdBase Id ) noexcept : Id{ Id }  {}
-        constexpr EntityId( TEntityType Type, TIndexType Index, Variant InVariant ) noexcept  
+        constexpr TEntityId() noexcept : Id{ 0 }  {}
+        constexpr TEntityId( TEntityIdBase Id ) noexcept : Id{ Id }  {}
+        constexpr TEntityId( TEntityType Type, TIndexType Index, Variant InVariant ) noexcept  
         {
             if constexpr( bAtomic )
             {
-                using TempId = EntityId<Variant, bExtendedIndex, false>;
+                using TempId = TEntityId<Variant, bExtendedIndex, false>;
                 TempId Temp{ Type };
                 auto& Desc{ Temp.GetDescription() };
                 Desc.Component = *reinterpret_cast<uint32_t*>( &InVariant );
@@ -92,11 +92,11 @@ namespace SKL
                 }
             }
         }
-        constexpr ~EntityId() noexcept = default;
+        constexpr ~TEntityId() noexcept = default;
 
-        constexpr EntityId( const EntityId& Other ) noexcept
+        constexpr TEntityId( const TEntityId& Other ) noexcept
             : Id{ Other.Id } {}
-        constexpr EntityId& operator=( const EntityId& Other ) noexcept
+        constexpr TEntityId& operator=( const TEntityId& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             if constexpr( true == bAtomic )
@@ -111,8 +111,8 @@ namespace SKL
             return *this;
         }
 
-        SKL_FORCEINLINE constexpr bool operator==( const EntityId& Other ) const noexcept { return Id == Other.Id; }
-        SKL_FORCEINLINE constexpr bool operator!=( const EntityId& Other ) const noexcept { return Id != Other.Id; }
+        SKL_FORCEINLINE constexpr bool operator==( const TEntityId& Other ) const noexcept { return Id == Other.Id; }
+        SKL_FORCEINLINE constexpr bool operator!=( const TEntityId& Other ) const noexcept { return Id != Other.Id; }
         SKL_FORCEINLINE constexpr void operator=( TEntityIdBase InId ) noexcept { return Id = InId; }
         SKL_FORCEINLINE constexpr operator TEntityIdBase() const noexcept
         { 
@@ -125,7 +125,7 @@ namespace SKL
                return Id; 
             }
         }
-        SKL_FORCEINLINE constexpr operator EntityId<Variant, bExtendedIndex, !bAtomic>() const noexcept 
+        SKL_FORCEINLINE constexpr operator TEntityId<Variant, bExtendedIndex, !bAtomic>() const noexcept 
         { 
             if constexpr( true == bAtomic )
             {
@@ -224,8 +224,8 @@ namespace SKL
 
         TBaseType Id;
 
-        friend EntityId<Variant, !bExtendedIndex,  bAtomic>;
-        friend EntityId<Variant,  bExtendedIndex, !bAtomic>;
-        friend EntityId<Variant, !bExtendedIndex, !bAtomic>;
+        friend TEntityId<Variant, !bExtendedIndex,  bAtomic>;
+        friend TEntityId<Variant,  bExtendedIndex, !bAtomic>;
+        friend TEntityId<Variant, !bExtendedIndex, !bAtomic>;
     };
 }

@@ -378,7 +378,7 @@ namespace ServicesTests
         class MySimpleService: public SKL::SimpleService
         {
         public:
-            using MyEntityId = SKL::EntityId<uint32_t>;
+            using MyEntityId = SKL::TEntityId<uint32_t>;
             static constexpr SKL::TEntityType MyEntityType = 1;
 
             struct RootComponentData
@@ -473,7 +473,7 @@ namespace ServicesTests
         class MySimpleService: public SKL::SimpleService
         {
         public:
-            using MyEntityId = SKL::EntityId<uint32_t>;
+            using MyEntityId = SKL::TEntityId<uint32_t>;
             static constexpr SKL::TEntityType MyEntityType = 1;
 
             struct RootComponentData

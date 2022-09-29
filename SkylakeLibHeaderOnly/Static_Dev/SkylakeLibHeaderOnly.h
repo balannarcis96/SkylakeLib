@@ -27,7 +27,7 @@
 #include "RStatus.h"
 
 //! Base Types
-#include "Types.h"
+#include "SkylakeLibTypes.h"
 
 #if !defined(SKL_BUILD_SHIPPING)
 #include "DebugTrap.h"

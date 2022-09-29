@@ -32,7 +32,7 @@ namespace SKL
         using OnAllFreedTask   = ASD::UniqueFunctorWrapper<32, void(SKL_CDECL*)()noexcept>;
 
         using EntityId                           = TEntityId;
-        using NonAtomicEntityId                  = SKL::EntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, false>;
+        using NonAtomicEntityId                  = SKL::TEntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, false>;
         using IndexType                          = typename EntityId::TIndexType;
         using RootComponentData                  = TRootComponentData;
         using Componenets                        = std::tuple<TComponents...>;
