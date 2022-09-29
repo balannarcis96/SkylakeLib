@@ -10,6 +10,7 @@ file( GLOB_RECURSE _Diagnostics_files            LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _ECS_files                    LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/ECS/*.cpp"                    "${SKYLAKE_SRC_ROOT}/ECS/*.h" )
 file( GLOB_RECURSE _Enums_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Enums/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Enums/*.h" )
 file( GLOB_RECURSE _Macros_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Macros/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Macros/*.h" )
+file( GLOB_RECURSE _Math_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Math/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Math/*.h" )
 file( GLOB_RECURSE _Memory_files                 LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Memory/*.cpp"                 "${SKYLAKE_SRC_ROOT}/Memory/*.h" )
 file( GLOB_RECURSE _Math_files                   LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Math/*.cpp"                   "${SKYLAKE_SRC_ROOT}/Math/*.h" )
 file( GLOB_RECURSE _Networking_files             LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Networking/*.cpp"             "${SKYLAKE_SRC_ROOT}/Networking/*.h" )
@@ -32,7 +33,8 @@ add_library (SkylakeLib STATIC
     ${_ECS_files}              
     ${_Enums_files}                 
     ${_Math_files}                   
-    ${_Macros_files}                 
+    ${_Macros_files}                  
+    ${_Math_files}                
     ${_Memory_files}                 
     ${_Networking_files}                   
     ${_Root_files}                     
@@ -53,6 +55,7 @@ source_group("AOD"                    FILES ${_AOD_files}                   )
 source_group("Diagnostics"            FILES ${_Diagnostics_files}           )
 source_group("ECS"                    FILES ${_ECS_files}                   )
 source_group("Enums"                  FILES ${_Enums_files}                 )
+source_group("Math"                   FILES ${_Macros_files}                )
 source_group("Macros"                 FILES ${_Macros_files}                )
 source_group("Memory"                 FILES ${_Memory_files}                )
 source_group("Math"                   FILES ${_Math_files}                  )

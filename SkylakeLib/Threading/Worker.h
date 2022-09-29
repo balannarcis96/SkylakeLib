@@ -30,10 +30,10 @@ namespace SKL
         }
 
         //! Is this worker running
-        bool GetIsRunning() const noexcept { return bIsRunning.load_relaxed(); }
+        bool GetIsRunning() const noexcept { return TRUE == bIsRunning.load_relaxed(); }
 
         //! Is this a master worker
-        bool IsMaster() const noexcept { return bIsMasterThread.load_relaxed(); }
+        bool IsMaster() const noexcept { return TRUE == bIsMasterThread.load_relaxed(); }
 
         //! Start the worker
         RStatus Start() noexcept;   
@@ -83,18 +83,22 @@ namespace SKL
         void RunImpl() noexcept;
         void Clear() noexcept;
                 
-        TaskQueue                           DelayedTasks                {};          //!< Single consummer multiple producers queue for delayed tasks 
-        AODTaskQueue                        AODSharedObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                        AODStaticObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                        AODCustomObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
-        std::synced_value<uint32_t>         bIsRunning                  { FALSE };   //!< Is this worker signaled to run
-        std::synced_value<uint32_t>         bIsMasterThread             { FALSE };   //!< Is this a master worker
-        std::relaxed_value<TEpochTimePoint> StartedAt                   { 0 };       //!< Time point when the worker started
-        RunTask                             OnRun                       {};          //!< Task to run as main of the thread
-        WorkerGroup*                        Group                       { nullptr }; //!< Owning group of this worker
-        std::jthread                        Thread                      {};          //!< Thread of this worker
+        TaskQueue                                             DelayedTasks                {};          //!< Single consummer multiple producers queue for delayed tasks 
+        AODTaskQueue                                          AODSharedObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
+        AODTaskQueue                                          AODStaticObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
+        AODTaskQueue                                          AODCustomObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
+        std::synced_value<uint32_t>                           bIsRunning                  { FALSE };   //!< Is this worker signaled to run
+        std::synced_value<uint32_t>                           bIsMasterThread             { FALSE };   //!< Is this a master worker
+        std::relaxed_value<TEpochTimePoint>                   StartedAt                   { 0 };       //!< Time point when the worker started
+        RunTask                                               OnRun                       {};          //!< Task to run as main of the thread
+        WorkerGroup*                                          Group                       { nullptr }; //!< Owning group of this worker
+        std::jthread                                          Thread                      {};          //!< Thread of this worker
+        std::relaxed_value<struct AODTLSContext*>             AODTLSContext               {};          //!< Cached AODTLSContext instance for this worker
+        std::relaxed_value<struct ServerInstanceTLSContext*>  ServerInstanceTLSContext    {};          //!< Cached ServerInstanceTLSContext instance for this worker
 
         friend WorkerGroup;
         friend class ServerInstance;    
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive>
+        friend struct WorkerGroupRunVariant;
     };  
 }

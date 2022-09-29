@@ -47,3 +47,10 @@
 
 //! EntityId
 #include "EntityId.h"
+
+#if defined(SKL_NO_NAMESPACE)
+#ifndef SKL_NO_NAMESPACE_STATEMENT
+#define SKL_NO_NAMESPACE_STATEMENT
+    using namespace SKL;
+#endif SKL_NO_NAMESPACE_STATEMENT
+#endif

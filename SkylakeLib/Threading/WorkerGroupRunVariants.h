@@ -17,6 +17,8 @@ namespace SKL
     {
         SKL_FORCEINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
+            SKLL_TRACE();
+
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
@@ -32,6 +34,9 @@ namespace SKL
                 SKL_ASSERT( nullptr != MyTLSSyncSystem );
                 MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
             }
+            
+            InWorker.AODTLSContext.exchange( SKL::AODTLSContext::GetInstance() );
+            InWorker.ServerInstanceTLSContext.exchange( SKL::ServerInstanceTLSContext::GetInstance() );
 
             while( InGroup.IsRunning() ) SKL_LIKELY
             {
@@ -120,6 +125,8 @@ namespace SKL
     {
         SKL_FORCEINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
+            SKLL_TRACE();
+
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { Tag.SyncTLSTickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
@@ -131,6 +138,9 @@ namespace SKL
                 SKL_ASSERT( nullptr != MyTLSSyncSystem );
                 MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
             }
+            
+            InWorker.AODTLSContext.exchange( SKL::AODTLSContext::GetInstance() );
+            InWorker.ServerInstanceTLSContext.exchange( SKL::ServerInstanceTLSContext::GetInstance() );
 
             while( InGroup.IsRunning() ) SKL_LIKELY
             {

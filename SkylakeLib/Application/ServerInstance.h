@@ -72,6 +72,17 @@ namespace SKL
             return WorkerGroups[ Id ];
         }
 
+        //! Get all worker groups in this server instance 
+        std::span<WorkerGroup*> GetAllWorkerGroups() noexcept
+        {
+            if( WorkerGroups.size() <= 1 )
+            {
+                return {};
+            }
+
+            return std::span<WorkerGroup*>{ WorkerGroups.begin() + 1, WorkerGroups.end() };
+        }
+
         //! Signal all worker groups to stop
         void SignalToStop( bool bForce = true ) noexcept;
 
@@ -279,6 +290,7 @@ namespace SKL
         ServerInstanceFlags                         ServerBuiltFlags               {};          //!< Server instance flags
         std::synced_value<uint32_t>                 ActiveWorkerGroups             { 0 };       //!< Number of running worker groups
         std::synced_value<uint32_t>                 TotalWorkerGroups              { 0 };       //!< Total number of worker groups
+        std::synced_value<uint32_t>                 TotalWorkers                   { 0 };       //!< Total number of workers
         std::vector<WorkerGroup*>                   DeferredTasksHandlingGroups    {};          //!< All active worker groups marked with [bHandlesTimerTasks=true]
         std::vector<WorkerGroup*>                   DeferredAODTasksHandlingGroups {};          //!< All active worker groups marked with [bSupportsAOD=true]
         std::vector<WorkerGroup*>                   TLSSyncHandlingGroup           {};          //!< All worker groups marked with [bSupportsTLSSync=true]
@@ -291,6 +303,7 @@ namespace SKL
         std::vector<std::unique_ptr<WorkerService>> WorkerServices                 {};          //!< All Worker service instances
         std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
         std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
+        std::unique_ptr<std::latch>                 SyncWorkerStartup              {};          //!< Latch used to sync all workers startup
 
         friend class Worker;
         friend class WorkerGroup;

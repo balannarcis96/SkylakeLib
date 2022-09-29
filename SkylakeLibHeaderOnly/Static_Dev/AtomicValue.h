@@ -144,11 +144,23 @@ namespace std
         {
             return AtomicWrappedValue.fetch_sub( 1, std::memory_order_acq_rel );
         }
+        
+        // Decrease the value by ByValue and return the value before the decrement.
+        SKL_FORCEINLINE TOutType decrement( TType ByValue ) noexcept
+        {
+            return AtomicWrappedValue.fetch_sub( ByValue, std::memory_order_acq_rel );
+        }
 
         // Increments the value by 1 and return the value before the increment.
         SKL_FORCEINLINE TOutType increment( ) noexcept
         {
             return AtomicWrappedValue.fetch_add( 1, std::memory_order_acq_rel );
+        }
+        
+        // Increments the value by ByValue and return the value before the increment.
+        SKL_FORCEINLINE TOutType increment( TType ByValue ) noexcept
+        {
+            return AtomicWrappedValue.fetch_add( ByValue, std::memory_order_acq_rel );
         }
 
     private:

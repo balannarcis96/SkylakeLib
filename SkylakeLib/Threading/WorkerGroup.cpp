@@ -60,8 +60,6 @@ namespace SKL
 
     void WorkerGroup::Join() noexcept
     {
-        SKL_ASSERT_ALLWAYS( false == IsRunning() );
-
         for( auto& Worker : Workers )
         {
             if( nullptr == Worker || true == Worker->IsMaster() )
@@ -96,6 +94,7 @@ namespace SKL
             }
         }
 
+        //@TODO move the TLSSyncSystem at ServerInstance level
         if( true == Tag.bSupportsTLSSync )
         {
             MyTLSSyncSystem.reset( new TLSSyncSystem() );
@@ -395,6 +394,8 @@ namespace SKL
 
     bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& Worker ) noexcept
     {
+        //SKLL_TRACE();
+
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
 
@@ -408,9 +409,9 @@ namespace SKL
             {
                 TLSContext.DelayedSharedObjectTasks.pop();
 
-                Task->Dispatch();
-
-                TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
+                auto* Parent{ Task->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( Task );
             }
             else
             {
@@ -431,9 +432,9 @@ namespace SKL
             {
                 TLSContext.DelayedCustomObjectTasks.pop();
 
-                Task->Dispatch();
-
-                TSharedPtr<IAODCustomObjectTask>::Static_Reset( Task );
+                auto* Parent{ Task->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( Task );
             }
             else
             {
@@ -453,10 +454,10 @@ namespace SKL
             if( true == Task->IsDue( Now ) )
             {
                 TLSContext.DelayedStaticObjectTasks.pop();
-             
-                Task->Dispatch();
 
-                TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
+                auto* Parent{ Task->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( Task );
             }
             else
             {
@@ -469,6 +470,8 @@ namespace SKL
 
     bool WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
     {
+        //SKLL_TRACE();
+
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
 
@@ -477,8 +480,9 @@ namespace SKL
         {
             if( true == NewTask->IsDue( Now ) )
             {
-                NewTask->Dispatch();
-                TSharedPtr<IAODSharedObjectTask>::Static_Reset( NewTask );
+                auto* Parent{ NewTask->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( NewTask );
             }
             else
             {
@@ -494,8 +498,9 @@ namespace SKL
         {
             if( true == NewTask->IsDue( Now ) )
             {
-                NewTask->Dispatch();
-                TSharedPtr<IAODCustomObjectTask>::Static_Reset( NewTask );
+                auto* Parent{ NewTask->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( NewTask );
             }
             else
             {
@@ -511,8 +516,9 @@ namespace SKL
         {
             if( true == NewTask->IsDue( Now ) )
             {
-                NewTask->Dispatch();
-                TSharedPtr<IAODStaticObjectTask>::Static_Reset( NewTask );
+                auto* Parent{ NewTask->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( NewTask );
             }
             else
             {

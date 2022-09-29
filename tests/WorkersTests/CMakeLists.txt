@@ -9,6 +9,8 @@ target_link_libraries(SkylakeLibWorkersTests PUBLIC SkylakeLib)
 target_link_libraries(SkylakeLibWorkersTests PUBLIC gtest_main)
 #target_link_libraries(SkylakeLibWorkersTests PUBLIC GTest::gmock)
 
+target_link_libraries(SkylakeLibWorkersTests PUBLIC SkylakeLibTestsSharedLib)
+
 # Set C++20
 set_property(TARGET SkylakeLibWorkersTests PROPERTY CXX_STANDARD 20)
 

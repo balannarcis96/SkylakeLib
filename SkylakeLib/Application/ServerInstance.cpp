@@ -106,6 +106,8 @@ namespace SKL
             return RFail;
         }
 
+        SyncWorkerStartup.reset( new std::latch( static_cast<ptrdiff_t>( TotalWorkers.load() ) ) );
+
         for( auto* Group: WorkerGroups )
         {
             if( nullptr == Group ) { continue; }
@@ -227,9 +229,12 @@ namespace SKL
             TLSSyncHandlingGroup.push_back( NewGroup.get() );
         }
 
+        TotalWorkers.increment( static_cast<uint32_t>( NewGroup->GetTotalNumberOfWorkers() ) );
+
         // save
         WorkerGroups.emplace_back( NewGroup.release() );
         ( void )TotalWorkerGroups.increment();
+        
 
         return true;
     }
@@ -380,13 +385,14 @@ namespace SKL
     
     bool ServerInstance::OnAllWorkerGroupsStarted() noexcept
     {
+        SKLL_VER_FMT("[ServerInstance:%ws] All worker groups started!", Config.Name );
+
         if( false == OnServerStarted() )
         {
             SKLL_ERR_FMT("[ServerInstance:%ws] OnServerStarted() Failed!", Config.Name );
             return false;
         }
 
-        SKLL_VER_FMT("[ServerInstance:%ws] All worker groups started!", Config.Name );
         return true;
     }
     

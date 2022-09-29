@@ -21,7 +21,8 @@ namespace SKL::AOD
         //Select target worker group
         auto TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
-        auto* TargetWG{ TaskHandlingWGs[ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() ] };
+        const auto TargetWGIndex{ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() };
+        auto* TargetWG{ TaskHandlingWGs[ TargetWGIndex ] };
         SKL_ASSERT( true == TargetWG->GetTag().bSupportsAOD );
         SKL_ASSERT( nullptr != TargetWG );
         SKL_ASSERT( 0 < TargetWG->GetNumberOfRunningWorkers() );
@@ -33,7 +34,9 @@ namespace SKL::AOD
         {
             //Select target worker
             auto Workers{ TargetWG->GetWorkers() };
-            auto* TargetW{ Workers[ static_cast<size_t>( TLSContext.RRLastIndex2++ ) % Workers.size() ].get() };
+            const auto TargetWIndex{ 1 + ( static_cast<size_t>( TLSContext.RRLastIndex2++ ) % ( Workers.size() - 1 ) ) };
+            SKL_ASSERT( 0 != TargetWIndex && TargetWIndex < Workers.size() );
+            auto* TargetW{ Workers[ TargetWIndex ].get() };
             if( nullptr != TargetW ) SKL_LIKELY
             {
                 //Defer task to worker
@@ -77,6 +80,8 @@ namespace SKL::AOD
             }
             else
             {
+                SKLL_TRACE_MSG( "Flush SKIPP!" );
+                //SKL_BREAK();
                 // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }
         }
@@ -84,7 +89,11 @@ namespace SKL::AOD
 
     bool StaticObject::Dispatch( IAODStaticObjectTask* InTask ) noexcept
     {
+        SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
+        
+        // reset next ptr 
+        InTask->Next = nullptr;
 
         if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
         {
@@ -174,6 +183,8 @@ namespace SKL::AOD
             }
             else
             {
+                SKLL_VER( "Flush SKIPP!" );
+                //SKL_BREAK();
                 // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }
         }
@@ -184,16 +195,19 @@ namespace SKL::AOD
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
         
+        // reset next ptr 
+        InTask->Next = nullptr;
+
         if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
         {
-            // Queue the task (must be done only after the count increment
+            // Queue the task (must be done only after the count increment)
             TaskQueue.Push( InTask ); // RefPoint [1]
 
             // There is a consumer present, just bail
             return false;
         }
 
-        // Queue the task (must be done only after the count increment
+        // Queue the task (must be done only after the count increment)
         TaskQueue.Push( InTask ); // RefPoint [2]
 
         // This thread is the new consumer for this AODObject instance, dispatch all available tasks.
@@ -253,12 +267,12 @@ namespace SKL::AOD
     {
         while( true )
         {
+            std::this_thread::yield();
+            
             auto* Task{ reinterpret_cast<IAODCustomObjectTask*>( TaskQueue.Pop() ) };
             if( nullptr != Task ) SKL_LIKELY
             {
                 Task->Dispatch();
-
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
 
                 TSharedPtr<IAODCustomObjectTask>::Static_Reset( Task );
 
@@ -279,7 +293,10 @@ namespace SKL::AOD
         SKL_ASSERT( nullptr != InTask );
         SKL_ASSERT( false == InTask->IsNull() );
         
-        if( RemainingTasksCount.increment() != 0 ) // RefPoint [0]
+        // reset next ptr 
+        InTask->Next = nullptr;
+
+        if( 0 != RemainingTasksCount.increment() ) // RefPoint [0]
         {
             // Queue the task (must be done only after the count increment
             TaskQueue.Push( InTask ); // RefPoint [1]

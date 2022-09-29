@@ -21,7 +21,7 @@ namespace SKL
 
         const char *GetName( ) const noexcept override
         { 
-            return "ThreadLocalMemoryManager"; 
+            return "[ThreadLocalMemoryManager]"; 
         }
 
         //! Preallocate all pools

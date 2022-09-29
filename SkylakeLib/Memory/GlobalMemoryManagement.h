@@ -106,6 +106,14 @@ namespace SKL
         template<size_t AllocateSize>
         static AllocResult Allocate() noexcept
         {
+#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            SKL_IFMEMORYSTATS( ++TotalAllocations );
+            return AllocResult{ 
+                .MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment ),
+                .MemoryBlockSize = AllocateSize
+            };
+#endif
+
             static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
 
             AllocResult Result { };
@@ -169,6 +177,14 @@ namespace SKL
         //! Allocate new memory block with the size known at run time
         static AllocResult Allocate( size_t AllocateSize ) noexcept
         {
+#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            SKL_IFMEMORYSTATS( ++TotalAllocations );
+            return AllocResult{ 
+                .MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment ),
+                .MemoryBlockSize = AllocateSize
+            };
+#endif
+
             AllocResult Result { };
 
             if( SKL_GUARD_ALLOC_SIZE_ON && ( AllocateSize > CMemoryManager_MaxAllocSize ) ) SKL_UNLIKELY
@@ -241,6 +257,12 @@ namespace SKL
         {
             SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % CMemoryManager_Alignment );
                      
+#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            SKL_IFMEMORYSTATS( ++TotalDeallocations );
+            SKL_FREE_SIZE_ALIGNED( InPointer, AllocateSize, CMemoryManager_Alignment );
+            return;
+#endif
+
 #if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
             {
                 std::lock_guard<std::mutex> Guard{ AllocationsMutex };
@@ -292,7 +314,13 @@ namespace SKL
         SKL_NOINLINE static void Deallocate( void* InPointer, size_t AllocateSize ) noexcept 
         {
             SKL_ASSERT( 0 == ( ( uintptr_t )InPointer ) % CMemoryManager_Alignment );
-          
+               
+#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            SKL_IFMEMORYSTATS( ++TotalDeallocations );
+            SKL_FREE_SIZE_ALIGNED( InPointer, AllocateSize, CMemoryManager_Alignment );
+            return;
+#endif
+
 #if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
             {
                 std::lock_guard<std::mutex> Guard{ AllocationsMutex };

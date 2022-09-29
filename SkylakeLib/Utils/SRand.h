@@ -76,8 +76,11 @@ namespace SKL
     {
         static void InitializeThread() noexcept
         {
-            const auto Result{ Create() };
-            SKL_ASSERT( RSuccess == Result );
+            if( nullptr == GetInstance() )
+            {
+                const auto Result{ Create() };
+                SKL_ASSERT( RSuccess == Result );
+            }
         }
         static void ShutdownThread() noexcept
         {

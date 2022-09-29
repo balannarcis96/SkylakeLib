@@ -3,6 +3,8 @@
 #include <SkylakeLib.h>
 #include <ApplicationSetup.h>
 
+FILE* TestLogFile;
+
 namespace AODTests
 {
     class AODStandaloneFixture: public ::testing::Test
@@ -18,6 +20,7 @@ namespace AODTests
             ServerInstanceConfig.AddNewGroup( SKL::WorkerGroupTag{  .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } );        
             ASSERT_TRUE( SKL::RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
 
+            ASSERT_TRUE( SKL::RSuccess == SKL::ThreadLocalMemoryManager::Create() );
             ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ 
                 .Id = 1, 
                 .WorkersCount = 1, 
@@ -34,6 +37,8 @@ namespace AODTests
 
             SKL::AODTLSContext::Destroy();
             SKL::ServerInstanceTLSContext::Destroy();
+            SKL::ThreadLocalMemoryManager::FreeAllPools();
+            SKL::ThreadLocalMemoryManager::Destroy();
 
             ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
@@ -156,23 +161,34 @@ namespace AODTests
     class AODTestsFixture4 : public ::testing::Test, public TestApplication
     {
     public:
-        static constexpr uint64_t IterCount{ 10000 };
+        static constexpr uint64_t IterCount{ 50 };
 
         struct MyObject : SKL::AOD::SharedObject
         {
             int Counter { IterCount };
 
-            MyObject() noexcept : SKL::AOD::SharedObject{ this } {}
+            MyObject() noexcept : SKL::AOD::SharedObject{ this } 
+            {
+                SKLL_TRACE();
+            }
             ~MyObject() noexcept
             {
+                SKLL_TRACE();
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
-                SKLL_INF( "AODTestsFixture4::MyObject::~MyObject()" );
             }
         };
         
-        AODTestsFixture4()
+        AODTestsFixture4() noexcept
             : ::testing::Test(),
-              TestApplication( L"AOD_TESTS_APP" ) {}      
+              TestApplication( L"AOD_TESTS_APP" ) 
+        {
+            SKLL_TRACE();
+        }      
+
+        ~AODTestsFixture4() noexcept
+        {
+            SKLL_TRACE();
+        }
 
         void SetUp() override
         {
@@ -186,38 +202,162 @@ namespace AODTests
 
         bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
         {
+            SKLL_TRACE();
+
             if ( false == TestApplication::OnAllWorkersStarted( InGroup ) )
             {
+                SKL_ASSERT( false );
                 return false;
             }
-
+            /*
             if( false == InGroup.GetTag().bIsActive )
             {
                 auto obj = SKL::MakeShared<MyObject>();
 
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
-                    SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
+                    const auto Result{ obj->DoAsyncAfter( 500, [ this, &InGroup ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObj );
-                        if( 0 == --Self.Counter )           
+
+                        SKLL_TRACE_MSG_FMT( "Before Counter:%d", Self.Counter );
+
+                        auto incResult{ a.increment() };
+
+                        if( 0 != incResult )
+                        {
+                            const auto ThreadId { std::this_thread::get_id() };
+                            static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
+                            const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
+                            SKLL_ERR_FMT( "ThreadId: %u", tId );
+                        }
+
+                        SKL_ASSERT( 0 == incResult );
+
+                        const auto NewCounter = --Self.Counter;
+                        
+                        if( NewCounter == 5002 )
+                        {
+                            SKL_BREAK();
+                        }
+
+                        SKL_ASSERT( true == Counts.empty() || NewCounter != Counts.top() );
+
+                        Counts.push( NewCounter );
+
+                        if( 0 == NewCounter )           
                         {
                             InGroup.GetServerInstance()->SignalToStop( true );
                         }
-                    } ) );
+
+                        SKLL_TRACE_MSG_FMT( "After Counter:%d", Self.Counter );
+
+                        auto decResult{ a.decrement() };
+                        
+                        if( 1 != decResult )
+                        {
+                            const auto ThreadId { std::this_thread::get_id() };
+                            static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
+                            const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
+                            SKLL_ERR_FMT( "Dec-ThreadId: %u", tId );
+                        }
+
+                        SKL_ASSERT( 1 == decResult );
+
+                    } ) };
+
+                   SKL_ASSERT_ALLWAYS( SKL::RSuccess == Result );
                 }
 
                 obj.reset();
-            }
+            }*/
 
             return true;
         }
+
+        bool OnServerStarted() noexcept
+        {
+            SKLL_TRACE();
+
+            if ( false == TestApplication::OnServerStarted() )
+            {
+                SKL_ASSERT( false );
+                return false;
+            }
+            
+            /*if( false == InGroup.GetTag().bIsActive )
+            {*/
+                auto obj = SKL::MakeShared<MyObject>();
+
+                for( uint64_t i = 0; i < IterCount; ++i )
+                {
+                    const auto Result{ obj->DoAsyncAfter( 500, [ this ]( SKL::AOD::SharedObject& InObj ) noexcept -> void 
+                    {
+                        auto& Self = reinterpret_cast<MyObject&>( InObj );
+
+                        SKLL_TRACE_MSG_FMT( "Before Counter:%d", Self.Counter );
+
+                        auto incResult{ a.increment() };
+
+                        if( 0 != incResult )
+                        {
+                            const auto ThreadId { std::this_thread::get_id() };
+                            static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
+                            const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
+                            SKLL_ERR_FMT( "ThreadId: %u", tId );
+                        }
+
+                        SKL_ASSERT( 0 == incResult );
+
+                        const auto NewCounter = --Self.Counter;
+                        
+                        if( NewCounter == 5002 )
+                        {
+                            SKL_BREAK();
+                        }
+
+                        SKL_ASSERT( true == Counts.empty() || NewCounter != Counts.top() );
+
+                        Counts.push( NewCounter );
+
+                        if( 0 == NewCounter )           
+                        {
+                            SignalToStop( true );
+                        }
+
+                        SKLL_TRACE_MSG_FMT( "After Counter:%d", Self.Counter );
+
+                        auto decResult{ a.decrement() };
+                        
+                        if( 1 != decResult )
+                        {
+                            const auto ThreadId { std::this_thread::get_id() };
+                            static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
+                            const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
+                            SKLL_ERR_FMT( "Dec-ThreadId: %u", tId );
+                        }
+
+                        SKL_ASSERT( 1 == decResult );
+
+                    } ) };
+
+                   SKL_ASSERT_ALLWAYS( SKL::RSuccess == Result );
+                }
+
+                obj.reset();
+            //}
+
+            return true;
+        }
+
+        std::synced_value<int32_t> a;
+        std::stack<int32_t, std::vector<int32_t>> Counts;
     };
     
     class AODTestsFixture_CustomObject : public ::testing::Test, public TestApplication
     {
     public:
-        static constexpr uint64_t IterCount{ 10000 };
+        static constexpr uint64_t IterCount{ 10 };
 
         struct MyObject;
 
@@ -234,6 +374,7 @@ namespace AODTests
             ~MyObject() noexcept
             {
                 SKLL_TRACE();
+                SKLL_INF_FMT( "AODTestsFixture4::MyObject::~MyObject() Counter:%d", Counter );
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
             }
         };
@@ -252,31 +393,28 @@ namespace AODTests
             ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
-        bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
+        bool OnServerStarted() noexcept override
         {
-            if ( false == TestApplication::OnAllWorkersStarted( InGroup ) )
+            if ( false == TestApplication::OnServerStarted() )
             {
                 return false;
             }
 
-            if( false == InGroup.GetTag().bIsActive )
+            auto obj = SKL::MakeShared<MyObject>();
+
+            for( uint64_t i = 0; i < IterCount; ++i )
             {
-                auto obj = SKL::MakeShared<MyObject>();
-
-                for( uint64_t i = 0; i < IterCount; ++i )
+                SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ this ]( SKL::AOD::CustomObject& InObj ) noexcept -> void 
                 {
-                    SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ &InGroup ]( SKL::AOD::CustomObject& InObj ) noexcept -> void 
+                    auto& Self = reinterpret_cast<MyObject&>( InObj );
+                    if( 0 == --Self.Counter )           
                     {
-                        auto& Self = reinterpret_cast<MyObject&>( InObj );
-                        if( 0 == --Self.Counter )           
-                        {
-                            InGroup.GetServerInstance()->SignalToStop( true );
-                        }
-                    } ) );
-                }
-
-                obj.reset();
+                        SignalToStop( true );
+                    }
+                } ) );
             }
+
+            obj.reset();
 
             return true;
         }
@@ -399,6 +537,7 @@ namespace AODTests
                 } );
             }
 
+            std::this_thread::sleep_for( TCLOCK_MILLIS( 1000 ) );
             InGroup.GetServerInstance()->SignalToStop( true );
         } ) );
 
@@ -826,6 +965,24 @@ namespace AODTests
 
 int main( int argc, char** argv )
 {
+    //TestLogFile = fopen( "./log.log", "w+" );
+    if( nullptr != TestLogFile )
+    {
+        SKL::Skylake_InitializeLibrary( argc, argv, TestLogFile );
+    }
+    else
+    {
+        puts( "!!!Failed to open log file" );
+    }
+
     testing::InitGoogleTest( &argc, argv );
-    return RUN_ALL_TESTS( );
+    auto result{ RUN_ALL_TESTS( ) };
+
+    if( nullptr != TestLogFile )
+    {
+       fprintf( TestLogFile, "########### TEST LOG END ###########\n" );
+       fclose( TestLogFile );
+    }
+
+    return result;
 }

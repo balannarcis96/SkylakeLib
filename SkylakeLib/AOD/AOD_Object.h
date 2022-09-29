@@ -96,6 +96,7 @@ namespace SKL::AOD
         void* TargetSharedPointer{ nullptr }; //!< Cached pointer to base the shared memory policy off of
 
         friend IAODSharedObjectTask;
+        friend class WorkerGroup;
     };
 }
 
@@ -143,6 +144,7 @@ namespace SKL::AOD
                 return RAllocationFailed;
             }
 
+            NewTask->SetParent( this );
             NewTask->SetDue( AfterMilliseconds );
             NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
@@ -158,6 +160,8 @@ namespace SKL::AOD
         void Flush() noexcept;
         bool Dispatch( IAODStaticObjectTask* InTask ) noexcept;
         bool DelayTask( IAODStaticObjectTask* InTask ) noexcept;
+
+        friend class WorkerGroup;
     };
 }
 
@@ -200,6 +204,7 @@ namespace SKL::AOD
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
+            SKLL_TRACE();
             using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;
             
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
@@ -230,5 +235,6 @@ namespace SKL::AOD
 
         friend IAODCustomObjectTask;
         friend CustomObjectDeallocator;
+        friend class WorkerGroup;
     };
 }

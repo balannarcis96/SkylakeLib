@@ -18,6 +18,7 @@ option(SKL_BUILD_DB                 "Build the DB library"                OFF)
 option(SKL_BUILD_PROTOCOL           "Build the Protocol library"           ON)
 option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"             ON)
 option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"          OFF)
+option(SKL_MATH                     "Enable SkylakeLib Math abstractions"  ON)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -41,8 +42,13 @@ set_property(CACHE SKL_HEADER_ONLY_BUILD_TYPE PROPERTY STRINGS ${SKL_HEADER_ONLY
 
 #SKL_REAL_TYPE
 set(SKL_REAL_TYPE_OPTIONS Single Double)
-set(SKL_REAL_TYPE Single CACHE STRING "Skylake real type (float/double)")
+set(SKL_REAL_TYPE Double CACHE STRING "Real type used in the math abstractions(float/double)")
 set_property(CACHE SKL_REAL_TYPE PROPERTY STRINGS ${SKL_REAL_TYPE_OPTIONS})
+
+#SKL_USE_SSE
+set(SKL_USE_SSE_OPTIONS SEE2 SSE4 None)
+set(SKL_USE_SSE SSE4 CACHE STRING "What SSE version to use (eg. for math)")
+set_property(CACHE SKL_USE_SSE PROPERTY STRINGS ${SKL_USE_SSE_OPTIONS})
 
 #SKL_LOG_LEVEL
 set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
@@ -109,6 +115,7 @@ if(SKL_REAL_TYPE STREQUAL "Single")
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_REAL_TYPE_SINGLE)
 elseif(SKL_REAL_TYPE STREQUAL "Double")
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_REAL_TYPE_DOUBLE)
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_USE_LARGE_WORLD_COORDS)
 else()
     message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
 endif()
@@ -161,6 +168,10 @@ if(SKL_DEBUG_MEMORY_ALLOCATORS)
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_DEBUG_MEMORY_ALLOCATORS)
 endif()
 
+if(SKL_MATH)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_MATH)
+endif()
+
 if(SKL_DISABLE_EXCEPTIONS)
     # Disable std exceptions
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC _HAS_EXCEPTIONS=0)
@@ -182,4 +193,10 @@ elseif(SKL_LIB_LOG_LEVEL STREQUAL WRN)
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKLL_LOG_LEVEL=3)
 elseif(SKL_LIB_LOG_LEVEL STREQUAL INF)
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKLL_LOG_LEVEL=4)
+endif()
+
+if(SKL_USE_SSE STREQUAL SSE2)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_SSE=2)
+elseif(SKL_USE_SSE STREQUAL SSE4)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_SSE=4)
 endif()

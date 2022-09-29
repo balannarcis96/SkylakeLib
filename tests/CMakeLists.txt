@@ -14,6 +14,7 @@ add_subdirectory(MemoryManagementTests)
 add_subdirectory(WorkersTests)
 add_subdirectory(TCPAcceptorTests)
 add_subdirectory(AODTests)
+add_subdirectory(AODQueueTests)
 add_subdirectory(ServiceTests)
 add_subdirectory(TLSSyncTests)
 add_subdirectory(ECSTEsts)
@@ -21,6 +22,10 @@ add_subdirectory(UtilsTests)
 
 if(SKL_BUILD_DB)
     add_subdirectory(DBTests)
+endif()
+
+if(SKL_MATH)
+    add_subdirectory(MathTests)
 endif()
 
 if(SKL_BUILD_PROTOCOL)

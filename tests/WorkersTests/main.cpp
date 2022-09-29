@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <SkylakeLib.h>
+#include <ApplicationSetup.h>
 
 namespace WorkersTests
 {
@@ -8,6 +9,703 @@ namespace WorkersTests
         void operator()( SKL::Worker& Worker, SKL::WorkerGroup& Group ) noexcept {};
         
         int a;
+    };
+
+    struct TestFixture1: public ::testing::Test, TestApplication
+    {
+         TestFixture1()
+                : ::testing::Test(),
+                  TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
+
+        // Start sequence
+        bool OnAddServices() noexcept override
+        { 
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 1 == ++SequenceCount );
+            
+            return true; 
+        }
+        bool OnBeforeStartServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 2 == ++SequenceCount );
+            
+            if( false == TestApplication::OnBeforeStartServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 3 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerStarted( InWorker, Group ) )
+            {
+                return false;
+            }
+
+            return true;
+        }
+        bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 4 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkersStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 5 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerGroupStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 6 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkerGroupsStarted() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 7 == ++SequenceCount );
+            
+            if( false == TestApplication::OnServerStarted() )
+            {
+                return false;
+            }
+            
+            StartLath.arrive_and_wait();
+
+            return true;
+        }
+
+        // Stop sequence
+        bool OnBeforeStopServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 8 == ++SequenceCount );
+            
+            if( false == TestApplication::OnBeforeStopServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        void OnAllServiceStopped() noexcept override
+        {
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 9 == ++SequenceCount );
+            
+            TestApplication::OnAllServiceStopped();
+        }
+        bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 10 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerStopped( InWorker, Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 11 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkersStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 12 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerGroupStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 13 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkerGroupsStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 14 == ++SequenceCount );
+            
+            if( false == TestApplication::OnServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAfterServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 15 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAfterServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
+        {
+            SKLL_TRACE();
+            TestApplication::OnServiceStopped( InService, InStatus );
+        }
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+
+        uint32_t SequenceCount{ 0 };
+        std::latch StartLath{ 2 };
+    };
+    
+    struct TestFixture2: public ::testing::Test, TestApplication
+    {
+         TestFixture2()
+                : ::testing::Test(),
+                  TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
+
+        // Start sequence
+        bool OnAddServices() noexcept override
+        { 
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 1 == ++SequenceCount );
+            
+            return true; 
+        }
+        bool OnBeforeStartServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 2 == ++SequenceCount );
+            
+            if( false == TestApplication::OnBeforeStartServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 3 <= ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerStarted( InWorker, Group ) )
+            {
+                return false;
+            }
+
+            return true;
+        }
+        bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 19 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkersStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 20 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerGroupStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 21 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkerGroupsStarted() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 22 == ++SequenceCount );
+            
+            if( false == TestApplication::OnServerStarted() )
+            {
+                return false;
+            }
+            
+            StartLath.arrive_and_wait();
+
+            return true;
+        }
+
+        // Stop sequence
+        bool OnBeforeStopServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 23 == ++SequenceCount );
+            
+            if( false == TestApplication::OnBeforeStopServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        void OnAllServiceStopped() noexcept override
+        {
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 24 == ++SequenceCount );
+            
+            TestApplication::OnAllServiceStopped();
+        }
+        bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 25 <= ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerStopped( InWorker, Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 41 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkersStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 42 == ++SequenceCount );
+            
+            if( false == TestApplication::OnWorkerGroupStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 43 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAllWorkerGroupsStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 44 == ++SequenceCount );
+            
+            if( false == TestApplication::OnServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAfterServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 45 == ++SequenceCount );
+            
+            if( false == TestApplication::OnAfterServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
+        {
+            SKLL_TRACE();
+            TestApplication::OnServiceStopped( InService, InStatus );
+        }
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+
+        uint32_t SequenceCount{ 0 };
+        std::latch StartLath{ 2 };
+    };
+    
+    struct TestFixture3: public ::testing::Test, TestApplication
+    {
+         TestFixture3()
+                : ::testing::Test(),
+                  TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
+
+        // Start sequence
+        bool OnAddServices() noexcept override
+        { 
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 0 == SequenceCount.increment() );
+            
+            return true; 
+        }
+        bool OnBeforeStartServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 1 == SequenceCount.increment() );
+            
+            if( false == TestApplication::OnBeforeStartServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 2 <= SequenceCount.increment() );
+            
+            if( false == TestApplication::OnWorkerStarted( InWorker, Group ) )
+            {
+                return false;
+            }
+
+            return true;
+        }
+        bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            SequenceCount.increment();
+            
+            for( auto& Worker : Group.GetWorkers() )
+            {
+                if( nullptr == Worker ){ continue; }
+                EXPECT_TRUE( true == Worker->GetIsRunning() );
+            }
+
+            if( false == TestApplication::OnAllWorkersStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            SequenceCount.increment();
+            
+            for( auto& Worker : Group.GetWorkers() )
+            {
+                if( nullptr == Worker ){ continue; }
+                EXPECT_TRUE( true == Worker->GetIsRunning() );
+            }
+
+            if( false == TestApplication::OnWorkerGroupStarted( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 38 == SequenceCount.increment() );
+            
+            for( auto* WorkerGroup : GetAllWorkerGroups() )
+            {
+                EXPECT_TRUE( nullptr != WorkerGroup );
+                EXPECT_TRUE( true == WorkerGroup->IsRunning() );
+            }
+
+            if( false == TestApplication::OnAllWorkerGroupsStarted() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStarted() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 39 == SequenceCount.increment() );
+
+            if( false == TestApplication::OnServerStarted() )
+            {
+                return false;
+            }
+            
+            StartLath.arrive_and_wait();
+
+            return true;
+        }
+
+        // Stop sequence
+        bool OnBeforeStopServer() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 40 == SequenceCount.increment() );
+            
+            if( false == TestApplication::OnBeforeStopServer() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        void OnAllServiceStopped() noexcept override
+        {
+            SKLL_TRACE();
+
+            EXPECT_TRUE( 41 == SequenceCount.increment() );
+            
+            TestApplication::OnAllServiceStopped();
+        }
+        bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            SequenceCount.increment();
+            EXPECT_TRUE( false == InWorker.GetIsRunning() );
+            
+            if( false == TestApplication::OnWorkerStopped( InWorker, Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            SequenceCount.increment();
+
+            for( auto& Worker : Group.GetWorkers() )
+            {
+                if( nullptr == Worker ){ continue; }
+                EXPECT_TRUE( false == Worker->GetIsRunning() );
+            }
+
+            if( false == TestApplication::OnAllWorkersStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
+        {
+            SKLL_TRACE();
+            
+            SequenceCount.increment();
+
+            for( auto& Worker : Group.GetWorkers() )
+            {
+                if( nullptr == Worker ){ continue; }
+                EXPECT_TRUE( false == Worker->GetIsRunning() );
+            }
+
+            if( false == TestApplication::OnWorkerGroupStopped( Group ) )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAllWorkerGroupsStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 78 == SequenceCount.increment() );
+            
+            for( auto* WorkerGroup : GetAllWorkerGroups() )
+            {
+                EXPECT_TRUE( nullptr != WorkerGroup );
+                EXPECT_TRUE( false == WorkerGroup->IsRunning() );
+            }
+
+            if( false == TestApplication::OnAllWorkerGroupsStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 79 == SequenceCount.increment() );
+            
+            for( auto& WorkerGroup : this->GetAllWorkerGroups() )
+            {
+                EXPECT_TRUE( nullptr != WorkerGroup );
+                EXPECT_TRUE( false == WorkerGroup->IsRunning() );
+            }
+
+            if( false == TestApplication::OnServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        bool OnAfterServerStopped() noexcept override
+        {
+            SKLL_TRACE();
+            
+            EXPECT_TRUE( 80 == SequenceCount.increment() );
+            
+            for( auto& WorkerGroup : this->GetAllWorkerGroups() )
+            {
+                EXPECT_TRUE( nullptr != WorkerGroup );
+                EXPECT_TRUE( false == WorkerGroup->IsRunning() );
+            }
+
+            if( false == TestApplication::OnAfterServerStopped() )
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
+        {
+            SKLL_TRACE();
+            TestApplication::OnServiceStopped( InService, InStatus );
+        }
+
+        void SetUp() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
+        }
+        void TearDown() override
+        {
+            ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
+        }
+
+        std::relaxed_value<uint32_t> SequenceCount{ 0 };
+        std::latch StartLath{ 2 };
     };
 
     TEST( WorkersTests, MainTest )
@@ -104,6 +802,121 @@ namespace WorkersTests
         }
 
         SKL::Skylake_TerminateLibrary();
+    }
+
+    TEST_F( TestFixture1, FullFlow_OneReactiveWorker )
+    {
+        const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 24, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 1,
+            .bIsActive                       = false,
+            .bHandlesTasks                   = true,
+            .bSupportsAOD                    = false,
+            .bHandlesTimerTasks              = false,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = false,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == Start( false ) );
+
+        StartLath.arrive_and_wait();
+
+        Stop();
+
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+    }
+    
+    TEST_F( TestFixture2, FullFlow_MultipleReactiveWorkers )
+    {
+        const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 24, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 16,
+            .bIsActive                       = false,
+            .bHandlesTasks                   = true,
+            .bSupportsAOD                    = false,
+            .bHandlesTimerTasks              = false,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = false,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == Start( false ) );
+
+        StartLath.arrive_and_wait();
+
+        Stop();
+
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+    }
+    
+    TEST_F( TestFixture3, FullFlow_MultipleReactiveAndActiveWorkers )
+    {
+        const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 24, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 16,
+            .bIsActive                       = false,
+            .bHandlesTasks                   = true,
+            .bSupportsAOD                    = false,
+            .bHandlesTimerTasks              = false,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = false,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"REACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+            .TickRate                        = 24, 
+            .SyncTLSTickRate                 = 0,
+            .Id                              = 1,
+            .WorkersCount                    = 16,
+            .bIsActive                       = true,
+            .bHandlesTasks                   = false,
+            .bSupportsAOD                    = false,
+            .bHandlesTimerTasks              = false,
+            .bSupportsTLSSync                = false,
+            .bHasThreadLocalMemoryManager    = false,
+            .bPreallocateAllThreadLocalPools = false,
+            .bSupportesTCPAsyncAcceptors     = false,
+            .bCallTickHandler                = false,
+            .Name                            = L"ACTIVE"
+        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        ASSERT_TRUE( true == Start( false ) );
+
+        StartLath.arrive_and_wait();
+
+        Stop();
+
+        const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
+        const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+        ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
+        ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
     }
 }
 

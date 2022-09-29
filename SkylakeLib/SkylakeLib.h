@@ -10,6 +10,8 @@
 //! The header only part
 #include <SkylakeLibHeaderOnly.h>
 
+//#define SKL_MEM_MANAGER_DECAY_TO_GLOBAL
+
 //! Std
 #include "Std/Std.h"
 
@@ -79,6 +81,11 @@
 //! ECS
 #include "ECS/ECS.h"
 
+#if defined(SKL_MATH)
+    //! Math
+    #include "Math/Math.h"
+#endif
+
 namespace SKL
 {
     //! Initialize the SkylakeLibrary
@@ -101,5 +108,8 @@ namespace SKL
 }
 
 #if defined(SKL_NO_NAMESPACE)
+#ifndef SKL_NO_NAMESPACE_STATEMENT
+#define SKL_NO_NAMESPACE_STATEMENT
     using namespace SKL;
+#endif SKL_NO_NAMESPACE_STATEMENT
 #endif

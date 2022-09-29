@@ -259,6 +259,14 @@ namespace SKL
     {
         return GMultiByteToWideChar( InBuffer, N, OutBuffer, M );
     }
+
+    //! Get the current thread id as u32 
+    SKL_FORCEINLINE uint32_t GetCurrentThreadId() noexcept
+    {
+        const auto ThreadId { std::this_thread::get_id() };
+        static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
+        return *reinterpret_cast<const uint32_t*>( &ThreadId );
+    }
 }
 
 #include "TLSValue.h"

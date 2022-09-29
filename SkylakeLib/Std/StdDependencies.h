@@ -39,6 +39,7 @@
 #include <ostream>
 #include <stack>
 #include <thread>
+#include <latch>
 
 using TString = std::wstring;
 

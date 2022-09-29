@@ -62,15 +62,34 @@ namespace SKL
         //! Set parent AOD Object
         void SetParent( AOD::SharedObject* InObject )noexcept;
 
+        //! Get parent AOD Object ptr
+        SKL_FORCEINLINE AOD::SharedObject* GetParent() const noexcept { return Parent.get(); }
+
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
         {
-            Due = GetSystemUpTickCount() + AfterMilliseconds;
+            const auto Now{ GetSystemUpTickCount() };
+            Due =  Now + static_cast<TEpochTimePoint>( AfterMilliseconds );
+
+            SKL_ASSERT( Due > Now );
+
+            if( Due - Now > ( 30 * 1000 ) )
+            {
+                SKL_BREAK();
+            }
+
+            SKL_ASSERT( Due - Now < 30 * 1000 );
         }
 
         //! Is this task due
         SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
         {
+            if( false == ( Due == 0 || std::abs( static_cast<int64_t>( Due - InNow ) ) < ( 30 * 1000 ) ) )
+            {
+                SKL_BREAK();
+            }
+
+            SKL_ASSERT( Due == 0 || std::abs( static_cast<int64_t>( Due - InNow ) ) < ( 30 * 1000 ) );
             return InNow >= Due;
         }
 
@@ -168,6 +187,15 @@ namespace SKL
         {
             CastSelfToProto().Destroy();
         }
+        
+        //! Set parent AOD Object
+        SKL_FORCEINLINE void SetParent( AOD::StaticObject* InObject ) noexcept
+        {
+            Parent = InObject;
+        }
+        
+        //! Get parent AOD Object ptr
+        SKL_FORCEINLINE AOD::StaticObject* GetParent() const noexcept { return Parent; }
 
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
@@ -202,7 +230,8 @@ namespace SKL
             );
         }
 
-        TEpochTimePoint Due{ 0 }; //!< Used for when this task is delayed
+        AOD::StaticObject* Parent{ nullptr }; //!< Parent object ptr, the AOD object, this task will be dispatched on
+        TEpochTimePoint    Due   { 0 };       //!< Used for when this task is delayed
 
         friend struct AODTaskQueue;
     };
@@ -299,6 +328,9 @@ namespace SKL
 
         //! Set parent AOD Object
         void SetParent( AOD::CustomObject* InObject )noexcept;
+        
+        //! Get parent AOD Object ptr
+        SKL_FORCEINLINE AOD::CustomObject* GetParent() const noexcept { return Parent.get(); }
 
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept

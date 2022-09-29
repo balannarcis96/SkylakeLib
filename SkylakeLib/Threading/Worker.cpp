@@ -23,57 +23,57 @@ namespace SKL
     
     void Worker::RunImpl() noexcept
     {
-        if( nullptr == Group || false == Group->IsRunning() )
-        {
-            SKLL_WRN_FMT( "[WG:%ws] Worker::RunImpl() Can't RUN!", Group ? Group->GetTag().Name : L"UNKNOWN" );
-            return;
-        }
+        SKL_ASSERT( nullptr != Group && true == Group->IsRunning() );
+        SKL_ASSERT( true == Group->IsRunning() );
 
-        if( false == IsMaster() )
-        {
-            // init the SkylakeLib for this thread
-            Skylake_InitializeLibrary_Thread();
-        }
+        // init the SkylakeLib for this thread
+        Skylake_InitializeLibrary_Thread();
         
-        { 
-            // mark as running
-            bIsRunning.exchange( TRUE );
+        // mark as running
+        bIsRunning.exchange( TRUE );
+
+        auto* SInstance{ Group->GetServerInstance() };
+        SKL_ASSERT( nullptr != SInstance );
+        
+        // notice the group
+        if ( true == Group->OnWorkerStarted( *this ) )
+        {
+            // dispatch main task
+            SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
+
+            if( nullptr != SInstance->SyncWorkerStartup )
+            {
+                // wait for all other workers to rich this stage
+                SInstance->SyncWorkerStartup->arrive_and_wait();
+            }
 
             // save approx start time
             StartedAt.exchange( GetSystemUpTickCount() );
         
-            if ( true == Group->IsRunning() )
-            {
-                // notice the group
-                if ( true == Group->OnWorkerStarted(*this) )
-                {
-                    // dispatch main task
-                    SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
-                    OnRun.Dispatch( *this, *Group );
-                }
-                else
-                {
-                    Group->GetServerInstance()->SignalToStop( true );
-                }
-        
-                // mark as stopped
-                bIsRunning.exchange( FALSE );
-
-                // notice the group
-                Group->OnWorkerStopped( *this );
-            }
-            else
-            {
-                bIsRunning.exchange( FALSE );
-                SKLL_VER_FMT( "[WG:%ws] Worker::RunImpl() Early stopp!", Group->GetTag().Name );
-            }
+            // execute onRun handler
+            OnRun.Dispatch( *this, *Group );
         }
-        
-        if( false == IsMaster() )
+        else
         {
-            // terminate the SkylakeLib for this thread
-            Skylake_TerminateLibrary_Thread();
+            if( nullptr != SInstance->SyncWorkerStartup )
+            {
+                // wait for all other workers to start before issuing the stop server
+                SInstance->SyncWorkerStartup->arrive_and_wait();
+            }
+            
+            Group->GetServerInstance()->SignalToStop( true );
+
+            SKLL_TRACE_MSG_FMT( "Failure WG:%ws", Group->GetTag().Name );
         }
+        
+        // mark as stopped
+        bIsRunning.exchange( FALSE );
+
+        // notice the group
+        Group->OnWorkerStopped( *this );
+        
+        // terminate the SkylakeLib for this thread
+        Skylake_TerminateLibrary_Thread();
     }
 
     void Worker::Clear() noexcept

@@ -27,13 +27,13 @@ namespace SKL
 
     RStatus Skylake_InitializeLibrary( int32_t Argc, char** Argv, FILE* InLogOutput ) noexcept 
     {
-        ValidatePlatformRuntime();
-
         if( TRUE == GIsInit.load_relaxed() )
         {
             SKLL_WRN( "The SkylakeLib was already initialized" );
             return RSuccess;
         }
+        
+        ValidatePlatformRuntime();
 
         if( nullptr != InLogOutput )
         {
@@ -94,6 +94,8 @@ namespace SKL
             SKLL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
             return RSuccess;
         }
+        
+        TRand::InitializeThread();
 
         if( nullptr == StringUtils::GetInstance() )
         {
@@ -102,17 +104,6 @@ namespace SKL
                 SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
                 return RFail;
             }
-        }
-
-        if( nullptr == ThreadLocalMemoryManager::GetInstance() )
-        {
-            if( RSuccess != ThreadLocalMemoryManager::Create() )
-            {
-                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib failed to create the ThreadLocalMemoryManager!" );
-                return RFail;
-            }
-
-            SKLL_VER( "Skylake_InitializeLibrary_Thread() Created ThreadLocalMemoryManager." );
         }
 
         SkylakeLibInitPerThread::SetValue( true );
@@ -135,6 +126,8 @@ namespace SKL
         }
 
         StringUtils::Destroy();
+        
+        TRand::ShutdownThread();
 
         SkylakeLibInitPerThread::SetValue( false );
 
