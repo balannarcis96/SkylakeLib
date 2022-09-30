@@ -618,6 +618,27 @@ namespace DatacenterTests
             DC.SetStream( std::move( Stream.value() ) );
 
             ASSERT_TRUE( true == DC.Serialize( true ) );
+            
+            const SKL::DC::Datacenter<false>::Element* RootElement{ DC.GetRootElement() };
+            ASSERT_TRUE( true == RootElement->IsNamed( L"__root__" ) );
+            ASSERT_TRUE( 0 < RootElement->GetChildren().size() );
+
+            auto ClientSettings{ DC.GetAllByName( L"ClientSettings" ) };
+            ASSERT_TRUE( 1 == ClientSettings.size() );
+
+            auto* ClientSettingsElement{ ClientSettings[0] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement );
+            ASSERT_TRUE( 2 == ClientSettingsElement->GetAttributes().size() );
+
+            auto* ClientSettingsElement_Attr1{ ClientSettingsElement->GetAttributes()[0] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement_Attr1 );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr1->IsNamed( L"version" ) );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr1->IsValue( L"1" ) );
+            
+            auto* ClientSettingsElement_Attr2{ ClientSettingsElement->GetAttributes()[1] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement_Attr2 );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr2->IsNamed( L"name" ) );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr2->IsValue( L"Skylake Client" ) );
         }
     }
     
@@ -655,6 +676,27 @@ namespace DatacenterTests
             DC.SetStream( std::move( Stream.value() ) );
 
             ASSERT_TRUE( true == DC.Serialize( true ) );
+
+            const SKL::DC::Datacenter<false>::Element* RootElement{ DC.GetRootElement() };
+            ASSERT_TRUE( true == RootElement->IsNamed( L"__root__" ) );
+            ASSERT_TRUE( 0 < RootElement->GetChildren().size() );
+
+            auto ClientSettings{ DC.GetAllByName( L"ClientSettings" ) };
+            ASSERT_TRUE( 1 == ClientSettings.size() );
+
+            auto* ClientSettingsElement{ ClientSettings[0] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement );
+            ASSERT_TRUE( 2 == ClientSettingsElement->GetAttributes().size() );
+
+            auto* ClientSettingsElement_Attr1{ ClientSettingsElement->GetAttributes()[0] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement_Attr1 );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr1->IsNamed( L"version" ) );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr1->IsValue( L"1" ) );
+            
+            auto* ClientSettingsElement_Attr2{ ClientSettingsElement->GetAttributes()[1] };
+            ASSERT_TRUE( nullptr != ClientSettingsElement_Attr2 );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr2->IsNamed( L"name" ) );
+            ASSERT_TRUE( true == ClientSettingsElement_Attr2->IsValue( L"Skylake Client" ) );
         }
     }
 }

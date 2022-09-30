@@ -102,7 +102,13 @@ namespace SKL::DC
 			SKL_FORCEINLINE bool IsNamed( const wchar_t( &InName ) [ NameSize ] )const noexcept
 			{
                 SKL_ASSERT( nullptr != CachedNameRef );
-				return 0 == wcsicmp( InName, CachedNameRef, NameSize );
+				return 0 == SKL_WSTRICMP( InName, CachedNameRef, NameSize );
+			}
+			template<size_t StringSize>
+			SKL_FORCEINLINE bool IsValue( const wchar_t( &InString ) [ StringSize ] )const noexcept
+			{
+                SKL_ASSERT( nullptr != CachedValueRef );
+				return 0 == SKL_WSTRCMP( InString, CachedValueRef, StringSize );
 			}
 
             SKL_FORCEINLINE float GetFloat() const noexcept
@@ -275,6 +281,21 @@ namespace SKL::DC
 
                 return true;
             }
+            
+			template<size_t NameSize>
+			SKL_FORCEINLINE bool IsNamed( const wchar_t( &InName ) [ NameSize ] )const noexcept
+			{
+                SKL_ASSERT( nullptr != CachedNameRef );
+				return 0 == SKL_WSTRICMP( InName, CachedNameRef, NameSize );
+			}
+            
+			template<size_t StrSize>
+			SKL_FORCEINLINE bool IsValue( const wchar_t( &InString ) [ StrSize ] )const noexcept
+			{
+				if( false == HasValueString() ){ return false; }
+                SKL_ASSERT( nullptr != CachedValueRef );
+				return 0 == SKL_WSTRICMP( InString, CachedValueRef, StrSize );
+			}
 
             SKL_FORCEINLINE TStringRef GetName() const noexcept 
             {
@@ -298,6 +319,7 @@ namespace SKL::DC
             SKL_FORCEINLINE TRet& GetEditData() noexcept { return *this; };
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, ElementEditData>>
             SKL_FORCEINLINE const TRet& GetEditData() const noexcept { return *this; };
+            SKL_FORCEINLINE bool HasValueString() const noexcept { return CInvalidBlockIndex != ValueIndices.first && CInvalidBlockIndex != ValueIndices.second; }
 
             SKL_FORCEINLINE void SetChildrenCount( uint32_t InCount ) noexcept
             {
@@ -1101,6 +1123,15 @@ namespace SKL::DC
 
             return &Elements[0][0];
         }
+        const Element* GetRootElement() const noexcept
+        {
+            if( 0 == Elements.Size() || 0 == Elements[0].Size() )
+            {
+                return nullptr;
+            }
+
+            return &Elements[0][0];
+        }
         Element* GetElement( TBlockIndices InIndices ) noexcept 
         {
             SKL_ASSERT( CInvalidBlockIndex != InIndices.first && CInvalidBlockIndex != InIndices.second );
@@ -1151,9 +1182,10 @@ namespace SKL::DC
              Result.reserve( 128 );
 
             const auto* Root{ GetRootElement() };
+            const auto NameLength{ SKL_WSTRLEN( InName, 1024 ) };
             for( const auto* Item : Root->GetChildren() )
             {
-                if( 0 == wcsicmp( InName, Item->GetName() ) )
+                if( 0 == SKL_WSTRICMP( InName, Item->GetName(), NameLength ) )
                 {
                     Result.push_back( Item );
                 }
@@ -1230,21 +1262,12 @@ namespace SKL::DC
         }
         bool PostLoadProcessing_Elements_Recursive( Element* InElement, Element* InParentElement  ) noexcept
         {
+            InElement->Parent = InParentElement;
             if ( nullptr != InParentElement )
             {
-                if( nullptr != InElement->Parent )
-                {
-                    if constexpr( true == bEnableBuildCapabilities )
-                    {
-                        InElement->GetEditData().AddRef();
-                    }
-
-                    InElement->Parent->CachedChildren.push_back( InElement );
-                    return true;
-                }
+                InElement->Parent->CachedChildren.push_back( InElement );
             }    
 
-            InElement->Parent = InParentElement;
             SKL_ASSERT( CInvalidStringIndex != InElement->NameIndex && nullptr != InElement->CachedNameRef );
             if constexpr( true == bEnableBuildCapabilities )
             {
