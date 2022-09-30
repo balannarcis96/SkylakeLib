@@ -494,7 +494,12 @@ namespace SKL::DC
 
                 if( true == bIsLoadingOrSaving )
                 {
-                    InStream.Position += Remaining * ElementSerialSize;
+                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    if( false == Reader->TryForward( Remaining * ElementSerialSize ) )
+                    {
+                        SKLL_TRACE_MSG( "No space left in the stream" );                            
+                        return false;  
+                    }
                 }
                 else
                 {
