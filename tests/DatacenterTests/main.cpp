@@ -74,13 +74,13 @@ namespace DatacenterTests
             {
                 Datacenter::Attribute Attr;
                 Attr.CachedValueRef = L"23.555";
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Attr.GetFloat(), 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Attr.GetFloat(), 0.005f ) );    
             }
             
             {
                 Datacenter::Attribute Attr;
                 Attr.CachedValueRef = L"23.5555";
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Attr.GetDouble(), 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Attr.GetDouble(), 0.005 ) );    
             }
             
             {
@@ -90,8 +90,8 @@ namespace DatacenterTests
                 float Point2D[2]{ 0.0f, 0.0f };
                 ASSERT_TRUE( true == Attr.Get2DPoint( Point2D ) );
 
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[0], 0.0005f ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[1], 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[0], 0.005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[1], 0.005f ) );    
             }
             
             {
@@ -101,8 +101,8 @@ namespace DatacenterTests
                 double Point2D[2]{ 0.0f, 0.0f };
                 ASSERT_TRUE( true == Attr.Get2DPointD( Point2D ) );
 
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[0], 0.0005 ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[1], 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[0], 0.005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[1], 0.005 ) );    
             }
 
             {
@@ -112,9 +112,9 @@ namespace DatacenterTests
                 float Point3D[3]{ 0.0f, 0.0f, 0.0f };
                 ASSERT_TRUE( true == Attr.Get3DPoint( Point3D ) );
 
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[0], 0.0005f ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[1], 0.0005f ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[2], 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[0], 0.005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[1], 0.005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[2], 0.005f ) );    
             }
             
             {
@@ -124,9 +124,9 @@ namespace DatacenterTests
                 double Point3D[3]{ 0.0, 0.0, 0.0 };
                 ASSERT_TRUE( true == Attr.Get3DPointD( Point3D ) );
 
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[0], 0.0005 ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[1], 0.0005 ) );    
-                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[3], 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[0], 0.005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[1], 0.005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[2], 0.005 ) );    
             }
         }
         
@@ -455,6 +455,26 @@ namespace DatacenterTests
     TEST_F( DatacenterTestsFixture, Attribute_ValueAPI )
     {
        Attribute_ValueAPIDummy_Validate();
+    }
+
+    TEST_F( DatacenterTestsFixture, Datacenter_API )
+    {
+        {
+            SKL::BufferStream Stream{ 4096 * 1024 };
+            Datacenter DC;
+            DC.SetStream( std::move( Stream ) );
+        }
+
+        {
+            SKL::BufferStream Stream{ 4096 * 1024 };
+            BuildDatacenter DC{};
+            DC.SetStream( std::move( Stream ) );
+
+            auto& ValuesMap = DC.GetValuesMap();
+            auto& NamesMap = DC.GetNamesMap();
+            auto& ElementsBlock = DC.GetElementsBlock();
+            auto& AttributesBlock = DC.GetAttributesBlock();
+        }
     }
 }
 

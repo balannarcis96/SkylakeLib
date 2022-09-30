@@ -30,12 +30,17 @@ namespace SKL::DC
     using TStringRef     = const wchar_t*;
     using Stream         = StreamBase;
     using AttributeValue = TBlockIndices;
+    using TLanguage      = uint16_t;
 
-    constexpr size_t CElementsBlockSize        = std::numeric_limits<TBlockIndex>::max();
-    constexpr size_t CAttributesBlockSize      = std::numeric_limits<TBlockIndex>::max();
-    constexpr size_t CStringsBlockSize         = std::numeric_limits<TBlockIndex>::max();
-    constexpr TStringIndex CInvalidStringIndex = std::numeric_limits<TStringIndex>::max();
-    constexpr TBlockIndex CInvalidBlockIndex   = std::numeric_limits<TBlockIndex>::max();
+    constexpr TLanguage      CNoSpecificLanguage    = 0;
+    constexpr TLanguage      CInternationalLanguage = 1;
+    constexpr TVersion       CInvalidVersion        = 0;
+    constexpr TFormatVersion CInvalidFormatVersion  = 0;
+    constexpr size_t         CElementsBlockSize     = std::numeric_limits<TBlockIndex>::max();
+    constexpr size_t         CAttributesBlockSize   = std::numeric_limits<TBlockIndex>::max();
+    constexpr size_t         CStringsBlockSize      = std::numeric_limits<TBlockIndex>::max();
+    constexpr TStringIndex   CInvalidStringIndex    = std::numeric_limits<TStringIndex>::max();
+    constexpr TBlockIndex    CInvalidBlockIndex     = std::numeric_limits<TBlockIndex>::max();
 
 	inline bool CWStringStartsWith( const wchar_t* InPre, size_t InPreLength, const wchar_t* InString ) noexcept
 	{
@@ -68,7 +73,8 @@ namespace SKL::DC
 
         struct AttributeEditData
         {
-            uint64_t Hash{ 0 };
+            uint64_t      Hash          { 0 };
+            TBlockIndices CachedLocation{ CInvalidBlockIndex, CInvalidBlockIndex };
         };
         struct Attribute : std::conditional_t<bEnableBuildCapabilities, AttributeEditData, EmptyType>
         {
@@ -213,6 +219,9 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, AttributeEditData>>
             SKL_FORCEINLINE const TRet& GetEditData() const noexcept { return *this; };
 
+            SKL_FORCEINLINE void SetNameIndex( TNameIndex InNameIndex ) noexcept { NameIndex = InNameIndex; }
+            SKL_FORCEINLINE void SetValueIndices( TBlockIndices InValueIndices ) noexcept { Value = InValueIndices; }
+
         private:
             TNameIndex     NameIndex{ CInvalidStringIndex };
             TBlockIndices  Value    { CInvalidBlockIndex, CInvalidBlockIndex };
@@ -284,14 +293,29 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, ElementEditData>>
             SKL_FORCEINLINE const TRet& GetEditData() const noexcept { return *this; };
 
+            SKL_FORCEINLINE void SetChildrenCount( uint32_t InCount ) noexcept
+            {
+                SKL_ASSERT( true == CachedChildren.empty() );
+                ChildrenCount = InCount;
+            }
+            SKL_FORCEINLINE void SetAttributesCount( uint32_t InCount ) noexcept
+            {
+                SKL_ASSERT( true == CachedAttributes.empty() );
+                AttributesCount = InCount;
+            }
+            SKL_FORCEINLINE void SetNameIndex( TNameIndex InIndex ) noexcept { NameIndex = InIndex; }
+            SKL_FORCEINLINE void SetValueIndices( TBlockIndices InValueIndices ) noexcept { ValueIndices = InValueIndices; }
+
         private:
             TNameIndex     NameIndex         { CInvalidStringIndex };
             uint16_t       AttributesCount   { 0 };
             TBlockIndices  AttributeIndices  { CInvalidBlockIndex, CInvalidBlockIndex };
             uint16_t       ChildrenCount     { 0 };
             TBlockIndices  ChildrenIndices   { CInvalidBlockIndex, CInvalidBlockIndex };
+            TBlockIndices  ValueIndices      { CInvalidBlockIndex, CInvalidBlockIndex };
 
             TStringRef              CachedNameRef   { nullptr };
+            TStringRef              CachedValueRef  { nullptr };
             std::vector<Attribute*> CachedAttributes{};
             std::vector<Element*>   CachedChildren  {};
             Element*                Parent          { nullptr };
@@ -363,6 +387,16 @@ namespace SKL::DC
                 SKL_ASSERT( InIndex < Count );
 
                 return Data[ InIndex ];
+            }
+            SKL_FORCEINLINE T& Last() noexcept 
+            { 
+                SKL_ASSERT( false == Data.empty() );
+                return Data[ Data.size() - 1 ];
+            }
+            SKL_FORCEINLINE const T& Last() const noexcept 
+            { 
+                SKL_ASSERT( false == Data.empty() );
+                return Data[ Data.size() - 1 ];
             }
             SKL_FORCEINLINE uint32_t Size() const noexcept
             {
@@ -470,6 +504,16 @@ namespace SKL::DC
 
                 return Data[ InIndex ];
             }
+            SKL_FORCEINLINE T& Last() noexcept 
+            { 
+                SKL_ASSERT( false == Data.empty() );
+                return Data[ Data.size() - 1 ];
+            }
+            SKL_FORCEINLINE const T& Last() const noexcept 
+            { 
+                SKL_ASSERT( false == Data.empty() );
+                return Data[ Data.size() - 1 ];
+            }
             SKL_FORCEINLINE uint32_t Size() const noexcept
             {
                 SKL_ASSERT( Data.size() == TotalUsedBlockCount );
@@ -489,6 +533,14 @@ namespace SKL::DC
 
                 return true;
             }
+            SKL_FORCEINLINE bool CanFit( uint32_t InCount ) const noexcept { return ( TotalBlockCount - TotalUsedBlockCount ) >= InCount; }
+            SKL_FORCEINLINE void SetMaxSize( uint32_t InCount ) noexcept 
+            { 
+                SKL_ASSERT( true == Data.empty() );
+                SKL_ASSERT( 0 == TotalUsedBlockCount );
+                TotalBlockCount = InCount;
+            }
+            SKL_FORCEINLINE void Reserve( uint32_t InCount ) noexcept { Data.reserve( InCount ); }
         private:
             uint32_t       TotalBlockCount = 0;
             uint32_t       TotalUsedBlockCount = 0;
@@ -659,21 +711,19 @@ namespace SKL::DC
             friend MyType;
         };
 
-        struct StringMap
+        struct StringMapEditData
         {
-            struct MapEditData
+            void Clear() noexcept
             {
-                void Clear() noexcept
-                {
-                    PresentStringsByIndex.clear();
-                    PresentStringsByIndices.clear();
-                }
-                 
-                std::unordered_map<std::wstring, TStringIndex>   PresentStringsByIndex;
-                std::unordered_map<std::wstring, TStringIndices> PresentStringsByIndices;
-            };
-            using TMapEditData = std::conditional_t<bEnableBuildCapabilities, MapEditData, uint8_t>;
-
+                PresentStringsByIndex.clear();
+                PresentStringsByIndices.clear();
+            }
+             
+            std::unordered_map<std::wstring, TStringIndex>   PresentStringsByIndex;
+            std::unordered_map<std::wstring, TStringIndices> PresentStringsByIndices;
+        };
+        struct StringMap: std::conditional_t<bEnableBuildCapabilities, StringMapEditData, EmptyType>
+        {
             bool Serialize( Stream& InStream, bool bIsLoadingOrSaving ) noexcept
             {
                 if( false == StringBlocks.Serialize( InStream, bIsLoadingOrSaving ) )
@@ -721,8 +771,8 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, TStringIndex>>
             TRet QueryIndex( const wchar_t* InString ) noexcept
             {
-                const auto Item{ EditData.PresentStringsByIndex.find( InString ) };
-                if( EditData.PresentStringsByIndex.end() != Item )
+                const auto Item{ this->PresentStringsByIndex.find( InString ) };
+                if( this->PresentStringsByIndex.end() != Item )
                 {
                     return Item->second;
                 }
@@ -733,8 +783,8 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, TStringIndices>>
             TRet QueryIndices( const wchar_t* InString ) noexcept
             {
-                const auto Item{ EditData.PresentStringsByIndices.find( InString ) };
-                if( EditData.PresentStringsByIndices.end() != Item )
+                const auto Item{ this->PresentStringsByIndices.find( InString ) };
+                if( this->PresentStringsByIndices.end() != Item )
                 {
                     return Item->second;
                 }
@@ -745,8 +795,8 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, bool>>
             TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TStringIndex& OutIndex ) noexcept
             {
-                auto ExistingItem{ EditData.PresentStringsByIndex.find( InString ) };
-                if( ExistingItem != EditData.PresentStringsByIndex.end() )
+                auto ExistingItem{ this->PresentStringsByIndex.find( InString ) };
+                if( ExistingItem != this->PresentStringsByIndex.end() )
                 {
                     OutIndex = ExistingItem->second;
                     return true;
@@ -765,10 +815,10 @@ namespace SKL::DC
                 SKL_ASSERT( nullptr != NewStringEntry.CachedStringRef );
                 
                 // cache string by indices
-                EditData.PresentStringsByIndices.insert( { std::wstring{ NewStringEntry.CachedStringRef }, OutIndices } );
+                this->PresentStringsByIndices.insert( { std::wstring{ NewStringEntry.CachedStringRef }, OutIndices } );
                 
                 // cache string by index
-                EditData.PresentStringsByIndex.insert( { std::wstring{ NewStringEntry.CachedStringRef }, static_cast<TStringIndex>( AllStrings.Size() ) } );
+                this->PresentStringsByIndex.insert( { std::wstring{ NewStringEntry.CachedStringRef }, static_cast<TStringIndex>( AllStrings.Size() ) } );
                 
                 // set index where the new string entry will be added
                 OutIndex = static_cast<TStringIndex>( AllStrings.Size() );
@@ -782,8 +832,8 @@ namespace SKL::DC
             template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, bool>>
             TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TBlockIndices& OutIndices ) noexcept
             {
-                auto ExistingItem{ EditData.PresentStringsByIndices.find( InString ) };
-                if( ExistingItem != EditData.PresentStringsByIndices.end() )
+                auto ExistingItem{ this->PresentStringsByIndices.find( InString ) };
+                if( ExistingItem != this->PresentStringsByIndices.end() )
                 {
                     OutIndices = ExistingItem->second;
                     return true;
@@ -801,10 +851,10 @@ namespace SKL::DC
                 SKL_ASSERT( nullptr != NewStringEntry.CachedStringRef );
                 
                 // cache string by indices
-                EditData.PresentStringsByIndices.insert( { std::wstring{ NewStringEntry.CachedStringRef }, OutIndices } );
+                this->PresentStringsByIndices.insert( { std::wstring{ NewStringEntry.CachedStringRef }, OutIndices } );
                 
                 // cache string by index
-                EditData.PresentStringsByIndex.insert( { std::wstring{ NewStringEntry.CachedStringRef }, static_cast<TStringIndex>( AllStrings.Size() ) } );
+                this->PresentStringsByIndex.insert( { std::wstring{ NewStringEntry.CachedStringRef }, static_cast<TStringIndex>( AllStrings.Size() ) } );
 
                 // insert into all strings array
                 AllStrings.AddItem( std::move( NewStringEntry ) );
@@ -819,7 +869,7 @@ namespace SKL::DC
 
                 if constexpr( true == bEnableBuildCapabilities )
                 {
-                    EditData.Clear();
+                    StringMapEditData::Clear();
                 }
             }
 
@@ -883,14 +933,16 @@ namespace SKL::DC
 
             Array<StringBlock> StringBlocks;
             Array<StringEntry> AllStrings;
-            TMapEditData       EditData;
 
             friend ::DatacenterTests::DatacenterTestsFixture;
             friend MyType;
         };
 
-        using ElementsBlock   = Array<BlockArray<Element, static_cast<uint32_t>( GetElementSerialSize() )>>;
-        using AttributesBlock = Array<BlockArray<Attribute, static_cast<uint32_t>( GetAttributeSerialSize() )>>;
+        using ElementsBlock   = BlockArray<Element, static_cast<uint32_t>( GetElementSerialSize() )>;
+        using AttributesBlock = BlockArray<Attribute, static_cast<uint32_t>( GetAttributeSerialSize() )>;
+        
+        using DatacenterElements   = Array<ElementsBlock>;
+        using DatacenterAttributes = Array<AttributesBlock>;
 
         Datacenter() noexcept = default;
 
@@ -919,13 +971,15 @@ namespace SKL::DC
                 
                 Version       = Reader->ReadT<decltype( Version )>();
                 FormatVersion = Reader->ReadT<decltype( FormatVersion )>();
+                Language      = Reader->ReadT<decltype( Language )>();
             }
             else
             {
                 auto* Writer{ IStreamWriter<true>::FromStreamBase( TargetStream ) };
 
                 Writer->WriteT( Version );
-                FormatVersion->WriteT( Version );
+                Writer->WriteT( FormatVersion );
+                Writer->WriteT( Language );
             }
 
             if( false == Attributes.Serialize( TargetStream, bIsLoadingOrSaving ) )
@@ -1009,6 +1063,14 @@ namespace SKL::DC
         
         TVersion GetVersion() const noexcept{ return Version; }
         TFormatVersion GetFormatVersion() const noexcept{ return FormatVersion; }
+        TLanguage GetLanguage() const noexcept{ return Language; }
+        
+        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TVersion>> 
+        void SetVersion( TParam InVersion ) noexcept{ Version = InVersion; }
+        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TFormatVersion>> 
+        void SetFormatVersion( TParam InFormatVersion ) noexcept{ FormatVersion = InFormatVersion; }
+        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TLanguage>> 
+        void SetLanguage( TParam InLanguage ) noexcept{ Language = InLanguage; }
 
         Element* GetRootElement() noexcept
         {
@@ -1019,12 +1081,12 @@ namespace SKL::DC
 
             return &Elements[0][0];
         }
-        const Element* GetElement( TBlockIndices InIndices ) const noexcept 
+        Element* GetElement( TBlockIndices InIndices ) noexcept 
         {
             SKL_ASSERT( CInvalidBlockIndex != InIndices.first && CInvalidBlockIndex != InIndices.second );
             return &Elements[InIndices.first][InIndices.second];
         }
-        const Attribute* GetAttribute( TBlockIndices InIndices ) const noexcept 
+        Attribute* GetAttribute( TBlockIndices InIndices ) noexcept 
         {
             SKL_ASSERT( CInvalidBlockIndex != InIndices.first && CInvalidBlockIndex != InIndices.second );
             return &Attributes[InIndices.first][InIndices.second];
@@ -1034,9 +1096,9 @@ namespace SKL::DC
         TRet& GetValuesMap() noexcept { return ValuesMap; }
         template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, StringMap>> 
         TRet& GetNamesMap() noexcept { return NamesMap; }
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, ElementsBlock>> 
+        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, DatacenterElements>> 
         TRet& GetElementsBlock() noexcept { return Elements; }
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, AttributesBlock>> 
+        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, DatacenterAttributes>> 
         TRet& GetAttributesBlock() noexcept { return Attributes; }
         
         std::vector<const Element*> GetAllByNameStartsWith( const wchar_t* InStartsWithString ) const noexcept
@@ -1080,7 +1142,7 @@ namespace SKL::DC
             return Result;
         }
 
-    private:
+    protected:
         bool PostLoadProcessing_Attributes() noexcept
         {
             for( uint32_t i = 0; i < Attributes.Size(); ++i )
@@ -1215,13 +1277,15 @@ namespace SKL::DC
         bool                           bIsLoaded    { false };
         TVersion                       Version      { 0 };
         TFormatVersion                 FormatVersion{ 0 };
-        AttributesBlock                Attributes   {};
-        ElementsBlock                  Elements     {};
+        TLanguage                      Language     { CNoSpecificLanguage };
+        DatacenterAttributes           Attributes   {};
+        DatacenterElements             Elements     {};
         StringMap                      ValuesMap    {};
         StringMap                      NamesMap     {};
         std::unique_ptr<BufferStream>  SourceStream {};
 
         friend ::DatacenterTests::DatacenterTestsFixture;
+        friend struct Builder;
     };
 }
 #undef _CRT_NON_CONFORMING_WCSTOK

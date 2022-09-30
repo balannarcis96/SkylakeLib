@@ -68,6 +68,8 @@ endif()
 
 ################################################################
 
+add_subdirectory("ThirdParty")
+    
 add_subdirectory("SkylakeLibHeaderOnly")
 
 add_subdirectory("SkylakeLib/MiMalloc")
