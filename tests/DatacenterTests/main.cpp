@@ -4,213 +4,462 @@
 
 namespace DatacenterTests
 {
-    constexpr uint32_t CBufferSize { 1024 }; // multiple of sizeof( uint32_t )
-
-    struct MyTrivialType
+    class DatacenterTestsFixture : public testing::Test
     {
-        int a = 1, b = 2, c = 3;
-    };
+    public:
+        using Datacenter = SKL::DC::Datacenter<false>;
+        using BuildDatacenter = SKL::DC::Datacenter<true>;
+        using TestBlockArray = Datacenter::BlockArray<Datacenter::Attribute, static_cast<uint32_t>( Datacenter::GetAttributeSerialSize() )>;
 
-    const char* FileNamePtr{ nullptr };
+        DatacenterTestsFixture() 
+            : testing::Test() {}
 
-    TEST( UtilsTests, GRand_API )
-    {
-        constexpr size_t IterCount{ 1024 };
-
-        auto RandBuffer  { std::make_unique<uint32_t[]>( IterCount ) };
-        auto RandBuffer2 { std::make_unique<uint32_t[]>( IterCount ) };
-        auto RandBufferF { std::make_unique<float[]>( IterCount ) };
-        auto RandBufferD { std::make_unique<double[]>( IterCount ) };
-
-        memset( RandBuffer.get(), 0, sizeof( uint32_t ) * IterCount );
-        memset( RandBuffer2.get(), 0, sizeof( uint32_t ) * IterCount );
-        memset( RandBufferF.get(), 0, sizeof( float ) * IterCount );
-        memset( RandBufferD.get(), 0, sizeof( double ) * IterCount );
-
-        for( size_t i = 0; i < IterCount; ++i )
+        void SetUp() override
         {
-            RandBuffer[ i ]  = SKL::GRand::NextRandom();
-            RandBuffer2[ i ] = SKL::GRand::NextRandomInRange( 0, std::numeric_limits<uint32_t>::max() / 2 );
-            RandBufferF[ i ] = SKL::GRand::NextRandomF();
-            RandBufferD[ i ] = SKL::GRand::NextRandomD();
+
+        }
+        void TearDown() override
+        {
+
+        }
+
+        Datacenter::Attribute Attribute_APIDummy() const noexcept
+        {
+            Datacenter::Attribute Attr;
+            Attr.NameIndex = 23;
+            Attr.Value     = { 1 , 2 };
+            return Attr;
+        }
+        void Attribute_APIDummy_Validate( const Datacenter::Attribute& InDummyAttr ) const noexcept
+        {
+            ASSERT_TRUE( 23 == InDummyAttr.NameIndex );    
+            ASSERT_TRUE( 1 == InDummyAttr.Value.first );    
+            ASSERT_TRUE( 2 == InDummyAttr.Value.second );    
         }
         
-        for( size_t i = 0; i < IterCount; ++i )
+        void Attribute_ValueAPIDummy_Validate() const noexcept
         {
-            for( size_t j = 0; j < IterCount; ++j )
             {
-                if( j == i ) continue;  
-                ASSERT_TRUE( RandBuffer[ i ] != RandBuffer[ j ] );
-                ASSERT_TRUE( RandBuffer2[ i ] != RandBuffer2[ j ] );
-                ASSERT_TRUE( RandBufferF[ i ] != RandBufferF[ j ] );
-                ASSERT_TRUE( RandBufferD[ i ] != RandBufferD[ j ] );
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"2147483647";
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetInt() );    
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetInt64() );    
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetUInt64() );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"7FFFFFFF";
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetInt( 16 ) );  
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetInt64( 16 ) );    
+                ASSERT_TRUE( std::numeric_limits<int32_t>::max() == Attr.GetUInt64( 16 ) );    
+            }
+
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"4294967295";
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetUInt() );    
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetInt64() );    
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetUInt64() );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"FFFFFFFF";
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetUInt( 16 ) );  
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetInt64( 16 ) );    
+                ASSERT_TRUE( std::numeric_limits<uint32_t>::max() == Attr.GetUInt64( 16 ) );    
+            }
+
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.555";
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Attr.GetFloat(), 0.0005f ) );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.5555";
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Attr.GetDouble(), 0.0005 ) );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.555, 23.555";
+
+                float Point2D[2]{ 0.0f, 0.0f };
+                ASSERT_TRUE( true == Attr.Get2DPoint( Point2D ) );
+
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[0], 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point2D[1], 0.0005f ) );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.555, 23.555";
+
+                double Point2D[2]{ 0.0f, 0.0f };
+                ASSERT_TRUE( true == Attr.Get2DPointD( Point2D ) );
+
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[0], 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point2D[1], 0.0005 ) );    
+            }
+
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.555, 23.555, 23.555";
+
+                float Point3D[3]{ 0.0f, 0.0f, 0.0f };
+                ASSERT_TRUE( true == Attr.Get3DPoint( Point3D ) );
+
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[0], 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[1], 0.0005f ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555f, Point3D[2], 0.0005f ) );    
+            }
+            
+            {
+                Datacenter::Attribute Attr;
+                Attr.CachedValueRef = L"23.555, 23.555, 23.555";
+
+                double Point3D[3]{ 0.0, 0.0, 0.0 };
+                ASSERT_TRUE( true == Attr.Get3DPointD( Point3D ) );
+
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[0], 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[1], 0.0005 ) );    
+                ASSERT_TRUE( true == SKL::FIsNearlyEqual( 23.555, Point3D[3], 0.0005 ) );    
             }
         }
-    }
-
-    TEST( UtilsTests, BufferStream_API )
-    {
-        SKL::BufferStream Stream{ CBufferSize };
-        ASSERT_TRUE( nullptr != Stream.GetBuffer() );
-        ASSERT_TRUE( Stream.GetFront() == Stream.GetBuffer() );
-        ASSERT_TRUE( reinterpret_cast<void*>( &Stream.GetStream() ) == &Stream );
-        ASSERT_TRUE( false == Stream.IsEOS() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( Stream.GetBufferSize() == CBufferSize );
-        ASSERT_TRUE( Stream.GetRemainingSize() == CBufferSize );
-
-        Stream.ForwardToEnd();
-        ASSERT_TRUE( true == Stream.IsEOS() );
-        ASSERT_TRUE( Stream.GetBufferSize() == Stream.GetPosition() );
-        Stream.ForwardToEnd( Stream.GetBufferSize() );
-        ASSERT_TRUE( false == Stream.IsEOS() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        Stream.Forward( Stream.GetBufferSize() );
-        ASSERT_TRUE( true == Stream.IsEOS() );
-        ASSERT_TRUE( Stream.GetBufferSize() == Stream.GetPosition() );
-        Stream.Reset();
-        ASSERT_TRUE( false == Stream.IsEOS() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-
-        Stream.WriteT( static_cast<uint32_t>( 1 ) );
-        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
-        ASSERT_TRUE( Stream.GetBufferSize() - static_cast<uint32_t>( sizeof( uint32_t ) ) == Stream.GetRemainingSize() );
-
-        Stream.Reset();
-        ASSERT_TRUE( false == Stream.IsEOS() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-        ASSERT_TRUE( 1 == Stream.ReadT<uint32_t>() );
-        ASSERT_TRUE( sizeof( uint32_t ) == Stream.GetPosition() );
-        ASSERT_TRUE( Stream.GetBufferSize() - static_cast<uint32_t>( sizeof( uint32_t ) ) == Stream.GetRemainingSize() );
-
-        Stream.Reset();
-        for( uint32_t i = 0; i < CBufferSize / sizeof( uint32_t ); ++ i )
+        
+        Datacenter::Element Element_APIDummy() const noexcept
         {
-            Stream.WriteT( i );
+            Datacenter::Element Element;
+            Element.NameIndex        = 23;
+            Element.ChildrenCount    = 5;
+            Element.ChildrenIndices  = { 1 , 2 };
+            Element.AttributesCount  = 6;
+            Element.AttributeIndices = { 3 , 4 };
+            return Element;
         }
-        ASSERT_TRUE( true == Stream.IsEOS() );
-        ASSERT_TRUE( Stream.GetBufferSize() == Stream.GetPosition() );
-        Stream.Reset();
-        for( uint32_t i = 0; i < CBufferSize / sizeof( uint32_t ); ++ i )
+        void Element_APIDummy_Validate( const Datacenter::Element& InDummyElement ) const noexcept
         {
-            ASSERT_TRUE( i == Stream.ReadT<uint32_t>() );
+            ASSERT_TRUE( 23 == InDummyElement.NameIndex );    
+            ASSERT_TRUE( 5 == InDummyElement.ChildrenCount );    
+            ASSERT_TRUE( 1 == InDummyElement.ChildrenIndices.first );    
+            ASSERT_TRUE( 2 == InDummyElement.ChildrenIndices.second );   
+            ASSERT_TRUE( 6 == InDummyElement.AttributesCount );    
+            ASSERT_TRUE( 3 == InDummyElement.AttributeIndices.first );    
+            ASSERT_TRUE( 4 == InDummyElement.AttributeIndices.second );    
         }
-        ASSERT_TRUE( true == Stream.IsEOS() );
-        ASSERT_TRUE( Stream.GetBufferSize() == Stream.GetPosition() );
+
+        Datacenter::Array<Datacenter::Attribute> Array_APIDummy() const noexcept
+        {
+            Datacenter::Array<Datacenter::Attribute> Array;
+
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+            
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+
+            return Array;
+        }
+        void Array_APIDummy_Validate( const Datacenter::Array<Datacenter::Attribute>& InDummyArray ) const noexcept
+        {
+            ASSERT_TRUE( 3 == InDummyArray.Count );
+            ASSERT_TRUE( 3 == InDummyArray.Data.size() );
+
+            for( uint32_t i = 0 ;i < 3; ++i )
+            {
+                const auto& Item{ InDummyArray[i] };
+                ASSERT_TRUE( 23 == Item.NameIndex );    
+                ASSERT_TRUE( 1 == Item.Value.first );    
+                ASSERT_TRUE( 2 == Item.Value.second );  
+            }
+        }
+    
+        TestBlockArray BlockArray_APIDummy() const noexcept
+        {
+            TestBlockArray Array;
+            Array.TotalBlockCount = 64;
+
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+            
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+
+            {
+                auto Attr{ Attribute_APIDummy() };
+                Array.AddItem( std::move( Attr ) ) ;
+            }
+
+            return Array;
+        }
+        void BlockArray_APIDummy_Validate( const TestBlockArray& InDummyArray ) const noexcept
+        {
+            ASSERT_TRUE( 64 == InDummyArray.TotalBlockCount );
+            ASSERT_TRUE( 3 == InDummyArray.TotalUsedBlockCount );
+            ASSERT_TRUE( 3 == InDummyArray.Data.size() );
+
+            for( uint32_t i = 0 ;i < 3; ++i )
+            {
+                const auto& Item{ InDummyArray[i] };
+                ASSERT_TRUE( 23 == Item.NameIndex );    
+                ASSERT_TRUE( 1 == Item.Value.first );    
+                ASSERT_TRUE( 2 == Item.Value.second );  
+            }
+        }
+        
+        Datacenter::StringBlock StringBlock_APIDummy() const noexcept
+        {
+            Datacenter::StringBlock Block;
+          
+            EXPECT_TRUE( true == Block.AllocateBlock() );
+
+            {
+                SKL::DC::TBlockIndex Index{ 0 };
+                EXPECT_TRUE( nullptr != Block.TryAddString( L"ASD", 3, Index ) );
+                EXPECT_TRUE( 0 == Index );
+            }
+            
+            {
+                SKL::DC::TBlockIndex Index{ 0 };
+                EXPECT_TRUE( nullptr != Block.TryAddString( L"ASD", 3, Index ) );
+                EXPECT_TRUE( 4 == Index );
+            }
+
+            EXPECT_TRUE( 8 == Block.BlockUsedSize );
+
+            return Block;
+        }
+        void StringBlock_APIDummy_Validate( const Datacenter::StringBlock& InDummyStringBlock ) const noexcept
+        {
+            ASSERT_TRUE( SKL::DC::CStringsBlockSize == InDummyStringBlock.BlockTotalSize );
+            ASSERT_TRUE( 8 == InDummyStringBlock.BlockUsedSize );
+
+            ASSERT_TRUE( 0 == wcscmp( L"ASD", InDummyStringBlock.GetString( 0 ) ) );
+            ASSERT_TRUE( 0 == wcscmp( L"ASD", InDummyStringBlock.GetString( 4 ) ) );
+        }
+    
+        Datacenter::StringEntry StringEntry_APIDummy() const noexcept
+        {
+            Datacenter::StringEntry StringEntry;
+            StringEntry.Indices = { 1 , 2 };
+            return StringEntry;
+        }
+        void StringEntry_APIDummy_Validate( const Datacenter::StringEntry& InDummyStringEntry ) const noexcept
+        {
+            ASSERT_TRUE( 1 == InDummyStringEntry.Indices.first );    
+            ASSERT_TRUE( 2 == InDummyStringEntry.Indices.second );    
+        }
+        
+        BuildDatacenter::StringMap StringMap_APIDummy() const noexcept
+        {
+            BuildDatacenter::StringMap StringMap;
+
+            SKL::DC::TStringIndex Index{ SKL::DC::CInvalidStringIndex };
+            EXPECT_TRUE( true == StringMap.InsertString( L"ASB", 3, Index ) );
+            
+            EXPECT_TRUE( 0 == Index );
+
+            SKL::DC::TBlockIndices Indices{ SKL::DC::CInvalidBlockIndex, SKL::DC::CInvalidBlockIndex };
+            EXPECT_TRUE( true == StringMap.InsertString( L"ASD", 3, Indices ) );
+
+            EXPECT_TRUE( 0 == Indices.first );
+            EXPECT_TRUE( 4 == Indices.second );
+
+            return StringMap;
+        }
+        void StringMap_APIDummy_Validate( const BuildDatacenter::StringMap& InDummyStringMap ) const noexcept
+        {
+            ASSERT_TRUE( 1 == InDummyStringMap.StringBlocks.Size() );    
+            ASSERT_TRUE( 2 == InDummyStringMap.AllStrings.Size() );    
+            ASSERT_TRUE( 0 == wcscmp( L"ASB", InDummyStringMap.GetString( 0, 0 ) ) );
+            ASSERT_TRUE( 0 == wcscmp( L"ASD", InDummyStringMap.GetString( 0, 4 ) ) );
+        }
+    };
+
+    TEST_F( DatacenterTestsFixture, Attribute_API )
+    {
+        SKL::BufferStream Stream{ 4096 };
+
+        {
+            auto DummyAttr{ Attribute_APIDummy() };
+            ASSERT_TRUE( true == DummyAttr.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( Datacenter::GetAttributeSerialSize() == Stream.GetPosition() );
+        }
+
+        {
+            Stream.SetPosition( 0 );
+
+            Datacenter::Attribute Attr;
+            ASSERT_TRUE( true == Attr.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( Datacenter::GetAttributeSerialSize() == Stream.GetPosition() );
+            Attribute_APIDummy_Validate( Attr );
+        }
+    }
+    
+    TEST_F( DatacenterTestsFixture, Element_API )
+    {
+        SKL::BufferStream Stream{ 4096 };
+
+        {
+            auto DummyElement{ Element_APIDummy() };
+            ASSERT_TRUE( true == DummyElement.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( Datacenter::GetElementSerialSize() == Stream.GetPosition() );
+        }
+
+        {
+            Stream.SetPosition( 0 );
+
+            Datacenter::Element Element;
+            ASSERT_TRUE( true == Element.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( Datacenter::GetElementSerialSize() == Stream.GetPosition() );
+            Element_APIDummy_Validate( Element );
+        }
+    }
+    
+    TEST_F( DatacenterTestsFixture, Array_API )
+    {
+        SKL::BufferStream Stream{ 4096 };
+
+        {
+            auto DummyArray{ Array_APIDummy() };
+            ASSERT_TRUE( true == DummyArray.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( sizeof( uint32_t ) + ( 3 * Datacenter::GetAttributeSerialSize() ) == Stream.GetPosition() );
+        }
+
+        {
+            Stream.SetPosition( 0 );
+
+            Datacenter::Array<Datacenter::Attribute> Array;
+            ASSERT_TRUE( true == Array.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( sizeof( uint32_t ) + ( 3 * Datacenter::GetAttributeSerialSize() ) == Stream.GetPosition() );
+            Array_APIDummy_Validate( Array );
+        }
+    }
+    
+    TEST_F( DatacenterTestsFixture, BlockArray_API )
+    {
+        SKL::BufferStream Stream{ 4096 };
+
+        {
+            auto DummyArray{ BlockArray_APIDummy() };
+            ASSERT_TRUE( true == DummyArray.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( ( sizeof( uint32_t ) * 2 ) + ( 64 * Datacenter::GetAttributeSerialSize() ) == Stream.GetPosition() );
+        }
+
+        {
+            Stream.SetPosition( 0 );
+
+            TestBlockArray Array;
+            ASSERT_TRUE( true == Array.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( ( sizeof( uint32_t ) * 2 ) + ( 64 * Datacenter::GetAttributeSerialSize() ) == Stream.GetPosition() );
+            BlockArray_APIDummy_Validate( Array );
+        }
     }
 
-    TEST( UtilsTests, BufferStream_API_2 )
+    TEST_F( DatacenterTestsFixture, StringBlock_API )
     {
-        SKL::BufferStream Stream{ CBufferSize };
-        SKL_ASSERT( nullptr != Stream.GetBuffer() );
+        SKL::BufferStream Stream{ 4096 * 1024 };
 
-        Stream.WriteT<MyTrivialType>( {} );
-        ASSERT_TRUE( sizeof( MyTrivialType ) == Stream.GetPosition() );
-        ASSERT_TRUE( Stream.GetBufferSize() - static_cast<uint32_t>( sizeof( MyTrivialType ) ) == Stream.GetRemainingSize() );
+        {
+            auto DummyStringBlock{ StringBlock_APIDummy() };
+            ASSERT_TRUE( true == DummyStringBlock.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( ( sizeof( uint16_t ) * 2 ) + ( sizeof( wchar_t ) * SKL::DC::CStringsBlockSize ) == Stream.GetPosition() );
+        }
 
-        Stream.Reset();
-        ASSERT_TRUE( false == Stream.IsEOS() );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
+        {
+            Stream.SetPosition( 0 );
 
-        auto& Ref{  Stream.BuildObjectRef<MyTrivialType>() };
-        ASSERT_TRUE( 1 == Ref.a );
-        ASSERT_TRUE( 2 == Ref.b );
-        ASSERT_TRUE( 3 == Ref.c );
-        ASSERT_TRUE( 0 == Stream.GetPosition() );
-
-        auto Instance{ Stream.ReadT<MyTrivialType>() };
-        ASSERT_TRUE( 1 == Instance.a );
-        ASSERT_TRUE( 2 == Instance.b );
-        ASSERT_TRUE( 3 == Instance.c );
-        ASSERT_TRUE( sizeof( MyTrivialType ) == Stream.GetPosition() );
-        ASSERT_TRUE( Stream.GetBufferSize() - static_cast<uint32_t>( sizeof( MyTrivialType ) ) == Stream.GetRemainingSize() );
+            Datacenter::StringBlock StringBlock;
+            ASSERT_TRUE( true == StringBlock.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( ( sizeof( uint16_t ) * 2 ) + ( sizeof( wchar_t ) * SKL::DC::CStringsBlockSize ) == Stream.GetPosition() );
+            StringBlock_APIDummy_Validate( StringBlock );
+        }
     }
-
-    TEST( UtilsTests, BufferStream_CSTR_API_1 )
+    
+    TEST_F( DatacenterTestsFixture, StringEntry_API )
     {
-        SKL::BufferStream Stream{ CBufferSize };
-        SKL_ASSERT( nullptr != Stream.GetBuffer() );
+        SKL::BufferStream Stream{ 4096 };
 
-        Stream.WriteString( "TEST_STRING" );
-        ASSERT_TRUE( 12 == Stream.GetPosition() );
+        {
+            auto DummyStringEntry{ StringEntry_APIDummy() };
+            ASSERT_TRUE( true == DummyStringEntry.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( sizeof( SKL::DC::TBlockIndices ) == Stream.GetPosition() );
+        }
 
-        const char* StrPtr{ reinterpret_cast<const char*>( Stream.GetBuffer() ) };
-        ASSERT_TRUE( std::string{ StrPtr } == "TEST_STRING" );
+        {
+            Stream.SetPosition( 0 );
 
-        Stream.Reset();
-        ASSERT_TRUE( 11 == Stream.GetFrontAsString_Size() );
-        ASSERT_TRUE( 0 == SKL_STRCMP( "TEST_STRING", Stream.GetFrontAsString(), Stream.GetRemainingSize() ) );
+            Datacenter::StringEntry StringEntry;
+            ASSERT_TRUE( true == StringEntry.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( sizeof( SKL::DC::TBlockIndices ) == Stream.GetPosition() );
+            StringEntry_APIDummy_Validate( StringEntry );
+        }
     }
-
-    TEST( UtilsTests, BufferStream_CSTR_API_2 )
+    
+    TEST_F( DatacenterTestsFixture, StringMap_API )
     {
-        const char* MyStr { "TEST_STRING" };
+        SKL::BufferStream Stream{ 4096 * 1024 };
 
-        SKL::BufferStream Stream{ CBufferSize };
-        SKL_ASSERT( nullptr != Stream.GetBuffer() );
+        {
+            auto DummyStringMap{ StringMap_APIDummy() };
+            ASSERT_TRUE( true == DummyStringMap.Serialize( Stream.GetStreamBase(), false ) );
+            ASSERT_TRUE( 
+                    (
+                        (
+                            sizeof( uint32_t ) + ( sizeof( SKL::DC::TBlockIndices ) * 2 )
+                        )
+                        +
+                        ( 
+                            sizeof( uint32_t ) + ( ( ( sizeof( uint16_t ) * 2 ) + ( sizeof( wchar_t ) * SKL::DC::CStringsBlockSize ) ) )
+                        )
+                    )
+                    == Stream.GetPosition() );
+        }
 
-        Stream.WriteString( MyStr, 12 );
-        ASSERT_TRUE( 12 == Stream.GetPosition() );
+        {
+            Stream.SetPosition( 0 );
 
-        const char* StrPtr{ reinterpret_cast<const char*>( Stream.GetBuffer() ) };
-        ASSERT_TRUE( std::string{ StrPtr } == "TEST_STRING" );
-
-        Stream.Reset();
-        ASSERT_TRUE( 11 == Stream.GetFrontAsString_Size() );
-        ASSERT_TRUE( 0 == SKL_STRCMP( "TEST_STRING", Stream.GetFrontAsString(), Stream.GetRemainingSize() ) );
+            BuildDatacenter::StringMap StringMap;
+            ASSERT_TRUE( true == StringMap.Serialize( Stream.GetStreamBase(), true ) );
+            ASSERT_TRUE( 
+                    (
+                        (
+                            sizeof( uint32_t ) + ( sizeof( SKL::DC::TBlockIndices ) * 2 )
+                        )
+                        +
+                        ( 
+                            sizeof( uint32_t ) + ( ( ( sizeof( uint16_t ) * 2 ) + ( sizeof( wchar_t ) * SKL::DC::CStringsBlockSize ) ) )
+                        )
+                    )
+                    == Stream.GetPosition() );
+            StringMap_APIDummy_Validate( StringMap );
+        }
     }
-
-    TEST( UtilsTests, BufferStream_WCSTR_API_1 )
+    
+    TEST_F( DatacenterTestsFixture, Attribute_ValueAPI )
     {
-        SKL::BufferStream Stream{ CBufferSize };
-        SKL_ASSERT( nullptr != Stream.GetBuffer() );
-
-        Stream.WriteWString( L"TEST_STRING" );
-        ASSERT_TRUE( 12 * 2 == Stream.GetPosition() );
-
-        const wchar_t* StrPtr{ reinterpret_cast<const wchar_t*>( Stream.GetBuffer() ) };
-        ASSERT_TRUE( std::wstring{ StrPtr } == L"TEST_STRING" );
-
-        Stream.Reset();
-        ASSERT_TRUE( 11 == Stream.GetFrontAsWString_Size() );
-        ASSERT_TRUE( 0 == SKL_WSTRCMP( L"TEST_STRING", Stream.GetFrontAsWString(), Stream.GetRemainingSize() / 2 ) );
-    }
-
-    TEST( UtilsTests, BufferStream_WCSTR_API_2 )
-    {
-        const wchar_t* MyStr { L"TEST_STRING" };
-
-        SKL::BufferStream Stream{ CBufferSize };
-        SKL_ASSERT( nullptr != Stream.GetBuffer() );
-
-        Stream.WriteWString( MyStr, 12 );
-        ASSERT_TRUE( 12 * 2 == Stream.GetPosition() );
-
-        const wchar_t* StrPtr{ reinterpret_cast<const wchar_t*>( Stream.GetBuffer() ) };
-        ASSERT_TRUE( std::wstring{ StrPtr } == L"TEST_STRING" );
-
-        Stream.Reset();
-        ASSERT_TRUE( 11 == Stream.GetFrontAsWString_Size() );
-        ASSERT_TRUE( 0 == SKL_WSTRCMP( L"TEST_STRING", Stream.GetFrontAsWString(), Stream.GetRemainingSize() / 2 ) );
-    }
-
-    TEST( UtilsTests, BufferStream_File_API_2 )
-    {
-        auto Stream{ SKL::BufferStream::OpenFile( FileNamePtr ) };
-        ASSERT_TRUE( true == Stream.has_value() );
-        ASSERT_TRUE( true == Stream->IsValid() );
-
-        SKL::BufferStream Stream2{ std::move( *Stream ) };
-        ASSERT_TRUE( true == Stream2.IsValid() );
-        ASSERT_TRUE( false == Stream->IsValid() );
-
+       Attribute_ValueAPIDummy_Validate();
     }
 }
 
 int main( int argc, char** argv )
 {
-    UtilsTests::FileNamePtr = argv[0];
-
     testing::InitGoogleTest( &argc, argv );
     return RUN_ALL_TESTS( );
 }

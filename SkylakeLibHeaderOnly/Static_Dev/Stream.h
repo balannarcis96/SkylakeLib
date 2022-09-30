@@ -207,6 +207,8 @@ namespace SKL
 
             const auto* Result{ memcpy( OutBuffer, GetFront(), ActualReadSize ) };
             SKL_ASSERT( OutBuffer == Result );
+            
+            this->Forward( ActualReadSize );
 
             return true;
         }

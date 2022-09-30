@@ -857,6 +857,152 @@ namespace SKL
         free(buffer);
         return lineSize;
     }
+
+    std::vector<std::string> ScanForFilesInDirectory( const char* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& extensions ) noexcept
+    {
+        std::vector<std::string> result;
+	    WIN32_FIND_DATAA ffd;
+	    HANDLE hFind = INVALID_HANDLE_VALUE;
+	    std::string cwd = RootDirectory;
+	    std::string searchPattern = RootDirectory;
+	    searchPattern += "*";
+	    OutMaxFileSize = 0;
+
+	    hFind = FindFirstFileA( searchPattern.c_str( ), &ffd );
+	    if( INVALID_HANDLE_VALUE == hFind )
+	    {
+	    	return result;
+	    }
+
+	    do
+	    {
+	    	cwd = RootDirectory;
+	    	cwd += ffd.cFileName;
+
+	    	if( ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+	    	{
+	    		if( 0 == strcmp( ffd.cFileName, "." ) || 0 == strcmp( ffd.cFileName, ".." ) )
+	    		{
+	    			continue;
+	    		}
+
+	    		cwd += "\\";
+
+	    		auto temp = ScanForFilesInDirectory( cwd.c_str( ), OutMaxFileSize, extensions );
+
+	    		for( auto& t : temp )
+	    		{
+	    			result.push_back( std::move( t ) );
+	    		}
+	    	}
+	    	else
+	    	{
+	    		bool found = false;
+	    		for( const auto& t : extensions )
+	    		{
+	    			if( cwd.find( t ) != std::string::npos )
+	    			{
+	    				found = true;
+	    				break;
+	    			}
+	    		}
+	    		if( !found )
+	    		{
+	    			continue;
+	    		}
+
+	    		size_t FileSize = static_cast<size_t>( ffd.nFileSizeHigh ) * (size_t)( MAXDWORD + 1 ) +
+	    			(size_t)ffd.nFileSizeLow;
+	    		//FileSize <<= sizeof(ffd.nFileSizeHigh) * 8; // Push by count of bits
+	    		//FileSize |= ffd.nFileSizeLow;
+
+	    		if( FileSize > OutMaxFileSize )
+	    		{
+	    			OutMaxFileSize = FileSize;
+	    		}
+
+	    		result.push_back( cwd );
+	    	}
+	    }
+	    while( FindNextFileA( hFind, &ffd ) != 0 );
+
+	    FindClose( hFind );
+
+	    return result;
+    }
+
+    std::vector<std::wstring> ScanForFilesInDirectoryW( const wchar_t* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::wstring>& extensions ) noexcept
+    {
+        std::vector<std::wstring> result;
+	    WIN32_FIND_DATAW ffd;
+	    HANDLE hFind = INVALID_HANDLE_VALUE;
+	    std::wstring cwd = RootDirectory;
+	    std::wstring searchPattern = RootDirectory;
+	    searchPattern += L"*";
+	    OutMaxFileSize = 0;
+
+	    hFind = FindFirstFileW( searchPattern.c_str( ), &ffd );
+	    if( INVALID_HANDLE_VALUE == hFind )
+	    {
+	    	return result;
+	    }
+
+	    do
+	    {
+	    	cwd = RootDirectory;
+	    	cwd += ffd.cFileName;
+
+	    	if( ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+	    	{
+	    		if( 0 == wcscmp( ffd.cFileName, L"." ) || 0 == wcscmp( ffd.cFileName, L".." ) )
+	    		{
+	    			continue;
+	    		}
+
+	    		cwd += L"\\";
+
+	    		auto temp = ScanForFilesInDirectoryW( cwd.c_str( ), OutMaxFileSize, extensions );
+
+	    		for( auto& t : temp )
+	    		{
+	    			result.push_back( std::move( t ) );
+	    		}
+	    	}
+	    	else
+	    	{
+	    		bool found = false;
+	    		for( const auto& t : extensions )
+	    		{
+	    			if( cwd.find( t ) != std::wstring::npos )
+	    			{
+	    				found = true;
+	    				break;
+	    			}
+	    		}
+	    		if( !found )
+	    		{
+	    			continue;
+	    		}
+
+	    		size_t FileSize = static_cast<size_t>( ffd.nFileSizeHigh ) * (size_t)( MAXDWORD + 1 ) +
+	    			(size_t)ffd.nFileSizeLow;
+	    		//FileSize <<= sizeof(ffd.nFileSizeHigh) * 8; // Push by count of bits
+	    		//FileSize |= ffd.nFileSizeLow;
+
+	    		if( FileSize > OutMaxFileSize )
+	    		{
+	    			OutMaxFileSize = FileSize;
+	    		}
+
+	    		result.push_back( cwd );
+	    	}
+	    }
+	    while( FindNextFileW( hFind, &ffd ) != 0 );
+
+	    FindClose( hFind );
+
+	    return result;
+    }
 }
 
 // String Utils

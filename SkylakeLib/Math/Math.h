@@ -69,7 +69,7 @@ constexpr skReal CRadToDeg     = RadToDeg;
 constexpr skReal CDegToRad     = DegToRad;
 
 #if defined(SKL_USE_SSE)
-	#include <emmintrin.h>
+    #include <emmintrin.h>
 #endif
 
 namespace SKL

@@ -267,6 +267,12 @@ namespace SKL
         static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
         return *reinterpret_cast<const uint32_t*>( &ThreadId );
     }
+    
+    //! Scan directory recursively and collect file names
+    std::vector<std::string> ScanForFilesInDirectory( const char* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& extensions ) noexcept;
+
+    //! Scan directory recursively and collect file names
+    std::vector<std::wstring> ScanForFilesInDirectoryW( const wchar_t* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::wstring>& extensions ) noexcept;
 }
 
 #include "TLSValue.h"
