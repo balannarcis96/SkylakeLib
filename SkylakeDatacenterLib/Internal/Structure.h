@@ -64,6 +64,7 @@ namespace SKL::DC
         {
             return 
                   sizeof( TNameIndex ) 
+                + sizeof( TBlockIndices )
                 + sizeof( uint16_t )
                 + sizeof( TBlockIndices )
                 + sizeof( uint16_t )
@@ -256,6 +257,7 @@ namespace SKL::DC
                     auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
                     
                     NameIndex        = Reader->ReadT<decltype( NameIndex )>();
+                    ValueIndices     = Reader->ReadT<decltype( ValueIndices )>();
                     AttributesCount  = Reader->ReadT<decltype( AttributesCount )>();
                     AttributeIndices = Reader->ReadT<decltype( AttributeIndices )>();
                     ChildrenCount    = Reader->ReadT<decltype( ChildrenCount )>();
@@ -266,6 +268,7 @@ namespace SKL::DC
                     auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( NameIndex );
+                    Writer->WriteT( ValueIndices );
                     Writer->WriteT( AttributesCount );
                     Writer->WriteT( AttributeIndices );
                     Writer->WriteT( ChildrenCount );
@@ -278,6 +281,10 @@ namespace SKL::DC
             SKL_FORCEINLINE TStringRef GetName() const noexcept 
             {
                 return CachedNameRef;
+            }
+            SKL_FORCEINLINE TStringRef GetValue() const noexcept 
+            {
+                return CachedValueRef;
             }
             SKL_FORCEINLINE const std::vector<Attribute*>& GetAttributes() const noexcept
             {
@@ -1198,6 +1205,12 @@ namespace SKL::DC
 
                     ElementItem.CachedNameRef = NamesMap.GetStringByIndex( ElementItem.NameIndex );
                     SKL_ASSERT( nullptr != ElementItem.CachedNameRef );
+
+                    if( CInvalidBlockIndex != ElementItem.ValueIndices.first && CInvalidBlockIndex != ElementItem.ValueIndices.second )
+                    {
+                        ElementItem.CachedValueRef = NamesMap.GetString( ElementItem.ValueIndices );
+                        SKL_ASSERT( nullptr != ElementItem.CachedValueRef );
+                    }
 
                     if constexpr( true == bEnableBuildCapabilities )
                     {

@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.8)
 project ("SkyalakeLib_Datacenter_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibDatacenterTests main.cpp)
-add_test(NAME "TEST_SkylakeLibDatacenterTests" COMMAND SkylakeLibDatacenterTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_test(NAME "TEST_SkylakeLibDatacenterTests" COMMAND SkylakeLibDatacenterTests WORKING_DIRECTORY "$<TARGET_FILE_DIR:SkylakeLibDatacenterTests>/../")
 target_link_libraries(SkylakeLibDatacenterTests PUBLIC SkylakeDatacenterBuilder)
 
 # Link Google Test
