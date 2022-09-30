@@ -584,7 +584,7 @@ namespace DatacenterTests
         }
     }
 
-    TEST_F( DatacenterTestsFixture, Client_Builder_API )
+    TEST_F( DatacenterTestsFixture, DISABLED_Client_Builder_API )
     {
         {
              SKL::DC::Builder      DCBuilder{};
@@ -621,7 +621,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, Server_Builder_API )
+    TEST_F( DatacenterTestsFixture, DISABLED_Server_Builder_API )
     {
         {
              SKL::DC::Builder      DCBuilder{};
