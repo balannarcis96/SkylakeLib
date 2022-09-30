@@ -99,6 +99,7 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
+                    delete Task;
                     break;
                 }
                 
@@ -146,6 +147,7 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
+                    delete Task;
                     break;
                 }
                 
@@ -189,6 +191,7 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
+                    delete Task;
                     break;
                 }
                 
