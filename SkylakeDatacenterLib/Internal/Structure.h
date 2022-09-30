@@ -16,8 +16,6 @@ namespace DatacenterTests
     class DatacenterTestsFixture;
 }
 
-#define _CRT_NON_CONFORMING_WCSTOK
-
 namespace SKL::DC
 {
     using TVersion       = uint32_t;
@@ -1316,4 +1314,3 @@ namespace SKL::DC
         friend struct Builder;
     };
 }
-#undef _CRT_NON_CONFORMING_WCSTOK
