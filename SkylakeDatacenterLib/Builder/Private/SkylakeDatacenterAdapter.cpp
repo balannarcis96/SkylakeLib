@@ -45,6 +45,6 @@ namespace SKL::DC
 
     bool DatacenterAdapter::IsLanguageAttributeByName( const std::string_view& InString ) const noexcept 
     {
-        return 0 == stricmp( InString.data(), "language" ) || 0 == stricmp( InString.data() , "lang" );
+        return 0 == SKL_STRICMP( InString.data(), "language", 8 ) || 0 == SKL_STRICMP( InString.data() , "lang", 4 );
     }
 }

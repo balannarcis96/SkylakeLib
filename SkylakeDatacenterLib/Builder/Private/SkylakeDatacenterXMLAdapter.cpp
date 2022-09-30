@@ -93,30 +93,28 @@ namespace SKL::DC
         ::rapidxml::xml_attribute<char>* Attribute{ InNode->first_attribute() };
         while( nullptr != Attribute )
         {
-            if( true == InAdaptor->ShouldSkipAttributeByName( Attribute->name() ) )
+            if( false == InAdaptor->ShouldSkipAttributeByName( Attribute->name() ) )
             {
-                continue;
-            }
+                RawAttribute NewAttribute{};
 
-            RawAttribute NewAttribute{};
-
-            const auto* Name{ InAdaptor->ConvertUtf8ToUtf16( Attribute->name(), Attribute->name_size() ) };
-            if( nullptr == Name )
-            {
-            	SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute name to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
-				return nullptr;
-            }
-            NewAttribute.SetName( Name );
+                const auto* Name{ InAdaptor->ConvertUtf8ToUtf16( Attribute->name(), Attribute->name_size() ) };
+                if( nullptr == Name )
+                {
+            	    SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute name to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
+				    return nullptr;
+                }
+                NewAttribute.SetName( Name );
             
-            const auto* Value{ InAdaptor->ConvertUtf8ToUtf16( Attribute->value(), Attribute->value_size() ) };
-            if( nullptr == Value )
-            {
-            	SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
-				return nullptr;
-            }
-            NewAttribute.SetValue( Value );
+                const auto* Value{ InAdaptor->ConvertUtf8ToUtf16( Attribute->value(), Attribute->value_size() ) };
+                if( nullptr == Value )
+                {
+            	    SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
+				    return nullptr;
+                }
+                NewAttribute.SetValue( Value );
 
-            NewElement->AddAttribute( std::move( NewAttribute ) );
+                NewElement->AddAttribute( std::move( NewAttribute ) );
+            }
 
             Attribute = Attribute->next_attribute();
         }
@@ -125,7 +123,7 @@ namespace SKL::DC
         while( nullptr != ChildNode )
         {
             auto ChildElement{ ParseXmlFileNode( InAdaptor, NewElement.get(), ChildNode ) };
-            if( nullptr != ChildNode )
+            if( nullptr != ChildElement )
             {
                 NewElement->AddChild( ChildElement.release() );
             }
@@ -148,7 +146,7 @@ namespace SKL::DC
         }
 
         std::vector<std::unique_ptr<RawElement>> AllElements;
-        AllElements.resize( 1024 );
+        AllElements.reserve( 1024 );
 
         //const size_t DirectoryNameLength{ strlen( GetTargetDirectory() ) };
         for( auto& FileName: FilesInDirectory )
@@ -201,7 +199,7 @@ namespace SKL::DC
 
             XmlDoc->parse<0>( reinterpret_cast<char*>( Buffer.get() ) );
             
-			if ( nullptr == XmlDoc->first_node( )->next_sibling( ) )
+			if ( nullptr == XmlDoc->first_node( ) )
 			{
                 SKLL_TRACE_MSG( "Failed to allocate xmlDoc object !" );
 				return nullptr;
@@ -224,7 +222,7 @@ namespace SKL::DC
 				return nullptr;
             }
 
-            AllElements.emplace_back( std::move( FileRootNode ) );
+            AllElements.push_back( std::move( FileRootNode ) );
         }
 
         auto RootNode{ std::make_unique<RawElement>() };
@@ -233,6 +231,7 @@ namespace SKL::DC
 
         for( auto& Element: AllElements )
         {
+            if( nullptr == Element ){ continue; }
             RootNode->AddChild( Element.release() );
         }
 

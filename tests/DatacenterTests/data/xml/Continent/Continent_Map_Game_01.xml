@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Continent id="1981335975" configId="1" mapName_="Map_Game_01" _spawnTemplateId="2157711675">
+	<_Cluster cellWidth="2100" cellHeight="2100" interactionCellWidth="1200" interactionCellHeight="1200" cellOuterAddValue="50" />
+	<_NavMesh src="NavMesh/Maps/Map_1.navmesh" queryNodes="2048" />
+	<_AddAbnormality />
+	<_Points>
+		<Point type="Start" value="0.000000,0.000000,0.000000" />
+		<Point type="UnstuckTeleport" value="0.000000,0.000000,0.000000" />
+	</_Points>
+	<Regions />
+</Continent>

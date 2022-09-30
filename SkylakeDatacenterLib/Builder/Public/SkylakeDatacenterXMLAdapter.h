@@ -18,6 +18,10 @@ namespace SKL::DC
         DatacenterXMLAdapter() noexcept
         {
             AddAcceptedFileExtension( ".xml" );
+            
+            Utf8Buffer.reset( new char[ CBuffersLength ] );
+            SKL_ASSERT( nullptr != Utf8Buffer.get() );
+            Utf8Buffer[0] = L'\0';
 
             Utf16Buffer.reset( new wchar_t[ CBuffersLength ] );
             SKL_ASSERT( nullptr != Utf16Buffer.get() );
@@ -43,10 +47,21 @@ namespace SKL::DC
 
             return nullptr;
         }
+        SKL_FORCEINLINE std::pair<char*, size_t> GetUtf8Buffer() const noexcept { return { Utf8Buffer.get(), CBuffersLength }; }
+        SKL_FORCEINLINE const wchar_t* ConvertUtf16ToUtf8( const wchar_t* InStr, size_t InStringLengthInWChars ) noexcept
+        {
+            if( true == SKL::GWideCharToMultiByte( InStr, InStringLengthInWChars, Utf8Buffer.get(), CBuffersLength ) )
+            {
+                return Utf16Buffer.get();
+            }
+
+            return nullptr;
+        }
 
     protected:
         std::string                TargetDirectory       {};
         std::vector<std::string>   AcceptedFileExtensions{};
+        std::unique_ptr<char[]>    Utf8Buffer            { nullptr };
         std::unique_ptr<wchar_t[]> Utf16Buffer           { nullptr };
     };
 }

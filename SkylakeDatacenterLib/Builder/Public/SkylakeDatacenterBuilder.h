@@ -47,7 +47,10 @@ namespace SKL::DC
 
         SKL_FORCEINLINE MyDatacenter& GetDatacenter() noexcept { return DC; }
         SKL_FORCEINLINE const MyDatacenter& GetDatacenter() const noexcept { return DC; }
-
+        SKL_FORCEINLINE TVersion SetVersion() const noexcept { return TargetVersion; }
+        SKL_FORCEINLINE void SetVersion( TVersion InVersion ) noexcept { TargetVersion = InVersion; }
+        SKL_FORCEINLINE TFormatVersion SetFormatVersion() const noexcept { return TargetFormatVersion; }
+        SKL_FORCEINLINE void SetFormatVersion( TFormatVersion InFormatVersion ) noexcept { TargetFormatVersion = InFormatVersion; }
     private:
         bool BuildDCTree( RawElement* InElement ) noexcept;
         bool BuildDCTreeRecursive( RawElement* InElement, TBlockIndices InDCElementIndices ) noexcept;

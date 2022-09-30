@@ -304,6 +304,7 @@ namespace SKL
         std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
         std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
         std::unique_ptr<std::latch>                 SyncWorkerStartup              {};          //!< Latch used to sync all workers startup
+        std::unique_ptr<std::latch>                 SyncWorkerShutdown             {};          //!< Latch used to sync all workers shutdown
 
         friend class Worker;
         friend class WorkerGroup;

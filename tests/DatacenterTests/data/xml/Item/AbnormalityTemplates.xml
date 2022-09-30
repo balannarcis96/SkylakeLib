@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AbnormalityTemplates>
+	<Abnormality id="1282923164" duration="1000" _kind="RegenerateHP" _group="Doping" _maxStackCount="1" _startStackCount="1" _level="1" name_="@Abnormality:1" description_="@Abnormality:2" icon_="/Game/UI/StyleSet_Skylake/Shared/ActionAbleSlot_1_Brush.ActionAbleSlot_1_Brush" bNoRefresh="false" bStackTime="false" bIsBuff="false" bRealTime="false" bIsNonCombat="false" bInfinity="false" bNotCareDeath="false" bIsTransform="false" bHidden="false" bShowOtherUsers="false" bShowParty="false" bShowOnlyIcon="false" bIsStance="false" bJudgmentOnce="false" bBalancedByTargetCount="false" bIsKeptOnWorldChange="false" bRemoveOnAnyReaction="false" bShowForCreatureInWorld="false">
+		<_CancelConditions />
+		<_Categories />
+		<_Effects />
+	</Abnormality>
+</AbnormalityTemplates>

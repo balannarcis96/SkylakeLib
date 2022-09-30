@@ -30,8 +30,9 @@ namespace SKL::DC
     using TStringRef     = const wchar_t*;
     using Stream         = StreamBase;
     using AttributeValue = TBlockIndices;
-    using TLanguage      = uint16_t;
+    using TLanguage      = int16_t;
 
+    constexpr TLanguage      CInvalidLanguage       = -1;
     constexpr TLanguage      CNoSpecificLanguage    = 0;
     constexpr TLanguage      CInternationalLanguage = 1;
     constexpr TVersion       CInvalidVersion        = 0;
@@ -305,7 +306,8 @@ namespace SKL::DC
             }
             SKL_FORCEINLINE void SetNameIndex( TNameIndex InIndex ) noexcept { NameIndex = InIndex; }
             SKL_FORCEINLINE void SetValueIndices( TBlockIndices InValueIndices ) noexcept { ValueIndices = InValueIndices; }
-
+            SKL_FORCEINLINE void SetChildrenIndices( TBlockIndices InIndices ) noexcept { ChildrenIndices = InIndices; }
+            SKL_FORCEINLINE void SetAttributesIndices( TBlockIndices InIndices ) noexcept { AttributeIndices = InIndices; }
         private:
             TNameIndex     NameIndex         { CInvalidStringIndex };
             uint16_t       AttributesCount   { 0 };
@@ -345,7 +347,7 @@ namespace SKL::DC
                             return false;
                         }
 
-                        Data.emplace_back( std::move( Object ) );
+                        Data.push_back( std::move( Object ) );
                     }
                 }
                 else
@@ -406,7 +408,7 @@ namespace SKL::DC
             SKL_FORCEINLINE void AddItem( T&& InItem ) noexcept
             {
                 SKL_ASSERT( Data.size() == Count );
-                Data.emplace_back( std::forward<T>( InItem ) );
+                Data.push_back( std::forward<T>( InItem ) );
                 ++Count;
             }
         private:
@@ -439,7 +441,7 @@ namespace SKL::DC
                             return false;
                         }
 
-                        Data.emplace_back( std::move( Object ) );
+                        Data.push_back( std::move( Object ) );
                     }
                 }
                 else
@@ -528,7 +530,7 @@ namespace SKL::DC
                 }
 
                 SKL_ASSERT( Data.size() == TotalUsedBlockCount );
-                Data.emplace_back( std::forward<T>( InItem ) );
+                Data.push_back( std::forward<T>( InItem ) );
                 ++TotalUsedBlockCount;
 
                 return true;
@@ -956,7 +958,7 @@ namespace SKL::DC
         {
             if constexpr( false == bEnableBuildCapabilities )
             {
-                if( true == bIsLoadingOrSaving ) 
+                if( false == bIsLoadingOrSaving ) 
                 {
                     SKLL_TRACE_MSG_FMT( "Cannot performa save without bEnableBuildCapabilities==true!" );
                     return false;
@@ -1015,6 +1017,8 @@ namespace SKL::DC
                 }
             }
 
+            bIsLoaded = true;
+
             return true;
         }
 
@@ -1032,13 +1036,13 @@ namespace SKL::DC
                 return false;
             }
 
-            if( PostLoadProcessing_Attributes() )
+            if( false == PostLoadProcessing_Attributes() )
             {
                 SKLL_TRACE_MSG_FMT( "Failed to PostLoadProcessing_Attributes()!" );
                 return false;
             }
 
-            if( PostLoadProcessing_Elements() )
+            if( false == PostLoadProcessing_Elements() )
             {
                 SKLL_TRACE_MSG_FMT( "Failed to PostLoadProcessing_Elements()!" );
                 return false;
@@ -1061,6 +1065,17 @@ namespace SKL::DC
 
         bool IsLoaded() const noexcept{ return bIsLoaded; }
         
+        bool SaveToFile( const char* InFileName ) const noexcept
+        {
+            if( false == IsLoaded() )
+            {
+                return false;
+            }
+
+            SKL_ASSERT( nullptr != SourceStream );
+            return SourceStream->SaveToFile( InFileName, false, true, false );
+        }
+
         TVersion GetVersion() const noexcept{ return Version; }
         TFormatVersion GetFormatVersion() const noexcept{ return FormatVersion; }
         TLanguage GetLanguage() const noexcept{ return Language; }
@@ -1228,7 +1243,7 @@ namespace SKL::DC
             // cache all attributes
             for( uint16_t i = 0; i < InElement->AttributesCount; ++i )
             {
-                const auto* AttributeItem{ GetAttribute( InElement->AttributeIndices ) };
+                auto* AttributeItem{ GetAttribute( { InElement->AttributeIndices.first, InElement->AttributeIndices.second + i } ) };
                 if( nullptr == AttributeItem )
                 {
                     SKLL_TRACE_MSG_FMT( "Failed to get Attribute {%hu %hu} for element{%ws}"

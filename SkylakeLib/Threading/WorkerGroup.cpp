@@ -181,7 +181,7 @@ namespace SKL
 
     RStatus WorkerGroup::HandleMasterWorker( Worker* InMasterWorker ) noexcept
     {
-        // marsk as master
+        // mark as master
         InMasterWorker->bIsMasterThread.exchange( TRUE ); 
 
         // cache master worker pointer
@@ -613,6 +613,7 @@ namespace SKL
     bool WorkerGroup::OnWorkerStopped( Worker& Worker ) noexcept
     {
         const auto NewRunningWorkersCount { RunningWorkers.decrement() - 1 };
+        SKLL_TRACE_MSG_FMT( "NewRunningWorkersCount:%u", NewRunningWorkersCount );
 
         if ( false == Manager->OnWorkerStopped( Worker, *this ) )
         {
@@ -629,12 +630,26 @@ namespace SKL
 
         if( 0 == NewRunningWorkersCount )
         {
+            if( nullptr != GetServerInstance()->SyncWorkerShutdown )
+            {
+                // wait for all other workers to stop before going further
+                GetServerInstance()->SyncWorkerShutdown->arrive_and_wait();
+            }
+
             if ( false == OnAllWorkersStopped() )
             {
                 return false;
             }
 
             return Manager->OnWorkerGroupStopped( *this );
+        }
+        else
+        {
+            if( nullptr != GetServerInstance()->SyncWorkerShutdown )
+            {
+                // wait for all other workers to stop before going further
+                GetServerInstance()->SyncWorkerShutdown->arrive_and_wait();
+            }
         }
 
         return true;

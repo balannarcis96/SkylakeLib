@@ -1,0 +1,18 @@
+<ClientSettings version="1" name="Skylake Client">
+  <CharacterConfig
+	turnRate="65.0"
+	lookUpRate="45.0"
+	cameraArmLength="300"
+	baseFOV="90"
+	minCapsuleHalfHeight="50"
+	minCapsuleRadius="10"
+  />
+  <MovementConfig 
+	gravityScale="1.75"
+	yawRotationRate="2000.0"
+	jumpZVelocity="550.0"
+	minMoveSpeed="550"
+	minRunSpeed="450"
+	fallingDamageHeightThreshold="400"
+	/>
+</ClientSettings>

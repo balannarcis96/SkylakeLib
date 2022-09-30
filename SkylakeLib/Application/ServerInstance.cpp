@@ -107,6 +107,7 @@ namespace SKL
         }
 
         SyncWorkerStartup.reset( new std::latch( static_cast<ptrdiff_t>( TotalWorkers.load() ) ) );
+        SyncWorkerShutdown.reset( new std::latch( static_cast<ptrdiff_t>( TotalWorkers.load() ) ) );
 
         for( auto* Group: WorkerGroups )
         {

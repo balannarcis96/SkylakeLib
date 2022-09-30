@@ -187,6 +187,7 @@ namespace SKL::DC
 
         Element->SetAttributesCount( static_cast<uint32_t>( InRawElement->Attributes.size() ) );
         Element->SetChildrenCount( static_cast<uint32_t>( InRawElement->Children.size() ) );
+        Element->GetEditData().CachedLocation = InDCElementIndices;
 
         // insert element name string
         TNameIndex NameIndex{ CInvalidStringIndex };
@@ -195,6 +196,7 @@ namespace SKL::DC
             SKLL_TRACE_MSG_FMT( "Failed to insert element name into the names map. Name:%ws", InRawElement->GetName() );
             return false;
         }
+        Element->SetNameIndex( NameIndex );
 
         if( 0 != InRawElement->GetValueSize() )
         {
@@ -222,6 +224,7 @@ namespace SKL::DC
                 SKLL_TRACE_MSG_FMT( "Failed to allocate attributes block for element! count:%llu Name:%ws", InRawElement->Attributes.size(), InRawElement->GetName() );
                 return false;
             }
+            Element->SetAttributesIndices( AttributesIndices );
 
             for( uint32_t i = 0; i < static_cast<uint32_t>( InRawElement->Attributes.size() ); ++i )
             {
@@ -262,6 +265,7 @@ namespace SKL::DC
             SKLL_TRACE_MSG_FMT( "Failed to allocate child elements!. <%ws ...></>", InRawElement->GetName() );
             return false;
         }
+        DC.GetElement( InDCElementIndices )->SetChildrenIndices( ChildrenIndices );
         for( uint32_t i = 0; i < static_cast<uint32_t>( InRawElement->Children.size() ); ++i )
         {
             if( false == BuildDCTreeRecursive( InRawElement->Children[i], { ChildrenIndices.first, static_cast<TBlockIndex>( i + ChildrenIndices.second ) } ) )

@@ -54,15 +54,18 @@
 #define TCLOCK_SLEEP_FOR_MILLIS( int_value ) std::this_thread::sleep_for( TCLOCK_MILLIS( int_value ) )
 #define TCLOCK_SLEEP_FOR_MICROS( int_value ) std::this_thread::sleep_for( TCLOCK_MICROS( int_value ) )
 
+#define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strncmp( InStr1, InStr2, InMaxSizeInBytes )
+#define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcsncmp( InStr1, InStr2, InMaxSizeInWords )
+
+#define SKL_STRICMP( InStr1, InStr2, InMaxSizeInBytes ) ::_strnicmp( InStr1, InStr2, InMaxSizeInBytes )
+#define SKL_WSTRICMP( InStr1, InStr2, InMaxSizeInWords ) ::_wcsnicmp( InStr1, InStr2, InMaxSizeInWords )
+
 #if defined(_MSC_VER)
     #define SKL_STRCPY( InDest, InSrc, InSizeInBytes ) ::strcpy_s( InDest, InSizeInBytes, InSrc )
     #define SKL_WSTRCPY( InDest, InSrc, InSizeInWords ) ::wcscpy_s( InDest, InSizeInWords, InSrc )
     
     #define SKL_STRLEN( InStr, InSizeInBytes ) ::strnlen_s( InStr, InSizeInBytes )
     #define SKL_WSTRLEN( InStr, InSizeInWords ) ::wcsnlen_s( InStr, InSizeInWords  )
-
-    #define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strncmp( InStr1, InStr2, InMaxSizeInBytes )
-    #define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcsncmp( InStr1, InStr2, InMaxSizeInWords )
 
     #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy_s( InDest, InDestSize, InSrc, InSrcSize )
     #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove_s( InDest, InDestSize,InSrc, InSrcSize )
@@ -72,9 +75,6 @@
 
     #define SKL_STRLEN( InStr, InSizeInBytes ) ::strlen( InStr )
     #define SKL_WSTRLEN( InStr, InSizeInWords ) ::wcslen( InStr )
-
-    #define SKL_STRCMP( InStr1, InStr2, InMaxSizeInBytes ) ::strcmp( InStr1, InStr2 )
-    #define SKL_WSTRCMP( InStr1, InStr2, InMaxSizeInWords ) ::wcscmp( InStr1, InStr2 )
     
     #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy( InDest, InSrc, InDestSize )
     #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove( InDest, InSrc, InDestSize )

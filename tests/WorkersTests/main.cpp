@@ -362,7 +362,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_TRUE( 41 == ( SequenceCount.increment() + 1 ) );
+            EXPECT_EQ( 41 , ( SequenceCount.increment() + 1 ) );
             
             if( false == TestApplication::OnAllWorkersStopped( Group ) )
             {
@@ -439,7 +439,7 @@ namespace WorkersTests
             ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_TerminateLibrary() );
         }
 
-        std::relaxed_value<uint32_t> SequenceCount{ 0 };
+        std::synced_value<uint32_t> SequenceCount{ 0 };
         std::latch StartLath{ 2 };
     };
     

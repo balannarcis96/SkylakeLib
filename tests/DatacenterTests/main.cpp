@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <SkylakeDatacenter.h>
+#include <SkylakeDatacenterBuilder.h>
+#include <SkylakeDatacenterXMLAdapter.h>
 
 namespace DatacenterTests
 {
@@ -292,6 +293,112 @@ namespace DatacenterTests
         }
     };
 
+    struct TestDatacenterAdapter: public SKL::DC::DatacenterXMLAdapter
+    {
+        void SetIsForClientOrServer( bool bIsForClientOrServer ) noexcept { SetFilterIndex( bIsForClientOrServer ? 0 : 1 ); }
+        bool IsForClientOrServer() const noexcept { return GetFilterIndex() == 0; }
+
+        SKL::DC::TLanguage ParseLanguageFromUtf8String( const char* InLanguageStr ) const noexcept override
+        {
+            if( 0 == SKL_STRICMP( "INT", InLanguageStr, 3 ) )
+            {
+                return SKL::DC::CInternationalLanguage;
+            }
+
+            SKLL_TRACE_MSG_FMT( "Unknown language %s", InLanguageStr );
+
+            return SKL::DC::CInvalidLanguage;
+        }
+
+        const char* GetLanguageString( SKL::DC::TLanguage InLanguage ) const noexcept override
+        {
+            if( SKL::DC::CInternationalLanguage == InLanguage )
+            {
+                return "INT";
+            }
+
+            return nullptr;
+        }
+
+        bool ShouldSkipAttributeByName( const std::string_view& InString ) const noexcept override
+        {
+            if( true == IsForClientOrServer() )
+            {
+                return InString.starts_with( "_" );
+            }
+            else
+            {
+                return InString.ends_with( "_" );
+            }
+        }
+
+        bool ShouldSkipElementByName( const std::string_view& InString ) const noexcept override
+        {
+            if( true == IsForClientOrServer() )
+            {
+                return InString.starts_with( "_" );
+            }
+            else
+            {
+                return InString.ends_with( "_" );
+            }
+        }
+
+        const wchar_t* CleanAndConvertToUtf16ElementName( const std::string_view& InString ) noexcept override
+        {
+            auto Utf8Buffer{ GetUtf8Buffer() };
+            SKL_ASSERT( InString.length() < Utf8Buffer.second );
+            InString.copy( Utf8Buffer.first, InString.length() );
+            Utf8Buffer.first[ InString.length() ] = '\0';
+
+            char* InStrPtr{ Utf8Buffer.first };
+
+            if( true == IsForClientOrServer() )
+            {
+                if( true == InString.starts_with( '_' ) )
+                {
+                    ++InStrPtr;
+                }
+            }
+            else
+            {
+                if( true == InString.ends_with( '_' ) )
+                {
+                    InStrPtr[InString.length() - 1] = '\0';
+                }
+            }
+
+            return ConvertUtf8ToUtf16( InStrPtr, Utf8Buffer.second );
+        }
+
+        const wchar_t* CleanAndConvertToUtf16AttributeName( const std::string_view& InString ) noexcept override
+        {
+            auto Utf8Buffer{ GetUtf8Buffer() };
+            SKL_ASSERT( InString.length() < Utf8Buffer.second );
+            InString.copy( Utf8Buffer.first, InString.length() );
+            Utf8Buffer.first[ InString.length() ] = '\0';
+
+            char* InStrPtr{ Utf8Buffer.first };
+
+            if( true == IsForClientOrServer() )
+            {
+                if( true == InString.starts_with( '_' ) )
+                {
+                    ++InStrPtr;
+                }
+            }
+            else
+            {
+                if( true == InString.ends_with( '_' ) )
+                {
+                    InStrPtr[InString.length() - 1] = '\0';
+                }
+            }
+
+            return ConvertUtf8ToUtf16( InStrPtr, Utf8Buffer.second );
+        }
+    };
+
     TEST_F( DatacenterTestsFixture, Attribute_API )
     {
         SKL::BufferStream Stream{ 4096 };
@@ -474,6 +581,80 @@ namespace DatacenterTests
             auto& NamesMap = DC.GetNamesMap();
             auto& ElementsBlock = DC.GetElementsBlock();
             auto& AttributesBlock = DC.GetAttributesBlock();
+        }
+    }
+
+    TEST_F( DatacenterTestsFixture, Client_Builder_API )
+    {
+        {
+             SKL::DC::Builder      DCBuilder{};
+             SKL::DC::TFilterIndex FilterIndex{ 0 }; //For client
+
+             TestDatacenterAdapter* Adapter{ new TestDatacenterAdapter() };
+             SKL_ASSERT( nullptr != Adapter );
+
+             Adapter->SetTargetDirectory( "./xml/" );
+             DCBuilder.SetAdapter( Adapter );
+             DCBuilder.SetVersion( 1 );
+             DCBuilder.SetFormatVersion( 2 );
+         
+             const auto BuildResult{ DCBuilder.Build( FilterIndex ) };
+             ASSERT_TRUE( true == BuildResult );
+
+             SKL::DC::Builder::MyDatacenter& DC{ DCBuilder.GetDatacenter() };
+
+             SKL::BufferStream Stream{ 4096 * 1024 };
+             DC.SetStream( std::move( Stream ) );
+             ASSERT_TRUE( true == DC.Serialize( false ) );
+             ASSERT_TRUE( true == DC.SaveToFile( "./Datacenter_Client.bin" ) );
+        }
+        
+        {
+            SKL::DC::Datacenter<false> DC{};
+
+            auto Stream{ SKL::BufferStream::OpenFile( "./Datacenter_Client.bin" ) };
+            ASSERT_TRUE( true == !!Stream );
+
+            DC.SetStream( std::move( Stream.value() ) );
+
+            ASSERT_TRUE( true == DC.Serialize( true ) );
+        }
+    }
+    
+    TEST_F( DatacenterTestsFixture, Server_Builder_API )
+    {
+        {
+             SKL::DC::Builder      DCBuilder{};
+             SKL::DC::TFilterIndex FilterIndex{ 1 }; //For server
+
+             TestDatacenterAdapter* Adapter{ new TestDatacenterAdapter() };
+             SKL_ASSERT( nullptr != Adapter );
+
+             Adapter->SetTargetDirectory( "./xml/" );
+             DCBuilder.SetAdapter( Adapter );
+             DCBuilder.SetVersion( 1 );
+             DCBuilder.SetFormatVersion( 2 );
+         
+             const auto BuildResult{ DCBuilder.Build( FilterIndex ) };
+             ASSERT_TRUE( true == BuildResult );
+
+             SKL::DC::Builder::MyDatacenter& DC{ DCBuilder.GetDatacenter() };
+
+             SKL::BufferStream Stream{ 4096 * 1024 };
+             DC.SetStream( std::move( Stream ) );
+             ASSERT_TRUE( true == DC.Serialize( false ) );
+             ASSERT_TRUE( true == DC.SaveToFile( "./Datacenter_Server.bin" ) );
+        }
+        
+        {
+            SKL::DC::Datacenter<false> DC{};
+
+            auto Stream{ SKL::BufferStream::OpenFile( "./Datacenter_Server.bin" ) };
+            ASSERT_TRUE( true == !!Stream );
+
+            DC.SetStream( std::move( Stream.value() ) );
+
+            ASSERT_TRUE( true == DC.Serialize( true ) );
         }
     }
 }

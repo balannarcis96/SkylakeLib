@@ -70,7 +70,7 @@ namespace SKL::DC
         SKL_FORCEINLINE void SetParent( RawElement* InParent ) noexcept { Parent = InParent; }
         
         SKL_FORCEINLINE void AddChild( RawElement* InElement ) noexcept { Children.push_back( InElement ); }
-        SKL_FORCEINLINE void AddAttribute( RawAttribute&& InAttribute ) noexcept { Attributes.emplace_back( std::forward<RawAttribute>( InAttribute ) ); }
+        SKL_FORCEINLINE void AddAttribute( RawAttribute&& InAttribute ) noexcept { Attributes.push_back( std::forward<RawAttribute>( InAttribute ) ); }
 
     private:
         std::wstring  Name              {};
