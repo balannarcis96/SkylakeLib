@@ -9,8 +9,7 @@
 - [SkylakeLib][C++20] Library containing basic building blocks for high performance servers
    - asd
 - [SkylakeLibDB][C++20] Mysql database abstractions and facilities ![WIP](https://img.shields.io/static/v1?label=WorkInProgress&message=WIP&color=yellow)
-- [SkylakeLibProtocol][C++17] Header only library containing abstractions used to build and read packets
-- [SkylakeDatacenterLib][C++20] Datacenter facility
+- [SkylakeDatacenterLib][C++17] Datacenter facility
    - Allows for serializing of node-like data (eg. xml, json) into a flat binary file
    - Allows for node and attribute level data filtering and language based node filtering
    - With the filtering capabilities, separate binary files can be built from the same source data (eg. xml, json)
