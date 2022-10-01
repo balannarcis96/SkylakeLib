@@ -102,6 +102,9 @@ namespace SKL::DC
         virtual bool ShouldSkipElementByName( const std::string_view& InString ) const noexcept = 0;
         virtual const wchar_t* CleanAndConvertToUtf16ElementName( const std::string_view& InString ) noexcept = 0;
         virtual const wchar_t* CleanAndConvertToUtf16AttributeName( const std::string_view& InString ) noexcept = 0;
+        virtual const wchar_t* ConvertUtf8ToUtf16( const char* InStr, size_t InStringLength ) noexcept = 0;
+        virtual const char* ConvertUtf16ToUtf8( const wchar_t* InStr, size_t InStringLengthInWChars ) noexcept = 0;
+        virtual std::vector<std::string> ScanForFilesInDirectory( const char* InRootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& InEtensions ) noexcept = 0;
 
         virtual std::unique_ptr<RawElement> BuildRawStructure() noexcept = 0;
 

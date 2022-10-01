@@ -219,30 +219,34 @@ namespace SKL
         }
         
         //! get component for entity
-        template<typename TComponent> requires( false == std::is_same_v<TComponent, TRootComponentData> )
+        template<typename TComponent>
         SKL_FORCEINLINE TComponent& GetComponent( NonAtomicEntityId InEntityId ) noexcept
         {
+            static_assert( false == std::is_same_v<TComponent, TRootComponentData> );
             return Store.GetComponent<TComponent>( InEntityId.GetIndex() );
         }
 
         //! get component for entity
-        template<typename TComponent> requires( false == std::is_same_v<TComponent, TRootComponentData> )
+        template<typename TComponent>
         SKL_FORCEINLINE const TComponent& GetComponent( NonAtomicEntityId InEntityId ) const noexcept
         {
+            static_assert( false == std::is_same_v<TComponent, TRootComponentData> );
             return Store.GetComponent<TComponent>( InEntityId.GetIndex() );
         }
 
         //! get component for entity
-        template<typename TComponent> requires( false == std::is_same_v<TComponent, TRootComponentData> )
+        template<typename TComponent> 
         SKL_FORCEINLINE TComponent& GetComponent( IndexType InEntityIndex ) noexcept
         {
+            static_assert( false == std::is_same_v<TComponent, TRootComponentData> );
             return Store.GetComponent<TComponent>( InEntityIndex );
         }
 
         //! get component for entity
-        template<typename TComponent> requires( false == std::is_same_v<TComponent, TRootComponentData> )
+        template<typename TComponent>
         SKL_FORCEINLINE const TComponent& GetComponent( IndexType InEntityIndex ) const noexcept
         {
+            static_assert( false == std::is_same_v<TComponent, TRootComponentData> );
             return Store.GetComponent<TComponent>( InEntityIndex );
         }
         

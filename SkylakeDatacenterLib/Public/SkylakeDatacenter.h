@@ -7,6 +7,6 @@
 //! 
 #pragma once
 
-#include <SkylakeLib.h>
+#include <SkylakeLibStandalone.h>
 
 #include "../Internal/Structure.h"

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <SkylakeLib.h>
+
 #include <SkylakeDatacenterBuilder.h>
 #include <SkylakeDatacenterXMLAdapter.h>
 
@@ -298,6 +300,31 @@ namespace DatacenterTests
         void SetIsForClientOrServer( bool bIsForClientOrServer ) noexcept { SetFilterIndex( bIsForClientOrServer ? 0 : 1 ); }
         bool IsForClientOrServer() const noexcept { return GetFilterIndex() == 0; }
 
+        std::vector<std::string> ScanForFilesInDirectory( const char* InRootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& InEtensions ) noexcept override
+        {
+            return SKL::ScanForFilesInDirectory( InRootDirectory, OutMaxFileSize, InEtensions );
+        }
+
+        const wchar_t* ConvertUtf8ToUtf16( const char* InStr, size_t InStringLength ) noexcept override
+        {
+            if( true == SKL::GMultiByteToWideChar( InStr, InStringLength, Utf16Buffer.get(), CBuffersLength ) )
+            {
+                return Utf16Buffer.get();
+            }
+
+            return nullptr;
+        }
+        
+        const char* ConvertUtf16ToUtf8( const wchar_t* InStr, size_t InStringLengthInWChars ) noexcept override
+        {
+            if( true == SKL::GWideCharToMultiByte( InStr, InStringLengthInWChars, Utf8Buffer.get(), CBuffersLength ) )
+            {
+                return Utf8Buffer.get();
+            }
+
+            return nullptr;
+        }
+
         SKL::DC::TLanguage ParseLanguageFromUtf8String( const char* InLanguageStr ) const noexcept override
         {
             if( 0 == SKL_STRICMP( "INT", InLanguageStr, 3 ) )
@@ -569,13 +596,13 @@ namespace DatacenterTests
         {
             SKL::BufferStream Stream{ 4096 * 1024 };
             Datacenter DC;
-            DC.SetStream( std::move( Stream ) );
+            DC.SetStream( &Stream.GetStreamBase() );
         }
 
         {
             SKL::BufferStream Stream{ 4096 * 1024 };
             BuildDatacenter DC{};
-            DC.SetStream( std::move( Stream ) );
+            DC.SetStream( &Stream.GetStreamBase() );
 
             auto& ValuesMap = DC.GetValuesMap();
             auto& NamesMap = DC.GetNamesMap();
@@ -604,7 +631,7 @@ namespace DatacenterTests
              SKL::DC::Builder::MyDatacenter& DC{ DCBuilder.GetDatacenter() };
 
              SKL::BufferStream Stream{ 4096 * 1024 };
-             DC.SetStream( std::move( Stream ) );
+             DC.SetStream( &Stream.GetStreamBase() );
              ASSERT_TRUE( true == DC.Serialize( false ) );
              ASSERT_TRUE( true == DC.SaveToFile( "./Datacenter_Client.bin" ) );
         }
@@ -615,7 +642,7 @@ namespace DatacenterTests
             auto Stream{ SKL::BufferStream::OpenFile( "./Datacenter_Client.bin" ) };
             ASSERT_TRUE( true == !!Stream );
 
-            DC.SetStream( std::move( Stream.value() ) );
+            DC.SetStream( &Stream.value().GetStreamBase() );
 
             ASSERT_TRUE( true == DC.Serialize( true ) );
             
@@ -662,7 +689,7 @@ namespace DatacenterTests
              SKL::DC::Builder::MyDatacenter& DC{ DCBuilder.GetDatacenter() };
 
              SKL::BufferStream Stream{ 4096 * 1024 };
-             DC.SetStream( std::move( Stream ) );
+             DC.SetStream( &Stream.GetStreamBase() );
              ASSERT_TRUE( true == DC.Serialize( false ) );
              ASSERT_TRUE( true == DC.SaveToFile( "./Datacenter_Server.bin" ) );
         }
@@ -673,7 +700,7 @@ namespace DatacenterTests
             auto Stream{ SKL::BufferStream::OpenFile( "./Datacenter_Server.bin" ) };
             ASSERT_TRUE( true == !!Stream );
 
-            DC.SetStream( std::move( Stream.value() ) );
+            DC.SetStream( &Stream.value().GetStreamBase() );
 
             ASSERT_TRUE( true == DC.Serialize( true ) );
 

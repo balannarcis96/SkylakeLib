@@ -76,18 +76,14 @@ namespace SKL::DC
         if( 0 != InNode->value_size() )
         {
             //This node has value string
-            auto Utf16Buffer{ InAdaptor->GetUtf16Buffer() };
-            if( false == GMultiByteToWideChar( 
-                                    const_cast<const char*>( InNode->value() )
-                                    , InNode->value_size()
-                                    , Utf16Buffer.first
-                                    , static_cast<int32_t>( Utf16Buffer.second ) ) )
+            const auto* ValueString{ InAdaptor->ConvertUtf8ToUtf16( const_cast<const char*>( InNode->value() ), InNode->value_size() ) };
+            if( nullptr == ValueString )
             {
 				SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s>%s</>] element value to utf16", InNode->name( ), InNode->value( ) );
 				return nullptr;
             }
 
-            NewElement->SetValue( Utf16Buffer.first );
+            NewElement->SetValue( ValueString );
         }
 
         ::rapidxml::xml_attribute<char>* Attribute{ InNode->first_attribute() };

@@ -25,9 +25,9 @@ namespace SKL
     constexpr size_t CMemoryManager_Pool5_BlockCount                            = 8192;                     //!< [8192  blocks] MemoryManager.Pool5 number of cached blocks
     constexpr size_t CMemoryManager_Pool6_BlockSize                             = ((1024 * 1024) * 2);      //!< [2     mbytes] MemoryManager.Pool6 block size in bytes
     constexpr size_t CMemoryManager_Pool6_BlockCount                            = 8;                        //!< [8     blocks] MemoryManager.Pool6 number of cached blocks
-    SKL_IF_ALLOC_SIZE_GUARDED( constexpr size_t CMemoryManager_MaxAllocSize     = ((1024 * 1024) * 1024); ) //!< [1        GiB] The maximum size the MemoryManager is allowed to alloc at once
-    SKL_IF_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment    = SKL_CACHE_LINE_SIZE; )    //!< Alig all the MemoryManager memory blocks to the cache line
-    SKL_IFNOT_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment = sizeof( void * ); )       //!< Alig all the MemoryManager memory blocks to 8 bytes
+    SKL_IF_ALLOC_SIZE_GUARDED( constexpr size_t CMemoryManager_MaxAllocSize     = ((1024 * 1024) * 1024) ); //!< [1        GiB] The maximum size the MemoryManager is allowed to alloc at once
+    SKL_IF_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment    = SKL_CACHE_LINE_SIZE );    //!< Align all the MemoryManager memory blocks to the cache line
+    SKL_IFNOT_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment = sizeof( void * ) );       //!< Align all the MemoryManager memory blocks to 8 bytes
 
     // Sizes guard, dont change!
     static_assert( CMemoryManager_Pool1_BlockSize < std::numeric_limits<uint32_t>::max()
@@ -60,7 +60,11 @@ namespace SKL
         static constexpr bool    bIsThreadSafe                       = false;
         static constexpr bool    bUseSpinLock_Or_Atomics             = false;
         static constexpr bool    bAlignAllMemoryBlocksToTheCacheLine = false;
+#if defined(SKL_GUARD_ALLOC_SIZE)
         static constexpr size_t  MaxAllocationSize                   = CMemoryManager_MaxAllocSize;
+#else
+        static constexpr size_t  MaxAllocationSize                   =  0;
+#endif
     };
 
     /*------------------------------------------------------------
@@ -68,17 +72,6 @@ namespace SKL
       ------------------------------------------------------------*/
     constexpr size_t CTLSSyncSystem_QueueSize = 524288; //!< [ 1024 * 512 ] Max number of TLSSyncTasks in the TLSSync tasks queue at once
 
-    
-    /*------------------------------------------------------------
-        SRand
-      ------------------------------------------------------------*/
-    constexpr uint32_t Squirrel1_NOISE1    = 0x68E31DA4U;
-    constexpr uint32_t Squirrel1_NOISE2    = 0xB5297A4DU;
-    constexpr uint32_t Squirrel1_NOISE3    = 0x1B56C4E9U;
-    constexpr uint32_t Squirrel3_2D_PRIME  = 1913646613U;
-    constexpr uint32_t Squirrel3_3D_PRIME1 = 1206686359U;
-    constexpr uint32_t Squirrel3_3D_PRIME2 = 1589711413U;
-    
     /*------------------------------------------------------------
         String Utils
       ------------------------------------------------------------*/

@@ -67,12 +67,6 @@ namespace SKL
             return reinterpret_cast<AsyncIOOpaqueType*>( this );
         }
 
-        //! Construct span for the internal buffer
-        SKL_FORCEINLINE std::span<uint8_t> get_span() noexcept
-        {
-            return { GetInterface().Buffer, static_cast<size_t>( GetInterface().Length ) };
-        }
-
         //! Construct a new stream interface for this async IO buffer
         SKL_FORCEINLINE BufferStreamInterface GetStreamInterface() noexcept
         {

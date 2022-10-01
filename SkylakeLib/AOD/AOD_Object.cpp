@@ -8,16 +8,18 @@
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
 
+#if !defined(SKL_STANDALONE)
 #include "SkylakeLib.h"
 
 namespace SKL::AOD
 {
     template<typename TTask>
     bool ScheduleTask( AODTLSContext& TLSContext, TTask* InTask ) noexcept 
-        requires( std::is_same_v<TTask, IAODSharedObjectTask> 
-               || std::is_same_v<TTask, IAODStaticObjectTask> 
-               || std::is_same_v<TTask, IAODCustomObjectTask> )
     {
+        static_assert( std::is_same_v<TTask, IAODSharedObjectTask> 
+               || std::is_same_v<TTask, IAODStaticObjectTask> 
+               || std::is_same_v<TTask, IAODCustomObjectTask> );
+
         //Select target worker group
         auto TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
@@ -33,7 +35,7 @@ namespace SKL::AOD
         while( MaxTries > HandleTries )
         {
             //Select target worker
-            auto Workers{ TargetWG->GetWorkers() };
+            auto& Workers{ TargetWG->GetWorkers() };
             const auto TargetWIndex{ 1 + ( static_cast<size_t>( TLSContext.RRLastIndex2++ ) % ( Workers.size() - 1 ) ) };
             SKL_ASSERT( 0 != TargetWIndex && TargetWIndex < Workers.size() );
             auto* TargetW{ Workers[ TargetWIndex ].get() };
@@ -386,3 +388,5 @@ namespace SKL
         Parent.Pointer = InObject;
     }
 }
+
+#endif

@@ -23,6 +23,7 @@ namespace SKL
 
     struct StreamBase
     {
+        StreamBase() noexcept = default;
         StreamBase( uint32_t Position, uint32_t BufferSize, uint8_t* Buffer, bool bOwnsBuffer = false ) noexcept
             :Position{ Position }, bOwnsBuffer{ static_cast<uint32_t>( bOwnsBuffer ) }, Buffer{ BufferSize, Buffer } {}
         ~StreamBase() noexcept = default;
@@ -214,9 +215,10 @@ namespace SKL
         }
 
         //! Get the buffer at the current position as a ref to TObject class type
-        template<typename TObject> requires( std::is_class_v<TObject> )
+        template<typename TObject>
         SKL_FORCEINLINE const TObject& BuildObjectRef() const noexcept
         {
+            static_assert( std::is_class_v<TObject> );
             return *reinterpret_cast<TObject*>( GetFront() );
         }
 
@@ -280,9 +282,10 @@ namespace SKL
         SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return this->GetStream().Buffer.Buffer; }
         
         //! Get the buffer at the current position as a ref to TObject class type
-        template<typename TObject> requires( std::is_class_v<TObject> )
+        template<typename TObject>
         SKL_FORCEINLINE TObject& BuildObjectRef() noexcept
         {
+            static_assert( std::is_class_v<TObject> );
             return *reinterpret_cast<TObject*>( GetFront() );
         }
 

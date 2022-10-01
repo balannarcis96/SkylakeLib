@@ -38,25 +38,7 @@ namespace SKL::DC
         SKL_FORCEINLINE void SetTargetDirectory( const char* InTargetDirectory ) noexcept { TargetDirectory = InTargetDirectory; }
 
         SKL_FORCEINLINE std::pair<wchar_t*, size_t> GetUtf16Buffer() const noexcept { return { Utf16Buffer.get(), CBuffersLength }; }
-        SKL_FORCEINLINE const wchar_t* ConvertUtf8ToUtf16( const char* InStr, size_t InStringLength ) noexcept
-        {
-            if( true == SKL::GMultiByteToWideChar( InStr, InStringLength, Utf16Buffer.get(), CBuffersLength ) )
-            {
-                return Utf16Buffer.get();
-            }
-
-            return nullptr;
-        }
         SKL_FORCEINLINE std::pair<char*, size_t> GetUtf8Buffer() const noexcept { return { Utf8Buffer.get(), CBuffersLength }; }
-        SKL_FORCEINLINE const wchar_t* ConvertUtf16ToUtf8( const wchar_t* InStr, size_t InStringLengthInWChars ) noexcept
-        {
-            if( true == SKL::GWideCharToMultiByte( InStr, InStringLengthInWChars, Utf8Buffer.get(), CBuffersLength ) )
-            {
-                return Utf16Buffer.get();
-            }
-
-            return nullptr;
-        }
 
     protected:
         std::string                TargetDirectory       {};

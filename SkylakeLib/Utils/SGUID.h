@@ -10,11 +10,12 @@
 namespace SKL
 {
     template<typename MyRand = GRand> 
-        requires( std::is_same_v<MyRand, GRand> 
-               || std::is_same_v<MyRand, TRand> 
-               || std::is_base_of_v<Squirrel3Rand, MyRand> )
     struct SGUID 
     {
+        static_assert( std::is_same_v<MyRand, GRand> 
+               || std::is_same_v<MyRand, TRand> 
+               || std::is_base_of_v<Squirrel3Rand, MyRand> );
+
         union
         {
             uint32_t Value;

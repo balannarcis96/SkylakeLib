@@ -4,7 +4,7 @@ project ("SkyalakeLib_PROTOCOL_Tests" VERSION 1.0.0)
 add_executable(SkylakeLibPROTOCOLTests main.cpp)
 add_test(NAME "TEST_SkylakeLibPROTOCOLTests" COMMAND SkylakeLibPROTOCOLTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
-target_link_libraries(SkylakeLibPROTOCOLTests PUBLIC SkylakeLibProtocol)
+target_link_libraries(SkylakeLibPROTOCOLTests PUBLIC SkylakeLibStandalone)
 
 # Link Google Test
 target_link_libraries(SkylakeLibPROTOCOLTests PUBLIC gtest_main)

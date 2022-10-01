@@ -7,39 +7,9 @@
 //!
 #pragma once
 
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
-#include <array>
-#include <barrier>
-#include <bit>
-#include <cctype>
-#include <cfloat>
-#include <cinttypes>
-#include <cmath>
 #include <concepts>
-#include <csignal>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cwctype>
-#include <deque>
-#include <fvec.h>
-#include <iomanip>
-#include <locale>
-#include <variant>
-#include <optional>
-#include <queue>
-#include <shared_mutex>
-#include <span>
-#include <sstream>
-#include <istream>
-#include <fstream>
-#include <ostream>
-#include <stack>
-#include <thread>
 #include <latch>
+#include <bit>
 
 using TString = std::wstring;
 

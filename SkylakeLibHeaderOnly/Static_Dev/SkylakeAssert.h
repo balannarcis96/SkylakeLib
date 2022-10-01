@@ -19,7 +19,7 @@
     #define SKL_ASSERT_MSG(expression, msg) { auto ASSERT_RESULT{ !!(expression) }; assert(ASSERT_RESULT && msg); if( !ASSERT_RESULT ) { SKL_BREAK(); } }
 #endif
 
-#if not defined(SKL_NO_ASSERTS)
+#if !defined(SKL_NO_ASSERTS)
     #define SKL_ASSERT_ALLWAYS(expression) { auto ASSERT_RESULT{ !!(expression) }; assert(ASSERT_RESULT); if( !(ASSERT_RESULT) ) { SKL_BREAK(); } }
     #define SKL_ASSERT_ALLWAYS_MSG(expression, msg) { auto ASSERT_RESULT{ !!(expression) }; assert(ASSERT_RESULT && msg); if( !ASSERT_RESULT ) { SKL_BREAK(); } }
 #endif

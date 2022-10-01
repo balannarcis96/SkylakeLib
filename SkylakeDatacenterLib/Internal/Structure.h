@@ -980,10 +980,10 @@ namespace SKL::DC
 
         Datacenter() noexcept = default;
 
-        void SetStream( BufferStream&& InStream )
+        SKL_FORCEINLINE void SetStream( StreamBase* InStream )
         {
             SKL_ASSERT( false == IsLoaded() );
-            SourceStream.reset( new BufferStream{ std::forward<BufferStream>( InStream ) } );
+            SourceStream = InStream;
         }
 
         bool Serialize( bool bIsLoadingOrSaving, bool bDoPostLoadProcessing = true ) noexcept
@@ -997,7 +997,13 @@ namespace SKL::DC
                 }
             }
 
-            auto& TargetStream{ SourceStream->GetStreamBase() };
+            if( nullptr == SourceStream )
+            {
+                SKLL_TRACE_MSG_FMT( "No source stream provided!" );
+                return false;
+            }
+
+            auto& TargetStream{ *SourceStream };
 
             if ( true == bIsLoadingOrSaving )
             {
@@ -1093,6 +1099,8 @@ namespace SKL::DC
             Elements.Clear();
             ValuesMap.Clear();
             NamesMap.Clear();
+
+            SourceStream = nullptr;
         }
 
         bool IsLoaded() const noexcept{ return bIsLoaded; }
@@ -1105,7 +1113,8 @@ namespace SKL::DC
             }
 
             SKL_ASSERT( nullptr != SourceStream );
-            return SourceStream->SaveToFile( InFileName, false, true, false );
+            auto* Reader{ IStreamReader<true>::FromStreamBase( *SourceStream ) };
+            return Reader->SaveToFile( InFileName, false, true, false );
         }
 
         TVersion GetVersion() const noexcept{ return Version; }
@@ -1336,7 +1345,7 @@ namespace SKL::DC
         DatacenterElements             Elements     {};
         StringMap                      ValuesMap    {};
         StringMap                      NamesMap     {};
-        std::unique_ptr<BufferStream>  SourceStream {};
+        StreamBase*                    SourceStream { nullptr };
 
         friend ::DatacenterTests::DatacenterTestsFixture;
         friend struct Builder;

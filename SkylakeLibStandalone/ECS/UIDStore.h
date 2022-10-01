@@ -76,13 +76,6 @@ namespace SKL
             }
         }
 
-        //! get view into all ids
-        std::span<TUIDType> GetView() const noexcept
-        {
-            SKL_ASSERT( FALSE == bIsActive.load_relaxed() );
-            return { FreeIds };
-        }
-
         //! set the functor to be dispatched when all ids are dellocated and the store is not active
         template<typename TFunctor>
         void SetOnAllFreed( TFunctor&& InFunctor ) noexcept

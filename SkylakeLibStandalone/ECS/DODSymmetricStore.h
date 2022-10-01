@@ -10,7 +10,7 @@
 namespace SKL
 {
     template<typename TIndexType, TIndexType TCount, typename ...TComponents>
-    struct SymmetricStore: public MultiArray<TCount, TComponents...>
+    struct StaticSymmetricStore: public StaticMultiArray<TCount, TComponents...>
     {
         struct Traits
         {

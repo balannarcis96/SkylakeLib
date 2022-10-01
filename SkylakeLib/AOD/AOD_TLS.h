@@ -36,7 +36,8 @@ namespace SKL
         SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
         SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
         SKL_FORCEINLINE WorkerGroupTag GetWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
-        SKL_FORCEINLINE std::span<WorkerGroup*> GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
+        SKL_FORCEINLINE std::vector<WorkerGroup*>& GetDeferredAODTasksHandlingGroups() noexcept { return { DeferredAODTasksHandlingGroups }; }
+        SKL_FORCEINLINE const std::vector<WorkerGroup*>& GetDeferredAODTasksHandlingGroups() const noexcept { return { DeferredAODTasksHandlingGroups }; }
 
     public:
         TLSManagedPriorityQueue<IAODCustomObjectTask*> DelayedCustomObjectTasks      {};          //!< Priority queue of AOD Custom Object delayed tasks

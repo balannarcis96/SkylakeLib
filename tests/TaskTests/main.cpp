@@ -95,10 +95,8 @@ namespace TaskTests
 
         auto NewTask      { SKL::MakeShared<BufferType>() };
         auto Interface    { NewTask->GetInterface() };
-        auto SpanIterface { NewTask->get_span() };
 
         Interface.Buffer[2] = 0xF1;
-        ASSERT_TRUE( 0xF1 == SpanIterface[2] );
 
         auto SPtr = std::make_shared<MyType>();
         ASSERT_TRUE( SPtr.use_count() == 1 );

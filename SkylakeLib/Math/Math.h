@@ -380,7 +380,7 @@ namespace SKL
             Min -= Value;
         }
 
-        _NODISCARD bool Intersect( const MyType &Other ) const noexcept
+        SKL_NODISCARD bool Intersect( const MyType &Other ) const noexcept
         {
             if( Min.X > Other.Max.X || Other.Min.X > Max.X )
                 return false;
@@ -487,7 +487,7 @@ namespace SKL
             return X >= Other.X && Y >= Other.Y;
         }
         // Error-tolerant comparison.
-        _NODISCARD bool Equals( const TVector2D &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool Equals( const TVector2D &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Abs( X - V.X ) < Tolerance && Abs( Y - V.Y ) < Tolerance;
         }
@@ -573,7 +573,7 @@ namespace SKL
             return X * X + Y * Y;
         }
 
-        _NODISCARD TVector2D SafeNormal( TReal Tolerance = ToMyRealType( SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD TVector2D SafeNormal( TReal Tolerance = ToMyRealType( SMALL_NUMBER ) ) const noexcept
         {
             const TReal SquareSum = X * X + Y * Y;
             if( SquareSum > Tolerance )
@@ -597,11 +597,11 @@ namespace SKL
             X = ZeroValue;
             Y = ZeroValue;
         }
-        _NODISCARD int32_t IsNearlyZero( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD int32_t IsNearlyZero( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Abs( X ) < Tolerance && Abs( Y ) < Tolerance;
         }
-        _NODISCARD SKL_FORCEINLINE bool IsZero( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE bool IsZero( ) const noexcept
         {
             return X == ZeroValue && Y == ZeroValue;
         }
@@ -835,7 +835,7 @@ namespace SKL
         {
             return X * X + Y * Y + Z * Z;
         }
-        _NODISCARD TReal Size2D( ) const noexcept
+        SKL_NODISCARD TReal Size2D( ) const noexcept
         {
             return Sqrt( X * X + Y * Y );
         }
@@ -843,7 +843,7 @@ namespace SKL
         {
             return X * X + Y * Y;
         }
-        _NODISCARD bool IsNearlyZero( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool IsNearlyZero( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Abs( X ) < Tolerance && Abs( Y ) < Tolerance && Abs( Z ) < Tolerance;
         }
@@ -869,7 +869,7 @@ namespace SKL
         /**
          * Returns TRUE if Normalized.
          */
-        _NODISCARD bool IsNormalized( ) const noexcept
+        SKL_NODISCARD bool IsNormalized( ) const noexcept
         {
             return ( Abs( UnitValue - SizeSquared( ) ) <= ToMyRealType( 0.01 ) );
         }
@@ -888,7 +888,7 @@ namespace SKL
             }
         }
 
-        _NODISCARD TVector Projection( ) const noexcept
+        SKL_NODISCARD TVector Projection( ) const noexcept
         {
             const TReal RZ = UnitValue / Z;
             return TVector{ X * RZ, Y * RZ, 1 };
@@ -898,7 +898,7 @@ namespace SKL
             const TReal Scale = InverseSqrt( X * X + Y * Y + Z * Z );
             return TVector{ X * Scale, Y * Scale, Z * Scale };
         }
-        _NODISCARD TVector GridSnap( const TReal &GridSz ) const noexcept
+        SKL_NODISCARD TVector GridSnap( const TReal &GridSz ) const noexcept
         {
             return TVector{ SnapToGrid( X, GridSz ), SnapToGrid( Y, GridSz ), SnapToGrid( Z, GridSz ) };
         }
@@ -910,7 +910,7 @@ namespace SKL
                 Z
             };
         }
-        _NODISCARD TVector BoundToCube( TReal Radius ) const noexcept
+        SKL_NODISCARD TVector BoundToCube( TReal Radius ) const noexcept
         {
             return TVector{
                 Clamp( X, -Radius, Radius ),
@@ -941,22 +941,22 @@ namespace SKL
             return Angle;
         }
 
-        _NODISCARD TReal &Component( int32_t Index ) noexcept
+        SKL_NODISCARD TReal &Component( int32_t Index ) noexcept
         {
             return ( &X )[ Index ];
         }
 
-        _NODISCARD bool IsUniform( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool IsUniform( TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return ( Abs( X - Y ) < Tolerance ) && ( Abs( Y - Z ) < Tolerance );
         }
 
-        _NODISCARD TVector MirrorByVector( const TVector &MirrorNormal ) const noexcept
+        SKL_NODISCARD TVector MirrorByVector( const TVector &MirrorNormal ) const noexcept
         {
             return *this - MirrorNormal * ( ToMyRealType( 2.0 ) * ( *this | MirrorNormal ) );
         }
 
-        _NODISCARD TVector RotateAngleAxis( const int32_t Angle, const TVector &Axis ) const noexcept
+        SKL_NODISCARD TVector RotateAngleAxis( const int32_t Angle, const TVector &Axis ) const noexcept
         {
             const TReal S = ToMyRealType( GSGlobalMath.SinTab( Angle ) );
             const TReal C = ToMyRealType( GSGlobalMath.CosTab( Angle ) );
@@ -1079,7 +1079,7 @@ namespace SKL
         }
 
         /** Utility to check if there are any NaNs in this vector. */
-        _NODISCARD bool ContainsNaN( ) const noexcept
+        SKL_NODISCARD bool ContainsNaN( ) const noexcept
         {
             return ( FIsNaN( X ) || !FIsFinite( X ) ||
                      FIsNaN( Y ) || !FIsFinite( Y ) ||
@@ -1101,7 +1101,7 @@ namespace SKL
             Z = ( ( End.Z - Z ) * Alpha );
         }
 
-        _NODISCARD SAngle FaceOther( const TVector &other ) const noexcept
+        SKL_NODISCARD SAngle FaceOther( const TVector &other ) const noexcept
         {
             return SAngle{
                 static_cast< int16_t >( FAtan2( other.Y - Y, other.X - X ) * ToMyRealType( RadToUnit ) )
@@ -1122,17 +1122,17 @@ namespace SKL
             Z = fmax( Z, other.Z );
         }
 
-        _NODISCARD TReal DistanceTo( const TVector &Other ) const noexcept
+        SKL_NODISCARD TReal DistanceTo( const TVector &Other ) const noexcept
         {
             return Sqrt( Pow( Other.X - X, ToMyRealType( 2.0 ) ) + Pow( Other.Y - Y, ToMyRealType( 2.0 ) ) + Pow( Other.Z - Z, ToMyRealType( 2.0 ) ) );
         }
 
-        _NODISCARD TReal Distance2DTo( const TVector &Other ) const noexcept
+        SKL_NODISCARD TReal Distance2DTo( const TVector &Other ) const noexcept
         {
             return Sqrt( Pow( Other.X - X, ToMyRealType( 2.0 ) ) + Pow( Other.Y - Y, ToMyRealType( 2.0 ) ) );
         }
 
-        _NODISCARD SKL_FORCEINLINE TVector Absolute( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVector Absolute( ) const noexcept
         {
             return TVector{
                 Abs( X ), Abs( Y ), Abs( Z )
@@ -1140,14 +1140,14 @@ namespace SKL
         }
 
         template< std::TSInteger TInt >
-        _NODISCARD SKL_FORCEINLINE TIntPoint< TInt > ToIntPoint2D( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TIntPoint< TInt > ToIntPoint2D( ) const noexcept
         {
             return {
                 static_cast< TInt >( X ), static_cast< TInt >( Y )
             };
         }
 
-        _NODISCARD static TVector PointPlaneProject( const TVector &Point, const TVector &A, const TVector &B, const TVector &C ) noexcept;
+        SKL_NODISCARD static TVector PointPlaneProject( const TVector &Point, const TVector &A, const TVector &B, const TVector &C ) noexcept;
 
         SKL_FORCEINLINE friend TVector operator*( TReal Scale, const TVector &V )
         {
@@ -1236,20 +1236,20 @@ namespace SKL
         }
 
         // Simple functions.
-        _NODISCARD TReal &Component( int32_t Index ) noexcept
+        SKL_NODISCARD TReal &Component( int32_t Index ) noexcept
         {
             return ( &X )[ Index ];
         }
 
-        _NODISCARD friend SKL_FORCEINLINE TReal Dot3( const TVector4 &V1, const TVector4 &V2 ) noexcept
+        SKL_NODISCARD friend SKL_FORCEINLINE TReal Dot3( const TVector4 &V1, const TVector4 &V2 ) noexcept
         {
             return V1.X * V2.X + V1.Y * V2.Y + V1.Z * V2.Z;
         }
-        _NODISCARD friend SKL_FORCEINLINE TReal Dot4( const TVector4 &V1, const TVector4 &V2 ) noexcept
+        SKL_NODISCARD friend SKL_FORCEINLINE TReal Dot4( const TVector4 &V1, const TVector4 &V2 ) noexcept
         {
             return V1.X * V2.X + V1.Y * V2.Y + V1.Z * V2.Z + V1.W * V2.W;
         }
-        _NODISCARD friend SKL_FORCEINLINE TVector4 operator*( TReal Scale, const TVector4 &V ) noexcept
+        SKL_NODISCARD friend SKL_FORCEINLINE TVector4 operator*( TReal Scale, const TVector4 &V ) noexcept
         {
             return V.operator*( Scale );
         }
@@ -1257,11 +1257,11 @@ namespace SKL
         /**
          * Basic == or != operators for SQuat
          */
-        _NODISCARD SKL_FORCEINLINE bool operator==( const TVector4 &V ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE bool operator==( const TVector4 &V ) const noexcept
         {
             return ( ( X == V.X ) && ( Y == V.Y ) && ( Z == V.Z ) && ( W == V.W ) );
         }
-        _NODISCARD SKL_FORCEINLINE bool operator!=( const TVector4 &V ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE bool operator!=( const TVector4 &V ) const noexcept
         {
             return ( ( X != V.X ) || ( Y != V.Y ) || ( Z != V.Z ) || ( W != V.W ) );
         }
@@ -1269,13 +1269,13 @@ namespace SKL
         /**
          * Error tolerant comparison
          */
-        _NODISCARD bool Equals( const TVector4 &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool Equals( const TVector4 &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Abs( X - V.X ) < Tolerance && Abs( Y - V.Y ) < Tolerance && Abs( Z - V.Z ) < Tolerance && Abs( W - V.W ) < Tolerance;
         }
 
         /** Returns a normalized 3D SVector */
-        _NODISCARD SKL_FORCEINLINE TVector4 SafeNormal( TReal Tolerance = ToMyRealType( SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVector4 SafeNormal( TReal Tolerance = ToMyRealType( SMALL_NUMBER ) ) const noexcept
         {
             const TReal SquareSum = X * X + Y * Y + Z * Z;
             if( SquareSum > Tolerance )
@@ -1355,7 +1355,7 @@ namespace SKL
         {
             return this->X * P.X + this->Y * P.Y + this->Z * P.Z - W;
         }
-        _NODISCARD SKL_FORCEINLINE TPlane Flip( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TPlane Flip( ) const noexcept
         {
             return TPlane{ -this->X, -this->Y, -this->Z, -W };
         }
@@ -1371,7 +1371,7 @@ namespace SKL
         }
 
         // Error-tolerant comparison.
-        _NODISCARD bool Equals( const TPlane &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool Equals( const TPlane &V, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Abs( this->X - V.X ) < Tolerance && Abs( this->Y - V.Y ) < Tolerance && Abs( this->Z - V.Z ) < Tolerance && Abs( W - V.W ) < Tolerance;
         }
@@ -1481,12 +1481,12 @@ namespace SKL
         {}
         TSphere( const TVec3 *Pts, int32_t Count ) noexcept;
 
-        _NODISCARD bool Equals( const TSphere &Sphere, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool Equals( const TSphere &Sphere, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             return Center.Equals( Sphere.Center, Tolerance ) && Abs( W - Sphere.W ) < Tolerance;
         }
 
-        _NODISCARD bool IsInside( const TSphere &Other, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
+        SKL_NODISCARD bool IsInside( const TSphere &Other, TReal Tolerance = ToMyRealType( KINDA_SMALL_NUMBER ) ) const noexcept
         {
             if( W > Other.W - Tolerance )
             {
@@ -1539,69 +1539,69 @@ namespace SKL
         }
         TBox( const TVec3 *Points, int32_t Count ) noexcept;
 
-        _NODISCARD static TBox BuildAABB( const TVec3 &Origin, const TVec3 &Extent ) noexcept
+        SKL_NODISCARD static TBox BuildAABB( const TVec3 &Origin, const TVec3 &Extent ) noexcept
         {
             return { Origin - Extent, Origin + Extent };
         }
 
         // Accessors.
-        _NODISCARD SKL_FORCEINLINE TVec3 &GetExtrema( int32_t i ) noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 &GetExtrema( int32_t i ) noexcept
         {
             return ( &Min )[ i ];
         }
-        _NODISCARD SKL_FORCEINLINE const TVec3 &GetExtrema( int32_t i ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE const TVec3 &GetExtrema( int32_t i ) const noexcept
         {
             return ( &Min )[ i ];
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetUpperLeftCornerBottom( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetUpperLeftCornerBottom( ) const noexcept
         {
             return Min;
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetUpperRightCornerBottom( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetUpperRightCornerBottom( ) const noexcept
         {
             return {
                 Max.X, Min.Y, Min.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetLowerRightCornerBottom( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetLowerRightCornerBottom( ) const noexcept
         {
             return {
                 Max.X, Max.Y, Min.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetLowerLeftCornerBottom( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetLowerLeftCornerBottom( ) const noexcept
         {
             return {
                 Min.X, Max.Y, Min.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetUpperLeftCornerTop( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetUpperLeftCornerTop( ) const noexcept
         {
             return {
                 Min.X, Min.Y, Max.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetUpperRightCornerTop( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetUpperRightCornerTop( ) const noexcept
         {
             return {
                 Max.X, Min.Y, Max.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetLowerLeftCornerTop( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetLowerLeftCornerTop( ) const noexcept
         {
             return {
                 Min.X, Max.Y, Max.Z
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetLowerRightCornerTop( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetLowerRightCornerTop( ) const noexcept
         {
             return Max;
         }
@@ -1667,24 +1667,24 @@ namespace SKL
             return Max;
         }
 
-        _NODISCARD SKL_FORCEINLINE TBox ExpandBy( TReal W ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TBox ExpandBy( TReal W ) const noexcept
         {
             return { Min - TVec3( W, W, W ), Max + TVec3( W, W, W ) };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetCenter( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetCenter( ) const noexcept
         {
             // midpoint between the min and max points.
             return { ( Min + Max ) * ToMyRealType( 0.5 ) };
         }
 
-        _NODISCARD SKL_FORCEINLINE TVec3 GetExtent( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TVec3 GetExtent( ) const noexcept
         {
             // extent around the center
             return { ( Max - Min ) * ToMyRealType( 0.5 ) };
         }
 
-        _NODISCARD SKL_FORCEINLINE SIntRect GetXYRectangle( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE SIntRect GetXYRectangle( ) const noexcept
         {
             return {
                 { static_cast< int32_t >( Min.X ), static_cast< int32_t >( Min.Y ) },
@@ -1692,7 +1692,7 @@ namespace SKL
             };
         }
 
-        _NODISCARD SKL_FORCEINLINE SInt64Rect GetXYRectangle64( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE SInt64Rect GetXYRectangle64( ) const noexcept
         {
             return {
                 { static_cast< int64_t >( Min.X ), static_cast< int64_t >( Min.Y ) },
@@ -1701,7 +1701,7 @@ namespace SKL
         }
 
         template< std::TSInteger TInt >
-        _NODISCARD SKL_FORCEINLINE TIntRect< TInt > GetXYRectangle( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TIntRect< TInt > GetXYRectangle( ) const noexcept
         {
             return {
                 { static_cast< TInt >( Min.X ), static_cast< TInt >( Min.Y ) },
@@ -1715,7 +1715,7 @@ namespace SKL
             center  = Min + Extents;
         }
 
-        _NODISCARD bool Intersect( const TBox &other ) const noexcept
+        SKL_NODISCARD bool Intersect( const TBox &other ) const noexcept
         {
             if( Min.X > other.Max.X || other.Min.X > Max.X )
                 return FALSE;
@@ -1726,7 +1726,7 @@ namespace SKL
             return TRUE;
         }
 
-        _NODISCARD bool IntersectXY( const TBox &other ) const noexcept
+        SKL_NODISCARD bool IntersectXY( const TBox &other ) const noexcept
         {
             if( Min.X > other.Max.X || other.Min.X > Max.X )
                 return FALSE;
@@ -1735,18 +1735,18 @@ namespace SKL
             return TRUE;
         }
 
-        _NODISCARD bool IsInside( const TVec3 &In ) const noexcept
+        SKL_NODISCARD bool IsInside( const TVec3 &In ) const noexcept
         {
             return ( In.X > Min.X && In.X < Max.X && In.Y > Min.Y && In.Y < Max.Y && In.Z > Min.Z && In.Z < Max.Z );
         }
 
-        _NODISCARD TReal GetVolume( ) const noexcept
+        SKL_NODISCARD TReal GetVolume( ) const noexcept
         {
             return ( ( Max.X - Min.X ) * ( Max.Y - Min.Y ) * ( Max.Z - Min.Z ) );
         }
 
         /** Util to calculate distance from a point to a bounding box */
-        _NODISCARD TReal ComputeSquaredDistanceToPoint( const TVec3 &Point ) const noexcept
+        SKL_NODISCARD TReal ComputeSquaredDistanceToPoint( const TVec3 &Point ) const noexcept
         {
             // Accumulates the distance as we iterate axis
             TReal DistSquared = ZeroValue;
@@ -1784,7 +1784,7 @@ namespace SKL
         }
 
         /** Return closest point on or inside the box to the given point in space. */
-        _NODISCARD TVec3 GetClosestPointTo( const TVec3 &Point ) const noexcept
+        SKL_NODISCARD TVec3 GetClosestPointTo( const TVec3 &Point ) const noexcept
         {
             // Start by considering the Point inside the Box.
             TVec3 ClosestPoint = Point;
@@ -1928,7 +1928,7 @@ namespace SKL
 
     template< typename TReal >
     requires( std::is_floating_point_v< TReal > )
-        _NODISCARD TVector< TReal > TVector< TReal >::PointPlaneProject( const TVector< TReal > &Point, const TVector< TReal > &A, const TVector< TReal > &B, const TVector< TReal > &C )
+        SKL_NODISCARD TVector< TReal > TVector< TReal >::PointPlaneProject( const TVector< TReal > &Point, const TVector< TReal > &A, const TVector< TReal > &B, const TVector< TReal > &C )
     noexcept
     {
         // Compute the plane normal from ABC

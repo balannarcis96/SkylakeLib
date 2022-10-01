@@ -7,8 +7,8 @@
 //! 
 #pragma once
 
-//! The header only part
-#include <SkylakeLibHeaderOnly.h>
+//! The standalone part
+#include <SkylakeLibStandalone.h>
 
 //#define SKL_MEM_MANAGER_DECAY_TO_GLOBAL
 
@@ -17,9 +17,6 @@
 
 //! Tuning
 #include "Tuning/Tuning.h"
-
-//! Logging
-#include "Diagnostics/Log.h"
 
 #if defined(SKL_DEBUG)
     extern void _mi_assert_fail(const char* assertion, const char* fname, unsigned line, const char* func );
@@ -33,16 +30,13 @@
 //! Os specific port
 #include "Port/Port.h"
 
-//! Spin Lock
-#include "Utils/SpinLock.h"
-
 //! Skylake Random
 #include "Utils/SRand.h"
 
 //! Short-GUID
 #include "Utils/SGUID.h"
 
-//! Binary Stream
+//! String BufferStream
 #include "Utils/BufferStream.h"
 
 //! String Stream
@@ -78,8 +72,14 @@
 //! Application
 #include "Application/Application.h"
 
-//! ECS
-#include "ECS/ECS.h"
+//! ECS MultiArray
+#include "ECS/MultiArray.h"
+
+//! ECS DODSymmetricStore
+#include "ECS/DODSymmetricStore.h"
+
+//! ECS EntityStore
+#include "ECS/EntityStore.h"
 
 #if defined(SKL_MATH)
     //! Math

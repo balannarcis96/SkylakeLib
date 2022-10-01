@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <SkylakeLibProtocol.h>
+#include <SkylakeLibStandalone.h>
 
 namespace SkylakePROTOCOLTests
 {

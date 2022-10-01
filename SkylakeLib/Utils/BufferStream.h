@@ -1,7 +1,7 @@
 //!
 //! \file BinaryStream.h
 //! 
-//! \brief Binary stream maipulation abstractions
+//! \brief Binary stream manipulation abstractions
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 

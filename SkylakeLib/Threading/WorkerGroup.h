@@ -184,18 +184,18 @@ namespace SKL
         void ReactiveWorkerRun( Worker& Worker ) noexcept;
         
         //! Get the server instance
-        ServerInstance* GetServerInstance() noexcept { return Manager; }
+        SKL_FORCEINLINE ServerInstance* GetServerInstance() noexcept { return Manager; }
         
         //! Get the server instance
-        const ServerInstance* GetServerInstance() const noexcept { return Manager; }
+        SKL_FORCEINLINE const ServerInstance* GetServerInstance() const noexcept { return Manager; }
 
         //! Get workers 
-        std::span<std::unique_ptr<Worker>> GetWorkers() noexcept
-        {
-            return { Workers };
-        }
+        SKL_FORCEINLINE std::vector<std::unique_ptr<Worker>>& GetWorkers() noexcept { return Workers; }
 
-        TLSSyncSystem* GetTLSSyncSystem() const noexcept { return MyTLSSyncSystem.get(); }
+        //! Get workers 
+        SKL_FORCEINLINE const std::vector<std::unique_ptr<Worker>>& GetWorkers() const noexcept { return Workers; }
+
+        SKL_FORCEINLINE TLSSyncSystem* GetTLSSyncSystem() const noexcept { return MyTLSSyncSystem.get(); }
 
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;

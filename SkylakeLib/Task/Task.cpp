@@ -6,6 +6,7 @@
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
 
+#if !defined(SKL_STANDALONE)
 #include "SkylakeLib.h"
 
 namespace SKL
@@ -26,7 +27,7 @@ namespace SKL
         while( MaxTries > HandleTries )
         {
             //Select target worker
-            auto Workers{ TargetWG->GetWorkers() };
+            auto& Workers{ TargetWG->GetWorkers() };
             auto* TargetW{ Workers[ static_cast<size_t>( TLSContext.RRLastIndex2++ ) % Workers.size() ].get() };
             if( nullptr != TargetW ) SKL_LIKELY
             {
@@ -81,3 +82,5 @@ namespace SKL
         return ScheduleTask( TLSContext, InTask );
     }
 }
+
+#endif

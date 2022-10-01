@@ -13,9 +13,6 @@
 //! std dependencies
 #include "Std.h"
 
-//! Concepts
-#include "Concepts.h"
-
 //! ASD (Advanced Single Dispatch)
 #include "AdvancedSingleDispatch.h"
 #include "ASDForward.h"
@@ -47,6 +44,12 @@
 
 //! EntityId
 #include "EntityId.h"
+
+//! Packet
+#include "Packet.h"
+
+//! Packet Builder
+#include "PacketBuilder.h"
 
 #if defined(SKL_NO_NAMESPACE)
 #ifndef SKL_NO_NAMESPACE_STATEMENT

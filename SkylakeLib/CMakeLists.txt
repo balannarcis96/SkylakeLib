@@ -48,7 +48,7 @@ add_library (SkylakeLib STATIC
     ${_TLSSync_files}     
     ${_Utils_files}
 )
-            
+
 source_group("AdvancedSingleDispatch" FILES ${_AdvancedSingleDispatch_files})
 source_group("Application"            FILES ${_Application_files}           )
 source_group("AOD"                    FILES ${_AOD_files}                   )
@@ -73,15 +73,6 @@ source_group("Utils"                  FILES ${_Utils_files}                 )
 
 # Set C++20
 set_property(TARGET SkylakeLib PROPERTY CXX_STANDARD 20)
-
 target_include_directories(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/")
-
-if(SKL_HEADER_ONLY_BUILD_TYPE STREQUAL "Static_Dev")
-    target_link_libraries(SkylakeLib PUBLIC SkylakeLibHeaderOnly)
-elseif(SKL_HEADER_ONLY_BUILD_TYPE STREQUAL "Interface")
-    target_link_libraries(SkylakeLib INTERFACE SkylakeLibHeaderOnly)
-else()
-    message(FATAL_ERROR "Invalid SkylakeLibHeaderOnly build type! [${SKL_HEADER_ONLY_BUILD_TYPE}]")
-endif()
-     
+target_link_libraries(SkylakeLib PUBLIC SkylakeLibStandalone)
 target_link_libraries(SkylakeLib PUBLIC mimalloc-static)

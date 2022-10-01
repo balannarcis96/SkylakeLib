@@ -12,4 +12,6 @@ namespace SKL
     
 }
 
-#include "AsyncIOBuffer.h"
+#if !defined(SKL_STANDALONE)
+    #include "AsyncIOBuffer.h"
+#endif

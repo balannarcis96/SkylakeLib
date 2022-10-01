@@ -32,7 +32,7 @@ namespace SKL
             SKLL_WRN( "The SkylakeLib was already initialized" );
             return RSuccess;
         }
-        
+    
         ValidatePlatformRuntime();
 
         if( nullptr != InLogOutput )
@@ -94,7 +94,7 @@ namespace SKL
             SKLL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
             return RSuccess;
         }
-        
+    
         TRand::InitializeThread();
 
         if( nullptr == StringUtils::GetInstance() )
@@ -126,7 +126,7 @@ namespace SKL
         }
 
         StringUtils::Destroy();
-        
+    
         TRand::ShutdownThread();
 
         SkylakeLibInitPerThread::SetValue( false );

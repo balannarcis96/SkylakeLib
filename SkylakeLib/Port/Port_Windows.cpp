@@ -1,3 +1,4 @@
+#if !defined(SKL_STANDALONE)
 //!
 //! \file Port_Windows.cpp
 //! 
@@ -1044,3 +1045,5 @@ namespace SKL
         return L"[Invalid IPv4Address]";
     }
 }
+
+#endif

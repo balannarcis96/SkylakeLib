@@ -530,7 +530,7 @@ namespace WorkersTests
             
             for( auto* WorkerGroup : GetAllWorkerGroups() )
             {
-                EXPECT_TRUE( nullptr != WorkerGroup );
+                if( nullptr == WorkerGroup ){ continue; }
                 EXPECT_TRUE( true == WorkerGroup->IsRunning() );
             }
 
@@ -599,7 +599,7 @@ namespace WorkersTests
             
             SequenceCount.increment();
 
-            for( auto& Worker : Group.GetWorkers() )
+            for( const auto& Worker : Group.GetWorkers() )
             {
                 if( nullptr == Worker ){ continue; }
                 EXPECT_TRUE( false == Worker->GetIsRunning() );
@@ -637,9 +637,9 @@ namespace WorkersTests
             
             EXPECT_TRUE( 78 == SequenceCount.increment() );
             
-            for( auto* WorkerGroup : GetAllWorkerGroups() )
+            for( const auto* WorkerGroup : GetAllWorkerGroups() )
             {
-                EXPECT_TRUE( nullptr != WorkerGroup );
+                if( nullptr == WorkerGroup ){ continue; }
                 EXPECT_TRUE( false == WorkerGroup->IsRunning() );
             }
 
@@ -656,9 +656,9 @@ namespace WorkersTests
             
             EXPECT_TRUE( 79 == SequenceCount.increment() );
             
-            for( auto& WorkerGroup : this->GetAllWorkerGroups() )
+            for( auto* WorkerGroup : GetAllWorkerGroups() )
             {
-                EXPECT_TRUE( nullptr != WorkerGroup );
+                if( nullptr == WorkerGroup ){ continue; }
                 EXPECT_TRUE( false == WorkerGroup->IsRunning() );
             }
 
@@ -675,9 +675,9 @@ namespace WorkersTests
             
             EXPECT_TRUE( 80 == SequenceCount.increment() );
             
-            for( auto& WorkerGroup : this->GetAllWorkerGroups() )
+            for( auto& WorkerGroup : GetAllWorkerGroups() )
             {
-                EXPECT_TRUE( nullptr != WorkerGroup );
+                if( nullptr == WorkerGroup ){ continue; }
                 EXPECT_TRUE( false == WorkerGroup->IsRunning() );
             }
 

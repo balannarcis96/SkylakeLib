@@ -92,7 +92,7 @@ namespace SKL
                 }
             }
         }
-        constexpr ~TEntityId() noexcept = default;
+        ~TEntityId() noexcept = default;
 
         constexpr TEntityId( const TEntityId& Other ) noexcept
             : Id{ Other.Id } {}

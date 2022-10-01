@@ -5,6 +5,7 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
+#if !defined(SKL_STANDALONE)
 
 #include "SkylakeLib.h"
 
@@ -69,3 +70,5 @@ namespace SKL
         DeferredTasksHandlingGroups = SourceServerInstance->DeferredTasksHandlingGroups;
     }
 }
+
+#endif
