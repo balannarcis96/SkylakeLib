@@ -3,7 +3,9 @@
 # SkylakeLib 
 [C++20]Library containing basic building blocks for high performance servers.
 
-- [SkylakeLibHeaderOnly][C++20] Header only part of the SkylakeLib
+- [SkylakeLibHeaderOnly][C++17] Header only part of the SkylakeLib
+- [SkylakeLibStandalone][C++17] Standalone part of SkylakeLib
+    - Intended to be used as part of client (eg Static library linked in UE5 project)
 - [SkylakeLib][C++20] Library containing basic building blocks for high performance servers
    - asd
 - [SkylakeLibDB][C++20] Mysql database abstractions and facilities ![WIP](https://img.shields.io/static/v1?label=WorkInProgress&message=WIP&color=yellow)
