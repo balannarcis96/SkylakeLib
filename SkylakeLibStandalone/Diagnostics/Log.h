@@ -17,6 +17,7 @@ namespace SKL
 #define SKLL_LOG_LEVEL_ERR 2
 #define SKLL_LOG_LEVEL_WRN 3
 #define SKLL_LOG_LEVEL_INF 4
+#define SKLL_LOG_LEVEL_MUTE 5
 
 #if SKLL_LOG_LEVEL == SKLL_LOG_LEVEL_DEBUG 
 
@@ -90,6 +91,21 @@ namespace SKL
     #define SKLL_INF_FMT( InFormatString, ... ) 
     #define SKLL_WRN_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(), "\u001b[33m[SkylakeLib::WRN] " InFormatString "\n\u001b[37m", __VA_ARGS__ )
     #define SKLL_ERR_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(), "\u001b[31m[SkylakeLib::ERR] " InFormatString "\n\u001b[37m", __VA_ARGS__ )
+    #define SKLL_VER_FMT( InFormatString, ... )
+    #define SKLL_TRACE_MSG_FMT( InFmtStr, ... )
+    
+#elif SKLL_LOG_LEVEL == SKLL_LOG_LEVEL_MUTE
+
+    #define SKLL_INF( InString ) 
+    #define SKLL_WRN( InString ) 
+    #define SKLL_ERR( InString ) 
+    #define SKLL_VER( InString )
+    #define SKLL_TRACE() 
+    #define SKLL_TRACE_MSG( InString )
+
+    #define SKLL_INF_FMT( InFormatString, ... ) 
+    #define SKLL_WRN_FMT( InFormatString, ... ) 
+    #define SKLL_ERR_FMT( InFormatString, ... ) 
     #define SKLL_VER_FMT( InFormatString, ... )
     #define SKLL_TRACE_MSG_FMT( InFmtStr, ... )
 
