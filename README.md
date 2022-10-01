@@ -7,7 +7,7 @@
 - [SkylakeLibStandalone][C++17] Standalone part of SkylakeLib
     - Intended to be used as part of client (eg Static library linked in UE5 project)
 - [SkylakeLib][C++20] Library containing basic building blocks for high performance servers
-   - asd
+   - Full SkylakeLibrary - Used as base library for building server applications
 - [SkylakeLibDB][C++20] Mysql database abstractions and facilities ![WIP](https://img.shields.io/static/v1?label=WorkInProgress&message=WIP&color=yellow)
 - [SkylakeDatacenterLib][C++17] Datacenter facility
    - Allows for serializing of node-like data (eg. xml, json) into a flat binary file
