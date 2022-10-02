@@ -109,6 +109,10 @@ namespace SKL::DB
         bool ExecuteUpdateQuery( const char *Query ) noexcept;
         void CloseConnection() noexcept;
 
+        SKL_FORCEINLINE SKL_NODISCARD MYSQL_Opaque& GetMysqlObject() noexcept { return Mysql; }
+        SKL_FORCEINLINE SKL_NODISCARD const MYSQL_Opaque& GetMysqlObject() const noexcept { return Mysql; }
+
+
     private:
         DBConnection( const DBConnectionSettings& Settings ) noexcept;
         ~DBConnection() noexcept;
@@ -126,5 +130,6 @@ namespace SKL::DB
         DBConnectionSettings                Settings             {};
 
         friend DBConnectionFactory;
+        friend DBStatement;
     };
 }

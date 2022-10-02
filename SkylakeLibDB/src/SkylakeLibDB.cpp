@@ -1,7 +1,14 @@
+//!
+//! \file SkylakeLibDB.h
+//! 
+//! \brief MySQL c++ interface library
+//! 
+//! \author Balan Narcis (balannarcis96@gmail.com)
+//! 
+
 #include "SkylakeLibDB.h"
 
 #include <mysql.h>
-#include <my_command.h>
 
 namespace SKL::DB
 {
@@ -16,14 +23,14 @@ namespace SKL::DB
 
     DBLibGuard::DBLibGuard() noexcept
     {
-        SKL_VER( "[DBLibGuard] MYSQL library initializing!" );
+        //SKLL_VER( "[DBLibGuard] MYSQL library initializing!" );
         bIsValid = 0 == ::mysql_library_init( 0, nullptr, nullptr );
     }
     DBLibGuard::~DBLibGuard() noexcept
     {
         if( true == bIsValid )
         {
-            SKL_VER( "[DBLibGuard] MYSQL library terminating!" );
+            //SKLL_VER( "[DBLibGuard] MYSQL library terminating!" );
             ::mysql_library_end();
             bIsValid = false;
         }
@@ -40,11 +47,11 @@ namespace SKL::DB
     DBConnection::DBConnection( const DBConnectionSettings& Settings ) noexcept
         : Settings{ Settings }
     {
-        SKL_VER( "[DBConnection] DBConnection()!" );
+        SKLL_VER( "[DBConnection] DBConnection()!" );
     }
     DBConnection::~DBConnection() noexcept
     {
-        SKL_VER( "[DBConnection] ~DBConnection()!" );
+        SKLL_VER( "[DBConnection] ~DBConnection()!" );
         CloseConnection();
     }
     const char* DBConnection::GetStatus() noexcept
@@ -59,7 +66,7 @@ namespace SKL::DB
     {
         if( 0 != mysql_query( reinterpret_cast<MYSQL*>( &Mysql ), Query ) ) SKL_UNLIKELY
         {
-            SKL_WRN_FMT( "[DBConnection]::Execute() -> Failed with error [%s]", GetLastMysqlError( ) );
+            SKLL_WRN_FMT( "[DBConnection]::Execute() -> Failed with error [%s]", GetLastMysqlError( ) );
             return false;
         }
 
@@ -70,7 +77,7 @@ namespace SKL::DB
         const auto AcquireResult = AcquireConnection( );
         if( false == AcquireResult.IsSuccess( ) ) SKL_UNLIKELY
         {
-            SKL_WRN_FMT( "[DBConnection]::ExecuteUpdateQuery() -> Failed to acquire connection. LastMysqlError[%s]", GetLastMysqlError( ) );
+            SKLL_WRN_FMT( "[DBConnection]::ExecuteUpdateQuery() -> Failed to acquire connection. LastMysqlError[%s]", GetLastMysqlError( ) );
             return false;
         }
 
@@ -98,14 +105,14 @@ namespace SKL::DB
         if( 0 != ::mysql_ping( &MysqlRef ) ) SKL_UNLIKELY
         {
             CloseConnection();
-            SKL_WRN( "[DBConnection]::AcquireConnection() Failed to reaquire the connection!" );
+            SKLL_WRN( "[DBConnection]::AcquireConnection() Failed to reaquire the connection!" );
             return AcquireResult{ .bHasError = true, .bHasReconnected = false };
         }
 
         const bool bConnectionReaquired{ BeforeThreadId != MysqlRef.thread_id };
         if( true == bConnectionReaquired ) SKL_LIKELY
         {
-            SKL_INF( "[DBConnection]::AcquireConnection() Connection reaquired!" );
+            SKLL_INF( "[DBConnection]::AcquireConnection() Connection reaquired!" );
         }
 
         return AcquireResult{ .bHasError = false, .bHasReconnected = bConnectionReaquired };
@@ -130,13 +137,13 @@ namespace SKL::DB
     {
         if( true == bIsOpen )
         {
-            SKL_VER( "[DBConnection]::OpenConnection() Already openned!" );
+            SKLL_VER( "[DBConnection]::OpenConnection() Already openned!" );
             return true;
         }
 
         if( nullptr == ::mysql_init( reinterpret_cast<MYSQL*>( &Mysql ) ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::OpenConnection() Failed to init the mysql object erro[%s]!", GetLastMysqlError() );
+            SKLL_WRN_FMT( "[DBConnection]::OpenConnection() Failed to init the mysql object erro[%s]!", GetLastMysqlError() );
             return false;
         }
 
@@ -152,7 +159,7 @@ namespace SKL::DB
             , Flags
         ) }; nullptr == Result)
         {
-            SKL_ERR_FMT( "[DBConnection]::OpenConnection() Failed with error [%s]!", mysql_error( reinterpret_cast<MYSQL*>( &Mysql ) ) );
+            SKLL_ERR_FMT( "[DBConnection]::OpenConnection() Failed with error [%s]!", mysql_error( reinterpret_cast<MYSQL*>( &Mysql ) ) );
             return false;
         }
 
@@ -165,7 +172,7 @@ namespace SKL::DB
 
         bIsOpen = true;
 
-        SKL_VER_FMT( "[DBConnection]::OpenConnection() Successfully openned connection to DB[%s]!", Settings.Database.c_str() );
+        SKLL_VER_FMT( "[DBConnection]::OpenConnection() Successfully openned connection to DB[%s]!", Settings.Database.c_str() );
 
         return true;
     }
@@ -174,14 +181,14 @@ namespace SKL::DB
         ::mysql_close( reinterpret_cast<MYSQL*>( &Mysql ) );
         Mysql.Reset();
         bIsOpen = false;
-        SKL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
+        SKLL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
     }
     bool DBConnection::SetOptions() noexcept
     {
         const int32_t ProtoType{ MYSQL_PROTOCOL_TCP };
         if( 0 != ::mysql_options( reinterpret_cast<MYSQL*>( &Mysql ), MYSQL_OPT_PROTOCOL, &ProtoType ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set protocol! DB[%s]", Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set protocol! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 
@@ -189,7 +196,7 @@ namespace SKL::DB
         BOOL Reconnect{ TRUE };
         if( 0 != ::mysql_options( reinterpret_cast<MYSQL*>( &Mysql ), MYSQL_OPT_RECONNECT, &Reconnect ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set reconnect! DB[%s]", Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set reconnect! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 
@@ -198,27 +205,27 @@ namespace SKL::DB
             return false;
         }*/
 
-        if( true == mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
+        if( TRUE == mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set autocomit to %s! DB[%s]", Settings.bAutocommit ? "true" : "false" , Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set autocomit to %s! DB[%s]", Settings.bAutocommit ? "true" : "false" , Settings.Database.c_str() );
             return false;
         }
 
         if( 0 != ::mysql_set_character_set( reinterpret_cast<MYSQL*>( &Mysql ), "utf8" ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set mysql client charset to utf8! DB[%s]", Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set mysql client charset to utf8! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 
         // client sends data in UTF8, so MySQL must expect UTF8 too
         if( false == Execute( "SET NAMES `utf8`" ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET NAMES `utf8]! DB[%s]", Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET NAMES `utf8]! DB[%s]", Settings.Database.c_str() );
             return false;
         }
         if( false == Execute( "SET CHARACTER SET `utf8`" ) )
         {
-            SKL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET CHARACTER SET `utf8`]! DB[%s]", Settings.Database.c_str() );
+            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET CHARACTER SET `utf8`]! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 

@@ -15,7 +15,7 @@ namespace SKL::DB
         {
             if( false == InSettings.Validate() )
             {
-                SKL_WRN( "[DBConnectionFactory]::Initialize() Invalid settings!" );
+                SKLL_WRN( "[DBConnectionFactory]::Initialize() Invalid settings!" );
                 return false;
             }
 

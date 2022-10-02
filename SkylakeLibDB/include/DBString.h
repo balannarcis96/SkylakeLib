@@ -56,7 +56,7 @@ namespace SKL::DB
             return DBString<MaxSize>{ InUtf16 };
         }
 
-        SKL_NODISCARD const char *GetUtf8( ) noexcept
+        SKL_NODISCARD char *GetUtf8( ) noexcept
         {
             if( true == bHasSource && false == bHasUTF8 )
             {
@@ -70,7 +70,7 @@ namespace SKL::DB
 
             return Utf8;
         }
-        SKL_NODISCARD const wchar_t *GetUtf16( bool bForce = false ) noexcept
+        SKL_NODISCARD wchar_t *GetUtf16( bool bForce = false ) noexcept
         {
             if( true == bHasSource && ( false == bHasUTF16 || true == bForce ) )
             {
@@ -211,5 +211,7 @@ namespace SKL::DB
         bool    bHasUTF16           { false };
         char    Utf8[ CUTF8Size ]   { 0 };
         wchar_t Utf16[ CUTF16Size ] { 0 };
+
+        friend struct DBStatement;
     };
 }
