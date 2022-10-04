@@ -124,6 +124,22 @@ namespace SKL::DB
 
         return MYSQL_NO_DATA != Status;
     }
+    
+    bool DBStatement::Result::FetchColumn( int32_t InIndex ) noexcept
+    {
+        int32_t Result{ ::mysql_stmt_fetch_column( 
+                  reinterpret_cast<::MYSQL_STMT*>( Statement->Statement )
+                , reinterpret_cast<::MYSQL_BIND*>( &GetBind )
+                , InIndex - 1
+                , 0 ) };
+        if( 0 != Result ) SKL_UNLIKELY
+        {
+            const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
+            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+        }
+
+        return 0 == Result;
+    }
 
     DBStatement::~DBStatement() noexcept
     {
@@ -134,6 +150,8 @@ namespace SKL::DB
 
     bool DBStatement::Initialize( DBConnection* InConnection ) noexcept
     {
+        SKL_ASSERT( nullptr != InConnection );
+
         auto* NewStatement{ ::mysql_stmt_init( reinterpret_cast<::MYSQL*>( &InConnection->GetMysqlObject() ) ) };
         if( nullptr == NewStatement ) SKL_UNLIKELY
         {
@@ -143,6 +161,7 @@ namespace SKL::DB
         }
 
         Connection = InConnection;
+        Statement  = reinterpret_cast<MysqlStmtOpaque*>( NewStatement );
 
         return true;
     }
@@ -200,7 +219,7 @@ namespace SKL::DB
 
         if( true == bSuccess && 0 != BoundOutputsCount )
         {
-            if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) )  SKL_UNLIKELY
+            if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Output ) ) )  SKL_UNLIKELY
             {
                 const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
                 SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );

@@ -26,29 +26,9 @@ namespace SKL::DB
             }
         };
 
-        DBConnection( DBConnection&& Other ) noexcept
-            : bIsOpen { Other.bIsOpen }
-            , bIsTransactionStarted{ Other.bIsTransactionStarted }
-            , Mysql{ std::move( Other.Mysql ) }
-            , Settings{ std::move( Other.Settings ) }
-        {
-            Other.bIsOpen               = false;
-            Other.bIsTransactionStarted = false;
-        }
-        DBConnection& operator=( DBConnection&& Other ) noexcept
-        {
-            SKL_ASSERT( this != &Other );
-
-            bIsOpen               = Other.bIsOpen;
-            bIsTransactionStarted = Other.bIsTransactionStarted;
-            Mysql                 = std::move( Other.Mysql );
-            Settings              = std::move( Other.Settings );
-
-            Other.bIsOpen               = false;
-            Other.bIsTransactionStarted = false;
-
-            return *this;
-        }
+        DBConnection( DBConnection&& Other ) noexcept = delete;
+        DBConnection& operator=( DBConnection&& Other ) noexcept = delete;
+        ~DBConnection() noexcept;
 
         DBConnection( const DBConnection& ) = delete;
         DBConnection& operator=( const DBConnection& ) = delete;
@@ -124,7 +104,6 @@ namespace SKL::DB
 
     private:
         DBConnection( const DBConnectionSettings& Settings ) noexcept;
-        ~DBConnection() noexcept;
 
         AcquireResult TryReacquireConnection() noexcept;
         bool OpenConnection() noexcept;

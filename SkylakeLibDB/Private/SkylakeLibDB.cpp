@@ -14,6 +14,14 @@ namespace SKL::DB
 {
     constexpr size_t CActualSizeOfMYSQL = sizeof( MYSQL );
     static_assert( CActualSizeOfMYSQL == CSizeOfMYSQL, "Update CSizeOfMYSQL!" );
+    static_assert( sizeof( DBTimeBase ) == sizeof( MYSQL_TIME ) );
+
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_NONE ) == static_cast<int32_t>( MYSQL_TIMESTAMP_NONE ) );
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_ERROR ) == static_cast<int32_t>( MYSQL_TIMESTAMP_ERROR ) );
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_DATE ) == static_cast<int32_t>( MYSQL_TIMESTAMP_DATE ) );
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_DATETIME ) == static_cast<int32_t>( MYSQL_TIMESTAMP_DATETIME ) );
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_TIME ) == static_cast<int32_t>( MYSQL_TIMESTAMP_TIME ) );
+    static_assert( static_cast<int32_t>( ETimestampType::TIMESTAMP_DATETIME_TZ ) == static_cast<int32_t>( MYSQL_TIMESTAMP_DATETIME_TZ ) );
 
     /*------------------------------------------------------------
      * DBLibGuard
@@ -47,11 +55,10 @@ namespace SKL::DB
     DBConnection::DBConnection( const DBConnectionSettings& Settings ) noexcept
         : Settings{ Settings }
     {
-        SKLL_VER( "[DBConnection] DBConnection()!" );
+        Mysql.Reset();
     }
     DBConnection::~DBConnection() noexcept
     {
-        SKLL_VER( "[DBConnection] ~DBConnection()!" );
         CloseConnection();
     }
     const char* DBConnection::GetStatus() noexcept
@@ -87,9 +94,34 @@ DBConnection_Execute_Start:
             SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
             return -1;
         }
+        
+        int64_t NoOfRowsAffected{ 0 };
+        ::MYSQL_RES* Result{ ::mysql_store_result( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+        if ( nullptr != Result ) SKL_UNLIKELY
+        {
+            SKLL_TRACE_MSG( "Do not use this function for SELECT data queries!" );
+            const auto Temp{ ::mysql_num_rows( Result ) };
+            SKL_ASSERT( Temp <= INT64_MAX );
+            NoOfRowsAffected = static_cast<int64_t>( Temp );
+            ::mysql_free_result( Result );
+        }
+        else
+        {
+            NoOfRowsAffected = ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) );
+            if( NoOfRowsAffected == 0 ) SKL_LIKELY 
+            {
+                const auto Temp{ ::mysql_affected_rows( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+                SKL_ASSERT( Temp <= INT64_MAX );
+                NoOfRowsAffected = static_cast<int64_t>( Temp );
+            }
+            else
+            {
+                SKLL_TRACE_MSG_FMT( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
+                return -1;
+            }
+        }
 
-        uint32_t NoOfRowsAffected{ ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
-        return static_cast<int64_t>( NoOfRowsAffected );
+        return NoOfRowsAffected;
     }
     int64_t DBConnection::Execute( const char *Query, uint32_t InQueryLength ) noexcept
     {
@@ -116,9 +148,34 @@ DBConnection_Execute_Start:
             SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
             return -1;
         }
+        
+        int64_t NoOfRowsAffected{ 0 };
+        ::MYSQL_RES* Result{ ::mysql_store_result( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+        if ( nullptr != Result ) SKL_UNLIKELY
+        {
+            SKLL_TRACE_MSG( "Do not use this function for SELECT data queries!" );
+            const auto Temp{ ::mysql_num_rows( Result ) };
+            SKL_ASSERT( Temp <= INT64_MAX );
+            NoOfRowsAffected = static_cast<int64_t>( Temp );
+            ::mysql_free_result( Result );
+        }
+        else
+        {
+            NoOfRowsAffected = ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) );
+            if( NoOfRowsAffected == 0 ) SKL_LIKELY 
+            {
+                const auto Temp{ ::mysql_affected_rows( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+                SKL_ASSERT( Temp <= INT64_MAX );
+                NoOfRowsAffected = static_cast<int64_t>( Temp );
+            }
+            else
+            {
+                SKLL_TRACE_MSG_FMT( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
+                return -1;
+            }
+        }
 
-        uint32_t NoOfRowsAffected{ ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
-        return static_cast<int64_t>( NoOfRowsAffected );
+        return NoOfRowsAffected;
     }
     bool DBConnection::Ping() noexcept
     {
@@ -170,7 +227,7 @@ DBConnection_Execute_Start:
             return false;
         }
 
-        const uint32_t Flags{ Settings.bEnableMultistatements ? CLIENT_MULTI_STATEMENTS : 0 };
+        const uint32_t Flags{ /*Settings.bEnableMultistatements ? CLIENT_MULTI_STATEMENTS : */0 };
         if( const auto Result{ ::mysql_real_connect( 
               reinterpret_cast<MYSQL*>( &Mysql )
             , Settings.Host.c_str()
@@ -223,11 +280,18 @@ DBConnection_Execute_Start:
             SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set reconnect! DB[%s]", Settings.Database.c_str() );
             return false;
         }
-
+        
         /*if ( 0 != mysql_options( &Mysql, MYSQL_OPT_CONNECT_TIMEOUT, &ConnectionTimeout ) ) 
         {
             return false;
         }*/
+
+#if defined(SKL_MYSQL_COMPRESS_NET)
+        if ( 0 != mysql_options( reinterpret_cast<MYSQL*>( &Mysql ), MYSQL_OPT_COMPRESS, nullptr ) ) 
+        {
+            return false;
+        }
+#endif
 
         if( TRUE == ::mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
         {
@@ -260,15 +324,15 @@ DBConnection_Execute_Start:
      * DBConnectionFactory
      *------------------------------------------------------------*/
 
-    DBConnection DBConnectionFactory::TryOpenNewConnection() noexcept
+    std::unique_ptr<DBConnection> DBConnectionFactory::TryOpenNewConnection() noexcept
     {
         SKL_ASSERT( true == Settings.IsValid() );
 
-        DBConnection NewConnection{ Settings };
+        std::unique_ptr<DBConnection> NewConnection{ new DBConnection( Settings ) };
 
-        if( false == NewConnection.OpenConnection() ) SKL_UNLIKELY
+        if( false == NewConnection->OpenConnection() ) SKL_UNLIKELY
         {
-            return DBConnection{ DBConnectionSettings{} };
+            return nullptr;
         }
 
         return NewConnection;

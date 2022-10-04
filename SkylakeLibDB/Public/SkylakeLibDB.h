@@ -11,6 +11,42 @@
 
 namespace SKL::DB
 {
+    enum class EFieldType : int32_t
+    { 
+        TYPE_DECIMAL,
+        TYPE_TINY,
+        TYPE_SHORT,
+        TYPE_LONG,
+        TYPE_FLOAT,
+        TYPE_DOUBLE,
+        TYPE_NULL,
+        TYPE_TIMESTAMP,
+        TYPE_LONGLONG,
+        TYPE_INT24,
+        TYPE_DATE,
+        TYPE_TIME,
+        TYPE_DATETIME,
+        TYPE_YEAR,
+        TYPE_NEWDATE, /**< Internal to MySQL. Not used in protocol */
+        TYPE_VARCHAR,
+        TYPE_BIT,
+        TYPE_TIMESTAMP2,
+        TYPE_DATETIME2,   /**< Internal to MySQL. Not used in protocol */
+        TYPE_TIME2,       /**< Internal to MySQL. Not used in protocol */
+        TYPE_TYPED_ARRAY, /**< Used for replication only */
+        TYPE_JSON = 245,
+        TYPE_NEWDECIMAL = 246,
+        TYPE_ENUM = 247,
+        TYPE_SET = 248,
+        TYPE_TINY_BLOB = 249,
+        TYPE_MEDIUM_BLOB = 250,
+        TYPE_LONG_BLOB = 251,
+        TYPE_BLOB = 252,
+        TYPE_VAR_STRING = 253,
+        TYPE_STRING = 254,
+        TYPE_GEOMETRY = 255 
+    };
+
     constexpr size_t CSizeOfMYSQL = 1096;
     struct alignas( SKL_ALIGNMENT ) MYSQL_Opaque
     {
@@ -61,9 +97,8 @@ namespace SKL::DB
         uint32_t    Port                        { 0 };
         uint32_t    ReacquireConnectionMaxTries { 3 };
         uint32_t    ConnectionTimeoutMs         { 500 };
-        bool        bEnableMultistatements      { false };
-        bool        bIsValid                    { false };
         bool        bAutocommit                 { true };
+        bool        bIsValid                    { false };
 
         bool Validate() noexcept
         {
@@ -89,6 +124,7 @@ namespace SKL::DB
 }
 
 #include "../Private/DBString.h"
+#include "../Private/DBTime.h"
 #include "../Private/DBConnection.h"
 #include "../Private/DBConnectionFactory.h"
 #include "../Private/DBStatement.h"

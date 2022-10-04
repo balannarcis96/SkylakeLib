@@ -9,12 +9,29 @@ namespace SkylakeDBTests
         void SetUp() override
         {
             EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
+
+            SKL::DB::DBConnectionSettings Settings
+            {
+                  .Username                    = "developer"
+                , .Password                    = "123456aA!"
+                , .Database                    = "sys"
+                , .Host                        = "localhost"
+                , .Port                        = 3306
+                , .ReacquireConnectionMaxTries = 3
+                , .ConnectionTimeoutMs         = 100
+                , .bAutocommit                 = true       
+            };
+
+            EXPECT_TRUE( true == DBConnectionFactory.Initialize( std::move( Settings ) ) );
         }
 
         void TearDown() override
         {
             EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
         }
+
+    protected:
+        SKL::DB::DBConnectionFactory DBConnectionFactory{};
     };
 
     TEST( SkylakeDBTests, DBString_BasicAPI )
@@ -82,10 +99,68 @@ namespace SkylakeDBTests
         }
     }
 
-    TEST_F( SkylakeDBTestsFixture, DBConnection_BasicAPI )
+    TEST_F( SkylakeDBTestsFixture, DISABLED_DBConnection_BasicAPI )
     {
+        {
+            auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
+            ASSERT_TRUE( nullptr != Connection );
+            ASSERT_TRUE( true == Connection->IsOpen() );
+            const auto CountResult{ Connection->Execute( "UPDATE sys_config SET value='101' WHERE variable='statement_performance_analyzer.limit'" ) };
+            ASSERT_TRUE( -1 != CountResult );
+        }
         
+        {
+            auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
+            ASSERT_TRUE( nullptr != Connection );
+            ASSERT_TRUE( true == Connection->IsOpen() );
+            const auto CountResult{ Connection->Execute( "UPDATE sys_config SET value='100' WHERE variable='statement_performance_analyzer.limit'", 88 ) };
+            ASSERT_TRUE( -1 != CountResult );
+        }
     }
+    
+    TEST_F( SkylakeDBTestsFixture, DISABLED_DBStatement_BasicAPI )
+    {
+        {
+            auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
+            ASSERT_TRUE( nullptr != Connection );
+            ASSERT_TRUE( true == Connection->IsOpen() );
+
+            std::unique_ptr<SKL::DB::DBStatement> NewStatement{ new SKL::DB::DBStatement() };
+            NewStatement->SetQuery( "SELECT * FROM sys_config" );
+            ASSERT_TRUE( true == NewStatement->InitializeAndPrepare( Connection.get() ) );
+            ASSERT_TRUE( true == NewStatement->IsInitialized() );
+            
+            SKL::DB::DBString<128> Variable;
+            SKL::DB::DBString<128> Value;
+            SKL::DB::DBString<128> SetBy;
+            SKL::DB::DBTimeStamp   SetTime;
+
+            NewStatement->BindOutputString( 1, Variable );
+            NewStatement->BindOutputString( 2, Value );
+            NewStatement->BindOutputDate( 3, &SetTime );
+            NewStatement->BindOutputString( 4, Value );
+
+            auto Result{ NewStatement->Execute() };
+            ASSERT_TRUE( true == Result.IsValid() );
+            ASSERT_TRUE( false == Result.IsEmpty() );
+            ASSERT_TRUE( 6 == Result.GetNoOfRows() );
+
+            while( true == Result.Next() )
+            {
+                SKLL_INF_FMT( "[ Variable: %s Value:%s SetTime:[Y:%u M:%u D:%u h:%u m:%u s:%u] SetBy:%s]"
+                            , Variable.GetUtf8()
+                            , Value.GetUtf8()
+                            , SetTime.Year
+                            , SetTime.Month
+                            , SetTime.Day
+                            , SetTime.Hour
+                            , SetTime.Minute
+                            , SetTime.Second
+                            , SetBy.GetUtf8() );
+            } 
+        }
+    }
+
 }
 
 int main( int argc, char** argv )

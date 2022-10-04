@@ -53,42 +53,6 @@ namespace SKL::DB
 
     struct DBConnection;
     
-    enum class EFieldType : int32_t
-    { 
-        TYPE_DECIMAL,
-        TYPE_TINY,
-        TYPE_SHORT,
-        TYPE_LONG,
-        TYPE_FLOAT,
-        TYPE_DOUBLE,
-        TYPE_NULL,
-        TYPE_TIMESTAMP,
-        TYPE_LONGLONG,
-        TYPE_INT24,
-        TYPE_DATE,
-        TYPE_TIME,
-        TYPE_DATETIME,
-        TYPE_YEAR,
-        TYPE_NEWDATE, /**< Internal to MySQL. Not used in protocol */
-        TYPE_VARCHAR,
-        TYPE_BIT,
-        TYPE_TIMESTAMP2,
-        TYPE_DATETIME2,   /**< Internal to MySQL. Not used in protocol */
-        TYPE_TIME2,       /**< Internal to MySQL. Not used in protocol */
-        TYPE_TYPED_ARRAY, /**< Used for replication only */
-        TYPE_JSON = 245,
-        TYPE_NEWDECIMAL = 246,
-        TYPE_ENUM = 247,
-        TYPE_SET = 248,
-        TYPE_TINY_BLOB = 249,
-        TYPE_MEDIUM_BLOB = 250,
-        TYPE_LONG_BLOB = 251,
-        TYPE_BLOB = 252,
-        TYPE_VAR_STRING = 253,
-        TYPE_STRING = 254,
-        TYPE_GEOMETRY = 255 
-    };
-
     struct DBStatement
     {
         DBStatement() noexcept
@@ -148,7 +112,31 @@ namespace SKL::DB
 
                 return Next();
             }
+            
+            template<typename TType>
+            bool Get( int32_t InIndex, char* OutUtf8Buffer, TType* OutValue ) noexcept
+            {
+                DBStatement::BindImpl( reinterpret_cast<Parameter*>( &GetBind ), OutValue );
+                return FetchColumn( InIndex );
+            }
 
+            bool GetString( int32_t InIndex, char* OutUtf8Buffer, uint32_t* InUtf8BufferLength_OutStringLength ) noexcept
+            {
+                DBStatement::BindStringImpl( reinterpret_cast<Parameter*>( &GetBind ), OutUtf8Buffer, InUtf8BufferLength_OutStringLength );
+                return FetchColumn( InIndex );
+            }
+
+            template<typename TType>
+            SKL_FORCEINLINE void Bind( int32_t InIndex, TType * InValue ) noexcept
+            {
+                Statement->BindOutput( InIndex, InValue );
+            }
+
+            template<size_t InStringBufferSize>
+            SKL_FORCEINLINE void BindString( int32_t InIndex, DBString<InStringBufferSize>& InValue ) noexcept
+            {
+                Statement->BindOutputString( InIndex, InValue );
+            }
 
         private:
             Result( DBStatement* Statement, MysqlResOpaue* ResultMetadata, uint64_t NoOfRows ) noexcept
@@ -187,6 +175,8 @@ namespace SKL::DB
 
                 return *this;
             }
+
+            bool FetchColumn( int32_t InIndex ) noexcept;
 
             void FreeResultMetadata() noexcept;
 
@@ -251,8 +241,8 @@ namespace SKL::DB
         //! Bind value as input/output for query parameter
         //! \tparam TType must be value type
         //! \param InIndex 1-based index of param found in the query string
-        //! \param InValue pointer to the value, must be alive until call to Execute
-        template<typename TType, bool bIsInput = false>
+        //! \param InValue pointer to the value, must be alive until after the  call to Execute
+        template<typename TType, bool bIsInput = true>
         void Bind( int32_t InIndex, TType* InValue ) noexcept
         {
             SKL_ASSERT( 0 < InIndex );
@@ -277,26 +267,55 @@ namespace SKL::DB
 
             BindImpl( NewParameter, InValue );
         }
-
-        //! Bind string as input/output for query parameter
+        
+        //! Bind value as input/output date for query parameter
         //! \tparam TType must be value type
         //! \param InIndex 1-based index of param found in the query string
-        //! \param InValue pointer to the value, must be alive until call to Execute
-        template<size_t InStringBufferSize, bool bIsInput = false>
-        void BindString( int32_t InIndex, DBString<InStringBufferSize>& InValue ) noexcept
+        //! \param InValue pointer to the TDBTime<Type> instance, must be alive until after the call to Execute
+        template<EFieldType InDateType, bool bIsInput = true>
+        void BindDate( int32_t InIndex, TDBTime<InDateType>* InValue ) noexcept
         {
             SKL_ASSERT( 0 < InIndex );
-
-            auto*       Utf8String      { InValue.GetUtf8() };
-            const auto  Utf8StringLength{ InValue.GetUtf8Size() };
-
-            SKL_ASSERT( Utf8StringLength < std::numeric_limits<uint32_t>::max() );
+            
+            Parameter* NewParameter;
 
             if constexpr( true == bIsInput )
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxInputParams );
 
-                InputLengths[InIndex - 1] = Utf8StringLength;
+                InputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( DBTimeBase ) );
+                NewParameter              = &Input[InIndex - 1];
+            }
+            else
+            {
+                SKL_ASSERT( InIndex < CDBStatementMaxOutputParams );
+
+                OutputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( DBTimeBase ) );
+                NewParameter               = &Output[InIndex - 1];
+            }
+
+            NewParameter->Reset( InValue, static_cast<uint32_t>( sizeof( DBTimeBase ) ), nullptr, InDateType );
+        }
+
+        //! Bind string as input/output for query parameter
+        //! \tparam TType must be value type
+        //! \param InIndex 1-based index of param found in the query string
+        //! \param InValue pointer to the value, must be alive until after the  call to Execute
+        template<size_t InStringBufferSize, bool bIsInput = true>
+        void BindString( int32_t InIndex, DBString<InStringBufferSize>& InValue ) noexcept
+        {
+            SKL_ASSERT( 0 < InIndex );
+
+            auto* Utf8String{ InValue.GetUtf8() };
+
+            if constexpr( true == bIsInput )
+            {
+                SKL_ASSERT( InIndex < CDBStatementMaxInputParams );
+                
+                const auto Utf8StringLength{ InValue.GetUtf8Size() };
+                SKL_ASSERT( std::numeric_limits<uint32_t>::max() > Utf8StringLength );
+
+                InputLengths[InIndex - 1] = static_cast<uint32_t>( Utf8StringLength );
                 auto* NewParameter{ &Input[InIndex - 1] };
 
                 ++BoundInputsCount;
@@ -307,8 +326,8 @@ namespace SKL::DB
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxOutputParams );
 
-                OutputLengths[InIndex - 1] = Utf8StringLength;
-                auto* NewParameter{ &Input[InIndex - 1] };
+                OutputLengths[InIndex - 1] = static_cast<uint32_t>( InStringBufferSize );
+                auto* NewParameter{ &Output[InIndex - 1] };
 
                 ++BoundOutputsCount;
 
@@ -328,7 +347,7 @@ namespace SKL::DB
 
             ++BoundInputsCount;
 
-            BindStringImpl( NewParameter, InBuffer, &InputLengths[ InIndex - 1 ] );
+            BindBlobImpl( NewParameter, InBuffer, &InputLengths[ InIndex - 1 ] );
         }
         
         //! Bind blob as input for query parameter
@@ -337,17 +356,27 @@ namespace SKL::DB
         template<size_t InBufferSize>
         SKL_FORCEINLINE void BindInputBlob( const int32_t InIndex, char*( &InBuffer )[InBufferSize] ) noexcept
         {
-            return BindInputBlob( InIndex, InBuffer );
+            return BindInputBlob( InIndex, InBuffer, static_cast<uint32_t>( InBufferSize ) );
         }
 
         //! Bind value as output for query
         //! \tparam TType must be value type
         //! \param InIndex 1-based index of param found in the query string
-        //! \param InValue pointer to the value, must be alive until call to Execute
+        //! \param InValue pointer to the value, must be alive until after the  call to Execute
         template<typename TType>
         SKL_FORCEINLINE void BindOutput( int32_t InIndex, TType* InValue ) noexcept
         {
             return Bind<TType, false>( InIndex, InValue );
+        }
+        
+        //! Bind value as output date for query parameter
+        //! \tparam TType must be value type
+        //! \param InIndex 1-based index of param found in the query string
+        //! \param InValue pointer to the TDBTime<Type> instance, must be alive until after the call to Execute
+        template<EFieldType InDateType>
+        void BindOutputDate( int32_t InIndex, TDBTime<InDateType>* InValue ) noexcept
+        {
+            return BindDate<InDateType, false>( InIndex, InValue );
         }
 
         //! Bind string as output for query
@@ -360,6 +389,22 @@ namespace SKL::DB
             InValue.bHasSource    = true;
             InValue.bIsUTF8Source = true;
             InValue.bHasUTF8      = true;
+        }
+
+        //! Get input bind length
+        //! \param InIndex 1-based index of param found in the query string
+        SKL_FORCEINLINE uint32_t GetInputLength( int32_t InIndex ) noexcept
+        {
+            SKL_ASSERT( InIndex > 0 && InIndex <= CDBStatementMaxInputParams );
+            return InputLengths[ InIndex - 1 ];
+        }
+        
+        //! Get output bind length
+        //! \param InIndex 1-based index of param found in the query string
+        SKL_FORCEINLINE uint32_t GetOutputLength( int32_t InIndex ) noexcept
+        {
+            SKL_ASSERT( InIndex > 0 && InIndex <= CDBStatementMaxOutputParams );
+            return OutputLengths[ InIndex - 1 ];
         }
 
     private:
@@ -422,18 +467,22 @@ namespace SKL::DB
             {
                 InParameter->SetType( EFieldType::TYPE_LONGLONG, true );
             }
+            else if constexpr( std::is_same_v<BindType, DBTime> )
+            {
+                InParameter->SetType( EFieldType::TYPE_TIMESTAMP, true );
+            }
             else
             {
                 SKL_ASSERT_ALLWAYS_MSG( false, "Unsupported Bind Type!" );
             }
         }
 
-        SKL_FORCEINLINE static bool BindStringImpl( Parameter* InParameter, char* InString, uint32_t* InOutLength ) noexcept
+        SKL_FORCEINLINE static void BindStringImpl( Parameter* InParameter, char* InString, uint32_t* InOutLength ) noexcept
         {
             SKL_ASSERT( nullptr != InParameter );
             InParameter->Reset( static_cast<void*>( InString ), *InOutLength, InOutLength, EFieldType::TYPE_STRING, false );
         }
-        SKL_FORCEINLINE static bool BindBlobImpl( Parameter* InParameter, char* InString, uint32_t* InOutLength ) noexcept
+        SKL_FORCEINLINE static void BindBlobImpl( Parameter* InParameter, char* InString, uint32_t* InOutLength ) noexcept
         {
             SKL_ASSERT( nullptr != InParameter );
             InParameter->Reset( static_cast<void*>( InString ), *InOutLength, InOutLength, EFieldType::TYPE_BLOB, false );
