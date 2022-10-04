@@ -88,8 +88,8 @@ namespace SKL::DB
     struct DBConnectionFactory;
 }
 
-#include "DBString.h"
-#include "DBConnection.h"
-#include "DBConnectionFactory.h"
-#include "DBStatement.h"
-#include "DbTransaction.h"
+#include "../Private/DBString.h"
+#include "../Private/DBConnection.h"
+#include "../Private/DBConnectionFactory.h"
+#include "../Private/DBStatement.h"
+#include "../Private/DbTransaction.h"

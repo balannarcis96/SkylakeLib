@@ -62,76 +62,99 @@ namespace SKL::DB
     {
         return ::mysql_error( reinterpret_cast<MYSQL*>( &Mysql ) );
     }
-    bool DBConnection::Execute( const char *Query ) noexcept
+    int64_t DBConnection::Execute( const char *Query ) noexcept
     {
-        if( 0 != mysql_query( reinterpret_cast<MYSQL*>( &Mysql ), Query ) ) SKL_UNLIKELY
+        bool bConnectionReqauiredOnce{ false };
+DBConnection_Execute_Start:
+        if( 0 != ::mysql_query( reinterpret_cast<::MYSQL*>( &Mysql ), Query ) ) SKL_UNLIKELY
         {
-            SKLL_WRN_FMT( "[DBConnection]::Execute() -> Failed with error [%s]", GetLastMysqlError( ) );
-            return false;
-        }
-
-        return true;
-    }
-    bool DBConnection::ExecuteUpdateQuery( const char *Query ) noexcept
-    {
-        const auto AcquireResult = AcquireConnection( );
-        if( false == AcquireResult.IsSuccess( ) ) SKL_UNLIKELY
-        {
-            SKLL_WRN_FMT( "[DBConnection]::ExecuteUpdateQuery() -> Failed to acquire connection. LastMysqlError[%s]", GetLastMysqlError( ) );
-            return false;
-        }
-
-        return Execute( Query );
-    }
-    DBConnection::AcquireResult DBConnection::AcquireConnection( bool bOpenConnectionIfClosed ) noexcept
-    {
-        if( false == bIsOpen ) SKL_UNLIKELY
-        {
-            if( true == bOpenConnectionIfClosed ) SKL_LIKELY
+            const auto LastError{ ::mysql_errno( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+            if( false == bConnectionReqauiredOnce && ( CR_SERVER_LOST == LastError || CR_SERVER_GONE_ERROR == LastError ) )
             {
-                if( true == OpenConnection() )
+                const AcquireResult ReaquireResult{ TryReacquireConnection() };
+                if( ReaquireResult.IsSuccess() )
                 {
-                    return AcquireResult{ .bHasError = false, .bHasReconnected = true };
+                    bConnectionReqauiredOnce = true;
+                    goto DBConnection_Execute_Start;
+                }
+                else
+                {
+                    SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
                 }
             }
 
-            return AcquireResult{ .bHasError = true, .bHasReconnected = false };
+            const char* MysqlErrorString{ GetLastMysqlError() };
+            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            return -1;
         }
 
-        auto& MysqlRef = *reinterpret_cast<MYSQL*>( &Mysql );
-
-        const auto BeforeThreadId = MysqlRef.thread_id;
-
-        if( 0 != ::mysql_ping( &MysqlRef ) ) SKL_UNLIKELY
-        {
-            CloseConnection();
-            SKLL_WRN( "[DBConnection]::AcquireConnection() Failed to reaquire the connection!" );
-            return AcquireResult{ .bHasError = true, .bHasReconnected = false };
-        }
-
-        const bool bConnectionReaquired{ BeforeThreadId != MysqlRef.thread_id };
-        if( true == bConnectionReaquired ) SKL_LIKELY
-        {
-            SKLL_INF( "[DBConnection]::AcquireConnection() Connection reaquired!" );
-        }
-
-        return AcquireResult{ .bHasError = false, .bHasReconnected = bConnectionReaquired };
+        uint32_t NoOfRowsAffected{ ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+        return static_cast<int64_t>( NoOfRowsAffected );
     }
-    bool DBConnection::TryReacquireConnection() noexcept
+    int64_t DBConnection::Execute( const char *Query, uint32_t InQueryLength ) noexcept
+    {
+        bool bConnectionReqauiredOnce{ false };
+DBConnection_Execute_Start:
+        if( 0 != ::mysql_real_query( reinterpret_cast<::MYSQL*>( &Mysql ), Query, InQueryLength ) ) SKL_UNLIKELY
+        {
+            const auto LastError{ ::mysql_errno( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+            if( false == bConnectionReqauiredOnce && ( CR_SERVER_LOST == LastError || CR_SERVER_GONE_ERROR == LastError ) )
+            {
+                const AcquireResult ReaquireResult{ TryReacquireConnection() };
+                if( ReaquireResult.IsSuccess() )
+                {
+                    bConnectionReqauiredOnce = true;
+                    goto DBConnection_Execute_Start;
+                }
+                else
+                {
+                    SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                }
+            }
+
+            const char* MysqlErrorString{ GetLastMysqlError() };
+            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            return -1;
+        }
+
+        uint32_t NoOfRowsAffected{ ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+        return static_cast<int64_t>( NoOfRowsAffected );
+    }
+    bool DBConnection::Ping() noexcept
+    {
+        const auto PingResult{ ::mysql_ping( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+        if( 0 == PingResult ) SKL_LIKELY
+        {
+            const char* MysqlErrorString{ GetLastMysqlError() };
+            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString ); 
+        }
+
+        return 0 == PingResult;
+    }
+
+    DBConnection::AcquireResult DBConnection::TryReacquireConnection() noexcept
     {
         uint32_t Tries{ Settings.ReacquireConnectionMaxTries };
         do
         {
-            const auto AcquireResult{ AcquireConnection( ) };
-            if( true == AcquireResult.IsSuccess( ) ) SKL_LIKELY
+            const auto ThreadIdBefore{ ::mysql_thread_id( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+            const auto PingResult{ ::mysql_ping( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+            if( 0 == PingResult ) SKL_LIKELY
             {
-                break;
+                const auto ThreadIdAfter{ ::mysql_thread_id( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
+                return AcquireResult{ 
+                    .bHasError       = false,
+                    .bHasReconnected = ThreadIdAfter != ThreadIdBefore
+                };
             }
 
             --Tries;
-        } while( 0 < Tries ) SKL_UNLIKELY;
+        } while( 0 < Tries );
 
-        return 0 != Tries;
+        return AcquireResult{
+            .bHasError       = true,
+            .bHasReconnected = false
+        };
     }
     bool DBConnection::OpenConnection() noexcept
     {
@@ -181,6 +204,7 @@ namespace SKL::DB
         ::mysql_close( reinterpret_cast<MYSQL*>( &Mysql ) );
         Mysql.Reset();
         bIsOpen = false;
+        bIsTransactionStarted = false;
         SKLL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
     }
     bool DBConnection::SetOptions() noexcept
@@ -205,7 +229,7 @@ namespace SKL::DB
             return false;
         }*/
 
-        if( TRUE == mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
+        if( TRUE == ::mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
         {
             SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set autocomit to %s! DB[%s]", Settings.bAutocommit ? "true" : "false" , Settings.Database.c_str() );
             return false;
@@ -218,12 +242,12 @@ namespace SKL::DB
         }
 
         // client sends data in UTF8, so MySQL must expect UTF8 too
-        if( false == Execute( "SET NAMES `utf8`" ) )
+        if( -1 == Execute( "SET NAMES `utf8`" ) )
         {
             SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET NAMES `utf8]! DB[%s]", Settings.Database.c_str() );
             return false;
         }
-        if( false == Execute( "SET CHARACTER SET `utf8`" ) )
+        if( -1 == Execute( "SET CHARACTER SET `utf8`" ) )
         {
             SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET CHARACTER SET `utf8`]! DB[%s]", Settings.Database.c_str() );
             return false;

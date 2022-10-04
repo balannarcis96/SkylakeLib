@@ -56,16 +56,17 @@ namespace SKL::DB
         SKL_FORCEINLINE bool IsOpen() const noexcept { return bIsOpen; }
         SKL_NODISCARD const char* GetStatus() noexcept;
         SKL_NODISCARD const char* GetLastMysqlError() noexcept;
+        SKL_NODISCARD bool Ping() noexcept;
         
-        SKL_FORCEINLINE bool HasTransaction( ) const noexcept { return bIsTransactionStarted; }
-        bool StartTransaction( ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool HasTransaction( ) const noexcept { return bIsTransactionStarted; }
+        SKL_NODISCARD bool StartTransaction( ) noexcept
         {
             if( true == bIsTransactionStarted ) SKL_UNLIKELY
             {
                 return false;
             }
 
-            if( false == ExecuteUpdateQuery( "START TRANSACTION" ) ) SKL_UNLIKELY
+            if( false == Execute( "START TRANSACTION", 18 ) ) SKL_UNLIKELY
             {
                 return false;
             }
@@ -81,7 +82,7 @@ namespace SKL::DB
                 return false;
             }
 
-            if( false == ExecuteUpdateQuery( "ROLLBACK" ) ) SKL_UNLIKELY
+            if( false == Execute( "ROLLBACK", 9 ) ) SKL_UNLIKELY
             {
                 return false;
             }
@@ -97,7 +98,7 @@ namespace SKL::DB
                 return false;
             }
 
-            if( false == ExecuteUpdateQuery( "COMMIT" ) ) SKL_UNLIKELY
+            if( false == Execute( "COMMIT", 7 ) ) SKL_UNLIKELY
             {
                 return false;
             }
@@ -106,22 +107,28 @@ namespace SKL::DB
 
             return true;
         }
-        bool ExecuteUpdateQuery( const char *Query ) noexcept;
         void CloseConnection() noexcept;
+
+        //! Execute CUD (create/update/delete) queries, if binary data is queried into the db use Execute( Query, InQueryLength ) overload
+        //! \returns -1 if the execution failed 
+        //! \returns >= 0 (NoOfRowsAffected) on successfull execution
+        int64_t Execute( const char *Query ) noexcept;
+        
+        //! Execute CUD (create/update/delete) queries 
+        //! \returns -1 if the execution failed 
+        //! \returns >= 0 (NoOfRowsAffected) on successfull execution
+        int64_t Execute( const char *Query, uint32_t InQueryLength ) noexcept;
 
         SKL_FORCEINLINE SKL_NODISCARD MYSQL_Opaque& GetMysqlObject() noexcept { return Mysql; }
         SKL_FORCEINLINE SKL_NODISCARD const MYSQL_Opaque& GetMysqlObject() const noexcept { return Mysql; }
-
 
     private:
         DBConnection( const DBConnectionSettings& Settings ) noexcept;
         ~DBConnection() noexcept;
 
-        AcquireResult AcquireConnection( bool bOpenConnectionIfClosed = true ) noexcept;
-        bool TryReacquireConnection() noexcept;
+        AcquireResult TryReacquireConnection() noexcept;
         bool OpenConnection() noexcept;
         bool SetOptions() noexcept;
-        bool Execute( const char *Query ) noexcept;
 
     private:
         bool                                bIsOpen              { false };

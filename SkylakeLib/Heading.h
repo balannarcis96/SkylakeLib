@@ -68,23 +68,21 @@
             bool           bSupportsAOD                    { false };   //!< true -> Workers in this group can use AOD (Async Object Dispatcher) delayed tasks directly (handled by the same thread)
             bool           bHandlesTimerTasks              { false };   //!< true -> This group handles global and AOD(if bSupportsAOD=true) delayed tasks -> requires [bIsActive=true]
             bool           bSupportsTLSSync                { false };   //!< Supports TLSSync [ TLSSync it is its own feature, please get documented before use ]
-            bool           bHasThreadLocalMemoryManager    { false };   //!< true -> If any of the workers in this group need to use ThreadLocalMemoryManager or associated allocation strategies
             bool           bPreallocateAllThreadLocalPools { false };   //!< true -> Preallocate all pools in ThreadLocalMemoryManager
-            bool           bSupportesTCPAsyncAcceptors     { false };   //!< Does this group supports and handles tcp async acceptors
+            bool           bSupportesTCPAsyncAcceptors     { false };   //!< Does this group supports and handles TCP async acceptors
             bool           bCallTickHandler                { false };   //!< true -> the workers in the group will call the thick handler
             const wchar_t *Name                            { nullptr }; //!< Name of the worker group
             mutable bool   bIsValid                        { false };   //!< Initialize this member to false if you want your server to run correctly ;)
 
             //! [*]
-            //!  Case 1.If all worker groups in the server instance are active [bIsActive=true], delayed tasks produced on any thread will be proceseed by the thread that produced it
+            //!  Case 1.If all worker groups in the server instance are active [bIsActive=true], delayed tasks produced on any thread will be processed by the thread that produced it
             //!         Why to consider Case 1:
             //!           -  All tasks will be allocated through the thread local allocator -> very fast allocation/deallocation
             //!           -  No contention between threads (no load balancing)
             //!           -  Better time precision on delayed tasks
-            //!           -> Requires bHasThreadLocalMemoryManager == true
             //!
             //!  Case 2.If not all worker groups in the server are active and you need the possibility to delay tasks in non-active worker groups then 
-            //!    all worker groups marked with [bHandlesTimerTasks=true] will be used to check and dispatch delayed tasks (using rr-load balancing between worker groups and between workers)
+            //!    all worker groups marked with [bHandlesTimerTasks=true] will be used to check and dispatch delayed tasks (using RR-load balancing between worker groups and between workers)
             //!          Why to consider Case 2:
             //!              - The server can have inactive worker groups that can delay tasks
             //!
@@ -92,7 +90,7 @@
             //!
             //! Note: Delayed tasks include free delayed tasks and AOD delayed tasks
             //!
-            //! Note: [bSupportesTCPAsyncAcceptors=true] Accepted sockets will not be associated to any async IO api.
+            //! Note: [bSupportesTCPAsyncAcceptors=true] Accepted sockets will not be associated to any async IO API.
             //!
 
             SKL_FORCEINLINE bool Validate() const noexcept
@@ -129,18 +127,6 @@
                 //    SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid SyncTLSTickRate %u!", Name, SyncTLSTickRate );
                 //    return false;
                 //}
-
-                if( true == bPreallocateAllThreadLocalPools && false == bHasThreadLocalMemoryManager )
-                {
-                    SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bPreallocateAllThreadLocalPools == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
-                    return false;
-                }
-
-                if( true == bSupportsAOD && ( false == bHasThreadLocalMemoryManager ) )
-                {
-                    SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportsAOD == true] requires -> bHasThreadLocalMemoryManager = true!", Name );
-                    return false;
-                }
 
                 if( true == bSupportesTCPAsyncAcceptors && false == bHandlesTasks )
                 {

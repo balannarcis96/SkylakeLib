@@ -255,24 +255,21 @@ namespace SKL
             }
         }
 
-        if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
-        {   
-            if( nullptr == ThreadLocalMemoryManager::GetInstance() )
+        if( nullptr == ThreadLocalMemoryManager::GetInstance() )
+        {
+            if( RSuccess != ThreadLocalMemoryManager::Create() )
             {
-                if( RSuccess != ThreadLocalMemoryManager::Create() )
-                {
-                    SKLL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
-                    return false;
-                }   
+                SKLL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
+                return false;
+            }   
 
-                SKLL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
-            }
-        
-            if( true == InGroup.GetTag().bPreallocateAllThreadLocalPools )
-            {
-                SKLL_VER_FMT( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", InGroup.GetTag().Name );
-                ThreadLocalMemoryManager::Preallocate();
-            }
+            SKLL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
+        }
+    
+        if( true == InGroup.GetTag().bPreallocateAllThreadLocalPools )
+        {
+            SKLL_VER_FMT( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", InGroup.GetTag().Name );
+            ThreadLocalMemoryManager::Preallocate();
         }
 
         if( RSuccess != ServerInstanceTLSContext::Create( this, InGroup.GetTag() ) )
@@ -319,12 +316,9 @@ namespace SKL
         ServerInstanceTLSContext::Destroy();
         SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", InGroup.GetTag().Name );
 
-        if( true == InGroup.GetTag().bHasThreadLocalMemoryManager )
-        {
-            ThreadLocalMemoryManager::FreeAllPools();
-            ThreadLocalMemoryManager::Destroy();
-            SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
-        }
+        ThreadLocalMemoryManager::FreeAllPools();
+        ThreadLocalMemoryManager::Destroy();
+        SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
 
         TRand::ShutdownThread();
 

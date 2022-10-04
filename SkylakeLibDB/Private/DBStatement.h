@@ -22,15 +22,16 @@ namespace SKL::DB
 #ifndef SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH
     #define SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH 4096
 #endif
+
     constexpr size_t CDBStatementMaxInputParams = SKL_DB_LIB_STATEMENT_MAX_INPUT_PARAMS;
     constexpr size_t CDBStatementMaxOutputParams = SKL_DB_LIB_STATEMENT_MAX_OUTPUT_PARAMS;
-    constexpr size_t CDBStatementQueryMaxLength = SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH;
+    constexpr uint32_t CDBStatementQueryMaxLength = SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH;
 
     constexpr size_t CMysqlStmtSize = 696;
     struct MysqlStmtOpaque
     {
         MysqlStmtOpaque() noexcept { Zero(); }
-        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlStmtSize); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlStmtSize ); }
         uint8_t Body[CMysqlStmtSize];
     };
 
@@ -38,7 +39,7 @@ namespace SKL::DB
     struct MysqlBindOpaue
     {
         MysqlBindOpaue() noexcept { Zero(); }
-        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlBindSize); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlBindSize ); }
         uint8_t Body[CMysqlBindSize];
     };
 
@@ -46,7 +47,7 @@ namespace SKL::DB
     struct MysqlResOpaue
     {
         MysqlResOpaue() noexcept { Zero(); }
-        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlResSize); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlResSize ); }
         uint8_t Body[CMysqlResSize];
     };
 
@@ -132,7 +133,7 @@ namespace SKL::DB
                 }
             }
 
-            SKL_FORCEINLINE SKL_NODISCARD uint32_t GetNoOfRows() const noexcept { return NoOfRows; }
+            SKL_FORCEINLINE SKL_NODISCARD uint64_t GetNoOfRows() const noexcept { return NoOfRows; }
             SKL_FORCEINLINE SKL_NODISCARD bool IsEmpty() const noexcept { return 0 == NoOfRows; }
             SKL_FORCEINLINE SKL_NODISCARD bool IsValid() const noexcept { return nullptr != Statement; }
             SKL_FORCEINLINE explicit operator bool() const noexcept { return true == IsValid() && false == IsEmpty(); }
@@ -150,7 +151,7 @@ namespace SKL::DB
 
 
         private:
-            Result( DBStatement* Statement, MysqlResOpaue* ResultMetadata, uint32_t NoOfRows ) noexcept
+            Result( DBStatement* Statement, MysqlResOpaue* ResultMetadata, uint64_t NoOfRows ) noexcept
                 : GetBind{}
                 , Statement{ Statement }
                 , ResultMetadata{ ResultMetadata }
@@ -193,7 +194,7 @@ namespace SKL::DB
             MysqlBindOpaue GetBind;
             DBStatement*   Statement;
             MysqlResOpaue* ResultMetadata;
-            uint32_t       NoOfRows;
+            uint64_t       NoOfRows;
 
             friend DBStatement;
         };
@@ -208,6 +209,7 @@ namespace SKL::DB
         SKL_FORCEINLINE SKL_NODISCARD uint32_t GetBoundOutputsCount() const noexcept { return BoundOutputsCount; }
         SKL_FORCEINLINE SKL_NODISCARD bool IsInitialized() const noexcept { return bIsInitialized; }
         
+        //! Set query string 
         SKL_FORCEINLINE void SetQuery( const char* InQueryString, size_t InQueryStringLength ) noexcept 
         { 
             SKL_ASSERT( nullptr != Query.get() );
@@ -215,6 +217,8 @@ namespace SKL::DB
             SKL_STRCPY( Query.get(), InQueryString, InQueryStringLength ); 
             QueryStringLength = InQueryStringLength;
         }
+        
+        //! Set query string 
         template<size_t InQueryStringLength>
         SKL_FORCEINLINE void SetQuery( const char( &InQueryString )[InQueryStringLength] ) noexcept
         {
@@ -235,8 +239,8 @@ namespace SKL::DB
         int64_t ExecuteCount() noexcept;
 
         //! Execute CUD (create/update/delete) queries 
-        //! \return NoOfRowsAffected
-        uint64_t ExecuteUpdate() noexcept;
+        //! \return <NoOfRowsAffected, bErrorHasOccurred>
+        std::pair<uint64_t, bool> ExecuteUpdate() noexcept;
 
         //! Reset the statement state and clear any intermediate data 
         bool Reset( bool bShouldDoFullReset = false ) noexcept;
@@ -260,15 +264,15 @@ namespace SKL::DB
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxInputParams );
 
-                InputLengths[Index - 1] = static_cast<uint32_t>( sizeof( TType ) );
-                NewParameter            = &Input[Index - 1];
+                InputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( TType ) );
+                NewParameter              = &Input[InIndex - 1];
             }
             else
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxOutputParams );
 
-                OutputLengths[Index - 1] = static_cast<uint32_t>( sizeof( TType ) );
-                NewParameter             = &Output[Index - 1];
+                OutputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( TType ) );
+                NewParameter               = &Output[InIndex - 1];
             }
 
             BindImpl( NewParameter, InValue );
@@ -292,8 +296,8 @@ namespace SKL::DB
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxInputParams );
 
-                InputLengths[Index - 1] = Utf8StringLength;
-                auto* NewParameter{ &Input[Index - 1] };
+                InputLengths[InIndex - 1] = Utf8StringLength;
+                auto* NewParameter{ &Input[InIndex - 1] };
 
                 ++BoundInputsCount;
 
@@ -303,8 +307,8 @@ namespace SKL::DB
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxOutputParams );
 
-                OutputLengths[Index - 1] = Utf8StringLength;
-                auto* NewParameter{ &Input[Index - 1] };
+                OutputLengths[InIndex - 1] = Utf8StringLength;
+                auto* NewParameter{ &Input[InIndex - 1] };
 
                 ++BoundOutputsCount;
 
@@ -319,8 +323,8 @@ namespace SKL::DB
         {
             SKL_ASSERT( 0 < InIndex );
             
-            InputLengths[ InIndex - 1 ] = InBufferSize;
-            auto* NewParameter{ &Input[ InIndex - 1 ] };
+            InputLengths[InIndex - 1] = InBufferSize;
+            auto* NewParameter{ &Input[InIndex - 1] };
 
             ++BoundInputsCount;
 
@@ -336,7 +340,7 @@ namespace SKL::DB
             return BindInputBlob( InIndex, InBuffer );
         }
 
-        //! Bind value as output for query parameter
+        //! Bind value as output for query
         //! \tparam TType must be value type
         //! \param InIndex 1-based index of param found in the query string
         //! \param InValue pointer to the value, must be alive until call to Execute
@@ -346,6 +350,8 @@ namespace SKL::DB
             return Bind<TType, false>( InIndex, InValue );
         }
 
+        //! Bind string as output for query
+        //! \param InIndex 1-based index of param found in the query string
         template<size_t InStringBufferSize>
         SKL_FORCEINLINE void BindOutputString( int32_t InIndex, DBString<InStringBufferSize>& InValue ) noexcept
         {
@@ -361,7 +367,7 @@ namespace SKL::DB
         bool Prepare() noexcept;
 
         template<typename TType>
-        static bool BindImpl( Parameter* InParameter, TType *InValue ) noexcept
+        static void BindImpl( Parameter* InParameter, TType *InValue ) noexcept
         {
             static_assert( std::numeric_limits<uint32_t>::max() >= sizeof( TType ) );
 
@@ -374,47 +380,47 @@ namespace SKL::DB
             
             if constexpr( std::is_same_v<BindType, int> || std::is_same_v<BindType, long> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONG );
+                InParameter->SetType( EFieldType::TYPE_LONG );
             }
             else if constexpr( std::is_same_v<BindType, unsigned int> || std::is_same_v<BindType, unsigned long> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONG, true );
+                InParameter->SetType( EFieldType::TYPE_LONG, true );
             }
             else if constexpr( std::is_same_v<BindType, short> )
             {
-                InParameter->SetType( MYSQL_TYPE_SHORT );
+                InParameter->SetType( EFieldType::TYPE_SHORT );
             }
             else if constexpr( std::is_same_v<BindType, unsigned short> )
             {
-                InParameter->SetType( MYSQL_TYPE_SHORT, true );
+                InParameter->SetType( EFieldType::TYPE_SHORT, true );
             }
             else if constexpr( std::is_same_v<BindType, long long> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONGLONG );
+                InParameter->SetType( EFieldType::TYPE_LONGLONG );
             }
             else if constexpr( std::is_same_v<BindType, unsigned long long> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONGLONG, true );
+                InParameter->SetType( EFieldType::TYPE_LONGLONG, true );
             }
             else if constexpr( std::is_same_v<BindType, ::SKL::TDatabaseId> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONGLONG, true );
+                InParameter->SetType( EFieldType::TYPE_LONGLONG, true );
             }
             else if constexpr( std::is_same_v<BindType, float> )
             {
-                InParameter->SetType( MYSQL_TYPE_FLOAT );
+                InParameter->SetType( EFieldType::TYPE_FLOAT );
             }
             else if constexpr( std::is_same_v<BindType, double> )
             {
-                InParameter->SetType( MYSQL_TYPE_DOUBLE );
+                InParameter->SetType( EFieldType::TYPE_DOUBLE );
             }
             else if constexpr( std::is_same_v<BindType, bool> )
             {
-                InParameter->SetType( MYSQL_TYPE_BIT );
+                InParameter->SetType( EFieldType::TYPE_BIT );
             }
             else if constexpr( std::is_same_v<BindType, ::SKL::TEntityIdBase> )
             {
-                InParameter->SetType( MYSQL_TYPE_LONGLONG, true );
+                InParameter->SetType( EFieldType::TYPE_LONGLONG, true );
             }
             else
             {
@@ -448,5 +454,4 @@ namespace SKL::DB
         uint32_t                BoundInputsCount                          { 0 };
         uint32_t                BoundOutputsCount                         { 0 };
     };
-
 }
