@@ -65,6 +65,21 @@ namespace SKL::DC
             return nullptr;
         }
         
+        if( true == std::string_view{ InNode->name() }.empty() ) SKL_UNLIKELY
+        {
+            if( nullptr != InParent )
+            {
+                SKL_ASSERT( nullptr != InParent->GetName() );
+				SKLL_TRACE_MSG_FMT( "Found element with no name as child of <%ws ...> </%ws>", InParent->GetName(), InParent->GetName() );
+            }
+            else
+            {
+				SKLL_TRACE_MSG( "Found element with no name!!" );
+            }
+
+            return nullptr;
+        }
+
         const wchar_t* CleanElementName{ InAdaptor->CleanAndConvertToUtf16ElementName( InNode->name() ) };
         SKL_ASSERT( nullptr != CleanElementName );
 
@@ -73,13 +88,13 @@ namespace SKL::DC
         NewElement->SetName( CleanElementName );
         NewElement->SetParent( InParent );
 
-        if( 0 != InNode->value_size() )
+        if( 0 != InNode->value_size() && false == std::string_view{ InNode->value() }.empty() )
         {
             //This node has value string
             const auto* ValueString{ InAdaptor->ConvertUtf8ToUtf16( const_cast<const char*>( InNode->value() ), InNode->value_size() ) };
             if( nullptr == ValueString )
             {
-				SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s>%s</>] element value to utf16", InNode->name( ), InNode->value( ) );
+				SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s>%s</>] element value to utf16", InNode->name(), InNode->value() );
 				return nullptr;
             }
 
@@ -89,6 +104,12 @@ namespace SKL::DC
         ::rapidxml::xml_attribute<char>* Attribute{ InNode->first_attribute() };
         while( nullptr != Attribute )
         {
+            if( true == std::string_view{ Attribute->name() }.empty() )
+            {
+				SKLL_TRACE_MSG_FMT( "Found attibute with no name!! <%s ...></%s>", InNode->name(), InNode->name() );
+				return nullptr;
+            }
+
             if( false == InAdaptor->ShouldSkipAttributeByName( Attribute->name() ) )
             {
                 RawAttribute NewAttribute{};
@@ -101,13 +122,20 @@ namespace SKL::DC
                 }
                 NewAttribute.SetName( Name );
             
-                const auto* Value{ InAdaptor->ConvertUtf8ToUtf16( Attribute->value(), Attribute->value_size() ) };
-                if( nullptr == Value )
+                if( false == std::string_view{ Attribute->value() }.empty() )
                 {
-            	    SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
-				    return nullptr;
+                    const auto* Value{ InAdaptor->ConvertUtf8ToUtf16( Attribute->value(), Attribute->value_size() ) };
+                    if( nullptr == Value )
+                    {
+            	        SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
+				        return nullptr;
+                    }
+                    NewAttribute.SetValue( Value );
                 }
-                NewAttribute.SetValue( Value );
+                else
+                {
+                    NewAttribute.SetValue( L"" );
+                }
 
                 NewElement->AddAttribute( std::move( NewAttribute ) );
             }

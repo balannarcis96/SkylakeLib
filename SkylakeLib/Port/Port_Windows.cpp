@@ -1,4 +1,3 @@
-#if !defined(SKL_STANDALONE)
 //!
 //! \file Port_Windows.cpp
 //! 
@@ -6,7 +5,6 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-
 #include "../SkylakeLib.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -1045,5 +1043,3 @@ namespace SKL
         return L"[Invalid IPv4Address]";
     }
 }
-
-#endif

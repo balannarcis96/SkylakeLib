@@ -41,6 +41,8 @@ namespace SKL::DC
     constexpr TStringIndex   CInvalidStringIndex    = std::numeric_limits<TStringIndex>::max();
     constexpr TBlockIndex    CInvalidBlockIndex     = std::numeric_limits<TBlockIndex>::max();
 
+    constexpr TFormatVersion CCurrentFormatVersion  = 0x01000000;
+
 	inline bool CWStringStartsWith( const wchar_t* InPre, size_t InPreLength, const wchar_t* InString ) noexcept
 	{
 		const size_t StrLength{ wcslen( InString ) };

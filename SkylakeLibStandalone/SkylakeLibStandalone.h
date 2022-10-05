@@ -5,7 +5,8 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-#pragma once
+#ifndef SKYLAKELIB_STANDALONG_H
+#define SKYLAKELIB_STANDALONG_H
 
 //! The standalone part
 #include "../SkylakeLibHeaderOnly/Static_Dev/SkylakeLibHeaderOnly.h"
@@ -32,3 +33,5 @@
 
 //! ECS
 #include "ECS/ECS.h"
+
+#endif

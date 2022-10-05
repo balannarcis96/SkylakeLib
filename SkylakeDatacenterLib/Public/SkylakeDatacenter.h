@@ -7,6 +7,8 @@
 //! 
 #pragma once
 
-#include <SkylakeLibStandalone.h>
+#ifndef SKYLAKELIB_STANDALONG_H
+#   include <SkylakeLibStandalone.h>
+#endif
 
 #include "../Internal/Structure.h"

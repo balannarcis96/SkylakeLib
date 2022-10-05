@@ -5,8 +5,6 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-
-#if !defined(SKL_STANDALONE)
 #include "SkylakeLib.h"
 #include "WorkerGroupRunVariants.h"
 
@@ -741,5 +739,3 @@ namespace SKL
 
 #undef SKL_WORKER_ACTIVE_RUN_VARTIAN
 }
-
-#endif
