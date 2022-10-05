@@ -11,6 +11,22 @@
 
 namespace SKL::DB
 {
+#ifndef SKL_DB_LIB_STATEMENT_MAX_INPUT_PARAMS
+    #define SKL_DB_LIB_STATEMENT_MAX_INPUT_PARAMS 128
+#endif
+
+#ifndef SKL_DB_LIB_STATEMENT_MAX_OUTPUT_PARAMS
+    #define SKL_DB_LIB_STATEMENT_MAX_OUTPUT_PARAMS 128
+#endif
+
+#ifndef SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH
+    #define SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH 4096
+#endif
+
+    constexpr size_t CDBStatementMaxInputParams = SKL_DB_LIB_STATEMENT_MAX_INPUT_PARAMS;
+    constexpr size_t CDBStatementMaxOutputParams = SKL_DB_LIB_STATEMENT_MAX_OUTPUT_PARAMS;
+    constexpr uint32_t CDBStatementQueryMaxLength = SKL_DB_LIB_STATEMENT_QUERY_MAX_LENGTH;
+
     enum class EFieldType : int32_t
     { 
         TYPE_DECIMAL,
@@ -75,6 +91,30 @@ namespace SKL::DB
 
         uint8_t Buffer[ CSizeOfMYSQL ];
     };
+    
+    constexpr size_t CMysqlStmtSize = 696;
+    struct MysqlStmtOpaque
+    {
+        MysqlStmtOpaque() noexcept { Zero(); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlStmtSize ); }
+        uint8_t Body[CMysqlStmtSize];
+    };
+
+    constexpr size_t CMysqlBindSize = 104;
+    struct MysqlBindOpaue
+    {
+        MysqlBindOpaue() noexcept { Zero(); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlBindSize ); }
+        uint8_t Body[CMysqlBindSize];
+    };
+
+    constexpr size_t CMysqlResSize = 104;
+    struct MysqlResOpaue
+    {
+        MysqlResOpaue() noexcept { Zero(); }
+        SKL_FORCEINLINE void Zero() noexcept { memset( Body,0 , CMysqlResSize ); }
+        uint8_t Body[CMysqlResSize];
+    };
 
     struct DBLibGuard
     {
@@ -128,4 +168,6 @@ namespace SKL::DB
 #include "../Private/DBConnection.h"
 #include "../Private/DBConnectionFactory.h"
 #include "../Private/DBStatement.h"
-#include "../Private/DbTransaction.h"
+//#include "../Private/DBStatementField.h"
+//#include "../Private/DBStaticStatement.h"
+#include "../Private/DBTransaction.h"

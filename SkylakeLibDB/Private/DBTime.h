@@ -78,6 +78,7 @@ namespace SKL::DB
     using DBTime       = TDBTime<EFieldType::TYPE_TIME>;
     using DBTime2      = TDBTime<EFieldType::TYPE_TIME2>;
     using DBDateTime   = TDBTime<EFieldType::TYPE_DATETIME>;
+    using DBDateTime2   = TDBTime<EFieldType::TYPE_DATETIME2>;
     using DBTimeStamp  = TDBTime<EFieldType::TYPE_TIMESTAMP>;
     using DBTimeStamp2 = TDBTime<EFieldType::TYPE_TIMESTAMP2>;
 }

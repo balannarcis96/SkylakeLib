@@ -187,6 +187,17 @@ namespace SKL::DB
             SKL_ASSERT( true == bHasUTF8 );
             SKL_STRCPY( TargetBuffer, Utf8, TargetBufferSize );
         }
+        
+        SKL_FORCEINLINE void Clear() noexcept
+        {
+            Utf8[0]       = '\0';
+            Utf16[0]      = L'\0';
+            bHasSource    = false;
+            bIsUTF8Source = false;
+            bHasUTF8      = false;
+            bHasUTF16     = false;
+        }
+
     private:
         explicit DBString( const char *Utf8 ) noexcept 
             : bHasSource{ true }

@@ -1,5 +1,5 @@
 //!
-//! \file DBStatement.h
+//! \file DBStaticStatement.h
 //! 
 //! \brief MySQL c++ interface library
 //! 
@@ -9,19 +9,19 @@
 
 namespace SKL::DB
 {
-    struct DBStatement
+    struct DBStaticStatement
     {
-        DBStatement() noexcept
+        DBStaticStatement() noexcept
         {
             Query.reset( new char[CDBStatementQueryMaxLength] );
             SKL_ASSERT( nullptr != Query );
         }
-        ~DBStatement() noexcept;
+        ~DBStaticStatement() noexcept;
 
-        DBStatement( const DBStatement& ) = delete;
-        DBStatement( DBStatement&& ) = delete;
-        DBStatement& operator=( const DBStatement& ) = delete;
-        DBStatement& operator=( DBStatement&& ) = delete;
+        DBStaticStatement( const DBStaticStatement& ) = delete;
+        DBStaticStatement( DBStaticStatement&& ) = delete;
+        DBStaticStatement& operator=( const DBStaticStatement& ) = delete;
+        DBStaticStatement& operator=( DBStaticStatement&& ) = delete;
 
         struct Parameter
         {
@@ -72,13 +72,13 @@ namespace SKL::DB
             template<typename TType>
             bool Get( int32_t InIndex, char* OutUtf8Buffer, TType* OutValue ) noexcept
             {
-                DBStatement::BindImpl( reinterpret_cast<Parameter*>( &GetBind ), OutValue );
+                DBStaticStatement::BindImpl( reinterpret_cast<Parameter*>( &GetBind ), OutValue );
                 return FetchColumn( InIndex );
             }
 
             bool GetString( int32_t InIndex, char* OutUtf8Buffer, uint32_t* InUtf8BufferLength_OutStringLength ) noexcept
             {
-                DBStatement::BindStringImpl( reinterpret_cast<Parameter*>( &GetBind ), OutUtf8Buffer, InUtf8BufferLength_OutStringLength );
+                DBStaticStatement::BindStringImpl( reinterpret_cast<Parameter*>( &GetBind ), OutUtf8Buffer, InUtf8BufferLength_OutStringLength );
                 return FetchColumn( InIndex );
             }
 
@@ -95,7 +95,7 @@ namespace SKL::DB
             }
 
         private:
-            Result( DBStatement* Statement, MysqlResOpaue* ResultMetadata, uint64_t NoOfRows ) noexcept
+            Result( DBStaticStatement* Statement, MysqlResOpaue* ResultMetadata, uint64_t NoOfRows ) noexcept
                 : GetBind{}
                 , Statement{ Statement }
                 , ResultMetadata{ ResultMetadata }
@@ -137,12 +137,12 @@ namespace SKL::DB
             void FreeResultMetadata() noexcept;
 
         private:
-            MysqlBindOpaue GetBind;
-            DBStatement*   Statement;
-            MysqlResOpaue* ResultMetadata;
-            uint64_t       NoOfRows;
+            MysqlBindOpaue     GetBind;
+            DBStaticStatement* Statement;
+            MysqlResOpaue*     ResultMetadata;
+            uint64_t           NoOfRows;
 
-            friend DBStatement;
+            friend DBStaticStatement;
         };
 
         SKL_FORCEINLINE SKL_NODISCARD std::pair<const char*, size_t> GetQueryBuffer() const noexcept{ SKL_ASSERT( nullptr != Query.get() ); return { Query.get(), CDBStatementQueryMaxLength }; }
