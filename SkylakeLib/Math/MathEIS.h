@@ -135,6 +135,6 @@ namespace SKL
 #elif defined(SKL_USE_AVX_512)
 #   error "Implement using AVX 512"
 #else
-    #   error "Implement using no EIS"
+#   error "Implement using no EIS"
 #endif
 }

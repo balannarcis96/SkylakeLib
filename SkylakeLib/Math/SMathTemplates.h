@@ -18,54 +18,54 @@ namespace SKL
     }
 
     //! Get the absolute value of A
-    template< typename T >
-    SKL_FORCEINLINE constexpr T Abs( const T A ) noexcept requires std::is_arithmetic_v< T >
+    template<typename T>
+    SKL_FORCEINLINE constexpr T Abs( const T A ) noexcept requires std::is_arithmetic_v<T>
     {
-        if constexpr( std::is_floating_point_v< T > )
+        if constexpr( std::is_floating_point_v<T> )
         {
             return fabs( A );
         }
-        else if constexpr( std::is_unsigned_v< T > )
+        else if constexpr( std::is_unsigned_v<T> )
         {
             return A;
         }
         else
         {
-            return ( A >= static_cast< T >( 0 ) ) ? A : -A;
+            return ( A >= static_cast<T>( 0 ) ) ? A : -A;
         }
     }
 
     //! Get the Sign of A
     //! \returns (T)(-1) if negative , (T)(0) if zero, (T)(1) if positive
-    template< typename T >
-    SKL_FORCEINLINE constexpr T Sgn( const T A ) noexcept requires std::is_arithmetic_v< T >
+    template<typename T>
+    SKL_FORCEINLINE constexpr T Sgn( const T A ) noexcept requires std::is_arithmetic_v<T>
     {
-        if constexpr( std::is_unsigned_v< T > )
+        if constexpr( std::is_unsigned_v<T> )
         {
-            return static_cast< T >( A != 0 );
+            return static_cast<T>( A != 0 );
         }
-        else if constexpr( std::is_integral_v< T > )
+        else if constexpr( std::is_integral_v<T> )
         {
-            constexpr T ZeroValue    = static_cast< T >( 0 );
-            constexpr T One            = static_cast< T >( 1 );
-            constexpr T NegativeOne = static_cast< T >( -1 );
+            constexpr T ZeroValue   = static_cast<T>( 0 );
+            constexpr T One         = static_cast<T>( 1 );
+            constexpr T NegativeOne = static_cast<T>( -1 );
 
             return NegativeOne + ( One * ( A == ZeroValue ) ) + ( 2 * ( A > ZeroValue ) );
         }
         else
         {
-            constexpr T ZeroValue    = static_cast< T >( 0 );
-            constexpr T One            = static_cast< T >( 1 );
-            constexpr T NegativeOne = static_cast< T >( -1 );
+            constexpr T ZeroValue   = static_cast<T>( 0 );
+            constexpr T One         = static_cast<T>( 1 );
+            constexpr T NegativeOne = static_cast<T>( -1 );
 
             return ( A > ZeroValue ) ? One : ( ( A < ZeroValue ) ? NegativeOne : ZeroValue );
         }
     }
 
-    //! Min function using available self comparision operator <, >, <=, >=
+    //! Min function using available self comparison operator <, >, <=, >=
     //! \remarks Parameters are passed by value and it returns by value, careful when using it with objects
     //! \remarks Accepts a maximum of 10 parameters
-    template< std::TSelfComparableSmaller T, std::TSelfComparableSmaller... TOther >
+    template<std::TSelfComparableSmaller T, std::TSelfComparableSmaller... TOther>
     SKL_FORCEINLINE constexpr T Min( const T A, const T B, const TOther... C ) noexcept
     {
         static_assert( sizeof...( TOther ) < 8, "Please loop to get Min from more than 10 elements" );
@@ -81,10 +81,10 @@ namespace SKL
         }
     }
 
-    //! Max function using available self comparision operator <, >, <=, >=
+    //! Max function using available self comparison operator <, >, <=, >=
     //! \remarks Parameters are passed by value and it returns by value, careful when using it with objects
     //! \remarks Accepts a maximum of 10 parameters
-    template< std::TSelfComparableSmaller T, std::TSelfComparableSmaller... TOther >
+    template<std::TSelfComparableSmaller T, std::TSelfComparableSmaller... TOther>
     SKL_FORCEINLINE constexpr T Max( const T A, const T B, const TOther... C ) noexcept
     {
         static_assert( sizeof...( TOther ) < 8, "Please loop to get Max from more than 10 elements" );
@@ -102,7 +102,7 @@ namespace SKL
 
     //! Calculate Square of A, implementation: A * A
     //! \remarks Parameters are passed by value and it returns by value, careful when using it with objects
-    template< std::TSelfMultiplicable T >
+    template<std::TSelfMultiplicable T>
     SKL_FORCEINLINE constexpr auto Square( const T A ) noexcept
     {
         return A * A;
@@ -110,32 +110,31 @@ namespace SKL
 
     //! Clamp value of X between Min and Max
     //! \remarks Parameters are passed by value and it returns by value, careful when using it with objects
-    template< std::TSelfComparableSmaller T >
+    template<std::TSelfComparableSmaller T>
     SKL_FORCEINLINE constexpr T Clamp( const T X, const T Min, const T Max ) noexcept
     {
-        return X < Min ? Min : X < Max ? X :
-                                           Max;
+        return X < Min ? Min : X < Max ? X : Max;
     }
 
     //! Checks if two floating point numbers are nearly equal
-    template< std::TFloat T >
-    SKL_FORCEINLINE constexpr bool FIsNearlyEqual( T A, T B, T ErrorTolerance = static_cast< T >( SMALL_NUMBER ) ) noexcept
+    template<std::TFloat T>
+    SKL_FORCEINLINE constexpr bool FIsNearlyEqual( T A, T B, T ErrorTolerance = static_cast<T>( SMALL_NUMBER ) ) noexcept
     {
         return Abs( A - B ) < ErrorTolerance;
     }
 
     //! Checks if a floating point number is nearly zero
-    template< std::TFloat T >
-    SKL_FORCEINLINE constexpr bool FIsNearlyZero( T Value, T ErrorTolerance = static_cast< T >( SMALL_NUMBER ) ) noexcept
+    template<std::TFloat T>
+    SKL_FORCEINLINE constexpr bool FIsNearlyZero( T Value, T ErrorTolerance = static_cast<T>( SMALL_NUMBER ) ) noexcept
     {
         return Abs( Value ) < ErrorTolerance;
     }
 
     //! Determines if the given floating point number @Value is a not-a-number (NaN) value
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE bool FIsNaN( T Value ) noexcept
     {
-        if constexpr( std::is_same_v< T, float > )
+        if constexpr( std::is_same_v<T, float> )
         {
             return static_cast< bool >( _isnanf( Value ) );
         }
@@ -146,10 +145,10 @@ namespace SKL
     }
 
     //! Returns true if @Value is either a normal or subnormal finite value. Returns false if @Value is infinite or a NaN.
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE bool FIsFinite( T Value ) noexcept
     {
-        if constexpr( std::is_same_v< T, float > )
+        if constexpr( std::is_same_v<T, float> )
         {
             return static_cast< bool >( _finitef( Value ) );
         }
@@ -160,112 +159,112 @@ namespace SKL
     }
 
     //! Computes the e (Euler's number, 2.7182818) raised to the given @Power arg
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FEulerToPower( T Power ) noexcept
     {
         return std::exp( Power );
     }
 
     //! Computes the natural (base e) logarithm of @Value
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FLogE( T Value ) noexcept
     {
         return std::log( Value );
     }
 
     //! Computes the floating-point remainder of the division operation @Value/@ModByValue
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FMod( T Value, T ModByValue ) noexcept
     {
         return std::fmod( Value, ModByValue );
     }
 
     //! Computes the sine of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FSin( T Value ) noexcept
     {
         return std::sin( Value );
     }
 
     //! Computes the cosine of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FCos( T Value ) noexcept
     {
         return std::cos( Value );
     }
 
     //! Computes the principal values of the arc sine of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FAsin( T Value ) noexcept
     {
         return std::asin( Value );
     }
 
     //! Computes the principal values of the arc cosine of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FAcos( T Value ) noexcept
     {
         return std::acos( Value );
     }
 
     //! Computes the tangent of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FTan( T Value ) noexcept
     {
         return std::tan( Value );
     }
 
     //! Computes the arc tangent of @Value (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FAtan( T Value ) noexcept
     {
         return std::atan( Value );
     }
 
     //! Computes the arc tangent of @Y/@X using the signs of arguments to determine the correct quadrant (measured in radians)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FAtan2( T X, T Y ) noexcept
     {
         return std::atan2( X, Y );
     }
 
     //! Computes the square root of @Value
-    template< std::TArithmetic T >
+    template<std::TArithmetic T>
     SKL_FORCEINLINE T Sqrt( T Value ) noexcept
     {
         return std::sqrt( Value );
     }
 
     //! Computes the inverse square root of @Value (1.0 / @Value)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T InverseSqrt( T Value ) noexcept
     {
         return InvSqrtInternal( Value );
     }
 
     //! Computes(estimates) the inverse square root of @Value (1.0 / @Value)
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T InverseSqrtEst( T Value ) noexcept
     {
         return InvSqrtEstInternal( Value );
     }
 
     //! Computes the value of @Base raised to @Exp
-    template< std::TArithmetic T >
+    template<std::TArithmetic T>
     SKL_FORCEINLINE T Pow( T Base, T Exp ) noexcept
     {
         return std::pow( Base, Exp );
     }
 
     //! Floors @Value
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FFloor( T Value ) noexcept
     {
         return std::floor( Value );
     }
 
     //! Gets the next whole value starting from @Value
-    template< std::TFloat T >
+    template<std::TFloat T>
     SKL_FORCEINLINE T FCeil( T Value ) noexcept
     {
         return std::ceil( Value );
@@ -274,12 +273,12 @@ namespace SKL
 #pragma intrinsic( _BitScanReverse )
 #pragma intrinsic( _BitScanReverse64 )
     //! Computes the base 2 logarithm for @Value. @Value must be greater than 0
-    template< std::TUInt32Or64 T >
+    template<std::TUInt32Or64 T>
     SKL_FORCEINLINE uint32_t FloorLog2( T Value ) noexcept
     {
         unsigned long Result;
 
-        if constexpr( std::_Is_any_of_v< std::remove_cv_t< T >, unsigned int, unsigned long > )
+        if constexpr( std::_Is_any_of_v<std::remove_cv_t<T>, unsigned int, unsigned long> )
         {
             _BitScanReverse( &Result, static_cast< unsigned long >( Value ) );
         }
@@ -292,10 +291,10 @@ namespace SKL
     }
 
     //! Counts the number of leading zeros in the bit representation of @Value
-    template< std::TUInt32Or64 T >
+    template<std::TUInt32Or64 T>
     SKL_FORCEINLINE uint32_t CountLeadingZeros( T Value ) noexcept
     {
-        if constexpr( std::_Is_any_of_v< std::remove_cv_t< T >, unsigned int, unsigned long > )
+        if constexpr( std::_Is_any_of_v<std::remove_cv_t<T>, unsigned int, unsigned long> )
         {
             if( Value == 0 )
                 return 32;
@@ -310,21 +309,21 @@ namespace SKL
     }
 
     //! Counts the number of leading zeros in the bit representation of @Value
-    template< std::TInt32Or64 T >
+    template<std::TInt32Or64 T>
     SKL_FORCEINLINE constexpr bool IsPowerOfTwo( T Value ) noexcept
     {
         return ( ( Value & ( Value - 1 ) ) == 0 );
     }
 
     //! Computes the linear interpolation between @Start and @End by @Alpha
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T Lerp( const T &Start, const T &End, const U &Alpha ) noexcept
     {
-        return static_cast< T >( Start + ( ( End - Start ) * Alpha ) );
+        return static_cast<T>( Start + ( ( End - Start ) * Alpha ) );
     }
 
     //! Computes the bi-linear interpolation between 4 points forming 2 lines
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T BiLerp(
         const T &Point_00, const T &Point_10, const T &Point_01, const T &Point_11, const U &Alpha_BetweenPoints, const U &Alpha_Of_Individual_Lerps ) noexcept
     {
@@ -335,21 +334,21 @@ namespace SKL
     }
 
     //! Computes the cubic interpolation
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T CubicInterp(
         const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
     {
         const auto AlphaSquared = Square( Alpha );
         const auto AlphaCubed    = AlphaSquared * Alpha;
 
-        return static_cast< T >(
+        return static_cast<T>(
             ( ( ( 2 * AlphaCubed ) - ( 3 * AlphaSquared ) + 1 ) * P0 ) +
             ( ( AlphaCubed - ( 2 * AlphaSquared ) + Alpha ) * T0 ) + ( ( AlphaCubed - AlphaSquared ) * T1 ) +
             ( ( ( -2 * AlphaCubed ) + ( 3 * AlphaSquared ) ) * P1 ) );
     }
 
     //! Computes the first derivative of the cubic interpolation function
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T CubicInterpDerivative(
         const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
     {
@@ -367,7 +366,7 @@ namespace SKL
     }
 
     //! Computes the second derivative of the cubic interpolation function
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T CubicInterpSecondDerivative(
         const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
     {
@@ -381,7 +380,7 @@ namespace SKL
     }
 
     //! Computes ease-in-out linear interpolation. @Exp controls the degree of the curve.
-    template< std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U >
     SKL_FORCEINLINE constexpr T InterpEaseInOut(
         const T &Start, const T &End, const U &Alpha, const U &Exp ) noexcept
     {

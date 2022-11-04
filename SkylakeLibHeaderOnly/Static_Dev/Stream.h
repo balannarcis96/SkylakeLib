@@ -11,31 +11,104 @@ namespace SKL
 {
     struct IBuffer
     {
-        IBuffer() noexcept = default;
+        IBuffer() noexcept
+            : Length{ 0U }
+            , Padding{ 0U }
+            , Buffer{ nullptr } {}
+
         IBuffer( uint32_t BufferSize, uint8_t* Buffer ) noexcept
-            : Length{ BufferSize }, Padding{ 0 }, Buffer{ Buffer } {}
+            : Length{ BufferSize }
+            , Padding{ 0 }
+            , Buffer{ Buffer } {}
+            
+        IBuffer( const IBuffer& Other ) noexcept = default;
+        IBuffer& operator=( const IBuffer& ) noexcept = default;
+        
+        IBuffer( IBuffer&& Other ) noexcept
+            : Length{ Other.Length }
+            , Padding{ 0U }
+            , Buffer{ Other.Buffer } 
+        {
+            Other.Length = 0U;
+            Other.Buffer = nullptr;
+        }
+        IBuffer& operator=( IBuffer&& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+
+            Length  = Other.Length;
+            Padding = 0U;
+            Buffer  = Other.Buffer;
+
+            Other.Length = 0U;
+            Other.Buffer = nullptr;
+        }
+
         ~IBuffer() noexcept = default;
 
-        uint32_t Length { 0 };
+        uint32_t Length;
         uint32_t Padding;
-        uint8_t* Buffer { nullptr };
+        uint8_t* Buffer;
     };
 
     struct StreamBase
     {
-        StreamBase() noexcept = default;
+        StreamBase() noexcept
+            : Position{ 0U }
+            , bOwnsBuffer{ FALSE }
+            , Buffer{} {}
+
         StreamBase( uint32_t Position, uint32_t BufferSize, uint8_t* Buffer, bool bOwnsBuffer = false ) noexcept
-            :Position{ Position }, bOwnsBuffer{ static_cast<uint32_t>( bOwnsBuffer ) }, Buffer{ BufferSize, Buffer } {}
+            : Position{ Position }
+            , bOwnsBuffer{ static_cast<uint32_t>( bOwnsBuffer ) }
+            , Buffer{ BufferSize, Buffer } {}
+
+        StreamBase( const StreamBase& ) noexcept = default;
+        StreamBase& operator=( const StreamBase& ) noexcept = default;
+
+        StreamBase( StreamBase&& Other ) noexcept 
+            : Position{ Other.Position }
+            , bOwnsBuffer{ Other.bOwnsBuffer }
+            , Buffer{ std::move( Other.Buffer ) } {}
+        StreamBase& operator=( StreamBase&& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+
+            Position    = Other.Position;
+            bOwnsBuffer = Other.bOwnsBuffer;
+            Buffer      = std::move( Other.Buffer );
+
+            Other.Position    = 0U;
+            Other.bOwnsBuffer = FALSE;
+
+            return *this;
+        }
+        
         ~StreamBase() noexcept = default;
 
-        SKL_FORCEINLINE uint32_t GetPosition() const noexcept { return Position; }
-        SKL_FORCEINLINE uint32_t GetBufferLength() const noexcept { return Buffer.Length; }
-        SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return Buffer.Buffer; }
-        SKL_FORCEINLINE bool OwnsBuffer() const noexcept { return 0 != bOwnsBuffer; }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetPosition()      const noexcept { return Position; }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetBufferLength()  const noexcept { return Buffer.Length; }
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetBuffer()        const noexcept { return Buffer.Buffer; }
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetFront()         const noexcept { return GetBuffer() + GetPosition(); }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetRemainingSize() const noexcept { return GetBufferLength() - GetPosition(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool     OwnsBuffer()       const noexcept { return 0 != bOwnsBuffer; }
+        SKL_FORCEINLINE SKL_NODISCARD bool     IsEOS()            const noexcept { return 0 == GetRemainingSize(); }
 
-        uint32_t Position   { 0 };
-        uint32_t bOwnsBuffer{ FALSE };
-        IBuffer  Buffer     {};
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T* GetBufferAsTypePtr()       noexcept { return  reinterpret_cast<T*>      ( GetBuffer() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD const T* GetBufferAsTypePtr() const noexcept { return  reinterpret_cast<const T*>( GetBuffer() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T& GetBufferAsTypeRef()       noexcept { return *reinterpret_cast<T*>      ( GetBuffer() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD const T& GetBufferAsTypeRef() const noexcept { return *reinterpret_cast<const T*>( GetBuffer() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T  GetBufferAsTypeVal() const noexcept { return T{ GetBufferAsTypeRef() }; }
+        
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T* GetFrontAsTypePtr()       noexcept { return  reinterpret_cast<T*>      ( GetFront() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD const T* GetFrontAsTypePtr() const noexcept { return  reinterpret_cast<const T*>( GetFront() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T& GetFrontAsTypeRef()       noexcept { return *reinterpret_cast<T*>      ( GetFront() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD const T& GetFrontAsTypeRef() const noexcept { return *reinterpret_cast<const T*>( GetFront() ); }
+        template<typename T> SKL_FORCEINLINE SKL_NODISCARD       T  GetFrontAsTypeVal() const noexcept { return T{ GetFrontAsTypeRef() }; }
+
+        uint32_t Position;   
+        uint32_t bOwnsBuffer;
+        IBuffer  Buffer;
     };
 
     template<bool bIsBase_StreamObjectOrPtrToStreamObject>
@@ -270,6 +343,11 @@ namespace SKL
         {
             return reinterpret_cast<IStreamReader<true>*>( &InStream );
         }
+        
+        SKL_FORCEINLINE static IStreamReader<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        {
+            return reinterpret_cast<IStreamReader<true>&>( InStream );
+        }
     };
 
     using IStreamObjectReader    = IStreamReader<true>;
@@ -432,6 +510,11 @@ namespace SKL
         {
             return reinterpret_cast<IStreamWriter<true>*>( &InStream );
         }
+        
+        SKL_FORCEINLINE static IStreamWriter<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        {
+            return reinterpret_cast<IStreamWriter<true>&>( InStream );
+        }
     };
     
     using IStreamObjectWriter    = IStreamWriter<true>;
@@ -447,6 +530,11 @@ namespace SKL
         SKL_FORCEINLINE static IBinaryStream<true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
             return reinterpret_cast<IBinaryStream<true>*>( &InStream );
+        }
+
+        SKL_FORCEINLINE static IBinaryStream<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        {
+            return reinterpret_cast<IBinaryStream<true>&>( InStream );
         }
     };
     

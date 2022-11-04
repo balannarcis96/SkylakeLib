@@ -86,17 +86,15 @@ namespace SKL
                 if constexpr( true == Traits::bHasCustomWriteMethod )
                 {
                     const auto StartSize{ InStream.GetPosition() };
-                    RStatus    Result;
 
-                    {
-                        // Write through a transaction stream so all offsets are body based not packet based
-                        StreamBase TransactionStream{ BinaryStreamTransaction::CreateTransactionStream( InStream ) };
-                        Result = GetPacketData().WritePacket( TransactionStream );
+                    // Write through a transaction stream so all offsets are body based not packet based
+                    StreamBase TransactionStream{ BinaryStreamTransaction::CreateTransactionStream( InStream ) };
 
-                        SKL_ASSERT( ( static_cast<uint64_t>( TransactionStream.GetPosition() ) + InStream.GetPosition() ) <= static_cast<uint64_t>( InStream.GetBufferLength() )  )
+                    const RStatus Result{ GetPacketData().WritePacket( TransactionStream ) };
 
-                        BinaryStreamTransaction::CommitTransactionStream( TransactionStream, InStream );
-                    }
+                    SKL_ASSERT( ( static_cast<uint64_t>( TransactionStream.GetPosition() ) + InStream.GetPosition() ) <= static_cast<uint64_t>( InStream.GetBufferLength() )  )
+
+                    BinaryStreamTransaction::CommitTransactionStream( TransactionStream, InStream );
 
                     SKL_ASSERT( InStream.GetPosition() - StartSize <= CPacketMaximumUsableBodySize );
 
@@ -112,8 +110,10 @@ namespace SKL
                 }
                 else if constexpr( true == Traits::bIsFixedLength )
                 {
-                    auto& Writer = *reinterpret_cast<IStreamWriter<true>*>( &InStream );
-                    const auto Result{ Writer.Write( reinterpret_cast<const uint8_t*>( &GetPacketData() ), static_cast<uint32_t>( sizeof( typename Traits::PacketDataType ) ), false ) };
+                    IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
+                    const auto           Result{ Writer.Write( reinterpret_cast<const uint8_t*>( &GetPacketData() )
+                                                             , static_cast<uint32_t>( sizeof( typename Traits::PacketDataType ) )
+                                                             , false ) };
 
                     if constexpr( bCommitPacket )
                     {
@@ -137,23 +137,23 @@ namespace SKL
     protected:
         SKL_FORCEINLINE static constexpr void WritePacketHeader( StreamBase& InStream ) noexcept
         {
-            auto& Writer{ *reinterpret_cast<IStreamWriter<true>*>( &InStream ) };
+            IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
+            PacketHeader&        Header{ Writer.BuildObjectRef<PacketHeader>() };
 
-            PacketHeader& Header{ Writer.BuildObjectRef<PacketHeader>() };
             Header.Size   = 0;
             Header.Opcode = Traits::Opcode;
 
-            Writer.Forward(  static_cast<uint32_t>( sizeof( PacketHeader ) ) );
+            Writer.Forward( static_cast<uint32_t>( sizeof( PacketHeader ) ) );
         }
         SKL_FORCEINLINE static constexpr void WritePacketHeader( StreamBase& InStream, TPacketSize InSize ) noexcept
         {
-            auto& Writer{ *reinterpret_cast<IStreamWriter<true>*>( &InStream ) };
+            IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
+            PacketHeader&        Header{ Writer.BuildObjectRef<PacketHeader>() };
 
-            PacketHeader& Header{ Writer.BuildObjectRef<PacketHeader>() };
             Header.Size   = InSize;
             Header.Opcode = Traits::Opcode;
 
-            Writer.Forward(  static_cast<uint32_t>( sizeof( PacketHeader ) ) );
+            Writer.Forward( static_cast<uint32_t>( sizeof( PacketHeader ) ) );
         }
         SKL_FORCEINLINE const typename Traits::PacketDataType& GetPacketData() const noexcept
         {
@@ -174,14 +174,16 @@ namespace SKL
         }
         SKL_FORCEINLINE static void CommitPacket( StreamBase& InStream ) noexcept
         {
-            auto& Header = *reinterpret_cast<PacketHeader*>( InStream.Buffer.Buffer );
+            PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
             SKL_ASSERT( Header.Opcode == Traits::Opcode );
+
             Header.Size = InStream.GetPosition();
         }
         SKL_FORCEINLINE static void CommitPacket( StreamBase& InStream, TPacketSize InSize ) noexcept
         {
-            auto& Header = *reinterpret_cast<PacketHeader*>( InStream.Buffer.Buffer );
+            PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
             SKL_ASSERT( Header.Opcode == Traits::Opcode );
+
             Header.Size = InSize;
         }
         SKL_FORCEINLINE typename Traits::Super& GetSuper() noexcept
