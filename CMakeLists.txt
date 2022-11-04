@@ -6,7 +6,7 @@ set(SKL_USE_PRECISE_SLEEP_DESC "Use very precise sleep function for the active, 
 set(SKL_DEBUG_MEMORY_ALLOCATORS_DESC "Enable checks for correct allocation/deallocation")
 
 option(SKL_BUILD_TESTS              "Build tests"                               ON)  
-option(SKL_DISABLE_EXCEPTIONS       "Disable exceptions[Recommended]!"          ON)   
+option(SKL_DISABLE_EXCEPTIONS       "Disable exceptions[Recommended]!"         OFF)   
 option(SKL_BUILD_SHIPPING           "Build for shipping"                       OFF) 
 option(SKL_MEMORY_STATISTICS        "Enable memory statistics"                  ON) 
 option(SKL_NO_ASSERTS               "Disabled all runtime asserts"             OFF) 

@@ -62,6 +62,7 @@ namespace SKL
         return ScheduleTask( TLSContext, InTask );
     }
 
+    //! Called from withing the handler of a deferred task to defer the same task again 
     bool DeferTaskAgain( ITask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != InTask );

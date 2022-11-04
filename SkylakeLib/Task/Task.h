@@ -157,7 +157,7 @@ namespace SKL
         // set due
         //NewTask->SetDue( AfterMilliseconds ); due = 0 -> ASAP
 
-        // cast to base and return
+        // cast to base and defer
         return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
     }
 
@@ -174,7 +174,7 @@ namespace SKL
         // set due
         NewTask->SetDue( AfterMilliseconds );
 
-        // cast to base and return
+        // cast to base and defer
         return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
     }
 }
