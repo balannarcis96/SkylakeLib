@@ -68,33 +68,17 @@ namespace SKL
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
         {
-            const auto Now{ GetSystemUpTickCount() };
-            Due =  Now + static_cast<TEpochTimePoint>( AfterMilliseconds );
-
-            SKL_ASSERT( Due > Now );
-
-            if( Due - Now > ( 30 * 1000 ) )
-            {
-                SKL_BREAK();
-            }
-
-            SKL_ASSERT( Due - Now < 30 * 1000 );
+            Due = GetSystemUpTickCount() + static_cast<TEpochTimePoint>( AfterMilliseconds );
         }
 
         //! Is this task due
-        SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsDue( TEpochTimePoint InNow ) const noexcept
         {
-            if( false == ( Due == 0 || std::abs( static_cast<int64_t>( Due - InNow ) ) < ( 30 * 1000 ) ) )
-            {
-                SKL_BREAK();
-            }
-
-            SKL_ASSERT( Due == 0 || std::abs( static_cast<int64_t>( Due - InNow ) ) < ( 30 * 1000 ) );
             return InNow >= Due;
         }
 
         //! A > B
-        SKL_FORCEINLINE bool operator>( const IAODSharedObjectTask& Other ) noexcept    
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const IAODSharedObjectTask& Other ) noexcept    
         {
             return Due > Other.Due;
         }
@@ -200,7 +184,7 @@ namespace SKL
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
         {
-            Due = GetSystemUpTickCount() + AfterMilliseconds;
+            Due = GetSystemUpTickCount() + static_cast<TEpochTimePoint>( AfterMilliseconds );
         }
 
         //! Is this task due
@@ -335,7 +319,7 @@ namespace SKL
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
         {
-            Due = GetSystemUpTickCount() + AfterMilliseconds;
+            Due = GetSystemUpTickCount() + static_cast<TEpochTimePoint>( AfterMilliseconds );
         }
 
         //! Is this task due
