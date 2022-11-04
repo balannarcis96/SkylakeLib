@@ -5,6 +5,10 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
+//! \invariant [SKL_Packet_Invariant_1]: All offset values in the packet must be body based not buffer based
+//!                                      [Body based]: all offsets are relative to right after the header
+//!                                      [Buffer based]: all offsets are relative to right where the header starts
+//! 
 #pragma once
 
 namespace SKL
@@ -87,7 +91,7 @@ namespace SKL
                 {
                     const auto StartSize{ InStream.GetPosition() };
 
-                    // Write through a transaction stream so all offsets are body based not packet based
+                    // [SKL_Packet_Invariant_1] Write through a transaction stream so all offsets are body based not packet based
                     StreamBase TransactionStream{ BinaryStreamTransaction::CreateTransactionStream( InStream ) };
 
                     const RStatus Result{ GetPacketData().WritePacket( TransactionStream ) };

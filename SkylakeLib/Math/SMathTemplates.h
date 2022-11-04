@@ -46,17 +46,17 @@ namespace SKL
         }
         else if constexpr( std::is_integral_v<T> )
         {
-            constexpr T ZeroValue   = static_cast<T>( 0 );
-            constexpr T One         = static_cast<T>( 1 );
-            constexpr T NegativeOne = static_cast<T>( -1 );
+            constexpr T ZeroValue  { static_cast<T>( 0 ) };
+            constexpr T One        { static_cast<T>( 1 ) };
+            constexpr T NegativeOne{ static_cast<T>( -1 ) };
 
             return NegativeOne + ( One * ( A == ZeroValue ) ) + ( 2 * ( A > ZeroValue ) );
         }
         else
         {
-            constexpr T ZeroValue   = static_cast<T>( 0 );
-            constexpr T One         = static_cast<T>( 1 );
-            constexpr T NegativeOne = static_cast<T>( -1 );
+            constexpr T ZeroValue  { static_cast<T>( 0 ) };
+            constexpr T One        { static_cast<T>( 1 ) };
+            constexpr T NegativeOne{ static_cast<T>( -1 ) };
 
             return ( A > ZeroValue ) ? One : ( ( A < ZeroValue ) ? NegativeOne : ZeroValue );
         }
@@ -277,14 +277,15 @@ namespace SKL
     SKL_FORCEINLINE uint32_t FloorLog2( T Value ) noexcept
     {
         unsigned long Result;
-
-        if constexpr( std::_Is_any_of_v<std::remove_cv_t<T>, unsigned int, unsigned long> )
+        
+        if constexpr( std::is_same_v<std::remove_cv_t<T>, unsigned int>
+                   || std::is_same_v<std::remove_cv_t<T>, unsigned long> )
         {
-            _BitScanReverse( &Result, static_cast< unsigned long >( Value ) );
+            ( void )_BitScanReverse( &Result, static_cast<unsigned long>( Value ) );
         }
         else
         {
-            _BitScanReverse64( &Result, Value );
+            ( void )_BitScanReverse64( &Result, Value );
         }
 
         return Result;
@@ -294,16 +295,19 @@ namespace SKL
     template<std::TUInt32Or64 T>
     SKL_FORCEINLINE uint32_t CountLeadingZeros( T Value ) noexcept
     {
-        if constexpr( std::_Is_any_of_v<std::remove_cv_t<T>, unsigned int, unsigned long> )
+        if constexpr( std::is_same_v<std::remove_cv_t<T>, unsigned int>
+                   || std::is_same_v<std::remove_cv_t<T>, unsigned long> )
         {
             if( Value == 0 )
                 return 32;
+
             return 31 - FloorLog2( Value );
         }
         else
         {
             if( Value == 0 )
                 return 64;
+
             return 63 - FloorLog2( Value );
         }
     }
@@ -316,30 +320,36 @@ namespace SKL
     }
 
     //! Computes the linear interpolation between @Start and @End by @Alpha
-    template<std::TBasicMathEnabled T, std::TFloat U >
+    template<std::TBasicMathEnabled T, std::TFloat U>
     SKL_FORCEINLINE constexpr T Lerp( const T &Start, const T &End, const U &Alpha ) noexcept
     {
         return static_cast<T>( Start + ( ( End - Start ) * Alpha ) );
     }
 
     //! Computes the bi-linear interpolation between 4 points forming 2 lines
-    template<std::TBasicMathEnabled T, std::TFloat U >
-    SKL_FORCEINLINE constexpr T BiLerp(
-        const T &Point_00, const T &Point_10, const T &Point_01, const T &Point_11, const U &Alpha_BetweenPoints, const U &Alpha_Of_Individual_Lerps ) noexcept
+    template<std::TBasicMathEnabled T, std::TFloat U>
+    SKL_FORCEINLINE constexpr T BiLerp( const T &Point_00
+                                      , const T &Point_10
+                                      , const T &Point_01
+                                      , const T &Point_11
+                                      , const U &Alpha_BetweenPoints
+                                      , const U &Alpha_Of_Individual_Lerps ) noexcept
     {
-        return Lerp(
-            Lerp( Point_00, Point_10, Alpha_BetweenPoints ),
-            Lerp( Point_01, Point_11, Alpha_BetweenPoints ),
-            Alpha_Of_Individual_Lerps );
+        return Lerp( Lerp( Point_00, Point_10, Alpha_BetweenPoints )
+                   , Lerp( Point_01, Point_11, Alpha_BetweenPoints )
+                   , Alpha_Of_Individual_Lerps );
     }
 
     //! Computes the cubic interpolation
-    template<std::TBasicMathEnabled T, std::TFloat U >
-    SKL_FORCEINLINE constexpr T CubicInterp(
-        const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
+    template<std::TBasicMathEnabled T, std::TFloat U>
+    SKL_FORCEINLINE constexpr T CubicInterp( const T &P0
+                                           , const T &T0
+                                           , const T &P1
+                                           , const T &T1
+                                           , const U &Alpha ) noexcept
     {
-        const auto AlphaSquared = Square( Alpha );
-        const auto AlphaCubed    = AlphaSquared * Alpha;
+        const U AlphaSquared{ Square( Alpha ) };
+        const U AlphaCubed  { AlphaSquared * Alpha };
 
         return static_cast<T>(
             ( ( ( 2 * AlphaCubed ) - ( 3 * AlphaSquared ) + 1 ) * P0 ) +
@@ -348,46 +358,72 @@ namespace SKL
     }
 
     //! Computes the first derivative of the cubic interpolation function
-    template<std::TBasicMathEnabled T, std::TFloat U >
-    SKL_FORCEINLINE constexpr T CubicInterpDerivative(
-        const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
+    template<std::TBasicMathEnabled T, std::TFloat U>
+    SKL_FORCEINLINE constexpr T CubicInterpDerivative( const T &P0
+                                                     , const T &T0
+                                                     , const T &P1
+                                                     , const T &T1
+                                                     , const U &Alpha ) noexcept
     {
-        const auto A =
-            ( static_cast< U >( 6.0 ) * P0 ) + ( static_cast< U >( 3.0 ) * T0 ) + ( static_cast< U >( 3.0 ) * T1 ) - ( static_cast< U >( 6.0 ) * P1 );
+        const U A { ( static_cast<U>( 6.0 ) * P0 ) 
+                  + ( static_cast<U>( 3.0 ) * T0 ) 
+                  + ( static_cast<U>( 3.0 ) * T1 ) 
+                  - ( static_cast<U>( 6.0 ) * P1 ) };
 
-        const auto B =
-            ( static_cast< U >( -6.0 ) * P0 ) - ( static_cast< U >( 4.0 ) * T0 ) - ( static_cast< U >( 2.0 ) * T1 ) + ( static_cast< U >( 6.0 ) * P1 );
+        const U B { ( static_cast<U>( -6.0 ) * P0 ) 
+                  - ( static_cast<U>( 4.0 ) * T0 ) 
+                  - ( static_cast<U>( 2.0 ) * T1 ) 
+                  + ( static_cast<U>( 6.0 ) * P1 ) };
 
-        const auto C = T0;
-
-        const auto AlphaSquared = Square( Alpha );
+        const T C            { T0 };
+        const U AlphaSquared { Square( Alpha ) };
 
         return ( A * AlphaSquared ) + ( B * Alpha ) + C;
     }
 
     //! Computes the second derivative of the cubic interpolation function
-    template<std::TBasicMathEnabled T, std::TFloat U >
-    SKL_FORCEINLINE constexpr T CubicInterpSecondDerivative(
-        const T &P0, const T &T0, const T &P1, const T &T1, const U &Alpha ) noexcept
+    template<std::TBasicMathEnabled T, std::TFloat U>
+    SKL_FORCEINLINE SKL_NODISCARD constexpr T CubicInterpSecondDerivative( const T &P0
+                                                           , const T &T0
+                                                           , const T &P1
+                                                           , const T &T1
+                                                           , const U &Alpha ) noexcept
     {
-        const auto A =
-            ( static_cast< U >( 12.0 ) * P0 ) + ( static_cast< U >( 6.0 ) * T0 ) + ( static_cast< U >( 6.0 ) * T1 ) - ( static_cast< U >( 12.0 ) * P1 );
+        const U A { ( static_cast<U>( 12.0 ) * P0 ) 
+                  + ( static_cast<U>( 6.0 ) * T0 ) 
+                  + ( static_cast<U>( 6.0 ) * T1 ) 
+                  - ( static_cast<U>( 12.0 ) * P1 ) };
 
-        const auto B =
-            ( static_cast< U >( -6.0 ) * P0 ) - ( static_cast< U >( 4.0 ) * T0 ) - ( static_cast< U >( 2.0 ) * T1 ) + ( static_cast< U >( 6.0 ) * P1 );
+        const U B { ( static_cast<U>( -6.0 ) * P0 ) 
+                  - ( static_cast<U>( 4.0 ) * T0 ) 
+                  - ( static_cast<U>( 2.0 ) * T1 ) 
+                  + ( static_cast<U>( 6.0 ) * P1 ) };
 
         return ( A * Alpha ) + B;
     }
 
     //! Computes ease-in-out linear interpolation. @Exp controls the degree of the curve.
-    template<std::TBasicMathEnabled T, std::TFloat U >
-    SKL_FORCEINLINE constexpr T InterpEaseInOut(
-        const T &Start, const T &End, const U &Alpha, const U &Exp ) noexcept
+    template<std::TBasicMathEnabled T, std::TFloat U>
+    SKL_FORCEINLINE SKL_NODISCARD constexpr T InterpEaseInOut( const T &Start
+                                                             , const T &End
+                                                             , const U &Alpha
+                                                             , const U &Exp ) noexcept
     {
-        const U NewAlpha = ( Alpha < static_cast< U >( 0.5 ) ?
-                                 static_cast< U >( 0.5 ) * Pow( static_cast< U >( 2.0 ) * Alpha, Exp ) :
-                                   static_cast< U >( 1.0 - 0.5 ) * Pow( static_cast< U >( 2.0 ) * ( static_cast< U >( 1.0 ) - Alpha ), Exp ) );
+        constexpr U CZeroPointFive = static_cast<U>( 0.5 );
+        constexpr U CTwoPointZero  = static_cast<U>( 2.0 );
+        constexpr U COnePointZero  = static_cast<U>( 1.0 );
 
+        U NewAlpha;
+
+        if( Alpha < CZeroPointFive )
+        {
+            NewAlpha = CZeroPointFive * Pow( CTwoPointZero * Alpha, Exp );
+        }
+        else
+        {
+            NewAlpha = ( COnePointZero - CZeroPointFive ) * Pow( CTwoPointZero * ( COnePointZero - Alpha ), Exp );
+        }
+        
         return Lerp( Start, End, NewAlpha );
     }
 } // namespace SMath
