@@ -40,14 +40,14 @@ namespace SKL::MemoryPolicy
         }
 
         //! Removes 1 from the reference count of this instance
-        //! \remarks Only call this function while holding a valid reference to this instance
+        //! \remarks Only call this function when you know that removing 1 reference will not 0 reference count
         SKL_FORCEINLINE void ReleaseReferenceChecked() noexcept
         {
             ( void )--ReferenceCount;
         }
 
         //! Removes 1 from the reference count of this instance
-        //! \returns true if last ref count reached 0
+        //! \returns true if reached 0 ref count
         SKL_FORCEINLINE bool ReleaseReference() noexcept
         {
             return 0 == --ReferenceCount;
@@ -140,7 +140,7 @@ namespace SKL::MemoryPolicy
         }
 
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
-        template<typename TArrayItem, bool bConstruct = true, bool bAcceptNoThrowConstructor = false>
+        template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
         static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
@@ -150,10 +150,10 @@ namespace SKL::MemoryPolicy
             constexpr bool     bCanConstruct{ true  == bConstruct && true == std::is_default_constructible_v<TArrayItem> };
             
             static_assert( false == bCanConstruct 
-                      ||   false == bAcceptNoThrowConstructor ? 
+                      ||   false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_default_constructible_v<TArrayItem> : 
                               true == std::is_default_constructible_v<TArrayItem>   
-                       , "TArrayItem must be [bAcceptNoThrowConstructor ? throw : nothrow] default constructible" );
+                       , "TArrayItem must be [bAcceptThrowConstructor ? throw : nothrow] default constructible" );
 
             // construct array header
             GConstructNothrow<ArrayHeader>( InMemoryBlockPointer, ItemSize, ItemCount );
@@ -166,7 +166,7 @@ namespace SKL::MemoryPolicy
             {
                 for( uint32_t i = 0; i < ItemCount; ++i )
                 {
-                    if constexpr( false == bAcceptNoThrowConstructor || std::is_nothrow_default_constructible_v<TArrayItem> )
+                    if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_default_constructible_v<TArrayItem> )
                     {
                         GConstructNothrow<TArrayItem>( &Result[ i ] );  
                     }
@@ -181,7 +181,7 @@ namespace SKL::MemoryPolicy
         }
 
         //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
-        template<typename TObject, bool bConstruct, bool bAcceptNoThrowConstructor, typename ...TArgs>
+        template<typename TObject, bool bConstruct, bool bAcceptThrowConstructor, typename ...TArgs>
         static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
@@ -189,17 +189,17 @@ namespace SKL::MemoryPolicy
             constexpr bool bCanConstruct{ true == bConstruct && true == std::is_constructible_v<TObject, TArgs...> };
 
             static_assert( false == bConstruct || 
-                           false == bAcceptNoThrowConstructor ? 
+                           false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_constructible_v<TObject, TArgs...> : 
                               true == std::is_constructible_v<TObject, TArgs...>   
-                       , "TObject must be [bAcceptNoThrowConstructor ? throw : nothrow] constructible" );
+                       , "TObject must be [bAcceptThrowConstructor ? nothrow : throw] constructible" );
 
             TObject* Result{ reinterpret_cast<TObject*>( InMemoryBlockPointer ) };
             
             // construct if possible
             if constexpr( true == bCanConstruct )
             {
-                if constexpr( false == bAcceptNoThrowConstructor || std::is_nothrow_constructible_v<TObject, TArgs...> )
+                if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_constructible_v<TObject, TArgs...> )
                 {
                     GConstructNothrow<TObject>( Result, std::forward<TArgs>( Args )... );  
                 }
@@ -213,7 +213,7 @@ namespace SKL::MemoryPolicy
         }
 
         //! Deconstruct objects in the array if possible/wanted and return a pointer to the memory block and the memory block size
-        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InArrayPtr );
@@ -221,8 +221,8 @@ namespace SKL::MemoryPolicy
             constexpr bool bCanDestruct{ true == bDeconstruct && true == std::is_destructible_v<TArrayItem> };
             
             static_assert( false == bCanDestruct 
-                        || false == bAcceptNoThrowDestructor ? true == std::is_nothrow_destructible_v<TArrayItem> : true == std::is_destructible_v<TArrayItem>   
-                         , "TArrayItem must be [bAcceptNoThrowConstructor ? throw : nothrow] destructible" );
+                        || false == bAcceptThrowConstructor ? true == std::is_nothrow_destructible_v<TArrayItem> : true == std::is_destructible_v<TArrayItem>   
+                         , "TArrayItem must be [bAcceptThrowConstructor ? throw : nothrow] destructible" );
 
             auto& Header{ GetArrayHeader( InArrayPtr ) };
 
@@ -231,7 +231,7 @@ namespace SKL::MemoryPolicy
             {
                 for( uint32_t i = 0; i < Header.ItemCount; ++i )
                 {
-                    if constexpr( false == bAcceptNoThrowDestructor || std::is_nothrow_destructible_v<TArrayItem> )
+                    if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_destructible_v<TArrayItem> )
                     {
                         GDestructNothrow<TArrayItem>( &InArrayPtr[ i ] );  
                     }
@@ -246,7 +246,7 @@ namespace SKL::MemoryPolicy
         }
         
         //! Destroy the policy and deconstruct the object if possible and wanted
-        template<typename TObject, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         static void* DestroyForObject( TObject* InObjectPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InObjectPtr );
@@ -254,13 +254,13 @@ namespace SKL::MemoryPolicy
             constexpr bool bCanDestruct{ true == bDeconstruct && true == std::is_destructible_v<TObject> };
             
             static_assert( false == bCanDestruct 
-                        || false == bAcceptNoThrowDestructor ? true == std::is_nothrow_destructible_v<TObject> : true == std::is_destructible_v<TObject>   
-                         , "TObject must be [bAcceptNoThrowConstructor ? throw : nothrow] destructible" );
+                        || false == bAcceptThrowConstructor ? true == std::is_nothrow_destructible_v<TObject> : true == std::is_destructible_v<TObject>   
+                         , "TObject must be [bAcceptThrowConstructor ? throw : nothrow] destructible" );
 
             // destruct object if possible/wanted
             if constexpr( true == bCanDestruct )
             {
-                if constexpr( false == bAcceptNoThrowDestructor || std::is_nothrow_destructible_v<TObject> )
+                if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_destructible_v<TObject> )
                 {
                     GDestructNothrow<TObject>( InObjectPtr );  
                 }
@@ -416,7 +416,7 @@ namespace SKL::MemoryPolicy
         }
 
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
-        template<typename TArrayItem, bool bConstruct = true, bool bAcceptNoThrowConstructor = false>
+        template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
         static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
@@ -426,10 +426,10 @@ namespace SKL::MemoryPolicy
             constexpr bool     bCanConstruct{ true == bConstruct && true == std::is_default_constructible_v<TArrayItem> };
             
             static_assert( false == bCanConstruct 
-                      ||   false == bAcceptNoThrowConstructor ? 
+                      ||   false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_default_constructible_v<TArrayItem> : 
                               true == std::is_default_constructible_v<TArrayItem>   
-                       , "TArrayItem must be [bAcceptNoThrowConstructor ? throw : nothrow] default constructible" );
+                       , "TArrayItem must be [bAcceptThrowConstructor ? throw : nothrow] default constructible" );
 
             // construct the control block
             GConstructNothrow<ControlBlock>( InMemoryBlockPointer, 1, ( ItemSize * ItemCount ) + static_cast<uint32_t>( CSharedArrayHeaderSize ) );
@@ -445,7 +445,7 @@ namespace SKL::MemoryPolicy
             {
                 for( uint32_t i = 0; i < ItemCount; ++i )
                 {
-                    if constexpr( false == bAcceptNoThrowConstructor || std::is_nothrow_default_constructible_v<TArrayItem> )
+                    if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_default_constructible_v<TArrayItem> )
                     {
                         GConstructNothrow<TArrayItem>( &Result[ i ] );  
                     }
@@ -460,7 +460,7 @@ namespace SKL::MemoryPolicy
         }
 
         //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
-        template<typename TObject, bool bConstruct, bool bAcceptNoThrowConstructor, typename ...TArgs>
+        template<typename TObject, bool bConstruct, bool bAcceptThrowConstructor, typename ...TArgs>
         static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
@@ -469,21 +469,21 @@ namespace SKL::MemoryPolicy
             constexpr uint32_t AllocSize{ static_cast<uint32_t>( CalculateNeededSizeForObject<TObject>() ) };
 
             static_assert( false == bConstruct || 
-                           false == bAcceptNoThrowConstructor ? 
+                           false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_constructible_v<TObject, TArgs...> : 
                               true == std::is_constructible_v<TObject, TArgs...>   
-                       , "TObject must be [bAcceptNoThrowConstructor ? throw : nothrow] constructible" );
+                       , "TObject must be [bAcceptThrowConstructor ? throw : nothrow] constructible" );
 
             // construct the control block
             GConstructNothrow<ControlBlock>( InMemoryBlockPointer, 1, AllocSize );
     
-            // calcuate the object pointer
+            // calculate the object pointer
             TObject* Result{ reinterpret_cast<TObject*>( reinterpret_cast<uint8_t*>( InMemoryBlockPointer ) + CSharedObjectHeaderSize ) };
 
             // construct if possible
             if constexpr( true == bCanConstruct )
             {
-                if constexpr( false == bAcceptNoThrowConstructor || std::is_nothrow_constructible_v<TObject, TArgs...> )
+                if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_constructible_v<TObject, TArgs...> )
                 {
                     GConstructNothrow<TObject>( Result, std::forward<TArgs>( Args )... );  
                 }
@@ -498,7 +498,7 @@ namespace SKL::MemoryPolicy
 
         //! Try to destroy the policy (release reference) and deconstruct all objects in the array if possible 
         //! \returns a pointer to the memory block and the memory block size
-        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InArrayPtr );
@@ -506,10 +506,10 @@ namespace SKL::MemoryPolicy
             constexpr bool bCanDestruct{ true == bDeconstruct && true == std::is_destructible_v<TArrayItem> };
             
             static_assert( false == bCanDestruct 
-                        || false == bAcceptNoThrowDestructor ? 
+                        || false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_destructible_v<TArrayItem> : 
                               true == std::is_destructible_v<TArrayItem>   
-                         , "TArrayItem must be [bAcceptNoThrowConstructor ? throw : nothrow] destructible" );
+                         , "TArrayItem must be [bAcceptThrowConstructor ? throw : nothrow] destructible" );
 
             auto& ControlBlock{ GetControlBlockForArray( InArrayPtr ) };
 
@@ -523,7 +523,7 @@ namespace SKL::MemoryPolicy
                 {
                     for( uint32_t i = 0; i < Header.ItemCount; ++i )
                     {
-                        if constexpr( false == bAcceptNoThrowDestructor || std::is_nothrow_destructible_v<TArrayItem> )
+                        if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_destructible_v<TArrayItem> )
                         {
                             GDestructNothrow<TArrayItem>( &InArrayPtr[ i ] );  
                         }
@@ -541,7 +541,7 @@ namespace SKL::MemoryPolicy
         }
         
         //! Try to destroy the policy (release reference) and deconstruct the object if possible and wanted
-        template<typename TObject, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         static void* DestroyForObject( TObject* InObjectPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InObjectPtr );
@@ -549,10 +549,10 @@ namespace SKL::MemoryPolicy
             constexpr bool bCanDestruct{ true == bDeconstruct && true == std::is_destructible_v<TObject> };
             
             static_assert( false == bCanDestruct 
-                        || false == bAcceptNoThrowDestructor ? 
+                        || false == bAcceptThrowConstructor ? 
                               true == std::is_nothrow_destructible_v<TObject> : 
                               true == std::is_destructible_v<TObject>   
-                         , "TObject must be [bAcceptNoThrowConstructor ? throw : nothrow] destructible" );
+                         , "TObject must be [bAcceptThrowConstructor ? throw : nothrow] destructible" );
 
             auto& ControlBlock { GetControlBlockForObject( InObjectPtr ) };
             
@@ -562,7 +562,7 @@ namespace SKL::MemoryPolicy
                 // destruct object if possible/wanted
                 if constexpr( true == bCanDestruct )
                 {
-                    if constexpr( false == bAcceptNoThrowDestructor || std::is_nothrow_destructible_v<TObject> )
+                    if constexpr( false == bAcceptThrowConstructor || std::is_nothrow_destructible_v<TObject> )
                     {
                         GDestructNothrow<TObject>( InObjectPtr );  
                     }
@@ -596,32 +596,32 @@ namespace SKL::MemoryPolicy
         }
 
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
-        template<typename TArrayItem, bool bConstruct = true, bool bAcceptNoThrowConstructor = false>
+        template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
         SKL_FORCEINLINE static TArrayItem* ApplyPolicyAndConstructArray( void* InMemoryBlockPointer, uint32_t ItemsCount ) noexcept
         {
-            return TPolicy::template ConstructArray<TArrayItem, bConstruct, bAcceptNoThrowConstructor>( InMemoryBlockPointer, ItemsCount );
+            return TPolicy::template ConstructArray<TArrayItem, bConstruct, bAcceptThrowConstructor>( InMemoryBlockPointer, ItemsCount );
         }
 
         //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
-        template<typename TObject, bool bConstruct = true, bool bAcceptNoThrowConstructor = false, typename ...TArgs>
+        template<typename TObject, bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         SKL_FORCEINLINE static TObject* ApplyPolicyAndConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
         {
-            return TPolicy::template ConstructObject<TObject, bConstruct, bAcceptNoThrowConstructor, TArgs...>( InMemoryBlockPointer, std::forward<TArgs>( Args )... );
+            return TPolicy::template ConstructObject<TObject, bConstruct, bAcceptThrowConstructor, TArgs...>( InMemoryBlockPointer, std::forward<TArgs>( Args )... );
         }
 
         //! \brief Try to destroy the policy (release reference) and deconstruct all objects in the array if possible and wanted
         //! \returns a pointer to the memory block and the memory block size
-        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         SKL_FORCEINLINE static std::pair<void*, size_t> TryDestroyPolicyForArray( TArrayItem* IArrayPtr ) noexcept
         {
-            return TPolicy::template DestroyForArray<TArrayItem, bDeconstruct, bAcceptNoThrowDestructor>( IArrayPtr );
+            return TPolicy::template DestroyForArray<TArrayItem, bDeconstruct, bAcceptThrowConstructor>( IArrayPtr );
         }
 
         //! Try to destroy the policy and deconstruct the object if possible and wanted
-        template<typename TObject, bool bDeconstruct = true, bool bAcceptNoThrowDestructor = false>
+        template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
         SKL_FORCEINLINE static void* TryDestroyPolicyForObject( TObject* InObjectPtr ) noexcept
         {
-            return TPolicy::template DestroyForObject<TObject, bDeconstruct, bAcceptNoThrowDestructor>( InObjectPtr );
+            return TPolicy::template DestroyForObject<TObject, bDeconstruct, bAcceptThrowConstructor>( InObjectPtr );
         }
     };
 }
@@ -700,21 +700,21 @@ namespace SKL::MemoryAllocation
         using MyMemoryPolicy        = TMyMemoryPolicy;
         using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
 
-        //! Calculte needed size for an array of ItemsCount by policy
+        //! Calculate needed size for an array of ItemsCount by policy
         template<typename TArrayItemType>
         SKL_FORCEINLINE static size_t CalculateNeededSizeForArray( uint32_t ItemCount ) noexcept
         {
             return MyMemoryPolicy::template CalculateNeededSizeForArray<TArrayItemType>( ItemCount );
         }
 
-        //! Calculte needed size for an TObject by policy
+        //! Calculate needed size for an TObject by policy
         template<typename TObjectType>
         SKL_FORCEINLINE static size_t CalculateNeededSizeForObject( void* InPtr ) noexcept
         {
             return MyMemoryPolicy::template CalculateNeededSizeForObject<TObjectType>();
         }
 
-        template<bool bConstruct = true, bool bAcceptNoThrowConstructor = false, typename ...TArgs>
+        template<bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         static TDecayObject* AllocateObject( TArgs... Args ) noexcept
         {
             constexpr uint32_t AllocSize{ static_cast<uint32_t>( MyMemoryPolicy::template CalculateNeededSizeForObject<TDecayObject>() ) };
@@ -726,7 +726,7 @@ namespace SKL::MemoryAllocation
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptNoThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
+                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
             }
             else
             {
@@ -737,7 +737,7 @@ namespace SKL::MemoryAllocation
             return Result;
         }
 
-        template<bool bConstruct = true, bool bAcceptNoThrowConstructor = false>
+        template<bool bConstruct = true, bool bAcceptThrowConstructor = false>
         static TDecayObject* AllocateArray( uint32_t ItemCount ) noexcept
         {
             const uint32_t AllocSize{ static_cast<uint32_t>( MyMemoryPolicy::template CalculateNeededSizeForArray<TDecayObject>( ItemCount ) ) };
@@ -749,7 +749,7 @@ namespace SKL::MemoryAllocation
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the array policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructArray<TDecayObject, bConstruct, bAcceptNoThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
+                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructArray<TDecayObject, bConstruct, bAcceptThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
             }
             else
             {

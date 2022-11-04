@@ -10,7 +10,7 @@
 namespace SKL
 {
     template<typename TSharedPtrType>
-    struct EnditSharedPtr;
+    struct EditSharedPtr;
 
     template<typename TObject, typename TDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::DestructDeallocator>
     struct TSharedPtr
@@ -240,7 +240,7 @@ namespace SKL
         template<typename TObject, typename TDeallocator>
         friend struct TLockedSharedPtr;
 
-        friend EnditSharedPtr<MyType>;
+        friend EditSharedPtr<MyType>;
     };
 
     template<typename TObject>
@@ -368,7 +368,7 @@ namespace SKL
     };
 
     template<typename TSharedPtrType>
-    struct EnditSharedPtr
+    struct EditSharedPtr
     {
         using TRawPtr = typename TSharedPtrType::TObjectDecay *;
 

@@ -179,7 +179,7 @@ namespace SKL
 
                     // update the ptr inside Result
                     auto* ResultPtr{ static_cast<RootComponent*>( &RComponent ) };
-                    EnditSharedPtr<TEntitySharedPtr>::SetRawPtr( Result, ResultPtr );
+                    EditSharedPtr<TEntitySharedPtr>::SetRawPtr( Result, ResultPtr );
                 }
                 else
                 {
