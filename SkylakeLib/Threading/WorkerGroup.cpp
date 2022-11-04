@@ -116,7 +116,7 @@ namespace SKL
         Temp.reserve( static_cast<size_t>( Tag.WorkersCount ) + 1 );
         Temp.emplace_back( nullptr ); //index zero is not valid!
 
-        Worker* MasterWorker{ nullptr };
+        Worker* NewMasterWorker{ nullptr };
 
         for( uint16_t i = 0; i < Tag.WorkersCount; ++i )
         {
@@ -132,7 +132,7 @@ namespace SKL
             const bool bIsSelectedAsMasterWorker{ true == bIncludeMaster && i == Tag.WorkersCount - 1 };
             if( true == bIsSelectedAsMasterWorker )
             {
-                MasterWorker = NewWorker.get();
+                NewMasterWorker = NewWorker.get();
             }
             
             // init as slave worker
@@ -149,10 +149,10 @@ namespace SKL
         // move all workers in the main vector
         Workers = std::move( Temp );
 
-        if( nullptr != MasterWorker )
+        if( nullptr != NewMasterWorker )
         {
             // promote to master worker
-            return HandleMasterWorker( MasterWorker );
+            return HandleMasterWorker( NewMasterWorker );
         }
 
         return RSuccess;
@@ -191,15 +191,15 @@ namespace SKL
 
     void WorkerGroup::ProactiveWorkerRun( Worker& Worker ) noexcept
     {
-        const auto& Tag{ GetTag() };
+        const auto& WorkerGroupTag{ GetTag() };
         const auto bAllGroupsAreActive{ GetServerInstance()->GetFlags().bAllGroupsAreActive };
         if( TRUE == bAllGroupsAreActive )
         {
-            if( false == Tag.bHandlesTasks
-             && false == Tag.bSupportsAOD 
-             && false == Tag.bHandlesTimerTasks 
-             && false == Tag.bSupportsTLSSync 
-             && false == Tag.bCallTickHandler )
+            if( false == WorkerGroupTag.bHandlesTasks
+             && false == WorkerGroupTag.bSupportsAOD 
+             && false == WorkerGroupTag.bHandlesTimerTasks 
+             && false == WorkerGroupTag.bSupportsTLSSync 
+             && false == WorkerGroupTag.bCallTickHandler )
             {
                 ActiveWorkerVariant<false, false, false, false, false, true>::Run( Worker, *this );
             }
@@ -238,11 +238,11 @@ namespace SKL
         }
         else
         {
-            if( false == Tag.bHandlesTasks
-             && false == Tag.bSupportsAOD 
-             && false == Tag.bHandlesTimerTasks 
-             && false == Tag.bSupportsTLSSync 
-             && false == Tag.bCallTickHandler )
+            if( false == WorkerGroupTag.bHandlesTasks
+             && false == WorkerGroupTag.bSupportsAOD 
+             && false == WorkerGroupTag.bHandlesTimerTasks 
+             && false == WorkerGroupTag.bSupportsTLSSync 
+             && false == WorkerGroupTag.bCallTickHandler )
             {
                 ActiveWorkerVariant<false, false, false, false, false, false>::Run( Worker, *this );
             }
@@ -283,8 +283,8 @@ namespace SKL
     
     void WorkerGroup::ReactiveWorkerRun( Worker& Worker ) noexcept
     {
-        const auto& Tag{ GetTag() };
-        if( true == Tag.bSupportsTLSSync )
+        const auto& WorkerGroupTag{ GetTag() };
+        if( true == WorkerGroupTag.bSupportsTLSSync )
         {
             ReactiveWorkerVariant<true>::Run( Worker, *this );
         }
@@ -391,7 +391,7 @@ namespace SKL
         return false;
     }
 
-    bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& Worker ) noexcept
+    bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& /*Worker*/ ) noexcept
     {
         //SKLL_TRACE();
 
@@ -528,7 +528,7 @@ namespace SKL
         return HandleAODDelayedTasks_Local( Worker );
     }
 
-    bool WorkerGroup::HandleTimerTasks_Local( Worker& Worker ) noexcept
+    bool WorkerGroup::HandleTimerTasks_Local( Worker& /*Worker*/ ) noexcept
     {
         auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
         const auto Now{ GetSystemUpTickCount() };

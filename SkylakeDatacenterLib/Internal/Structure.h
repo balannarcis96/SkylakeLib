@@ -146,7 +146,8 @@ namespace SKL::DC
             SKL_FORCEINLINE bool GetBool() const noexcept
             {
                 SKL_ASSERT( nullptr != CachedValueRef );
-                return 0 == wcsicmp( CachedValueRef, L"true" ) || 0 == wcsicmp( CachedValueRef, L"1" );
+                //@ TODO Port to other than WIN32
+                return 0 == _wcsnicmp( CachedValueRef, L"true", 4 ) || 0 == _wcsnicmp( CachedValueRef, L"1", 1 );
             }
             SKL_FORCEINLINE std::wstring GetWString() const noexcept
             {
@@ -326,12 +327,12 @@ namespace SKL::DC
             SKL_FORCEINLINE void SetChildrenCount( uint32_t InCount ) noexcept
             {
                 SKL_ASSERT( true == CachedChildren.empty() );
-                ChildrenCount = InCount;
+                ChildrenCount = static_cast<uint16_t>( InCount );
             }
             SKL_FORCEINLINE void SetAttributesCount( uint32_t InCount ) noexcept
             {
                 SKL_ASSERT( true == CachedAttributes.empty() );
-                AttributesCount = InCount;
+                AttributesCount = static_cast<uint16_t>( InCount );
             }
             SKL_FORCEINLINE void SetNameIndex( TNameIndex InIndex ) noexcept { NameIndex = InIndex; }
             SKL_FORCEINLINE void SetValueIndices( TBlockIndices InValueIndices ) noexcept { ValueIndices = InValueIndices; }
@@ -651,6 +652,12 @@ namespace SKL::DC
 
             bool AllocateBlock( size_t BlockSize = CStringsBlockSize ) noexcept
             {
+                if( BlockSize > std::numeric_limits<TBlockIndex>::max() )
+                {
+                    SKLL_TRACE_MSG_FMT( "Cannot allocate block bigger than max:%llu! wanted:%llu", static_cast<size_t>( std::numeric_limits<TBlockIndex>::max() ), BlockSize );
+                    return false;
+                }
+
                 Block.reset( new wchar_t[ BlockSize ] );
                 if( nullptr == Block )
                 {
@@ -660,7 +667,7 @@ namespace SKL::DC
 
                 memset( Block.get(), 0, sizeof( wchar_t ) * BlockSize );
 
-                BlockTotalSize = static_cast<uint32_t>( BlockSize );
+                BlockTotalSize = static_cast<TBlockIndex>( BlockSize );
                 BlockUsedSize  = 0;
 
                 return true;
@@ -687,7 +694,7 @@ namespace SKL::DC
                         , sizeof( wchar_t ) * InStringSizeInWideCharsNoNullTerm
                     );
 
-                    BlockUsedSize += InStringSizeInWideCharsNoNullTerm;
+                    BlockUsedSize += static_cast<TBlockIndex>( InStringSizeInWideCharsNoNullTerm );
                 }
 
                 Block.get()[ BlockUsedSize ] = L'\0';
@@ -739,7 +746,7 @@ namespace SKL::DC
             SKL_FORCEINLINE TStringRef GetString() const noexcept { return CachedStringRef; }
 
         private:
-            TBlockIndices Indices{ 0 ,0 };
+            TBlockIndices Indices{ static_cast<TBlockIndex>( 0 ) ,static_cast<TBlockIndex>( 0 ) };
 
             TStringRef CachedStringRef{ nullptr };
 

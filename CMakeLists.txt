@@ -20,6 +20,7 @@ option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"                  
 option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"               OFF)
 option(SKL_MATH                     "Enable SkylakeLib Math abstractions"       ON)
 option(SKL_MYSQL_COMPRESS_NET       "Enable MYSQL network traffic compression"  ON)
+option(SKL_LINK_TIME_OPTIMIZATION   "Enable Link-time optimization"             ON)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -36,10 +37,10 @@ set(SKL_REAL_TYPE_OPTIONS Single Double)
 set(SKL_REAL_TYPE Double CACHE STRING "Real type used in the math abstractions(float/double)")
 set_property(CACHE SKL_REAL_TYPE PROPERTY STRINGS ${SKL_REAL_TYPE_OPTIONS})
 
-#SKL_USE_SSE
-set(SKL_USE_SSE_OPTIONS SEE2 SSE4 None)
-set(SKL_USE_SSE SSE4 CACHE STRING "What SSE version to use (eg. for math)")
-set_property(CACHE SKL_USE_SSE PROPERTY STRINGS ${SKL_USE_SSE_OPTIONS})
+#SKL_USE_EIS
+set(SKL_USE_EIS_OPTIONS AVX2 AVX_512 None)
+set(SKL_USE_EIS None CACHE STRING "What EIS(Enhanced Instruction Set) to use")
+set_property(CACHE SKL_USE_EIS PROPERTY STRINGS ${SKL_USE_EIS_OPTIONS})
 
 #SKL_LOG_LEVEL
 set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
@@ -47,10 +48,24 @@ set(SKL_LIB_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process
 set_property(CACHE SKL_LIB_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /ZI /MTd /Od")
-    set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2")
+    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /ZI /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8/ /wd4577 /wd4201 /wd4100")
+    set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
+    
+    if(SKL_LINK_TIME_OPTIMIZATION)
+        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /GL")
+        add_link_options("/LTCG")
+    endif()
+    
+    if(SKL_USE_EIS STREQUAL SSE2)
+        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:SSE2")
+    elseif(SKL_USE_EIS STREQUAL AVX2)
+        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:AVX2")
+    endif()
+
     set(CMAKE_CXX_FLAGS_DEBUG "${MSVC_COMPILE_DEBUG_OPTIONS}")
     set(CMAKE_CXX_FLAGS_RELEASE "${MSVC_COMPILE_RELEASE_OPTIONS}")
+else()
+    message(FATAL_ERROR "@TODO compiler flags")
 endif()
 
 ################################################################
@@ -83,6 +98,11 @@ if(SKL_BUILD_TESTS)
     if(SKL_ADD_TEST_LIBS)
         # google test lib
         add_subdirectory("googletest")    
+        
+        set_property(TARGET gtest PROPERTY CXX_STANDARD 20)
+        set_property(TARGET gtest_main PROPERTY CXX_STANDARD 20)
+        set_property(TARGET gmock PROPERTY CXX_STANDARD 20)
+        set_property(TARGET gmock_main PROPERTY CXX_STANDARD 20)
     endif()
     
     # SKL tests 
@@ -109,6 +129,9 @@ if(SKL_REAL_TYPE STREQUAL "Single")
 elseif(SKL_REAL_TYPE STREQUAL "Double")
     target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_REAL_TYPE_DOUBLE)
     target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_USE_LARGE_WORLD_COORDS)
+    
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_REAL_TYPE_DOUBLE)
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_USE_LARGE_WORLD_COORDS)
 else()
     message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
 endif()
@@ -171,10 +194,16 @@ endif()
 if(SKL_DISABLE_EXCEPTIONS)
     # Disable std exceptions
     target_compile_definitions(SkylakeLibStandalone PUBLIC _HAS_EXCEPTIONS=0)
-    
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})   # Disable RTTI
-        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS})   # Disable RTTI
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+    
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})   # Disable RTTI
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     endif()
 endif()
 
@@ -191,8 +220,8 @@ elseif(SKL_LIB_LOG_LEVEL STREQUAL INF)
     target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=4)
 endif()
 
-if(SKL_USE_SSE STREQUAL SSE2)
-    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_SSE=2)
-elseif(SKL_USE_SSE STREQUAL SSE4)
-    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_SSE=4)
+if(SKL_USE_EIS STREQUAL AVX2)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_AVX2)
+elseif(SKL_USE_EIS STREQUAL AVX_512)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_AVX_512)
 endif()

@@ -95,11 +95,11 @@ namespace AODTests
             if( InGroup.GetTag().Id == 1 )
             {
                 SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
-                InGroup.Defer( [ this ]( SKL::ITask* Self ) noexcept -> void 
+                InGroup.Defer( [ this ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                 {
                     for( uint64_t i = 0; i < IterCount; ++i )
                     {
-                        SKL::DeferTask( [ this ]( SKL::ITask* Self ) noexcept -> void 
+                        SKL::DeferTask( [ this ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                         {
                             Counter.decrement();
                         } );
@@ -142,7 +142,7 @@ namespace AODTests
             for( uint64_t i = 0; i < IterCount; ++i )
             {
                 int32_t ExecCounter = 0;
-                InGroup.Defer( [ this, ExecCounter ]( SKL::ITask* Self ) mutable noexcept -> void 
+                InGroup.Defer( [ this, ExecCounter ]( SKL::ITask* /*Self*/ ) mutable noexcept -> void 
                 {
                     SKL_ASSERT_ALLWAYS( 0 == ExecCounter++ );
 
@@ -525,7 +525,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
-        }, [ Ptr = obj.get() ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
+        }, [ Ptr = obj.get() ]( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
         {
             for( uint64_t i = 0; i < IterCount; ++i )
             {
@@ -545,8 +545,8 @@ namespace AODTests
         ASSERT_TRUE( 16 * IterCount == obj->a );
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
-        const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
+        //const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
+        //const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 16 * IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 16 * IterCount == TotalDeallocationsAfter );
     }
@@ -689,7 +689,7 @@ namespace AODTests
             {
                 bHasCreatedTask = true;
 
-                SKL::DeferTask( [ &InGroup ]( SKL::ITask* Self ) noexcept -> void 
+                SKL::DeferTask( [ &InGroup ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                 {
                     SKLL_INF( "FROM TASK" );
                     InGroup.GetServerInstance()->SignalToStop( true );
@@ -740,7 +740,7 @@ namespace AODTests
 
                 for( uint64_t i = 0; i < IterCount; ++i )
                 {
-                    SKL::DeferTask( [ &Counter ]( SKL::ITask* Self ) noexcept -> void 
+                    SKL::DeferTask( [ &Counter ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                     {
                         Counter.decrement();
                     } );
@@ -782,9 +782,8 @@ namespace AODTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        bool bHasCreatedTask{ false };
 
-        auto OnTick = []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
+        auto OnTick = []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
         {
             if( 0 == Counter.load_relaxed() )
             {
@@ -806,7 +805,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
@@ -851,7 +850,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -881,7 +880,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
@@ -896,7 +895,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
@@ -925,7 +924,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
@@ -940,7 +939,7 @@ namespace AODTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();

@@ -129,7 +129,7 @@ namespace SKL
             SKL_ASSERT( true == Tag.bSupportsTLSSync );
             SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
             
-            auto* Task{ MakeTLSSyncTaskRaw( GetNumberOfRunningWorkers(), std::forward<TFunctor>( InFunctor ) ) };
+            auto* Task{ MakeTLSSyncTaskRaw( static_cast<uint16_t>( GetNumberOfRunningWorkers() ), std::forward<TFunctor>( InFunctor ) ) };
             SKL_ASSERT( nullptr != Task );
             
             MyTLSSyncSystem->PushTask( Task );

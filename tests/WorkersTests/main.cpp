@@ -6,7 +6,7 @@
 namespace WorkersTests
 {
     struct MyType { 
-        void operator()( SKL::Worker& Worker, SKL::WorkerGroup& Group ) noexcept {};
+        void operator()( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept {};
         
         int a;
     };
@@ -362,7 +362,7 @@ namespace WorkersTests
         {
             SKLL_TRACE();
             
-            EXPECT_EQ( 41 , ( SequenceCount.increment() + 1 ) );
+            EXPECT_EQ( 41U , ( SequenceCount.increment() + 1U ) );
             
             if( false == TestApplication::OnAllWorkersStopped( Group ) )
             {
@@ -740,12 +740,12 @@ namespace WorkersTests
 
             using TT = ASD::CopyFunctorWrapper<16, void(*)(void)> ;        
 
-            Group1.SetWorkerStartHandler( []( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> bool {
+            Group1.SetWorkerStartHandler( []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> bool {
                 SKLL_INF( "Worker Group1 WORKER STARTED!" );
                 return true;
             } ); 
 
-            Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
+            Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
             {
                 SKLL_INF( "Worker Group1 Tick()" );
 
@@ -754,7 +754,7 @@ namespace WorkersTests
                     return ;
                 }
 
-                Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* Self ) noexcept {
+                Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* /*Self*/ ) noexcept {
                     SKLL_INF( "From TASK" );
                     Manager.SignalToStop();
                 } );
@@ -780,7 +780,7 @@ namespace WorkersTests
                     .Name             = L"BACK_END_GROUP"
                 }
             };
-            Group2.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& Group ) mutable noexcept -> void
+            Group2.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
             {
                 SKLL_INF( "Worker Group2 Tick()" );
             } );
@@ -822,7 +822,7 @@ namespace WorkersTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( false ) );
 
         StartLath.arrive_and_wait();
@@ -854,7 +854,7 @@ namespace WorkersTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( false ) );
 
         StartLath.arrive_and_wait();
@@ -886,7 +886,7 @@ namespace WorkersTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"REACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
             .TickRate                        = 24, 
             .SyncTLSTickRate                 = 0,
@@ -901,7 +901,7 @@ namespace WorkersTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"ACTIVE"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) noexcept -> void {} ) );
+        }, []( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( false ) );
 
         StartLath.arrive_and_wait();

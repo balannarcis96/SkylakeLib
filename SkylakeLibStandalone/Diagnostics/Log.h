@@ -93,7 +93,7 @@ namespace SKL
     #define SKLL_ERR_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(), "\u001b[31m[SkylakeLib::ERR] " InFormatString "\n\u001b[37m", __VA_ARGS__ )
     #define SKLL_VER_FMT( InFormatString, ... )
     #define SKLL_TRACE_MSG_FMT( InFmtStr, ... )
-    
+
 #elif SKLL_LOG_LEVEL == SKLL_LOG_LEVEL_MUTE
 
     #define SKLL_INF( InString ) 

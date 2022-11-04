@@ -25,7 +25,7 @@ namespace SKL
         SKL_ASSERT_ALLWAYS_MSG( SKL_CACHE_LINE_SIZE == L1CacheLineSize, "Unsupported l1 cache line size!" );
     }
 
-    RStatus Skylake_InitializeLibrary( int32_t Argc, char** Argv, FILE* InLogOutput ) noexcept 
+    RStatus Skylake_InitializeLibrary( int32_t /*Argc*/, char** /*Argv*/, FILE* InLogOutput ) noexcept 
     {
         if( TRUE == GIsInit.load_relaxed() )
         {

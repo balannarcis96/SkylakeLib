@@ -257,7 +257,7 @@ namespace SKL
         // Allocate new tcp socket
         TSocket AcceptSocket { AllocateNewIPv4TCPSocket() };
 
-        AcceptTask->SetCompletionHandler( [ this, AcceptSocket ]( IAsyncIOTask& Self, uint32_t NumberOfBytesTransferred ) noexcept -> void
+        AcceptTask->SetCompletionHandler( [ this, AcceptSocket ]( IAsyncIOTask& Self, uint32_t /*NumberOfBytesTransferred*/ ) noexcept -> void
         {
             const TSocket ListenSocket{ GetSocket() };
 

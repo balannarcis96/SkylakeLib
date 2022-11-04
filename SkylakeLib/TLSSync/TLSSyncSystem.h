@@ -19,7 +19,7 @@ namespace SKL
         TLSSyncSystem( TLSSyncSystem && )= delete;
         TLSSyncSystem &operator=( TLSSyncSystem && ) = delete;
 
-        void TLSInitialize( Worker& InWorker, WorkerGroup& InGroup ) noexcept
+        void TLSInitialize( Worker& /*InWorker*/, WorkerGroup& /*InGroup*/ ) noexcept
         {
             Queue.TLSInitialize();
         }

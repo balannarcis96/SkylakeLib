@@ -13,85 +13,74 @@ namespace SKL
     {
         int16_t Angle;
 
-        SAngle( )noexcept : Angle { 0 } { }
-        SAngle( int16_t _angle ) noexcept :Angle( _angle ) { }
-        explicit SAngle( float _degAngle ) noexcept :Angle( 0 )
+        SAngle() noexcept : Angle { 0 } { }
+        SAngle( int16_t Angle ) noexcept :Angle( Angle ) { }
+
+        SKL_FORCEINLINE SAngle operator+( const SAngle& Other ) const noexcept
         {
-            FromDeg( _degAngle );
+            return SAngle( Angle + Other.Angle );
         }
-        explicit SAngle( float _radAngle, bool explicitDummy ) noexcept :Angle( 0 )
+        SKL_FORCEINLINE SAngle operator-( const SAngle& Other ) const noexcept
         {
-            FromRad( _radAngle );
+            return SAngle( Angle - Other.Angle );
+        }
+        SKL_FORCEINLINE SAngle operator*( const SAngle& Other ) const noexcept
+        {
+            return SAngle( Angle * Other.Angle );
+        }
+        SKL_FORCEINLINE SAngle operator/( const SAngle& Other ) const noexcept
+        {
+            return SAngle( Angle / Other.Angle );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool operator<( const SAngle& Other ) const noexcept
+        {
+            return ( Angle < Other.Angle );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool operator<=( const SAngle& Other ) const noexcept
+        {
+            return ( Angle <= Other.Angle );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const SAngle& Other ) const noexcept
+        {
+            return ( Angle > Other.Angle );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>=( const SAngle& Other ) const noexcept
+        {
+            return ( Angle >= Other.Angle );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool operator==( const SAngle& Other ) const noexcept
+        {
+            return ( Angle == Other.Angle );
+        }
+        
+        SKL_FORCEINLINE void SetValue( const int16_t Value ) noexcept
+        {
+            Angle = Value;
+        }
+        SKL_FORCEINLINE void SetFromRad( float Value ) noexcept
+        {
+            Angle = static_cast<int16_t>( Value * RadToUnit_f );
+        }
+        SKL_FORCEINLINE void SetFromDeg( float Value ) noexcept
+        {
+            Angle = static_cast<int16_t>( Value * DegToUnit_f );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD float ToRad( ) const noexcept
+        {
+            return static_cast<float>( Angle ) * UnitToRad_f;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD float ToDeg( ) const noexcept
+        {
+            return static_cast<float>( Angle ) * UnitToDeg_f;
         }
 
-        SKL_FORCEINLINE void SetValue( const uint16_t val ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static SAngle NewFromRad( float Value ) noexcept
         {
-            Angle = val;
+            return SAngle( static_cast<int16_t>( Value * RadToUnit_f ) );
         }
-
-        SKL_FORCEINLINE int16_t Add( const SAngle& other ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static SAngle NewFromDeg( float Value ) noexcept
         {
-            return ( Angle += other.Angle );
-        }
-        SKL_FORCEINLINE int16_t Sub( const SAngle& other ) noexcept
-        {
-            return ( Angle -= other.Angle );
-        }
-        SKL_FORCEINLINE SAngle operator+( const SAngle& other ) const noexcept
-        {
-            return int16_t( Angle + other.Angle );
-        }
-        SKL_FORCEINLINE SAngle operator-( const SAngle& other ) const noexcept
-        {
-            return int16_t( Angle - other.Angle );
-        }
-        SKL_FORCEINLINE SAngle operator*( const SAngle& other ) const noexcept
-        {
-            return int16_t( Angle * other.Angle );
-        }
-        SKL_FORCEINLINE SAngle operator/( const SAngle& other ) const noexcept
-        {
-            return int16_t( Angle / other.Angle );
-        }
-        SKL_FORCEINLINE double operator*( const double scale ) const noexcept
-        {
-            return Angle * scale;
-        }
-        SKL_FORCEINLINE bool operator<( const SAngle& other ) const noexcept
-        {
-            return ( Angle < other.Angle );
-        }
-        SKL_FORCEINLINE bool operator<=( const SAngle& other ) const noexcept
-        {
-            return ( Angle <= other.Angle );
-        }
-        SKL_FORCEINLINE bool operator>( const SAngle& other ) const noexcept
-        {
-            return ( Angle > other.Angle );
-        }
-        SKL_FORCEINLINE bool operator>=( const SAngle& other ) const noexcept
-        {
-            return ( Angle >= other.Angle );
-        }
-        SKL_FORCEINLINE bool operator==( const SAngle& other ) const noexcept
-        {
-            return ( Angle == other.Angle );
-        }
-        SKL_FORCEINLINE int16_t FromRad( float rad ) noexcept
-        {
-            return ( Angle = static_cast< int16_t >( rad * RadToUnit ) );
-        }
-        SKL_FORCEINLINE int16_t FromDeg( float deg ) noexcept
-        {
-            return ( Angle = static_cast< int16_t >( deg * DegToUnit ) );
-        }
-        SKL_FORCEINLINE float ToRad( ) const noexcept
-        {
-            return ( float )( Angle * UnitToRad );
-        }
-        SKL_FORCEINLINE float ToDeg( ) const noexcept
-        {
-            return ( float )( Angle * UnitToDeg );
+            return SAngle( static_cast<int16_t>( Value * DegToUnit_f ) );
         }
     };
 }

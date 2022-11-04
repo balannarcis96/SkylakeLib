@@ -190,8 +190,8 @@ namespace TLSSyncTests
 
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
-        const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
+       /* const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
+        const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };*/
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
     }
@@ -221,8 +221,8 @@ namespace TLSSyncTests
 
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
-        const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
+        //const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
+        //const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount == TotalDeallocationsAfter );
     }

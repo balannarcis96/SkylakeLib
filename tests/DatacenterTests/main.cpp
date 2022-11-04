@@ -30,7 +30,7 @@ namespace DatacenterTests
         {
             Datacenter::Attribute Attr;
             Attr.NameIndex = 23;
-            Attr.Value     = { 1 , 2 };
+            Attr.Value     = { static_cast<SKL::DC::TBlockIndex>( 1 ) , static_cast<SKL::DC::TBlockIndex>( 2 ) };
             return Attr;
         }
         void Attribute_APIDummy_Validate( const Datacenter::Attribute& InDummyAttr ) const noexcept
@@ -373,12 +373,12 @@ namespace DatacenterTests
 
         const wchar_t* CleanAndConvertToUtf16ElementName( const std::string_view& InString ) noexcept override
         {
-            auto Utf8Buffer{ GetUtf8Buffer() };
-            SKL_ASSERT( InString.length() < Utf8Buffer.second );
-            InString.copy( Utf8Buffer.first, InString.length() );
-            Utf8Buffer.first[ InString.length() ] = '\0';
+            auto LocalUtf8Buffer{ GetUtf8Buffer() };
+            SKL_ASSERT( InString.length() < LocalUtf8Buffer.second );
+            InString.copy( LocalUtf8Buffer.first, InString.length() );
+            LocalUtf8Buffer.first[ InString.length() ] = '\0';
 
-            char* InStrPtr{ Utf8Buffer.first };
+            char* InStrPtr{ LocalUtf8Buffer.first };
 
             if( true == IsForClientOrServer() )
             {
@@ -395,17 +395,17 @@ namespace DatacenterTests
                 }
             }
 
-            return ConvertUtf8ToUtf16( InStrPtr, Utf8Buffer.second );
+            return ConvertUtf8ToUtf16( InStrPtr, LocalUtf8Buffer.second );
         }
 
         const wchar_t* CleanAndConvertToUtf16AttributeName( const std::string_view& InString ) noexcept override
         {
-            auto Utf8Buffer{ GetUtf8Buffer() };
-            SKL_ASSERT( InString.length() < Utf8Buffer.second );
-            InString.copy( Utf8Buffer.first, InString.length() );
-            Utf8Buffer.first[ InString.length() ] = '\0';
+            auto LocalUtf8Buffer{ GetUtf8Buffer() };
+            SKL_ASSERT( InString.length() < LocalUtf8Buffer.second );
+            InString.copy( LocalUtf8Buffer.first, InString.length() );
+            LocalUtf8Buffer.first[ InString.length() ] = '\0';
 
-            char* InStrPtr{ Utf8Buffer.first };
+            char* InStrPtr{ LocalUtf8Buffer.first };
 
             if( true == IsForClientOrServer() )
             {
@@ -422,7 +422,7 @@ namespace DatacenterTests
                 }
             }
 
-            return ConvertUtf8ToUtf16( InStrPtr, Utf8Buffer.second );
+            return ConvertUtf8ToUtf16( InStrPtr, LocalUtf8Buffer.second );
         }
     };
 

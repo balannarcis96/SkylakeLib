@@ -185,23 +185,23 @@ namespace SKL
         }
     }
 
-    bool ServerInstance::CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept
+    bool ServerInstance::CreateWorkerGroup( const WorkerGroupConfig& InConfig, bool bCreateMaster ) noexcept
     {
-        auto NewGroup { std::make_unique<WorkerGroup>( Config.Tag, this ) };
+        auto NewGroup { std::make_unique<WorkerGroup>( InConfig.Tag, this ) };
 
         // set worker tick handler
-        NewGroup->SetWorkerTickHandler( Config.OnWorkerTick );
+        NewGroup->SetWorkerTickHandler( InConfig.OnWorkerTick );
         
         // set worker start handler
-        NewGroup->SetWorkerStartHandler( Config.OnWorkerStart );
+        NewGroup->SetWorkerStartHandler( InConfig.OnWorkerStart );
         
         // set worker stop handler
-        NewGroup->SetWorkerStopHandler( Config.OnWorkerStop );
+        NewGroup->SetWorkerStopHandler( InConfig.OnWorkerStop );
 
         // add async tcp acceptors
-        for( const auto& Config: Config.TCPAcceptorConfigs )
+        for( const auto& Item: InConfig.TCPAcceptorConfigs )
         {
-            NewGroup->AddNewTCPAcceptor( Config );
+            NewGroup->AddNewTCPAcceptor( Item );
         }
         
         // build the group
@@ -234,7 +234,6 @@ namespace SKL
         // save
         WorkerGroups.emplace_back( NewGroup.release() );
         ( void )TotalWorkerGroups.increment();
-        
 
         return true;
     }

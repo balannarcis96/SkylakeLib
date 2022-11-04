@@ -68,9 +68,9 @@ namespace SKL
         }
 
         //! Construct a new stream interface for this async IO buffer
-        SKL_FORCEINLINE BufferStreamInterface GetStreamInterface() noexcept
+        SKL_FORCEINLINE BinaryStreamInterface GetStreamInterface() noexcept
         {
-            return BufferStreamInterface{ &Stream };
+            return BinaryStreamInterface{ &Stream };
         }
 
         //! Construct a new binary stream interface for this async IO buffer
@@ -80,9 +80,9 @@ namespace SKL
         }
 
         //! Construct stream transaction interface into this buffer at the current position
-        SKL_FORCEINLINE BufferStreamTransaction NewTransaction() noexcept
+        SKL_FORCEINLINE BinaryStreamTransaction NewTransaction() noexcept
         {
-            return BufferStreamTransaction{ &Stream };
+            return BinaryStreamTransaction{ Stream };
         }
 
         //! Has reached buffer end (is end of buffer)

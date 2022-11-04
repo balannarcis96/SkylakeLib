@@ -16,8 +16,8 @@ namespace SKL
         BufferStream( uint32_t InSize, uint32_t InPosition = 0 ) noexcept
             : BinaryStream{ nullptr, InSize, InPosition, true }
         {
-            Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( InSize, SKL_ALIGNMENT ) );
-            SKL_ASSERT( nullptr != Base.Buffer.Buffer ); 
+            Stream.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( InSize, SKL_ALIGNMENT ) );
+            SKL_ASSERT( nullptr != Stream.Buffer.Buffer ); 
         }
         ~BufferStream() noexcept
         {
@@ -29,9 +29,9 @@ namespace SKL
         {
             if( true == OwnsBuffer() )
             {
-                Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.Buffer.Length, SKL_ALIGNMENT ) );
-                SKL_ASSERT( nullptr != Base.Buffer.Buffer );
-                memcpy( Base.Buffer.Buffer, Other.Base.Buffer.Buffer, Base.Buffer.Length );
+                Stream.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Stream.Buffer.Length, SKL_ALIGNMENT ) );
+                SKL_ASSERT( nullptr != Stream.Buffer.Buffer );
+                memcpy( Stream.Buffer.Buffer, Other.Stream.Buffer.Buffer, Stream.Buffer.Length );
             }
         }
         BufferStream& operator=( const BufferStream& Other ) noexcept
@@ -40,13 +40,13 @@ namespace SKL
 
             Clear();
 
-            Base = Other.Base;
+            Stream = Other.Stream;
 
             if( true == OwnsBuffer() )
             {
-                Base.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Base.Buffer.Length, SKL_ALIGNMENT ) );
-                SKL_ASSERT( nullptr != Base.Buffer.Buffer );
-                memcpy( Base.Buffer.Buffer, Other.Base.Buffer.Buffer, Base.Buffer.Length );
+                Stream.Buffer.Buffer = reinterpret_cast<uint8_t*>( SKL_MALLOC_ALIGNED( Stream.Buffer.Length, SKL_ALIGNMENT ) );
+                SKL_ASSERT( nullptr != Stream.Buffer.Buffer );
+                memcpy( Stream.Buffer.Buffer, Other.Stream.Buffer.Buffer, Stream.Buffer.Length );
             }
 
             return *this;
@@ -54,10 +54,10 @@ namespace SKL
         BufferStream( BufferStream&& Other ) noexcept
             : BinaryStream{ Other }
         {
-            Other.Base.Position      = 0;
-            Other.Base.Buffer.Length = 0;
-            Other.Base.Buffer.Buffer = nullptr;
-            Other.Base.bOwnsBuffer   = FALSE;
+            Other.Stream.Position      = 0;
+            Other.Stream.Buffer.Length = 0;
+            Other.Stream.Buffer.Buffer = nullptr;
+            Other.Stream.bOwnsBuffer   = FALSE;
         }
         BufferStream& operator=( BufferStream&& Other ) noexcept
         {
@@ -65,11 +65,11 @@ namespace SKL
 
             Clear();
 
-            Base                     = Other.Base;
-            Other.Base.Position      = 0;
-            Other.Base.Buffer.Length = 0;
-            Other.Base.Buffer.Buffer = nullptr;
-            Other.Base.bOwnsBuffer   = FALSE;
+            Stream                     = Other.Stream;
+            Other.Stream.Position      = 0;
+            Other.Stream.Buffer.Length = 0;
+            Other.Stream.Buffer.Buffer = nullptr;
+            Other.Stream.bOwnsBuffer   = FALSE;
 
             return *this;
         }
@@ -101,15 +101,15 @@ namespace SKL
         //! Clear this buffer stream, deallocates buffer is bOwnsBuffer == true
         void Clear() noexcept
         {
-            if( true == OwnsBuffer() && nullptr != Base.Buffer.Buffer )
+            if( true == OwnsBuffer() && nullptr != Stream.Buffer.Buffer )
             {
-                SKL_FREE_SIZE_ALIGNED( Base.Buffer.Buffer, Base.Buffer.Length, SKL_ALIGNMENT );
+                SKL_FREE_SIZE_ALIGNED( Stream.Buffer.Buffer, Stream.Buffer.Length, SKL_ALIGNMENT );
             }
 
-            Base.Position      = 0;
-            Base.Buffer.Length = 0;
-            Base.Buffer.Buffer = nullptr;
-            Base.bOwnsBuffer   = FALSE;
+            Stream.Position      = 0;
+            Stream.Buffer.Length = 0;
+            Stream.Buffer.Buffer = nullptr;
+            Stream.bOwnsBuffer   = FALSE;
         }
     };
 }

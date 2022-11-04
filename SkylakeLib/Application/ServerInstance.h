@@ -293,7 +293,7 @@ namespace SKL
         virtual void OnServiceStopped( IService* InService, RStatus InStatus ) noexcept;
         virtual void OnAllServiceStopped() noexcept;
 
-        bool CreateWorkerGroup( const WorkerGroupConfig& Config, bool bCreateMaster ) noexcept;
+        bool CreateWorkerGroup( const WorkerGroupConfig& InConfig, bool bCreateMaster ) noexcept;
 
     private:
         std::vector<WorkerGroup*>                   WorkerGroups                   {};          //!< List of all workers groups

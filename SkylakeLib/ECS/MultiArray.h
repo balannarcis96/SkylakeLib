@@ -86,15 +86,15 @@ namespace SKL
         template<typename TType, typename ...TTypes>
         bool IsValidImpl() const noexcept
         {
-            const auto bIsValid{ nullptr != GetArray<TType>() };
+            const auto bLocalIsValid{ nullptr != GetArray<TType>() };
 
             if constexpr( 0 == sizeof...( TTypes ) )
             {
-                return bIsValid;
+                return bLocalIsValid;
             }
             else
             {
-                if( false == bIsValid )
+                if( false == bLocalIsValid )
                 {
                     return false;
                 }
@@ -103,6 +103,7 @@ namespace SKL
             }
         }
     
-        bool bIsValid{ false };
+        bool    bIsValid  { false };
+        uint8_t Padding[7]{ 0 };
     };
 }

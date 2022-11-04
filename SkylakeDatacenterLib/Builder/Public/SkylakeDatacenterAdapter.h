@@ -93,6 +93,9 @@ namespace SKL::DC
 
     struct DatacenterAdapter
     {
+        DatacenterAdapter() = default;
+        virtual ~DatacenterAdapter() = default;
+
         virtual bool IsLanguageAttributeByName( const std::string_view& InString ) const noexcept;
         virtual const wchar_t* GetRootNodeName() const noexcept { return L"__root__"; }
 

@@ -131,9 +131,9 @@ namespace SKL
                 return true;
             }
 
-            SKL_FORCEINLINE void SetWillCaptureCallingThread( bool bWillCaptureCallingThread ) noexcept 
+            SKL_FORCEINLINE void SetWillCaptureCallingThread( bool InbWillCaptureCallingThread ) noexcept 
             {
-                this->bWillCaptureCallingThread = bWillCaptureCallingThread;
+                bWillCaptureCallingThread = InbWillCaptureCallingThread;
             }
 
         private:

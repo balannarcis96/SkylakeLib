@@ -72,7 +72,7 @@ namespace SKL::DC
 
             // insert name string
             TNameIndex NameIndex{ CInvalidStringIndex };
-            if( false == this->NamesMap.InsertString( RawAttribute.GetName(),RawAttribute.GetNameSize(), NameIndex ) )
+            if( false == this->NamesMap.InsertString( RawAttribute.GetName(), RawAttribute.GetNameSize(), NameIndex ) )
             {
                 SKLL_TRACE_MSG_FMT( "Failed to insert attribute name into names map! str[%ws]", RawAttribute.GetName() );
                 return false;
@@ -81,7 +81,7 @@ namespace SKL::DC
 
             // insert value string
             TBlockIndices ValueIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
-            if( false == this->NamesMap.InsertString( RawAttribute.GetValue(),RawAttribute.GetValueSize(), ValueIndices ) )
+            if( false == this->NamesMap.InsertString( RawAttribute.GetValue(), RawAttribute.GetValueSize(), ValueIndices ) )
             {
                 SKLL_TRACE_MSG_FMT( "Failed to insert attribute value into values map! %ws=\"%ws\"", RawAttribute.GetName(), RawAttribute.GetValue() );
                 return false;
@@ -231,13 +231,13 @@ namespace SKL::DC
                 auto&                    RawAttribute{ InRawElement->Attributes[i] };
                 MyDatacenter::Attribute* DCAttribute { DC.GetAttribute( { AttributesIndices.first, static_cast<TBlockIndex>( i + AttributesIndices.second ) } ) };
 
-                TNameIndex NameIndex{ CInvalidStringIndex };
-                if( false == DC.InsertName( RawAttribute.GetName(), RawAttribute.GetNameSize(), NameIndex ) )
+                TNameIndex NewNameIndex{ CInvalidStringIndex };
+                if( false == DC.InsertName( RawAttribute.GetName(), RawAttribute.GetNameSize(), NewNameIndex ) )
                 {
                     SKLL_TRACE_MSG_FMT( "Failed to insert attribute name into the names map. <%ws %ws=\"%ws\"></>", InRawElement->GetName(), RawAttribute.GetName(), RawAttribute.GetValue() );
                     return false;
                 }
-                DCAttribute->SetNameIndex( NameIndex );
+                DCAttribute->SetNameIndex( NewNameIndex );
 
                 TBlockIndices ValueIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
                 if( false == DC.InsertValue( RawAttribute.GetValue(), RawAttribute.GetValueSize(), ValueIndices ) )
@@ -247,7 +247,7 @@ namespace SKL::DC
                 }
                 DCAttribute->SetValueIndices( ValueIndices );
 
-                RawAttribute.CachedNameIndex    = NameIndex;
+                RawAttribute.CachedNameIndex    = NewNameIndex;
                 RawAttribute.CachedValueIndices = ValueIndices;
                 RawAttribute.CachedMyLocation   = DCAttribute->GetEditData().CachedLocation;
             }

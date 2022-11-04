@@ -112,6 +112,7 @@ namespace SKL::DB
     private:
         bool                                bIsOpen              { false };
         bool                                bIsTransactionStarted{ false };
+        uint8_t                             Padding[6];
         MYSQL_Opaque                        Mysql                {};
         DBConnectionSettings                Settings             {};
 

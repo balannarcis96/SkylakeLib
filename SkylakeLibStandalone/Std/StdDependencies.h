@@ -36,6 +36,7 @@
 #include <stack>
 #include <thread>
 #include <limits>
+#include <filesystem>
 
 using TString = std::wstring;
 

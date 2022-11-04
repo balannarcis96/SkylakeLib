@@ -84,3 +84,9 @@ namespace SKL
 {
     constexpr uint16_t CPlatformCacheLineSize = static_cast<uint16_t>( SKL_CACHE_LINE_SIZE );
 }
+
+#if SKL_USE_LARGE_WORLD_COORDS
+    #define SKL_REAL_VALUE( x ) ( x )
+#else
+    #define SKL_REAL_VALUE( x ) ( x##f )
+#endif

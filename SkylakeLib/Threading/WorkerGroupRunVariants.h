@@ -130,7 +130,6 @@ namespace SKL
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { Tag.SyncTLSTickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
-            const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
             auto*      MyTLSSyncSystem     { InGroup.MyTLSSyncSystem.get() };
             
             if constexpr( true == bSupportsTLSSync )
@@ -183,21 +182,21 @@ namespace SKL
     using ReactiveWorkerVariant = WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false>;
 
     #define SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal )                   \
-             else if( bHandlesTasksVal == Tag.bHandlesTasks                                                                                                           \
-             && bSupportsAODVal == Tag.bSupportsAOD                                                                                                                   \
-             && bHandlesTimerTasksVal == Tag.bHandlesTimerTasks                                                                                                       \
-             && bSupportsTLSSyncVal == Tag.bSupportsTLSSync                                                                                                           \
-             && bCallTickHandlerVal == Tag.bCallTickHandler )                                                                                                         \
+             else if( bHandlesTasksVal == WorkerGroupTag.bHandlesTasks                                                                                                     \
+             && bSupportsAODVal == WorkerGroupTag.bSupportsAOD                                                                                                             \
+             && bHandlesTimerTasksVal == WorkerGroupTag.bHandlesTimerTasks                                                                                                 \
+             && bSupportsTLSSyncVal == WorkerGroupTag.bSupportsTLSSync                                                                                                     \
+             && bCallTickHandlerVal == WorkerGroupTag.bCallTickHandler )                                                                                                   \
             {                                                                                                                                                         \
                 ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, true>::Run( Worker, *this );  \
             }
 
  #define SKL_WORKER_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal )                          \
-             else if( bHandlesTasksVal == Tag.bHandlesTasks                                                                                                           \
-             && bSupportsAODVal == Tag.bSupportsAOD                                                                                                                   \
-             && bHandlesTimerTasksVal == Tag.bHandlesTimerTasks                                                                                                       \
-             && bSupportsTLSSyncVal == Tag.bSupportsTLSSync                                                                                                           \
-             && bCallTickHandlerVal == Tag.bCallTickHandler )                                                                                                         \
+             else if( bHandlesTasksVal == WorkerGroupTag.bHandlesTasks                                                                                                     \
+             && bSupportsAODVal == WorkerGroupTag.bSupportsAOD                                                                                                             \
+             && bHandlesTimerTasksVal == WorkerGroupTag.bHandlesTimerTasks                                                                                                 \
+             && bSupportsTLSSyncVal == WorkerGroupTag.bSupportsTLSSync                                                                                                     \
+             && bCallTickHandlerVal == WorkerGroupTag.bCallTickHandler )                                                                                                   \
             {                                                                                                                                                         \
                 ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, false>::Run( Worker, *this ); \
             }

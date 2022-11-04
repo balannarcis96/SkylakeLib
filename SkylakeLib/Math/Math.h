@@ -7,32 +7,58 @@
 //! 
 #pragma once
 
-#if SKL_USE_LARGE_WORLD_COORDS
-    #define SKL_REAL_VALUE( x ) ( x )
-#else
-    #define SKL_REAL_VALUE( x ) ( x##f )
-#endif
-
-#if SKL_USE_LARGE_WORLD_COORDS
-    using skReal = double;
-#else
-    using skReal = float;
-#endif
-
 #undef PI
 #define PI SKL_REAL_VALUE( 3.1415926535897932 )
+#define PI_f 3.1415926535897932f
+#define PI_d 3.1415926535897932
+
 #define SMALL_NUMBER SKL_REAL_VALUE( 1.e-8 )
+#define SMALL_NUMBER_f 1.e-8f
+#define SMALL_NUMBER_d 1.e-8
+
 #define KINDA_SMALL_NUMBER SKL_REAL_VALUE( 1.e-4 )
+#define KINDA_SMALL_NUMBER_f 1.e-4f
+#define KINDA_SMALL_NUMBER_d 1.e-4
+
 #define BIG_NUMBER SKL_REAL_VALUE( 3.4e+38 )
+#define BIG_NUMBER_f 3.4e+38f
+#define BIG_NUMBER_d 3.4e+38
+
 #define EULERS_NUMBER SKL_REAL_VALUE( 2.71828182845904523536 )
+#define EULERS_NUMBER_f 2.71828182845904523536f
+#define EULERS_NUMBER_d 2.71828182845904523536
+
 #define RadToUnit ( SKL_REAL_VALUE( 32767.0 ) / PI )
+#define RadToUnit_f ( 32767.0f / PI_f )
+#define RadToUnit_d ( 32767.0  / PI_d )
+
 #define UnitToRad ( PI / SKL_REAL_VALUE( 32767.0 ) )
+#define UnitToRad_f ( PI_f / 32767.0f )
+#define UnitToRad_d ( PI_d / 32767.0  )
+
 #define DegToUnit ( SKL_REAL_VALUE( 32767.0 ) / SKL_REAL_VALUE( 180.0 ) )
+#define DegToUnit_f ( 32767.0f / 180.0f )
+#define DegToUnit_d ( 32767.0  / 180.0  )
+
 #define UnitToDeg ( SKL_REAL_VALUE( 180.0 ) / SKL_REAL_VALUE( 32767.0 ) )
+#define UnitToDeg_f ( 180.0f / 32767.0f )
+#define UnitToDeg_d ( 180.0  / 32767.0  )
+
 #define RadToDeg ( SKL_REAL_VALUE( 180 ) / PI )
+#define RadToDeg_f ( 180f / PI_f )
+#define RadToDeg_d ( 180  / PI_d )
+
 #define DegToRad ( PI / SKL_REAL_VALUE( 180 ) )
+#define DegToRad_f ( PI_f / 180f )
+#define DegToRad_d ( PI_d / 180  )
+
 #define SK_REAL_ZERO SKL_REAL_VALUE( 0.0 )
+#define SK_REAL_ZERO_f 0.0f
+#define SK_REAL_ZERO_d 0.0
+
 #define SK_REAL_ONE SKL_REAL_VALUE( 1.0 )
+#define SK_REAL_ONE_f 1.0f
+#define SK_REAL_ONE_d 1.0
 
 #ifndef INDEX_NONE
     #define INDEX_NONE ( -1 )
@@ -40,9 +66,16 @@
 
 // Aux constants.
 #define INV_PI ( SKL_REAL_VALUE( 0.31830988618 ) )
+#define INV_PI_f ( 0.31830988618f )
+#define INV_PI_d ( 0.31830988618  )
+
 #define HALF_PI ( SKL_REAL_VALUE( 1.57079632679 ) )
+#define HALF_PI_f ( 1.57079632679f )
+#define HALF_PI_d ( 1.57079632679  )
 
 #define DELTA ( SKL_REAL_VALUE( 0.00001 ) )
+#define DELTA_f ( 0.00001f )
+#define DELTA_d ( 0.00001  )
 
 #define THRESH_POINT_ON_PLANE ( SKL_REAL_VALUE( 0.10 ) )        /* Thickness of plane for front/back/inside test */
 #define THRESH_POINT_ON_SIDE ( SKL_REAL_VALUE( 0.20 ) )         /* Thickness of polygon side's side-plane for point-inside/outside/on side test */

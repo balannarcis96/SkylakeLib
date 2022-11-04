@@ -1,7 +1,7 @@
 //!
 //! \file AODService.h
 //! 
-//! \brief AOD intefaced service abstraction
+//! \brief AOD interfaced service abstraction
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -29,7 +29,7 @@ namespace SKL
         }
 
     protected:
-        alignas(SKL_CACHE_LINE_SIZE) AOD::StaticObject AODObjectInterface{};
+        AOD::StaticObject AODObjectInterface{};
 
         friend ServerInstance;
     };

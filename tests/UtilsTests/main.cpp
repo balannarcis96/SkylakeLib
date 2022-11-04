@@ -205,6 +205,19 @@ namespace UtilsTests
         ASSERT_TRUE( false == Stream->IsValid() );
 
     }
+    
+    TEST( UtilsTests, STR_CMP_API )
+    {
+        ASSERT_TRUE( true == SKL::StringEqual( "", "" ) );
+        ASSERT_TRUE( true == SKL::StringEqual( "1", "1" ) );
+        ASSERT_TRUE( true == SKL::StringEqual( "asdasd", "asdasd" ) );
+        ASSERT_TRUE( false == SKL::StringEqual( "asdasd", "asdAsd" ) );
+
+        ASSERT_TRUE( true == SKL::StringEqual( L"", L"" ) );
+        ASSERT_TRUE( true == SKL::StringEqual( L"1", L"1" ) );
+        ASSERT_TRUE( true == SKL::StringEqual( L"asdasd", L"asdasd" ) );
+        ASSERT_TRUE( false == SKL::StringEqual( L"asdasd", L"asdAsd" ) );
+    }
 }
 
 int main( int argc, char** argv )

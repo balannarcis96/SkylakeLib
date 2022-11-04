@@ -1,7 +1,7 @@
 //!
 //! \file BinaryStream.h
 //! 
-//! \brief Binary stream maipulation abstractions
+//! \brief Binary stream manipulation abstractions
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -13,11 +13,11 @@ namespace SKL
     {
         IBuffer() noexcept = default;
         IBuffer( uint32_t BufferSize, uint8_t* Buffer ) noexcept
-            : Length{ BufferSize }, Buffer{ Buffer } {}
+            : Length{ BufferSize }, Padding{ 0 }, Buffer{ Buffer } {}
         ~IBuffer() noexcept = default;
 
         uint32_t Length { 0 };
-        //uint32_t Padding;
+        uint32_t Padding;
         uint8_t* Buffer { nullptr };
     };
 
@@ -29,6 +29,9 @@ namespace SKL
         ~StreamBase() noexcept = default;
 
         SKL_FORCEINLINE uint32_t GetPosition() const noexcept { return Position; }
+        SKL_FORCEINLINE uint32_t GetBufferLength() const noexcept { return Buffer.Length; }
+        SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return Buffer.Buffer; }
+        SKL_FORCEINLINE bool OwnsBuffer() const noexcept { return 0 != bOwnsBuffer; }
 
         uint32_t Position   { 0 };
         uint32_t bOwnsBuffer{ FALSE };
@@ -36,7 +39,7 @@ namespace SKL
     };
 
     template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct alignas( SKL_ALIGNMENT ) IStreamReader
+    struct IStreamReader
     {
         //! Get the target data this interface operates on
         SKL_FORCEINLINE StreamBase& GetStream() noexcept
@@ -269,8 +272,11 @@ namespace SKL
         }
     };
 
+    using IStreamObjectReader    = IStreamReader<true>;
+    using IStreamObjectPtrReader = IStreamReader<false>;
+
     template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct alignas( SKL_ALIGNMENT ) IStreamWriter: public IStreamReader<bIsBase_StreamObjectOrPtrToStreamObject>
+    struct IStreamWriter: public IStreamReader<bIsBase_StreamObjectOrPtrToStreamObject>
     {
         //! Can fit InAmount bytes into the stream starting at the current stream position
         SKL_FORCEINLINE bool CanFit( uint32_t InAmount ) const noexcept { return this->GetRemainingSize() >= InAmount; }
@@ -427,9 +433,12 @@ namespace SKL
             return reinterpret_cast<IStreamWriter<true>*>( &InStream );
         }
     };
+    
+    using IStreamObjectWriter    = IStreamWriter<true>;
+    using IStreamObjectPtrWriter = IStreamWriter<false>;
 
     template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct alignas( SKL_ALIGNMENT ) IBinaryStream: public IStreamWriter<bIsBase_StreamObjectOrPtrToStreamObject>
+    struct IBinaryStream: public IStreamWriter<bIsBase_StreamObjectOrPtrToStreamObject>
     {
         IBinaryStream() noexcept = default;
         IBinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
@@ -440,32 +449,35 @@ namespace SKL
             return reinterpret_cast<IBinaryStream<true>*>( &InStream );
         }
     };
+    
+    using IBinaryStreamObject    = IBinaryStream<true>;
+    using IBinaryStreamObjectPtr = IBinaryStream<false>;
 
-    struct alignas( SKL_ALIGNMENT ) BinaryStream: public IBinaryStream<true>
+    struct alignas( SKL_ALIGNMENT ) BinaryStream: public IBinaryStreamObject
     {
         BinaryStream() noexcept = default;
         BinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition, bool bOwnsBuffer ) noexcept
-            : Base{ InPosition, InSize, InBuffer, bOwnsBuffer } {}
+            : Stream{ InPosition, InSize, InBuffer, bOwnsBuffer } {}
 
         BinaryStream( const BinaryStream& ) noexcept = default;
         BinaryStream& operator=( const BinaryStream& ) noexcept = default;
 
-        SKL_FORCEINLINE StreamBase& GetStreamBase() noexcept { return Base; }
-        SKL_FORCEINLINE const StreamBase& GetStreamBase() const noexcept { return Base; }
+        SKL_FORCEINLINE StreamBase& GetStreamBase() noexcept { return Stream; }
+        SKL_FORCEINLINE const StreamBase& GetStreamBase() const noexcept { return Stream; }
 
     protected:
-        StreamBase Base;
+        StreamBase Stream{};
     };
 
-    struct alignas( SKL_ALIGNMENT ) BufferStreamInterface : public IBinaryStream<false>
+    struct alignas( SKL_ALIGNMENT ) BinaryStreamInterface : public IBinaryStreamObjectPtr
     {
-        BufferStreamInterface( StreamBase* SourceStream ) noexcept
+        BinaryStreamInterface( StreamBase* SourceStream ) noexcept
             : IBinaryStream{}, SourceBase{ SourceStream } {}
-        ~BufferStreamInterface() noexcept = default;
+        ~BinaryStreamInterface() noexcept = default;
 
-        BufferStreamInterface( const BufferStreamInterface& Other ) noexcept
+        BinaryStreamInterface( const BinaryStreamInterface& Other ) noexcept
             : SourceBase{ Other.SourceBase } {}
-        BufferStreamInterface& operator=( const BufferStreamInterface& Other ) noexcept
+        BinaryStreamInterface& operator=( const BinaryStreamInterface& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             SourceBase = Other.SourceBase;
@@ -473,35 +485,35 @@ namespace SKL
         }
 
     private:
-        StreamBase* SourceBase;
+        StreamBase* SourceBase{ nullptr };
     };
 
-    struct alignas( SKL_ALIGNMENT ) BufferStreamTransaction : public IBinaryStream<true>
+    struct alignas( SKL_ALIGNMENT ) BinaryStreamTransaction : public IBinaryStreamObject
     {
-        BufferStreamTransaction( StreamBase* SourceStream ) noexcept
-            : IBinaryStream{}, Base{ *SourceStream }, SourceBase{ SourceStream }
+        BinaryStreamTransaction( StreamBase& SourceStream ) noexcept
+            : IBinaryStream{}, TransactionStream{ SourceStream }, TargetStream{ &SourceStream }
         {
-            Base.bOwnsBuffer   = FALSE;
-            Base.Buffer.Length = GetRemainingSize();
-            Base.Buffer.Buffer = GetFront();
-            Base.Position      = 0;
+            TransactionStream.bOwnsBuffer   = FALSE;
+            TransactionStream.Buffer.Length = GetRemainingSize();
+            TransactionStream.Buffer.Buffer = GetFront();
+            TransactionStream.Position      = 0;
         }
-        ~BufferStreamTransaction() noexcept
+        ~BinaryStreamTransaction() noexcept
         {
             Commit();
             Release();
         }
 
-        BufferStreamTransaction( const BufferStreamTransaction& Other ) noexcept
-            : Base{ Other.Base }, SourceBase{ Other.SourceBase }
+        BinaryStreamTransaction( const BinaryStreamTransaction& Other ) noexcept
+            : TransactionStream{ Other.TransactionStream }, TargetStream{ Other.TargetStream }
         {
             SKL_ASSERT( false == Other.OwnsBuffer() );
         }
-        BufferStreamTransaction& operator=( const BufferStreamTransaction& Other ) noexcept
+        BinaryStreamTransaction& operator=( const BinaryStreamTransaction& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
-            Base       = Other.Base;
-            SourceBase = Other.SourceBase;
+            TransactionStream = Other.TransactionStream;
+            TargetStream      = Other.TargetStream;
             SKL_ASSERT( false == Other.OwnsBuffer() );
             return *this;
         }
@@ -509,43 +521,101 @@ namespace SKL
         //!
         //! "Commits" changes to the underlying Stream
         //! 
-        //! \remarks After Commiting, the Buffer(ptr) is pushed forward by the committed amount and the Position is reset to 0 (rebased)
+        //! \remarks After Committing, the Buffer(ptr) is pushed forward by the committed amount and the Position is reset to 0 (rebased)
         //! 
         void CommitAndRebase() noexcept
         {
             // Commit to base 
-            SourceBase->Position += GetPosition();
+            TargetStream->Position += GetPosition();
 
             // Rebase
-            Base.Buffer.Length    = GetRemainingSize();
-            Base.Buffer.Buffer   += GetPosition();
-            Base.Position         = 0;
+            TransactionStream.Buffer.Length  = GetRemainingSize();
+            TransactionStream.Buffer.Buffer += GetPosition();
+            TransactionStream.Position       = 0;
         }
 
         //! "Commits" changes to the underlying Stream
         SKL_FORCEINLINE void Commit() noexcept
         {
             // Commit to base 
-            SourceBase->Position += GetPosition();
+            TargetStream->Position += GetPosition();
         }
 
         //! "Rolls back" changes by resetting the Position to 0
         SKL_FORCEINLINE void Rollback( ) noexcept
         {
-            Base.Position = 0;
+            TransactionStream.Position = 0;
         }
 
         //! Release the underlying stream
         void Release() noexcept
         {
-            Base.Position      = 0;
-            Base.Buffer.Length = 0;
-            Base.Buffer.Buffer = nullptr;
-            SourceBase         = nullptr;
+            TransactionStream.Position      = 0;
+            TransactionStream.Buffer.Length = 0;
+            TransactionStream.Buffer.Buffer = nullptr;
+            TargetStream                    = nullptr;
+        }
+
+        //! Get the transaction stream 
+        SKL_FORCEINLINE StreamBase& GetStream() noexcept 
+        { 
+            return TransactionStream;
+        }
+        
+        //! Get the transaction stream 
+        SKL_FORCEINLINE const StreamBase& GetStream() const noexcept 
+        { 
+            return TransactionStream;
+        }
+
+        //! Get the transaction target stream 
+        SKL_FORCEINLINE StreamBase& GetTargetStream() noexcept 
+        { 
+            SKL_ASSERT( nullptr != TargetStream );
+            return *TargetStream;
+        }
+        
+        //! Get the transaction target stream 
+        SKL_FORCEINLINE const StreamBase& GetTargetStream() const noexcept 
+        { 
+            SKL_ASSERT( nullptr != TargetStream );
+            return *TargetStream;
+        }
+
+        //! Construct a transaction stream for a given stream
+        SKL_FORCEINLINE SKL_NODISCARD static StreamBase CreateTransactionStream( const StreamBase& InTargetStream ) noexcept
+        {
+            SKL_ASSERT( ( static_cast<int64_t>( InTargetStream.Buffer.Length ) - InTargetStream.Position ) > 0 );
+
+            return StreamBase
+            (
+                  0
+                , InTargetStream.Buffer.Length - InTargetStream.Position
+                , InTargetStream.Buffer.Buffer + InTargetStream.Position
+                , false
+            );
+        }
+        
+        //! Commit the transaction 
+        SKL_FORCEINLINE static void CommitTransactionStream( StreamBase& InTransactionStream, StreamBase& InTargetStream  ) noexcept
+        {
+            SKL_ASSERT( ( static_cast<size_t>( InTransactionStream.GetPosition() ) + InTargetStream.GetPosition() ) < std::numeric_limits<uint32_t>::max() );
+            InTargetStream.Position += InTransactionStream.GetPosition();
+        }
+        
+        //! Commit the transaction and rebase
+        SKL_FORCEINLINE static void CommitTransactionStreamAndRebase( StreamBase& InTransactionStream, StreamBase& InTargetStream  ) noexcept
+        {
+            SKL_ASSERT( ( static_cast<size_t>( InTransactionStream.GetPosition() ) + InTargetStream.GetPosition() ) < std::numeric_limits<uint32_t>::max() );
+            InTargetStream.Position += InTransactionStream.GetPosition();
+
+            InTransactionStream.Buffer.Length  = IStreamObjectReader::FromStreamBase( InTransactionStream )->GetRemainingSize();
+            InTransactionStream.Buffer.Buffer += InTransactionStream.GetPosition();
+            InTransactionStream.Position       = 0;
         }
 
     private:
-        StreamBase  Base;
-        StreamBase* SourceBase;
+        StreamBase  TransactionStream;
+        StreamBase* TargetStream;
     };
 }

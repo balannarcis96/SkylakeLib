@@ -67,7 +67,6 @@ namespace SKL
             static constexpr bool                     bHasCustomWriteMethod = TestPacketBuildContextFlags( Traits::Flags, EPacketContextFlags::HasCustomWriteMethod );
         };
 
-
         PacketBuildContext() noexcept = default;
         ~PacketBuildContext() noexcept = default;
 
@@ -87,7 +86,17 @@ namespace SKL
                 if constexpr( true == Traits::bHasCustomWriteMethod )
                 {
                     const auto StartSize{ InStream.GetPosition() };
-                    const auto Result   { GetPacketData().WritePacket( InStream ) };
+                    RStatus    Result;
+
+                    {
+                        // Write through a transaction stream so all offsets are body based not packet based
+                        StreamBase TransactionStream{ BinaryStreamTransaction::CreateTransactionStream( InStream ) };
+                        Result = GetPacketData().WritePacket( TransactionStream );
+
+                        SKL_ASSERT( ( static_cast<uint64_t>( TransactionStream.GetPosition() ) + InStream.GetPosition() ) <= static_cast<uint64_t>( InStream.GetBufferLength() )  )
+
+                        BinaryStreamTransaction::CommitTransactionStream( TransactionStream, InStream );
+                    }
 
                     SKL_ASSERT( InStream.GetPosition() - StartSize <= CPacketMaximumUsableBodySize );
 
@@ -349,5 +358,4 @@ namespace SKL
         ReadStub \
     }; \
     static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
-
 }
