@@ -7,11 +7,4 @@
 //! 
 #pragma once
 
-namespace SKL
-{
-    
-}
-
-#if !defined(SKL_STANDALONE)
-    #include "AsyncIOBuffer.h"
-#endif
+#include "AsyncIOBuffer.h"
