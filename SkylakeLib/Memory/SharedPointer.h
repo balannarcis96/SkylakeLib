@@ -29,11 +29,17 @@ namespace SKL
         {
             SKL_ASSERT( this != &Other );
             
-            // Release the potentialy held ref
+            // Release the potentially held ref
             reset();
     
             // Copy the object pointer and increment ref if possible
-            Pointer = Other.NewRefRaw();
+            Pointer = Other.Pointer;
+
+            // Increment reference
+            if( nullptr != Pointer )
+            { 
+                Static_IncrementReference( Pointer ); 
+            }
 
             return *this;
         }
@@ -41,7 +47,7 @@ namespace SKL
         {
             SKL_ASSERT( this != &Other );
             
-            // Release the potentialy held ref
+            // Release the potentially held ref
             reset();
     
             // Copy the object pointer
@@ -229,6 +235,13 @@ namespace SKL
             }
 
             return Pointer;  
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD TObjectDecay* ReleaseRawRef() noexcept
+        {
+            TObjectDecay* Result{ Pointer };
+            Pointer = nullptr ;
+            return Result;;  
         }
 
     private:

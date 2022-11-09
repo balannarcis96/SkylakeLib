@@ -30,3 +30,5 @@ source_group("/"                      FILES ${_Root_files}       )
 set_property(TARGET SkylakeLibStandalone PROPERTY CXX_STANDARD 17)
 
 target_include_directories(SkylakeLibStandalone PUBLIC "${SKYLAKE_SRC_ROOT}/")
+
+target_precompile_headers(SkylakeLibStandalone PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLibStandalone.h")

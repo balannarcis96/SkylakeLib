@@ -45,6 +45,23 @@ namespace SKL
     {
         return TestPacketBuildContextFlags( Flags, static_cast<TBuildPacketContextFlags>( TestFlag ) );
     }
+    
+    SKL_FORCEINLINE void CommitPacket( StreamBase& InStream ) noexcept
+    {
+        SKL_ASSERT( CPacketHeaderSize <= InStream.GetBufferLength() );
+
+        PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
+        Header.Size = static_cast<TPacketSize>( InStream.GetPosition() );
+    }
+
+    SKL_FORCEINLINE void CommitPacket( StreamBase& InStream, TPacketSize InSize ) noexcept
+    {
+        SKL_ASSERT( CPacketHeaderSize <= InStream.GetBufferLength() );
+        SKL_ASSERT( InSize <= InStream.GetBufferLength() );
+
+        PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
+        Header.Size = static_cast<TPacketSize>( InStream.GetPosition() );
+    }
 
     template<
         typename                 InSuper
@@ -175,20 +192,6 @@ namespace SKL
                 const auto BodySize{ GetSuper().CalculateBodySize() };
                 return BodySize + CPacketHeaderSize;
            }
-        }
-        SKL_FORCEINLINE static void CommitPacket( StreamBase& InStream ) noexcept
-        {
-            PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
-            SKL_ASSERT( Header.Opcode == Traits::Opcode );
-
-            Header.Size = InStream.GetPosition();
-        }
-        SKL_FORCEINLINE static void CommitPacket( StreamBase& InStream, TPacketSize InSize ) noexcept
-        {
-            PacketHeader& Header{ InStream.GetBufferAsTypeRef<PacketHeader>() };
-            SKL_ASSERT( Header.Opcode == Traits::Opcode );
-
-            Header.Size = InSize;
         }
         SKL_FORCEINLINE typename Traits::Super& GetSuper() noexcept
         {

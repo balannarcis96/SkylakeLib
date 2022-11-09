@@ -19,3 +19,5 @@ target_include_directories(SkylakeLibDB PUBLIC "${SKYLAKE_SRC_ROOT}/Public/")
 target_link_libraries(SkylakeLibDB PUBLIC SkylakeLib)
 target_link_libraries(SkylakeLibDB PUBLIC mysql)
 target_link_libraries(SkylakeLibDB PUBLIC "${SKL_MYSQL_STATIC_LIB_DIRECTORY}/$<CONFIG>/mysqlclient.lib")
+
+target_precompile_headers(SkylakeLibDB PUBLIC "${SKYLAKE_SRC_ROOT}/Public/SkylakeLibDB.h")

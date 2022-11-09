@@ -9,3 +9,5 @@ target_include_directories(SkylakeLibHeaderOnly PUBLIC "${CMAKE_CURRENT_SOURCE_D
 #Set C++17
 set_property(TARGET SkylakeLibHeaderOnly PROPERTY CXX_STANDARD 17)
 
+target_precompile_headers(SkylakeLibHeaderOnly PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Static_Dev/SkylakeLibHeaderOnly.h")
+

@@ -34,3 +34,8 @@ source_group("Private" FILES ${_Builder_Private_files})
 set_property(TARGET SkylakeDatacenterBuilder PROPERTY CXX_STANDARD 20)
 target_link_libraries(SkylakeDatacenterBuilder PUBLIC SkylakeDatacenterLib)
 target_link_libraries(SkylakeDatacenterBuilder PUBLIC rapidXML)
+
+target_precompile_headers(SkylakeDatacenterLib PUBLIC "${_src_root_path}/Public/SkylakeDatacenter.h")
+target_precompile_headers(SkylakeDatacenterBuilder PUBLIC "${_src_root_path}/Builder/Public/SkylakeDatacenterAdapter.h")
+target_precompile_headers(SkylakeDatacenterBuilder PUBLIC "${_src_root_path}/Builder/Public/SkylakeDatacenterBuilder.h")
+target_precompile_headers(SkylakeDatacenterBuilder PUBLIC "${_src_root_path}/Builder/Public/SkylakeDatacenterXMLAdapter.h")

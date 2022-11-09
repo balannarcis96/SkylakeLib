@@ -29,7 +29,7 @@ namespace SKL
             auto *NewObject = new TUpper( );
             if( !NewObject )
             {
-                return RStatus::AllocationFailed;
+                return RStatus_AllocationFailed;
             }
             
             if( const auto InitializeResult = NewObject->Initialize( std::forward<TArgs>( Args )... ); InitializeResult != RSuccess )

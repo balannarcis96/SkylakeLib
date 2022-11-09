@@ -22,7 +22,7 @@ namespace SKL
 
     constexpr TPacketOpcode CInvalidOpcode          = 0;
     constexpr TPacketOpcode CRoutedPacketOpcode     = 1; 
-    constexpr auto          CPacketAlignment        = sizeof( PacketHeader );
+    constexpr auto          CPacketAlignment        = SKL_ALIGNMENT;
     constexpr TPacketOpcode CClientOpcodeStartValue = 2;
 
     constexpr TPacketSize   CPacketHeaderSize      = static_cast<TPacketSize>( sizeof( PacketHeader ) );
