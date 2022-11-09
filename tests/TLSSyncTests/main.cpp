@@ -100,7 +100,7 @@ namespace TLSSyncTests
                 return false;
             }
 
-            AddService( new MyService() );
+            AddService( SKL::CreateService<MyService>() );
 
             return true;
         }

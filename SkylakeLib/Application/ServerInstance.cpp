@@ -551,6 +551,12 @@ namespace SKL
             return false;
         }
 
+        if( 0 != ( reinterpret_cast<uint64_t>( InService ) % SKL_CACHE_LINE_SIZE ) )
+        {
+            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) Use CreateService<T>(...) to create the service!", GetName() );
+            return false;
+        }
+
         if( nullptr != GetServiceById( InService->GetUID() ) )
         {
             SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );

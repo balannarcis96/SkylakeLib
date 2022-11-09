@@ -65,3 +65,39 @@ namespace SKL
 #include "AODService.h"
 #include "ActiveService.h"
 #include "WorkerService.h"
+
+namespace SKL
+{
+    template<typename TService, typename ...TArgs>
+    inline TService* CreateService( TArgs... Args ) noexcept
+    {
+        auto* Block{ SKL_MALLOC_ALIGNED( sizeof( TService ), SKL_CACHE_LINE_SIZE ) };
+
+        if( nullptr != Block ) SKL_LIKELY
+        {
+            GConstructNothrow<TService>( Block, std::forward<TArgs>( Args )... );
+        }
+        
+        return reinterpret_cast<TService*>( Block );
+    }
+
+    template<typename TService>
+    SKL_FORCEINLINE void DeleteService( TService* InService ) noexcept
+    {
+        SKL_ASSERT( nullptr != InService && 0 == ( reinterpret_cast<uint64_t>( InService ) % SKL_CACHE_LINE_SIZE ) );
+        SKL_FREE_ALIGNED( InService, SKL_CACHE_LINE_SIZE );
+    }
+
+    template<typename TService>
+    class ServiceDeleter
+    {
+    public:
+        SKL_FORCEINLINE void operator()( TService* InService ) const noexcept
+        {
+            DeleteService( InService );
+        }
+    };
+
+    template<typename TService>
+    using TServicePtr = std::unique_ptr<TService, ServiceDeleter<TService>>;
+}

@@ -50,7 +50,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MySimpleService>() ) );
             return true;
         }
 
@@ -113,7 +113,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MyService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MyService>() ) );
             return true;
         }
 
@@ -176,7 +176,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MyService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MyService>() ) );
             return true;
         }
 
@@ -278,7 +278,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MyService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MyService>() ) );
             return true;
         }
 
@@ -357,7 +357,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MySimpleService>() ) );
             return true;
         }
 
@@ -452,7 +452,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MySimpleService>() ) );
             return true;
         }
 
@@ -552,7 +552,7 @@ namespace ServicesTests
   
         bool OnAddServices() noexcept override
         {
-            SKL_ASSERT_ALLWAYS( true == AddService( new MySimpleService() ) );
+            SKL_ASSERT_ALLWAYS( true == AddService( SKL::CreateService<MySimpleService>() ) );
             return true;
         }
 

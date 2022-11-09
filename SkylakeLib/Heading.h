@@ -89,7 +89,7 @@ namespace SKL
 
             if ( 0 == Id )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %u!", Name, Id );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %hu!", Name, Id );
                 return false;
             }
 

@@ -106,10 +106,10 @@ namespace SKL
         SKL_FORCEINLINE ServerInstanceFlags GetFlags() const noexcept { return ServerBuiltFlags; }
         
         //! Get service API
-        const std::vector<std::unique_ptr<SimpleService>>& GetAllSimpleServices() const noexcept { return SimpleServices; }
-        const std::vector<std::unique_ptr<AODService>>&    GetAllAODServices() const noexcept { return AODServices; }
-        const std::vector<std::unique_ptr<ActiveService>>& GetAllActiveServices() const noexcept { return ActiveServices; }
-        const std::vector<std::unique_ptr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
+        const std::vector<TServicePtr<SimpleService>>& GetAllSimpleServices() const noexcept { return SimpleServices; }
+        const std::vector<TServicePtr<AODService>>&    GetAllAODServices() const noexcept { return AODServices; }
+        const std::vector<TServicePtr<ActiveService>>& GetAllActiveServices() const noexcept { return ActiveServices; }
+        const std::vector<TServicePtr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
         const std::vector<IService*>&                      GetAllServices() const noexcept { return AllServices; }
 
         //! Get a service by UID. O(n)
@@ -347,10 +347,10 @@ namespace SKL
         std::relaxed_value<uint32_t>                bIsRunning                     { FALSE };   //!< Is the server running
         std::relaxed_value<uint32_t>                TotalNumberOfRunningWorkers    { 0 };       //!< Total number of running workers
         ServerInstanceConfig                        Config                         {};          //!< Config
-        std::vector<std::unique_ptr<SimpleService>> SimpleServices                 {};          //!< All simple service instances
-        std::vector<std::unique_ptr<AODService>>    AODServices                    {};          //!< All AOD service instances
-        std::vector<std::unique_ptr<ActiveService>> ActiveServices                 {};          //!< All Active service instances
-        std::vector<std::unique_ptr<WorkerService>> WorkerServices                 {};          //!< All Worker service instances
+        std::vector<TServicePtr<SimpleService>>     SimpleServices                 {};          //!< All simple service instances
+        std::vector<TServicePtr<AODService>>        AODServices                    {};          //!< All AOD service instances
+        std::vector<TServicePtr<ActiveService>>     ActiveServices                 {};          //!< All Active service instances
+        std::vector<TServicePtr<WorkerService>>     WorkerServices                 {};          //!< All Worker service instances
         std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
         std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
         std::unique_ptr<std::latch>                 SyncWorkerStartup              {};          //!< Latch used to sync all workers startup
