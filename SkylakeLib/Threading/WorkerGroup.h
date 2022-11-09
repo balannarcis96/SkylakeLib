@@ -122,19 +122,6 @@ namespace SKL
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );
         }
     
-        //! Issue a new TLS sync task on the workers of this group
-        template<typename TFunctor>
-        void SyncTSL( TFunctor&& InFunctor ) noexcept
-        {
-            SKL_ASSERT( true == Tag.bSupportsTLSSync );
-            SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
-            
-            auto* Task{ MakeTLSSyncTaskRaw( static_cast<uint16_t>( GetNumberOfRunningWorkers() ), std::forward<TFunctor>( InFunctor ) ) };
-            SKL_ASSERT( nullptr != Task );
-            
-            MyTLSSyncSystem->PushTask( Task );
-        }
-        
         //! Create new tcp async acceptor on this instance
         RStatus AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept;
 
@@ -195,8 +182,6 @@ namespace SKL
         //! Get workers 
         SKL_FORCEINLINE const std::vector<std::unique_ptr<Worker>>& GetWorkers() const noexcept { return Workers; }
 
-        SKL_FORCEINLINE TLSSyncSystem* GetTLSSyncSystem() const noexcept { return MyTLSSyncSystem.get(); }
-
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;
 
@@ -232,7 +217,6 @@ namespace SKL
         std::synced_value<uint32_t>               RunningWorkers      { 0 };       //!< Count of active running workers
         std::synced_value<uint32_t>               TotalWorkers        { 0 };       //!< Count of total workers registered in the group
         Worker*                                   MasterWorker        { nullptr }; //!< Cached pointer to the master worker [if any]
-        std::unique_ptr<TLSSyncSystem>            MyTLSSyncSystem     { nullptr }; //!< Instance of the TLSSyncSystem [if activated]
 
         friend Worker;    
         friend ServerInstance;    

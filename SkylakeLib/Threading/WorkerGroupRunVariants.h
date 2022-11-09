@@ -25,7 +25,7 @@ namespace SKL
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
             auto&      WorkerServices      { InGroup.GetServerInstance()->GetAllWorkerServices() };
             auto&      OnWorkerTick        { InGroup.OnWorkerTick };
-            auto*      MyTLSSyncSystem     { InGroup.MyTLSSyncSystem.get() };
+            auto*      MyTLSSyncSystem     { InGroup.GetServerInstance()->GetTSLSyncSystemPtr() };
             
             PreciseSleep_WaitableTimer::Create();
 
@@ -130,7 +130,7 @@ namespace SKL
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
             const auto TickRate            { Tag.SyncTLSTickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
-            auto*      MyTLSSyncSystem     { InGroup.MyTLSSyncSystem.get() };
+            auto*      MyTLSSyncSystem     { InGroup.GetServerInstance()->GetTSLSyncSystemPtr() };
             
             if constexpr( true == bSupportsTLSSync )
             {

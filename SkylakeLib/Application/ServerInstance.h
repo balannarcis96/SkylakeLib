@@ -81,7 +81,7 @@ namespace SKL
         //! Signal all worker groups to stop
         void SignalToStop( bool bForce = true ) noexcept;
 
-        //! Is any woker group running now
+        //! Is any worker group running now
         bool IsAnyWorkerGroupRunning() const noexcept   
         {
             for( auto* Group: WorkerGroups )
@@ -112,6 +112,7 @@ namespace SKL
         const std::vector<std::unique_ptr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
         const std::vector<IService*>&                      GetAllServices() const noexcept { return AllServices; }
 
+        //! Get a service by UID. O(n)
         template<typename TService = IService>
         TService* GetServiceById( uint32_t UID ) const noexcept
         {
@@ -136,6 +137,7 @@ namespace SKL
             return nullptr;
         }
 
+        //! Get simple service by UID. O(n)
         template<typename TService = SimpleService>
         SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept
         {
@@ -154,6 +156,7 @@ namespace SKL
             return nullptr;
         }
 
+        //! Get AOD service by UID. O(n)
         template<typename TService = AODService>
         AODService* GetAODServiceById( uint32_t UID ) const noexcept
         {
@@ -172,6 +175,7 @@ namespace SKL
             return nullptr;
         }
 
+        //! Get active service by UID. O(n)
         template<typename TService = ActiveService>
         TService* GetActiveServiceById( uint32_t UID ) const noexcept
         {
@@ -190,6 +194,7 @@ namespace SKL
             return nullptr;
         }
 
+        //! Get worker service by UID. O(n)
         template<typename TService = WorkerService>
         TService* GetWorkerServiceById( uint32_t UID ) const noexcept
         {
@@ -208,6 +213,7 @@ namespace SKL
             return nullptr;
         }
 
+        //! Get simple service by UID as index. O(1)
         template<typename TService = SimpleService>
         SKL_FORCEINLINE TService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
@@ -217,6 +223,7 @@ namespace SKL
             return static_cast<TService*>( SimpleServices[ UID ].get() );
         }
 
+        //! Get AOD service by UID as index. O(1)
         template<typename TService = AODService>
         SKL_FORCEINLINE TService* GetAODServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
@@ -226,6 +233,7 @@ namespace SKL
             return static_cast<TService*>( SimpleServices[ UID ].get() );
         }
 
+        //! Get active service by UID as index. O(1)
         template<typename TService = ActiveService>
         SKL_FORCEINLINE TService* GetActiveServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
@@ -234,6 +242,7 @@ namespace SKL
             return static_cast<TService*>( SimpleServices[ UID ].get() );
         }
 
+        //! Get worker service by UID as index. O(1)
         template<typename TService = WorkerService>
         SKL_FORCEINLINE TService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
@@ -248,33 +257,63 @@ namespace SKL
         bool AddService( ActiveService* InService ) noexcept;
         bool AddService( WorkerService* InService ) noexcept;
         
-        uint32_t GetTotalGroupsCount() const noexcept { return TotalWorkerGroups.load_relaxed(); }
+        //! Get the total number of worker groups in this server instance
+        uint32_t GetTotalWorkerGroupsCount() const noexcept { return TotalWorkerGroups.load_relaxed(); }
+
+        //! Get the total number of workers running in this server instance
         uint32_t GetTotalNumberOfRunningWorkers() const noexcept { return TotalNumberOfRunningWorkers.load_relaxed(); }
-
-        //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id
-        template<typename TFunctor>
-        SKL_FORCEINLINE void SyncTSLOnGroupById( uint16_t GroupId, TFunctor&& InFunctor ) noexcept
+        
+        //! Does this server have at least one worker that support TLS Sync
+        SKL_FORCEINLINE SKL_NODISCARD bool SupportsTSLSync() const noexcept
         {
-            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
-            auto* GroupPtr{ GetWorkerGroupById( GroupId ) };
-            SKL_ASSERT( nullptr != GroupPtr );
-            SKL_ASSERT( true == GroupPtr->GetTag().bSupportsTLSSync );
-
-            GroupPtr->SyncTSL( std::forward<TFunctor>( InFunctor ) );
+            return nullptr != MyTLSSyncSystem.get();
         }
         
-        //! Issue a new TLS sync task on a specific worker group that support TLS Sync [bSupportsTLSSync=true] by Id as index
-        template<typename TFunctor>
-        SKL_FORCEINLINE void SyncTSLOnGroupByIdAsIndex( uint16_t GroupId, TFunctor&& InFunctor ) noexcept
+        //! Get reference to the TLSSyncSystem instance for this server application
+        SKL_FORCEINLINE SKL_NODISCARD TLSSyncSystem& GetTSLSyncSystem() noexcept
         {
-            SKL_ASSERT( false == TLSSyncHandlingGroup.empty() );
-            auto* GroupPtr{ GetWorkerGroupWithIdAsIndex( GroupId ) };
-            SKL_ASSERT( nullptr != GroupPtr );
-            SKL_ASSERT( true == GroupPtr->GetTag().bSupportsTLSSync );
-
-            GroupPtr->SyncTSL( std::forward<TFunctor>( InFunctor ) );
+            SKL_ASSERT( SupportsTSLSync() );
+            return *MyTLSSyncSystem;
+        }
+        
+        //! Get reference to the TLSSyncSystem instance for this server application
+        SKL_FORCEINLINE SKL_NODISCARD const TLSSyncSystem& GetTSLSyncSystem() const noexcept
+        {
+            SKL_ASSERT( SupportsTSLSync() );
+            return *MyTLSSyncSystem;
         }
 
+        //! Get the number of workers that support TLS Sync
+        SKL_FORCEINLINE SKL_NODISCARD uint64_t GetNoOfWorkersThatSupportTLSSync() const noexcept
+        {
+            if( false == SupportsTSLSync() )
+            {
+                return 0;
+            }
+
+            return MyTLSSyncSystem->GetNoOfWorkersThatSupportTLSSync();
+        }
+        
+        //! Get pointer to the TLSSyncSystem instance for this server application
+        SKL_FORCEINLINE SKL_NODISCARD TLSSyncSystem* GetTSLSyncSystemPtr() noexcept
+        {
+            return MyTLSSyncSystem.get();
+        }
+        
+        //! Issue a new TLS sync task on all worker groups that support TLS Sync [WorkerGroup.Tag.bSupportsTLSSync=true]
+        template<typename TFunctor>
+        void SyncTSL( TFunctor&& InFunctor ) noexcept
+        {
+            SKL_ASSERT( SupportsTSLSync() );
+
+            auto& TLSSyncSystemInstance{ GetTSLSyncSystem() };
+            
+            auto* Task{ MakeTLSSyncTaskRaw( static_cast<uint16_t>( TLSSyncSystemInstance.GetNoOfWorkersThatSupportTLSSync() ), std::forward<TFunctor>( InFunctor ) ) };
+            SKL_ASSERT( nullptr != Task );
+            
+            TLSSyncSystemInstance.PushTask( Task );
+        }
+        
     protected:
         virtual bool OnAddServices() noexcept { return true; }
         virtual bool OnWorkerStarted( Worker& InWorker, WorkerGroup& Group ) noexcept;
@@ -316,6 +355,7 @@ namespace SKL
         std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
         std::unique_ptr<std::latch>                 SyncWorkerStartup              {};          //!< Latch used to sync all workers startup
         std::unique_ptr<std::latch>                 SyncWorkerShutdown             {};          //!< Latch used to sync all workers shutdown
+        std::unique_ptr<TLSSyncSystem>              MyTLSSyncSystem                { nullptr }; //!< Instance of the TLSSyncSystem
 
         friend class Worker;
         friend class WorkerGroup;

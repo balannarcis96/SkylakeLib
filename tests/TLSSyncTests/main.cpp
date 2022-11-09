@@ -72,7 +72,7 @@ namespace TLSSyncTests
                 return false;
             }
 
-            SyncTSLOnGroupByIdAsIndex( 1, [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
+            SyncTSL( [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
             {
                 if( false == bIsFinalzation )
                 {
@@ -137,7 +137,7 @@ namespace TLSSyncTests
 
             for( uint32_t i = 0; i < IterCount; ++i )
             {
-                SyncTSLOnGroupByIdAsIndex( 1, [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
+                SyncTSL( [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
                 {
                     if( true == bIsFinalzation )
                     {

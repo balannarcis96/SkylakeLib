@@ -59,6 +59,8 @@ namespace SKL
             SKLL_WRN_FMT( "[ServerInstance:%ws] No worker group to handle delayed tasks, DONT USE DELAYED TASKS!!", GetName() );
         }
 
+        uint64_t NoOfWorkersThatSupportTLSSync{ 0 };
+
         // create worker groups
         for( size_t i = 0; i < Config.WorkerGroups.size(); ++i )
         {
@@ -67,14 +69,36 @@ namespace SKL
  
             if( false == CreateWorkerGroup( WorkerConfig, bDoesMasterNeedsToBeCreated ) )
             {
-                SKLL_ERR_FMT( "ServerInstance[%ws]::Initialize()", Config.Name );
+                SKLL_ERR_FMT( "[ServerInstance:%ws]::Initialize()", Config.Name );
                 return RFail;
+            }
+
+            if( WorkerConfig.Tag.bSupportsTLSSync )
+            {
+                NoOfWorkersThatSupportTLSSync += WorkerGroups.back()->GetTotalNumberOfWorkers();
             }
         }
 
+        if( 0 < NoOfWorkersThatSupportTLSSync )
+        {
+            MyTLSSyncSystem.reset( new TLSSyncSystem() );
+            if( nullptr == MyTLSSyncSystem.get() )
+            {
+                SKLL_ERR_FMT( "[ServerInstance:%ws]::Initialize() Failed to allocate TLSSyncSystem!", Config.Name );
+                return RFail;
+            }
+
+            MyTLSSyncSystem->NoOfWorkersThatSupportTLSSync = NoOfWorkersThatSupportTLSSync;
+        }
+
+        SKLL_INF_FMT( "[ServerInstance:%ws] Created %llu Worker Groups. TLSSync workers count: %llu."
+                     , Config.Name
+                     , WorkerGroups.size()
+                     , NoOfWorkersThatSupportTLSSync );
+
         if( false == OnAddServices() )
         {
-            SKLL_ERR_FMT( "ServerInstance[%ws]::OnAddServices() Failed", Config.Name );
+            SKLL_ERR_FMT( "[ServerInstance:%ws]::OnAddServices() Failed", Config.Name );
             return RFail;
         }
 
@@ -83,7 +107,7 @@ namespace SKL
         {
             if( const auto Result{ Service->Initialize() }; RSuccess != Result )
             {
-                SKLL_ERR_FMT( "ServerInstance[%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
+                SKLL_ERR_FMT( "[ServerInstance:%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
                 return RFail;
             }
 
@@ -198,7 +222,7 @@ namespace SKL
         // set worker stop handler
         NewGroup->SetWorkerStopHandler( InConfig.OnWorkerStop );
 
-        // add async tcp acceptors
+        // add async TCP acceptors
         for( const auto& Item: InConfig.TCPAcceptorConfigs )
         {
             NewGroup->AddNewTCPAcceptor( Item );

@@ -12,6 +12,8 @@ namespace SKL
     template<size_t BlockSize>
     using MemoryBlock = std::array<uint8_t, BlockSize>;
 
+
+
     template<typename T>
     SKL_FORCEINLINE constexpr void GDestruct( T* Ptr ) noexcept
     {

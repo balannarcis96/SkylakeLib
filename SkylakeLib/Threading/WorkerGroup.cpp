@@ -93,18 +93,6 @@ namespace SKL
             }
         }
 
-        //@TODO move the TLSSyncSystem at ServerInstance level
-        if( true == Tag.bSupportsTLSSync )
-        {
-            MyTLSSyncSystem.reset( new TLSSyncSystem() );
-            SKL_ASSERT( nullptr != MyTLSSyncSystem.get() );
-            if ( nullptr == MyTLSSyncSystem )
-            {
-                SKLL_ERR_FMT( "WorkerGroup::Build() Failed to allocate the TLSSyncSystem! GroupId[%ws]", Tag.Name );
-                return RFail;
-            }
-        }
-
         return CreateWorkers( bIncludeMaster );
     }
 
@@ -120,7 +108,7 @@ namespace SKL
 
         for( uint16_t i = 0; i < Tag.WorkersCount; ++i )
         {
-            // allocate new woker
+            // allocate new worker
             auto NewWorker = std::make_unique<Worker>( this );
             if( nullptr == NewWorker )
             {
