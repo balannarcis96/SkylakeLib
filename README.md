@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 ![CMake](https://github.com/balannarcis96/SkylakeLib/actions/workflows/cmake.yml/badge.svg?branch=main) 
-![Version](https://img.shields.io/badge/Version-v1.0.0.alpha-blue) 
+![Version](https://img.shields.io/badge/Version-v0.5.0-blue) 
 ![Win64](https://img.shields.io/badge/Windows64-Full-brightgreen)
 ![Ubuntu64](https://img.shields.io/badge/Ubuntu64-WIP-yellow)
 ![FreeBSD64](https://img.shields.io/badge/FreeBSD64-WIP-yellow)
