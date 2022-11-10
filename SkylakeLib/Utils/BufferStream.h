@@ -84,12 +84,12 @@ namespace SKL
             } 
 
             File.seekg( 0, std::ifstream::end );
-            const uint32_t ReadSize{ static_cast< uint32_t >( File.tellg( ) ) };
+            const uint32_t ReadSize{ static_cast<uint32_t>( File.tellg() ) };
             File.seekg( 0, std::ifstream::beg );
             File.close();
 
-            BufferStream Result{ ReadSize };
-            SKL_ASSERT( Result.GetBufferSize() == ReadSize );
+            BufferStream Result{ ReadSize + 1 };
+            SKL_ASSERT( Result.GetBufferSize() == ReadSize + 1 );
             if( false == Result.ReadFromFile( InFileName ) ) SKL_UNLIKELY
             {
                 return {};

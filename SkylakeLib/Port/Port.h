@@ -226,6 +226,9 @@ namespace SKL
     //! Convert ip v4 address wide string to binary
     uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
 
+    //! Get the cwd
+    bool GetCurrentWorkingDirectory( char* OutBuffer, size_t BufferSize ) noexcept;
+
     //! UTF16 -> UTF8
     bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept;
 

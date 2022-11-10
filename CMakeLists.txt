@@ -48,7 +48,7 @@ set(SKL_LIB_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process
 set_property(CACHE SKL_LIB_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /ZI /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
+    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
     set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
     
     if(SKL_LINK_TIME_OPTIMIZATION)

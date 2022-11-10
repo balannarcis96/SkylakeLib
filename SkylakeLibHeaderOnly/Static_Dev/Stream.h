@@ -471,7 +471,7 @@ namespace SKL
             } 
 
             File.seekg( 0, std::ifstream::end );
-            const uint32_t ReadSize{ static_cast< uint32_t >( File.tellg( ) ) };
+            const uint32_t ReadSize{ static_cast<uint32_t>( File.tellg( ) ) };
             File.seekg( 0, std::ifstream::beg );
 
             if( 0 == ReadSize ) SKL_UNLIKELY
@@ -481,7 +481,7 @@ namespace SKL
                 return false;
             }
 
-            const auto bItFits{ this->CanFit( ReadSize ) };
+            const auto bItFits{ CanFit( ReadSize + 1 ) };
             if( false == bItFits && false == bTruncate )
             {
                 //SKLL_VER_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
@@ -489,7 +489,7 @@ namespace SKL
                 return false;
             }
 
-            File.read( reinterpret_cast<char*>( this->GetFront() ), ReadSize );
+            File.read( reinterpret_cast<char*>( GetFront() ), ReadSize );
 
             const auto Result{ File.good() };
             if( false == Result )
@@ -498,6 +498,8 @@ namespace SKL
             }
 
             File.close();
+
+            GetBuffer()[ReadSize] = '\0';
 
             return Result;
         }

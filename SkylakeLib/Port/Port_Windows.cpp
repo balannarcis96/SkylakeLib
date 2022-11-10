@@ -1002,6 +1002,12 @@ namespace SKL
 
 	    return result;
     }
+
+    bool GetCurrentWorkingDirectory( char* OutBuffer, size_t BufferSize ) noexcept
+    {
+        return 0 != GetCurrentDirectory( static_cast<DWORD>( BufferSize ), OutBuffer );
+    }
+
 }
 
 // String Utils

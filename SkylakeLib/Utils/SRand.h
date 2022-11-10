@@ -9,7 +9,7 @@
 
 namespace SKL
 {
-    //! Thread local rand facillity
+    //! Thread local rand facility
     struct TRand final: private ITLSSingleton<TRand>
     {
         static void InitializeThread() noexcept
@@ -60,7 +60,7 @@ namespace SKL
         Squirrel3Rand Rand{};
     };
 
-    //! Global, thread safe, rand facillity
+    //! Global, thread safe, rand facility
     struct GRand final
     {
         //! Generate pseudo random value in interval [0, UINT32_MAX]
