@@ -114,7 +114,7 @@ namespace SKL::DC
             {
                 RawAttribute NewAttribute{};
 
-                const auto* Name{ InAdaptor->ConvertUtf8ToUtf16( Attribute->name(), Attribute->name_size() ) };
+                const auto* Name{ InAdaptor->CleanAndConvertToUtf16AttributeName( Attribute->name() ) };
                 if( nullptr == Name )
                 {
             	    SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute name to utf16", InNode->name( ), Attribute->name(), Attribute->value() );

@@ -1300,7 +1300,7 @@ namespace SKL::DC
             // cache all attributes
             for( uint16_t i = 0; i < InElement->AttributesCount; ++i )
             {
-                auto* AttributeItem{ GetAttribute( { InElement->AttributeIndices.first, InElement->AttributeIndices.second + i } ) };
+                auto* AttributeItem{ GetAttribute( { InElement->AttributeIndices.first, static_cast<TBlockIndex>( InElement->AttributeIndices.second + i ) } ) };
                 if( nullptr == AttributeItem )
                 {
                     SKLL_TRACE_MSG_FMT( "Failed to get Attribute {%hu %hu} for element{%ws}"
@@ -1317,14 +1317,14 @@ namespace SKL::DC
             {
                 auto* Child{ GetElement( {
                     InElement->ChildrenIndices.first,
-                    InElement->ChildrenIndices.second + i
+                    static_cast<TBlockIndex>( InElement->ChildrenIndices.second + i )
                 } ) };
 
                 if( nullptr == Child )
                 {
                     SKLL_TRACE_MSG_FMT( "Failed to get Child {%hu %hu} for element{%ws}"
                         , InElement->ChildrenIndices.first
-                        , InElement->ChildrenIndices.second + i
+                        , static_cast<TBlockIndex>( InElement->ChildrenIndices.second + i )
                         , InElement->GetName() );
                     return false;
                 }
@@ -1333,7 +1333,7 @@ namespace SKL::DC
                 {
                     InElement->GetEditData().CachedLocation = {
                           InElement->ChildrenIndices.first
-                        , InElement->ChildrenIndices.second + i
+                        , static_cast<TBlockIndex>( InElement->ChildrenIndices.second + i )
                     };
                 }
 

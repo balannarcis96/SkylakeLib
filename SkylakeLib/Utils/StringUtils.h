@@ -32,6 +32,12 @@ namespace SKL
         //! Convert ipv4 address to wide string 
         static const wchar_t* IpV4AddressToWString( TIPv4Address InAddress ) noexcept;
 
+        //! Convert wide string(UTF16) to multi byte string (UTF8)
+        static const char* ConvertUtf16ToUtf8( const wchar_t* InWString, size_t MaxCharCountInString ) noexcept;
+        
+        //! Convert  multi byte string (UTF8) to wide string(UTF16)
+        static const wchar_t* ConvertUtf8ToUtf16( const char* InString, size_t MaxCharCountInString ) noexcept;
+
     private:
         BufferStream WorkBenchBuffer;
 

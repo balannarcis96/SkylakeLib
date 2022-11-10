@@ -1048,4 +1048,40 @@ namespace SKL
 
         return L"[Invalid IPv4Address]";
     }
+
+    const char* StringUtils::ConvertUtf16ToUtf8( const wchar_t* InWString, size_t MaxCharCountInString ) noexcept
+    {
+        auto* Instance{ StringUtils::GetInstance() };
+        SKL_ASSERT( nullptr != Instance );
+        
+        SKL::BufferStream& Buffer{ Instance->WorkBenchBuffer };
+
+        if( false == GWideCharToMultiByte( InWString
+                                         , MaxCharCountInString
+                                         , reinterpret_cast<char*>( Buffer.GetBuffer() )
+                                         , static_cast<int32_t>( Buffer.GetBufferSize() ) ) ) SKL_UNLIKELY
+        {
+            SKL_STRCPY( reinterpret_cast<char*>( Buffer.GetBuffer() ), "[U16-U8-CONVERSATION-FAILED]", 30 );
+        }
+
+        return reinterpret_cast<const char*>( Buffer.GetBuffer() );
+    }
+    
+    const wchar_t* StringUtils::ConvertUtf8ToUtf16( const char* InString, size_t MaxCharCountInString ) noexcept
+    {
+        auto* Instance{ StringUtils::GetInstance() };
+        SKL_ASSERT( nullptr != Instance );
+        
+        SKL::BufferStream& Buffer{ Instance->WorkBenchBuffer };
+
+        if( false == GMultiByteToWideChar( InString
+                                         , MaxCharCountInString
+                                         , reinterpret_cast<wchar_t*>( Buffer.GetBuffer() )
+                                         , static_cast<int32_t>( Buffer.GetBufferSize() / sizeof( wchar_t ) ) ) ) SKL_UNLIKELY
+        {
+            SKL_WSTRCPY( reinterpret_cast<wchar_t*>( Buffer.GetBuffer() ), L"[U8-U16-CONVERSATION-FAILED]", 30 );
+        }
+
+        return reinterpret_cast<const wchar_t*>( Buffer.GetBuffer() );
+    }
 }
