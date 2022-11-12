@@ -161,7 +161,7 @@ namespace ServicesTests
 
             void OnTick() noexcept override
             {
-                if( ++SeqCounter == 10000 )
+                if( ++SeqCounter == 120 ) // 2 seconds = 60 * 2
                 {
                     GetServerInstance().SignalToStop();
                 }

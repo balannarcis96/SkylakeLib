@@ -520,6 +520,16 @@ namespace SKL
     {
         auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
         const auto Now{ GetSystemUpTickCount() };
+        
+        while( false == TLSContext.PendingDelayedTasks.empty() )
+        {
+            auto* Task{ TLSContext.PendingDelayedTasks.front() };
+            SKL_ASSERT( nullptr != Task );
+
+            TLSContext.PendingDelayedTasks.pop();
+
+            TLSContext.DelayedTasks.push( Task );
+        }
 
         while( false == TLSContext.DelayedTasks.empty() )
         {

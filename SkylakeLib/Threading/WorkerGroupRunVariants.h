@@ -20,7 +20,7 @@ namespace SKL
             SKLL_TRACE();
 
             const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
-            const auto TickRate            { true == Tag.bSupportsTLSSync ? std::min( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
+            const auto TickRate            { true == Tag.bSupportsTLSSync ? std::max( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
             const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
             const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
             auto&      WorkerServices      { InGroup.GetServerInstance()->GetAllWorkerServices() };

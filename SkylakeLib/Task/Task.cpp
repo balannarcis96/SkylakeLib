@@ -72,12 +72,10 @@ namespace SKL
         TSharedPtr<ITask>::Static_IncrementReference( InTask );
 
         auto& TLSContext{ *ServerInstanceTLSContext::GetInstance() };
-        if( true == TLSContext.GetCurrentWorkerGroupTag().bHandlesTimerTasks )
-        {
-            TLSContext.DelayedTasks.push( InTask );
-            return true;
-        }
+        SKL_ASSERT( true == TLSContext.GetCurrentWorkerGroupTag().bHandlesTimerTasks );
 
-        return ScheduleTask( TLSContext, InTask );
+        TLSContext.PendingDelayedTasks.push( InTask );
+
+        return true;
     }
 }

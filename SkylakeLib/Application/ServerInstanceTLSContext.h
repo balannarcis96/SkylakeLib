@@ -27,6 +27,7 @@ namespace SKL
         SKL_FORCEINLINE const std::vector<WorkerGroup*>& GetDeferredTasksHandlingGroups() const noexcept { return DeferredTasksHandlingGroups; }
 
     private:
+        TLSManagedQueue<ITask*>                    PendingDelayedTasks        {};
         TLSManagedPriorityQueue<ITask*>            DelayedTasks               {};
         WorkerGroupTag                             ParentWorkerGroup          {};
         ServerInstanceFlags                        ServerFlags                {};
