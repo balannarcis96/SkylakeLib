@@ -14,7 +14,10 @@ namespace SKL
     struct TLSSyncSystem
     {
          TLSSyncSystem() noexcept  = default;
-        ~TLSSyncSystem() noexcept = default;
+        ~TLSSyncSystem() noexcept
+        {
+            Queue.Clear();
+        }
 
         TLSSyncSystem( const TLSSyncSystem & ) = delete;
         TLSSyncSystem &operator=( const TLSSyncSystem & ) = delete;
@@ -30,7 +33,6 @@ namespace SKL
         //! Called by each worker that supports TLSSync 
         void TLSShutdown() noexcept
         {
-            Queue.Clear();
         }
 
         //! Push new TLSSync task 

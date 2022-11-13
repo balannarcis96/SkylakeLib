@@ -40,6 +40,7 @@ namespace SKL
 
         friend bool DeferTask( ITask* InTask ) noexcept;    
         friend bool DeferTaskAgain( ITask* InTask ) noexcept;
+        friend bool DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
         friend bool ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept;
 
         friend class WorkerGroup;

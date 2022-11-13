@@ -1,7 +1,7 @@
 //!
 //! \file DODSymmetricStore.h
 //! 
-//! \brief (Data Oriented Desing)Symmetric Store
+//! \brief (Data Oriented Design)Symmetric Store
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -21,14 +21,14 @@ namespace SKL
         };
 
         template<typename TComponent>
-        SKL_FORCEINLINE TComponent& GetComponent( TIndexType InIndex ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TComponent& GetComponent( TIndexType InIndex ) noexcept
         {
             SKL_ASSERT( Traits::EntitiesCount > InIndex );
             return this->template GetArray<TComponent>()[ InIndex ];
         }
 
         template<typename TComponent>
-        SKL_FORCEINLINE const TComponent& GetComponent( TIndexType InIndex ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD const TComponent& GetComponent( TIndexType InIndex ) const noexcept
         {
             SKL_ASSERT( Traits::EntitiesCount > InIndex );
             return this->template GetArray<TComponent>()[ InIndex ];

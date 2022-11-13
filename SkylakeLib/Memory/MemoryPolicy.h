@@ -9,6 +9,11 @@
 
 namespace SKL::MemoryPolicy
 {
+    //[SemVer] Any changes must bump at least one of these components
+    constexpr int32_t CVersionMajor = 1;
+    constexpr int32_t CVersionMinor = 1;
+    constexpr int32_t CVersionPatch = 1;
+
     struct ArrayHeader
     {
         SKL_FORCEINLINE ArrayHeader( uint32_t ItemSize, uint32_t ItemCount ) noexcept : ItemSize{ ItemSize }, ItemCount{ ItemCount } {}
@@ -781,4 +786,12 @@ namespace SKL::MemoryStrategy
         using DestructDeallocator = SKL::MemoryDeallocation::SharedMemoryDeallocator<TObject, MemoryPolicy>;
         using Allocator           = SKL::MemoryAllocation::MemoryAllocator<TObject, MemoryPolicy>;
     };
+}
+
+namespace SKL
+{
+    consteval bool CExpectMemoryPolicyVersion( int32_t Major )
+    {
+        return MemoryPolicy::CVersionMajor == Major;
+    }
 }

@@ -78,4 +78,23 @@ namespace SKL
 
         return true;
     }
+
+    //! Called from withing the handler of a deferred task to defer the same task again 
+    bool DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept
+    {
+        SKL_ASSERT( nullptr != InTask );
+        SKL_ASSERT( 0 < TSharedPtr<ITask>::Static_GetReferenceCount( InTask ) );
+
+        InTask->SetDue( AfterMilliseconds );
+
+        // Add reference
+        TSharedPtr<ITask>::Static_IncrementReference( InTask );
+
+        auto& TLSContext{ *ServerInstanceTLSContext::GetInstance() };
+        SKL_ASSERT( true == TLSContext.GetCurrentWorkerGroupTag().bHandlesTimerTasks );
+
+        TLSContext.PendingDelayedTasks.push( InTask );
+
+        return true;
+    }
 }

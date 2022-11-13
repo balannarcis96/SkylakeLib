@@ -144,6 +144,9 @@ namespace SKL
     //! Defer an already deferred task
     bool DeferTaskAgain( ITask* InTask ) noexcept;
 
+    //! Defer an already deferred task
+    bool DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
+
     //! Defer functor execution asap [void( void )noexcept] 
     template<typename TFunctor>
     bool DeferTask( TFunctor&& InFunctor ) noexcept

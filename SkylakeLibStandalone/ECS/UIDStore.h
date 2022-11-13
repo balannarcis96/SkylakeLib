@@ -32,20 +32,41 @@ namespace SKL
 
             // set active
             bIsActive.exchange( TRUE );
+            
+            // clear flag
+            bHasCalledOnAllFreed.exchange( FALSE );
         }
         
         //! deactivate the store, when all ids are freed the callback is called
         void Deactivate() noexcept
         {
             bIsActive.exchange( FALSE );
+
+            bool bAllAreDeallocated{ false };
+            
+            {
+                SpinLockScopeGuard Guard{ IdsLock };
+                bAllAreDeallocated = FreeIds.size() == MaxUIDValue;           
+            }
+            
+            if( true == bAllAreDeallocated )
+            {
+                if( FALSE == bHasCalledOnAllFreed.exchange( TRUE ) )
+                {
+                    if( false == OnAllFreed.IsNull() )
+                    {
+                       OnAllFreed.Dispatch();
+                    }
+                }
+            }
         }
 
         //! allocate new id
-        TUIDType Allocate() noexcept
+        SKL_NODISCARD TUIDType Allocate() noexcept
         {
             TUIDType Result{ IdentityValue };
 
-            if( TRUE == bIsActive )
+            if( TRUE == bIsActive ) SKL_LIKELY
             {
                 SpinLockScopeGuard Guard{ IdsLock };
                 if( FALSE == FreeIds.empty() )
@@ -53,6 +74,11 @@ namespace SKL
                     Result = FreeIds.top();
                     FreeIds.pop();
                 }
+            }
+
+            if( IdentityValue != Result ) SKL_LIKELY
+            {
+                AllocationsCount.increment();
             }
 
             return Result;
@@ -70,26 +96,42 @@ namespace SKL
                 bDeallocatedAll = FreeIds.size() == MaxUIDValue;
             }
 
-            if( FALSE == bIsActive.load_relaxed() && true == bDeallocatedAll && false == OnAllFreed.IsNull() )
+            AllocationsCount.decrement();
+
+            if( ( FALSE == bIsActive.load_relaxed() ) && ( true == bDeallocatedAll ) )
             {
-                OnAllFreed.Dispatch();
+                if( FALSE == bHasCalledOnAllFreed.exchange( TRUE ) )
+                {
+                    if( false == OnAllFreed.IsNull() )
+                    {
+                       OnAllFreed.Dispatch();
+                    }
+                }
             }
         }
 
-        //! set the functor to be dispatched when all ids are dellocated and the store is not active
+        //! set the functor to be dispatched when all ids are deallocated and the store is not active
         template<typename TFunctor>
-        void SetOnAllFreed( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE void SetOnAllFreed( TFunctor&& InFunctor ) noexcept
         {
             OnAllFreed += std::forward<TFunctor>( InFunctor );
         }
 
         //! is the store active
-        bool IsActive() const noexcept{ return TRUE == bIsActive.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool IsActive() const noexcept{ return TRUE == bIsActive.load_relaxed(); }
+        
+        //! is ready to be destroyed
+        SKL_FORCEINLINE SKL_NODISCARD bool IsShutdownAndReadyToDestroy() const noexcept{ return ( FALSE == bIsActive.load_relaxed() ) && ( TRUE == bHasCalledOnAllFreed.load_relaxed() ); }
+
+        //! get the count of allocated ids
+        SKL_FORCEINLINE SKL_NODISCARD size_t GetAllocatedIdsCount() const noexcept { return AllocationsCount.load_relaxed(); }
 
     private:
-        std::relaxed_value<int32_t>                 bIsActive { FALSE }; //!< is the store active
-        SpinLock                                    IdsLock   {};        //!< spin lock to guard the FreeIds stack
-        std::stack<TUIDType, std::vector<TUIDType>> FreeIds   {};        //!< stack of free ids
-        OnAllFreedTask                              OnAllFreed{};        //!< functor to dispatch when all ids are freed and the store is not active
+        std::relaxed_value<int32_t>                 bIsActive            { FALSE }; //!< is the store active
+        std::relaxed_value<int32_t>                 bHasCalledOnAllFreed { FALSE }; //!< is the store active
+        std::relaxed_value<size_t>                  AllocationsCount     { 0 };     //!< is the store active
+        SpinLock                                    IdsLock              {};        //!< spin lock to guard the FreeIds stack
+        std::stack<TUIDType, std::vector<TUIDType>> FreeIds              {};        //!< stack of free ids
+        OnAllFreedTask                              OnAllFreed           {};        //!< functor to dispatch when all ids are freed and the store is not active
     };
 }

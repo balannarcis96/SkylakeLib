@@ -32,10 +32,10 @@ namespace SKL
         }
 
         //! Initialize the server instance
-        RStatus Initialize( ServerInstanceConfig&& InConfig ) noexcept;
+        SKL_NODISCARD RStatus Initialize( ServerInstanceConfig&& InConfig ) noexcept;
 
         //! Start all worker groups and use the calling thread for the master worker
-        RStatus StartServer() noexcept;
+        SKL_NODISCARD RStatus StartServer() noexcept;
         
         //! Join all worker groups
         void JoinAllGroups() noexcept
@@ -48,10 +48,10 @@ namespace SKL
         }
 
         //! Get configuration
-        const ServerInstanceConfig& GetConfig() const noexcept { return Config; }
+        SKL_FORCEINLINE SKL_NODISCARD const ServerInstanceConfig& GetConfig() const noexcept { return Config; }
 
         //! Get worker group by id
-        WorkerGroup* GetWorkerGroupById( uint16_t Id ) const noexcept 
+        SKL_NODISCARD WorkerGroup* GetWorkerGroupById( uint16_t Id ) const noexcept 
         {
             for( auto* Group: WorkerGroups )
             {
@@ -66,23 +66,23 @@ namespace SKL
         }
 
         //! Get worker group by using the Id as index 
-        SKL_FORCEINLINE WorkerGroup* GetWorkerGroupWithIdAsIndex( uint16_t Id ) const noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD WorkerGroup* GetWorkerGroupWithIdAsIndex( uint16_t Id ) const noexcept 
         {
             SKL_ASSERT( WorkerGroups.size() > Id );
             return WorkerGroups[ Id ];
         }
 
         //! Get all worker groups in this server instance 
-        SKL_FORCEINLINE std::vector<WorkerGroup*>& GetAllWorkerGroups() noexcept { return WorkerGroups; }
+        SKL_FORCEINLINE SKL_NODISCARD std::vector<WorkerGroup*>& GetAllWorkerGroups() noexcept { return WorkerGroups; }
 
         //! Get all worker groups in this server instance 
-        SKL_FORCEINLINE const std::vector<WorkerGroup*>& GetAllWorkerGroups() const noexcept { return WorkerGroups; }
+        SKL_FORCEINLINE SKL_NODISCARD const std::vector<WorkerGroup*>& GetAllWorkerGroups() const noexcept { return WorkerGroups; }
 
         //! Signal all worker groups to stop
         void SignalToStop( bool bForce = true ) noexcept;
 
         //! Is any worker group running now
-        bool IsAnyWorkerGroupRunning() const noexcept   
+        SKL_NODISCARD bool IsAnyWorkerGroupRunning() const noexcept   
         {
             for( auto* Group: WorkerGroups )
             {
@@ -97,13 +97,13 @@ namespace SKL
         }
 
         //! Is the server instance running
-        SKL_FORCEINLINE bool IsRunning() const noexcept { return bIsRunning.load_acquire(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool IsRunning() const noexcept { return bIsRunning.load_acquire(); }
 
         //! Get the name of the server instance
-        SKL_FORCEINLINE const wchar_t* GetName() noexcept { return Config.Name; }
+        SKL_FORCEINLINE SKL_NODISCARD const wchar_t* GetName() noexcept { return Config.Name; }
 
         //! Get server flags
-        SKL_FORCEINLINE ServerInstanceFlags GetFlags() const noexcept { return ServerBuiltFlags; }
+        SKL_FORCEINLINE SKL_NODISCARD ServerInstanceFlags GetFlags() const noexcept { return ServerBuiltFlags; }
         
         //! Get service API
         const std::vector<TServicePtr<SimpleService>>& GetAllSimpleServices() const noexcept { return SimpleServices; }
@@ -114,7 +114,7 @@ namespace SKL
 
         //! Get a service by UID. O(n)
         template<typename TService = IService>
-        TService* GetServiceById( uint32_t UID ) const noexcept
+        SKL_NODISCARD TService* GetServiceById( uint32_t UID ) const noexcept
         {
             static_assert( 
                    std::is_same_v<IService, TService> 
@@ -139,7 +139,7 @@ namespace SKL
 
         //! Get simple service by UID. O(n)
         template<typename TService = SimpleService>
-        SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept
+        SKL_NODISCARD SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
 
@@ -158,7 +158,7 @@ namespace SKL
 
         //! Get AOD service by UID. O(n)
         template<typename TService = AODService>
-        AODService* GetAODServiceById( uint32_t UID ) const noexcept
+        SKL_NODISCARD AODService* GetAODServiceById( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
 
@@ -177,7 +177,7 @@ namespace SKL
 
         //! Get active service by UID. O(n)
         template<typename TService = ActiveService>
-        TService* GetActiveServiceById( uint32_t UID ) const noexcept
+        SKL_NODISCARD TService* GetActiveServiceById( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
 
@@ -196,7 +196,7 @@ namespace SKL
 
         //! Get worker service by UID. O(n)
         template<typename TService = WorkerService>
-        TService* GetWorkerServiceById( uint32_t UID ) const noexcept
+        SKL_NODISCARD TService* GetWorkerServiceById( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, WorkerService> || std::is_base_of_v<WorkerService, TService> );
 
@@ -215,7 +215,7 @@ namespace SKL
 
         //! Get simple service by UID as index. O(1)
         template<typename TService = SimpleService>
-        SKL_FORCEINLINE TService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TService* GetSimpleServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, SimpleService> || std::is_base_of_v<SimpleService, TService> );
 
@@ -225,30 +225,30 @@ namespace SKL
 
         //! Get AOD service by UID as index. O(1)
         template<typename TService = AODService>
-        SKL_FORCEINLINE TService* GetAODServiceWithIdAsIndex( uint32_t UID ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TService* GetAODServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, AODService> || std::is_base_of_v<AODService, TService> );
 
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( AODServices.size() ) );
-            return static_cast<TService*>( SimpleServices[ UID ].get() );
+            return static_cast<TService*>( AODServices[ UID ].get() );
         }
 
         //! Get active service by UID as index. O(1)
         template<typename TService = ActiveService>
-        SKL_FORCEINLINE TService* GetActiveServiceWithIdAsIndex( uint32_t UID ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TService* GetActiveServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( ActiveServices.size() ) );
-            return static_cast<TService*>( SimpleServices[ UID ].get() );
+            return static_cast<TService*>( ActiveServices[ UID ].get() );
         }
 
         //! Get worker service by UID as index. O(1)
         template<typename TService = WorkerService>
-        SKL_FORCEINLINE TService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TService* GetWorkerServiceWithIdAsIndex( uint32_t UID ) const noexcept
         {
             static_assert( std::is_same_v<TService, WorkerService> || std::is_base_of_v<WorkerService, TService> );
             SKL_ASSERT( 0 != UID && UID < static_cast<uint32_t>( WorkerServices.size() ) );
-            return static_cast<TService*>( SimpleServices[ UID ].get() );
+            return static_cast<TService*>( WorkerServices[ UID ].get() );
         }
 
         //! ADD service API
@@ -258,10 +258,10 @@ namespace SKL
         bool AddService( WorkerService* InService ) noexcept;
         
         //! Get the total number of worker groups in this server instance
-        uint32_t GetTotalWorkerGroupsCount() const noexcept { return TotalWorkerGroups.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetTotalWorkerGroupsCount() const noexcept { return TotalWorkerGroups.load_relaxed(); }
 
         //! Get the total number of workers running in this server instance
-        uint32_t GetTotalNumberOfRunningWorkers() const noexcept { return TotalNumberOfRunningWorkers.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetTotalNumberOfRunningWorkers() const noexcept { return TotalNumberOfRunningWorkers.load_relaxed(); }
         
         //! Does this server have at least one worker that support TLS Sync
         SKL_FORCEINLINE SKL_NODISCARD bool SupportsTSLSync() const noexcept
@@ -301,6 +301,7 @@ namespace SKL
         }
         
         //! Issue a new TLS sync task on all worker groups that support TLS Sync [WorkerGroup.Tag.bSupportsTLSSync=true]
+        //! \remarks accepted signature void( SKL_CDECL* )( Worker&, WorkerGroup&, bool ) noexcept
         template<typename TFunctor>
         void SyncTSL( TFunctor&& InFunctor ) noexcept
         {

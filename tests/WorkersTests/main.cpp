@@ -797,7 +797,7 @@ namespace WorkersTests
             ASSERT_TRUE( nullptr != QueryResult );
             ASSERT_TRUE( 2 == QueryResult->GetTag().Id );
 
-            Manager.StartServer();
+            ( void )Manager.StartServer();
         }
 
         SKL::Skylake_TerminateLibrary();
