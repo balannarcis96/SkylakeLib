@@ -565,7 +565,7 @@ namespace SKL
         return RSuccess;
     }
     
-    RStatus AsyncIO::ReceiveAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept
+    RStatus AsyncIO::ReceiveAsync( TSocket InSocket, IBuffer* InBuffer, TSharedPtr<AsyncIOOpaqueType> InOpaqueObject ) noexcept
     {
         DWORD NumberOfBytesReceived { 0 };
         DWORD Flags { 0 };
@@ -577,7 +577,7 @@ namespace SKL
           , 1
           , &NumberOfBytesReceived
           , &Flags
-          , reinterpret_cast<OVERLAPPED*>( InOpaqueObject )
+          , reinterpret_cast<OVERLAPPED*>( InOpaqueObject.get() )
           , nullptr
         );
         if ( SOCKET_ERROR == Result ) SKL_LIKELY
@@ -588,12 +588,16 @@ namespace SKL
                 SKLL_ERR_FMT( "AsyncIO::ReceiveAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
+
+            // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
+            // on the same AsyncIO handle that the socket was associated with
+            ( void )InOpaqueObject.ReleaseRawRef();
         }
 
         return RSuccess;
     }
     
-    RStatus AsyncIO::SendAsync( TSocket InSocket, IBuffer* InBuffer, AsyncIOOpaqueType* InOpaqueObject ) noexcept
+    RStatus AsyncIO::SendAsync( TSocket InSocket, IBuffer* InBuffer, TSharedPtr<AsyncIOOpaqueType> InOpaqueObject ) noexcept
     {
         DWORD NumberOfBytesReceived { 0 };
 
@@ -604,7 +608,7 @@ namespace SKL
           , 1
           , &NumberOfBytesReceived
           , 0
-          , reinterpret_cast<OVERLAPPED*>( InOpaqueObject )
+          , reinterpret_cast<OVERLAPPED*>( InOpaqueObject.get() )
           , nullptr
         );
         if ( SOCKET_ERROR == Result ) SKL_LIKELY
@@ -615,19 +619,23 @@ namespace SKL
                 SKLL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
+
+            // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
+            // on the same AsyncIO handle that the socket was associated with
+            ( void )InOpaqueObject.ReleaseRawRef();
         }
 
         return RSuccess;
     }
 
-    RStatus AsyncIO::SendAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept
+    RStatus AsyncIO::SendAsync( TSocket InSocket, TSharedPtr<IAsyncIOTask> InAsyncIOTask ) noexcept
     {
-        return SendAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaqueObject() );
+        return SendAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
     }
 
-    RStatus AsyncIO::ReceiveAsync( TSocket InSocket, IAsyncIOTask* InAsyncIOTask ) noexcept
+    RStatus AsyncIO::ReceiveAsync( TSocket InSocket, TSharedPtr<IAsyncIOTask> InAsyncIOTask ) noexcept
     {
-        return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask->ToOSOpaqueObject() );
+        return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
     }
 
     RStatus AsyncIO::AssociateToTheAPI( TSocket InSocket ) const noexcept

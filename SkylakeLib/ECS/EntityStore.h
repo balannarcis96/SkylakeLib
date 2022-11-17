@@ -25,27 +25,30 @@ namespace SKL
         static void Deallocate( RootComponent* InPtr ) noexcept;
     };
 
-    template<TEntityType MyEntityType, typename TEntityId, size_t TMaxEntities, typename TRootComponentData, typename ...TComponents>
+    template<TEntityType MyEntityType, typename TEntityId, size_t TMaxEntities, bool TPaddRootEntityToMultipleOfCacheLine, typename TRootComponentData, typename ...TComponents>
     struct EntityStore
     {
-        using MyType           = EntityStore<MyEntityType, TEntityId, TMaxEntities, TRootComponentData, TComponents...>;
+        using MyType           = EntityStore<MyEntityType, TEntityId, TMaxEntities,TPaddRootEntityToMultipleOfCacheLine, TRootComponentData, TComponents...>;
         using OnAllFreedTask   = ASD::UniqueFunctorWrapper<32, void(SKL_CDECL*)()noexcept>;
 
-        using EntityId                           = TEntityId;
-        using AtomicEntityId                     = SKL::TEntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, true>;
-        using NonAtomicEntityId                  = SKL::TEntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, false>;
-        using IndexType                          = typename EntityId::TIndexType;
-        using RootComponentData                  = TRootComponentData;
-        using Componenets                        = std::tuple<TComponents...>;
-        static constexpr size_t MaxEntities      = TMaxEntities;
-        static constexpr size_t ComponentsCount  = 1 + sizeof...( TComponents );
-        static constexpr IndexType IdentityValue = 0;
-        static constexpr TEntityType EntityType  = MyEntityType;
+        using EntityId                                             = TEntityId;
+        using AtomicEntityId                                       = SKL::TEntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, true>;
+        using NonAtomicEntityId                                    = SKL::TEntityId<typename TEntityId::Variant, TEntityId::CExtendexIndex, false>;
+        using IndexType                                            = typename EntityId::TIndexType;
+        using RootComponentData                                    = TRootComponentData;
+        using Componenets                                          = std::tuple<TComponents...>;
+        static constexpr size_t MaxEntities                        = TMaxEntities;
+        static constexpr size_t ComponentsCount                    = 1 + sizeof...( TComponents );
+        static constexpr IndexType IdentityValue                   = 0;
+        static constexpr TEntityType EntityType                    = MyEntityType;
+        static constexpr bool bPaddRootEntityToMultipleOfCacheLine = TPaddRootEntityToMultipleOfCacheLine;
         
         static_assert( std::is_unsigned_v<IndexType> );
         static_assert( TMaxEntities <= static_cast<size_t>( std::numeric_limits<IndexType>::max() ) );
         static_assert( true == std::is_class_v<TRootComponentData>, "The root component data a class/struct type" );
         static_assert( false == std::is_polymorphic_v<TRootComponentData>, "The root component data must not be a polymorphic or abstract type" );
+        
+        struct EmptyType{};
 
         struct RootComponentInternalData
         {
@@ -88,7 +91,7 @@ namespace SKL
             friend SharedEntityDeallocator<MyType>;
         };
 
-        struct RootComponent : 
+        struct RootComponent: 
               AOD::CustomObject
             , RootComponentInternalData
             , TRootComponentData
@@ -103,17 +106,72 @@ namespace SKL
             friend SharedEntityDeallocator<MyType>;
         };
 
-        struct SharedRootComponent: 
-                  protected MemoryPolicy::ControlBlock
-                , RootComponent
+        struct PaddToMultipleOfCachelineBase
         {
-            SharedRootComponent() noexcept
-                : MemoryPolicy::ControlBlock( 0, sizeof( SharedRootComponent ) ), RootComponent() {}
-            ~SharedRootComponent() noexcept = default;
+            struct TestType 
+                : protected MemoryPolicy::ControlBlock
+                , RootComponent {};
+
+            static consteval size_t CalculatePaddingSize()
+            {
+                const double BSize   { static_cast<double>( sizeof( TestType ) ) };
+                const double Multiple{ BSize / static_cast<double>( SKL_CACHE_LINE_SIZE ) };
+                const double Fraction{ Multiple - static_cast<double>( static_cast<size_t>( Multiple ) ) };
+
+                double FinalMultiple{ Multiple };
+                if constexpr( Fraction > 0.0 )
+                {
+                    ++FinalMultiple;
+                }
+
+                return ( static_cast<size_t>( FinalMultiple ) * static_cast<size_t>( SKL_CACHE_LINE_SIZE ) )  - sizeof( TestType );
+            }
+
+            static constexpr size_t BaseSize    = sizeof( TestType );
+            static constexpr size_t PaddingSize = CalculatePaddingSize();
+
+            PaddToMultipleOfCachelineBase() noexcept = default;
+            ~PaddToMultipleOfCachelineBase() noexcept = default;
+
+        private:
+            uint8_t Padding[PaddingSize];
+        };
+
+        static constexpr bool   bNeedsToPaddToMultipleOfCacheLine = ( true == bPaddRootEntityToMultipleOfCacheLine ) && ( 0 != PaddToMultipleOfCachelineBase::PaddingSize );
+        static constexpr size_t FirstCacheLineUsedBytesSize       = sizeof( RootComponent ) - sizeof( TRootComponentData );
+
+        struct PaddedSharedRootComponent: 
+                protected MemoryPolicy::ControlBlock
+                , RootComponent
+                , PaddToMultipleOfCachelineBase
+        {
+            PaddedSharedRootComponent() noexcept
+                : MemoryPolicy::ControlBlock( 0, sizeof( PaddedSharedRootComponent ) ), RootComponent(), PaddToMultipleOfCachelineBase() 
+            {
+                SKL_ASSERT( 0 == ( reinterpret_cast<uint64_t>( this ) % SKL_CACHE_LINE_SIZE ) );
+            }
+            ~PaddedSharedRootComponent() noexcept = default;
 
             friend MyType;
             friend SharedEntityDeallocator<MyType>;
         };
+
+        struct NotPaddedSharedRootComponent: 
+                  protected MemoryPolicy::ControlBlock
+                , RootComponent
+        {
+            NotPaddedSharedRootComponent() noexcept
+                : MemoryPolicy::ControlBlock( 0, sizeof( NotPaddedSharedRootComponent ) ), RootComponent() {}
+            ~NotPaddedSharedRootComponent() noexcept = default;
+
+            friend MyType;
+            friend SharedEntityDeallocator<MyType>;
+        };
+
+        using SharedRootComponent = std::conditional_t<bNeedsToPaddToMultipleOfCacheLine, PaddedSharedRootComponent, NotPaddedSharedRootComponent>;
+
+        static_assert( ( false == bPaddRootEntityToMultipleOfCacheLine )
+                    || ( 0U == ( sizeof( SharedRootComponent ) % SKL_CACHE_LINE_SIZE ) ) );
 
         struct TRootComponentDataTraits
         {
@@ -130,7 +188,9 @@ namespace SKL
         };
 
         using TEntitySharedPtr = TSharedPtr<RootComponent, SharedEntityDeallocator<MyType>>;
-        using TEntityPtr       = RootComponent *;
+        using TEntityPtr       = RootComponent*;
+        using TEntityRef       = RootComponent&;
+        using TEntityConstRef  = const RootComponent&;
         using MyStore          = SymmetricStore<IndexType, TMaxEntities, SharedRootComponent, TComponents...>;
         using MyIdStore        = UIDStore<IndexType, IdentityValue, static_cast<IndexType>( TMaxEntities )>;
         using Variant          = typename TEntityId::Variant;
@@ -281,13 +341,6 @@ namespace SKL
         }
         
         //! get entity root component
-        SKL_FORCEINLINE SKL_NODISCARD const RootComponent& GetEntityRaw( NonAtomicEntityId InEntityId ) const noexcept
-        {
-            const auto& RComponent{ Store.GetComponent<SharedRootComponent>( InEntityId.GetIndex() ) };
-            return static_cast<const RootComponent&>( RComponent );
-        }
-        
-        //! get entity root component
         SKL_FORCEINLINE SKL_NODISCARD RootComponent& GetEntityRaw( NonAtomicEntityId InEntityId ) noexcept
         {
             auto& RComponent{ Store.GetComponent<SharedRootComponent>( InEntityId.GetIndex() ) };
@@ -295,9 +348,9 @@ namespace SKL
         }
         
         //! get entity root component
-        SKL_FORCEINLINE SKL_NODISCARD const RootComponent& GetEntityRaw( IndexType InEntityIndex ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD const RootComponent& GetEntityRaw( NonAtomicEntityId InEntityId ) const noexcept
         {
-            const auto& RComponent{ Store.GetComponent<SharedRootComponent>( InEntityIndex ) };
+            const auto& RComponent{ Store.GetComponent<SharedRootComponent>( InEntityId.GetIndex() ) };
             return static_cast<const RootComponent&>( RComponent );
         }
         
@@ -308,8 +361,27 @@ namespace SKL
             return static_cast<RootComponent&>( RComponent );
         }
         
+        //! get entity root component
+        SKL_FORCEINLINE SKL_NODISCARD const RootComponent& GetEntityRaw( IndexType InEntityIndex ) const noexcept
+        {
+            const auto& RComponent{ Store.GetComponent<SharedRootComponent>( InEntityIndex ) };
+            return static_cast<const RootComponent&>( RComponent );
+        }
+        
         //! get the number of allocated entities
         SKL_FORCEINLINE SKL_NODISCARD size_t GetAllocatedEntitiesCount() const noexcept { return IdStore.GetAllocatedIdsCount(); }
+
+        //! given the reference to root component data get the encompassing root component reference
+        SKL_FORCEINLINE SKL_NODISCARD static TEntityRef GetRootComponentDataParent( RootComponentData& InData ) noexcept
+        {
+            return static_cast<TEntityRef>( InData );
+        }
+        
+        //! given the reference to root component data get the encompassing root component reference
+        SKL_FORCEINLINE SKL_NODISCARD static TEntityConstRef GetRootComponentDataParent( const RootComponentData& InData ) noexcept
+        {
+            return static_cast<TEntityConstRef>( InData );
+        }
 
     private:
         static void CustomObjectDeleter( AOD::CustomObject* InCustomObject ) noexcept

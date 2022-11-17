@@ -390,7 +390,7 @@ namespace ServicesTests
                 int32_t b { 55 };
             };
 
-            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, false, RootComponentData, OtherComponent>;
             using TEntityPtr = MyEntityStore::TEntitySharedPtr;
 
 
@@ -485,7 +485,7 @@ namespace ServicesTests
                 int32_t b { 55 };
             };
 
-            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, true, RootComponentData, OtherComponent>;
             using TEntityPtr = MyEntityStore::TEntitySharedPtr;
 
             MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }

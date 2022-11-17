@@ -45,6 +45,9 @@
 //! Memory abstractions
 #include "Memory/Memory.h"
 
+//! Async IO API
+#include "Port/AsyncIO.h"
+
 //! TLS Sync System
 #include "TLSSync/TLSSync.h"
 

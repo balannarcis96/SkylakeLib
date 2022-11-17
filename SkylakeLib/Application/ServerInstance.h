@@ -303,7 +303,7 @@ namespace SKL
         //! Issue a new TLS sync task on all worker groups that support TLS Sync [WorkerGroup.Tag.bSupportsTLSSync=true]
         //! \remarks accepted signature void( SKL_CDECL* )( Worker&, WorkerGroup&, bool ) noexcept
         template<typename TFunctor>
-        void SyncTSL( TFunctor&& InFunctor ) noexcept
+        void SyncTLS( TFunctor&& InFunctor ) noexcept
         {
             SKL_ASSERT( SupportsTSLSync() );
 

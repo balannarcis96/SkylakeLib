@@ -301,7 +301,7 @@ namespace SKL
                 SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
             }
         
-            // signal to termiante the worker group
+            // signal to terminate the worker group
             return true;
         }
         

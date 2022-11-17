@@ -127,18 +127,24 @@ namespace SKL
         }
 
         AsyncIOOpaqueType OsOpaqueType; //!< Opaque object needed internally by the OS to perform the async IO operation
-        StreamBase       Stream;        //!< Cached buffer data and manipulation info
+        StreamBase        Stream;       //!< Cached buffer data and manipulation info
     };
 
-    template<uint32_t BufferSize, size_t CompletionTaskSize = 16> 
+    template<uint32_t TBufferSize, size_t TCompletionTaskSize = 16> 
     struct AsyncIOBuffer : IAsyncIOTask
     {
+        static constexpr uint32_t BufferSize       = TBufferSize;
+        static constexpr size_t CompletionTaskSize = TCompletionTaskSize;
+
         static_assert( CompletionTaskSize % 8 == 0 );
 
         using TDispatch = ASD::UniqueFunctorWrapper<CompletionTaskSize, typename IAsyncIOTask::TDispatchFunctionPtr>;
         
         AsyncIOBuffer() noexcept 
-            : IAsyncIOTask( IBuffer{ BufferSize, Buffer } ), OnDispatch{} {}
+            : IAsyncIOTask( IBuffer{ BufferSize, Buffer } ), OnDispatch{} 
+        {
+            SKL_ASSERT( 0 == ( reinterpret_cast<uint64_t>( Buffer ) % SKL_ALIGNMENT ) );
+        }
 
         ~AsyncIOBuffer() noexcept = default;
 
@@ -156,11 +162,145 @@ namespace SKL
             OnDispatch += std::forward<TFunctor>( InFunctor );
         }
 
-    private:
+    protected:
         TDispatch OnDispatch;           //!< The functor to dispatch when the async IO operation is completed
         uint8_t   Buffer[ BufferSize ]; //!< The buffer to carry the data
     };
 
 #define SKL_ASYNCIO_BUFFER_TRANSACTION( BufferPtr )          \
     if( auto Transaction{ NewTask->NewTransaction() }; true )
+}
+
+namespace SKL
+{
+    constexpr size_t CPacketHeaderToBodyPaddingSize = static_cast<size_t>( SKL_ALIGNMENT ) - CPacketHeaderSize;
+
+    template<size_t CompletionTaskSize = 16> 
+    struct AsyncNetBuffer: public AsyncIOBuffer<CPacketMaximumSize + CPacketHeaderToBodyPaddingSize, CompletionTaskSize>
+    {
+        using Base = AsyncIOBuffer<CPacketMaximumSize + CPacketHeaderToBodyPaddingSize, CompletionTaskSize>;
+
+        static constexpr size_t CPacketHeaderOffset = static_cast<size_t>( SKL_ALIGNMENT ) - CPacketHeaderSize;
+        static constexpr size_t CPacketBodyOffset   = SKL_ALIGNMENT;
+
+        static constexpr uint32_t CPacketReceiveHeaderState = 0;
+        static constexpr uint32_t CPacketReceiveBodyState   = 1;
+        static constexpr uint32_t CPacketSendState          = 2;
+
+        // The buffer description
+        // ----------------------------------------------------------------
+        // | Buffer    | [00 00 00 00] [00 00 00 00] [00 00 00 00 00 ...] |
+        // ----------------------------------------------------------------
+        // | Purpose   |     State        Header          Packet Body     |
+        // ----------------------------------------------------------------
+        // | Size      |   4 bytes       4 bytes          65531 bytes     |
+        // ----------------------------------------------------------------
+        // | Alignment |   8 bytes       4 bytes          8 bytes         |
+        // ----------------------------------------------------------------
+        // The 4 bytes padding is introduced to force the body to be 8 bytes aligned
+        
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetCurrentState() const noexcept
+        {
+            return *reinterpret_cast<const uint32_t*>( this->Buffer );
+        }
+        
+        SKL_FORCEINLINE void SetCurrentState( uint32_t State ) noexcept
+        {
+            return *reinterpret_cast<uint32_t*>( this->Buffer ) = State;
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool IsReceiveBuffer() const noexcept
+        {
+            return CPacketReceiveHeaderState == GetCurrentState() || CPacketReceiveBodyState == GetCurrentState();
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD bool IsSendBuffer() const noexcept
+        {
+            return CPacketSendState == GetCurrentState();
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD bool IsReceivingHeader() const noexcept
+        {
+            return CPacketReceiveHeaderState == GetCurrentState();
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD bool IsReceivingBody() const noexcept
+        {
+            return CPacketReceiveBodyState == GetCurrentState();
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetPacketHeaderBuffer() noexcept
+        {
+            return this->Buffer + CPacketHeaderOffset;
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetPacketBodyBuffer() noexcept
+        {
+            return this->Buffer + CPacketBodyOffset;
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD PacketHeader& GetPacketHeader() noexcept
+        {
+            return *reinterpret_cast<PacketHeader*>( GetPacketHeaderBuffer() );
+        }
+    
+        SKL_NODISCARD constexpr static uint32_t GetPacketTotalBufferSize() noexcept
+        {
+            return CPacketMaximumSize;
+        }
+
+        SKL_NODISCARD constexpr static uint32_t GetPacketBodyBufferSize() noexcept
+        {
+            return CPacketMaximumBodySize;
+        }
+
+        template<typename TPacketBody>
+        SKL_FORCEINLINE SKL_NODISCARD TPacketBody& CastToPacketType() noexcept
+        {
+            return *reinterpret_cast<TPacketBody*>( GetPacketBodyBuffer() );
+        }
+    
+        SKL_FORCEINLINE void PrepareForReceivingHeader() noexcept
+        {
+            SetCurrentState( CPacketReceiveHeaderState );
+
+            this->Stream.Position      = 0;
+            this->Stream.Buffer.Buffer = GetPacketHeaderBuffer();
+            this->Stream.Buffer.Length = CPacketHeaderSize;
+        }
+    
+        SKL_FORCEINLINE void PrepareForReceivingBody() noexcept
+        {
+            SetCurrentState( CPacketReceiveBodyState );
+
+            const TPacketSize TotalReadSize{ GetPacketHeader().Size - CPacketHeaderSize };
+            SKL_ASSERT( TotalReadSize > 0 );
+
+            this->Stream.Position      = 0;
+            this->Stream.Buffer.Buffer = GetPacketBodyBuffer();
+            this->Stream.Buffer.Length = TotalReadSize;
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetRemainingToReadFromBody() const noexcept
+        {
+            SKL_ASSERT( IsReceivingBody() );
+
+            const TPacketSize TotalReadSize{ GetPacketHeader().Size - CPacketHeaderSize };
+            SKL_ASSERT( TotalReadSize > 0 );
+
+            return static_cast<uint32_t>( TotalReadSize ) - this->Stream.Position;
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t ConfirmReceivedAmmount( uint32_t NoOfBytesTransferred ) const noexcept
+        {
+            SKL_ASSERT( IsReceivingBody() );
+
+            this->Stream.Position      += NoOfBytesTransferred;
+            this->Stream.Buffer.Buffer += NoOfBytesTransferred;
+            
+            SKL_ASSERT( ( this->Stream.Buffer.Buffer - this->Buffer ) <= Base::BufferSize );
+
+            return GetRemainingToReadFromBody();
+        }
+    };
 }

@@ -186,7 +186,7 @@ namespace ECSTests
         constexpr SKL::TEntityType CMyEntityType = 1;
 
         using MyEntityId = SKL::TEntityId<uint32_t>;
-        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, false, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
 
         MyEntityStore Store{};
@@ -309,8 +309,14 @@ namespace ECSTests
         constexpr SKL::TEntityType CMyEntityType = 2;
 
         using MyEntityId = SKL::TEntityId<uint32_t, true, true>;
-        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, RootComponentData, OtherComponent>;
+        using MyEntityStore = SKL::EntityStore<CMyEntityType, MyEntityId, 1024, true, RootComponentData, OtherComponent>;
         using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
+
+        const size_t aa{ sizeof( MyEntityStore::SharedRootComponent ) };
+        const size_t bb{ MyEntityStore::PaddToMultipleOfCachelineBase::BaseSize };
+        const size_t cc{ MyEntityStore::PaddToMultipleOfCachelineBase::PaddingSize };
+        const size_t dd{ MyEntityStore::FirstCacheLineUsedBytesSize };
+        printf( "\n%llu %llu %llu L1-line-used:%llu\n", aa, bb, cc,dd );
 
         MyEntityStore Store{};
 

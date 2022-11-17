@@ -15,7 +15,9 @@ namespace SKL
     template<typename TObject, typename TDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::DestructDeallocator>
     struct TSharedPtr
     {
-        using MyType                = TSharedPtr<TObject, TDeallocator>;
+        template<typename U>
+        using MyGenericType         = TSharedPtr<U, TDeallocator>;
+        using MyType                = MyGenericType<TObject>;
         using TObjectDecay          = std::remove_all_extents_t<TObject>;
         using element_type          = TObjectDecay;
         using MemoryPolicy          = typename TDeallocator::MyMemoryPolicy;
@@ -63,31 +65,34 @@ namespace SKL
             reset();
         }
 
-        // stl compatible API
-        SKL_FORCEINLINE          TObjectDecay* get()                        const noexcept { return Pointer; }
-        SKL_FORCEINLINE          TObjectDecay* operator->()                 const noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
-        SKL_FORCEINLINE          TObjectDecay& operator*()                        noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
-        SKL_FORCEINLINE const    TObjectDecay& operator*()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
-        SKL_FORCEINLINE          size_t        use_count()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return static_cast<size_t>( Static_GetReferenceCount( Pointer ) ); }
-        SKL_FORCEINLINE explicit               operator bool()              const noexcept { return nullptr != Pointer; }
-        SKL_FORCEINLINE          void          reset()                            noexcept { if( nullptr != Pointer ) SKL_LIKELY { Static_Reset( Pointer ); Pointer = nullptr;  } }
-        SKL_FORCEINLINE          TObjectDecay& operator[]( uint32_t Index )       noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
-        SKL_FORCEINLINE const    TObjectDecay& operator[]( uint32_t Index ) const noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        // STL compatible API
+        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay* get()                        const noexcept { return Pointer; }
+        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay* operator->()                 const noexcept { SKL_ASSERT( Pointer != nullptr ); return Pointer; }
+        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay& operator*()                        noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
+        SKL_FORCEINLINE SKL_NODISCARD const    TObjectDecay& operator*()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return *Pointer; }
+        SKL_FORCEINLINE SKL_NODISCARD          size_t        use_count()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return static_cast<size_t>( Static_GetReferenceCount( Pointer ) ); }
+        SKL_FORCEINLINE SKL_NODISCARD explicit               operator bool()              const noexcept { return nullptr != Pointer; }
+        SKL_FORCEINLINE                        void          reset()                            noexcept { if( nullptr != Pointer ) SKL_LIKELY { Static_Reset( Pointer ); Pointer = nullptr;  } }
+        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay& operator[]( uint32_t Index )       noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        SKL_FORCEINLINE SKL_NODISCARD const    TObjectDecay& operator[]( uint32_t Index ) const noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
         
-        template<typename TNewObject, typename TNewDeallocator = TDeallocator>
-        SKL_FORCEINLINE TSharedPtr<TNewObject, TNewDeallocator> CastTo() noexcept
+        // static_cast the underlying pointer to TNewObject and increment reference count
+        template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
+        SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> CastTo() noexcept
         {
-            if constexpr( std::is_class_v<TNewObject> )
-            {
-                return { static_cast<TNewObject*>( NewRefRaw() ) };
-            }
-            else
-            {
-                return { reinterpret_cast<TNewObject*>( NewRefRaw() ) };
-            }
+            return { static_cast<TNewObject*>( NewRefRaw() ) };
         }    
-        template<typename TNewObject, typename TNewDeallocator = TDeallocator>
-        SKL_FORCEINLINE TSharedPtr<TNewObject, TNewDeallocator> CastMoveTo() noexcept
+        
+        // reinterpret_cast the underlying pointer to TNewObject and increment reference count
+        template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
+        SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> ReinterpretCastTo() noexcept
+        {
+            return { reinterpret_cast<TNewObject*>( NewRefRaw() ) };
+        }    
+
+        // static_cast the underlying pointer to TNewObject and move it out of this TSharedPtr instance
+        template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
+        SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> CastMoveTo() noexcept
         {
             TNewObject* Result;
 
@@ -102,6 +107,16 @@ namespace SKL
 
             Pointer = nullptr;
 
+            return { Result };
+        }    
+
+        // reinterpret_cast the underlying pointer to TNewObject and move it out of this TSharedPtr instance
+        template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
+        SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> ReinterpretCastMoveTo() noexcept
+        {
+            TNewObject* Result;
+            Result  = reinterpret_cast<TNewObject*>( NewRefRaw() );
+            Pointer = nullptr;
             return { Result };
         }    
     
@@ -122,7 +137,7 @@ namespace SKL
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
         //! 
-        SKL_FORCEINLINE static uint32_t Static_GetReferenceCount( TObjectDecay* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static uint32_t Static_GetReferenceCount( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InPtr );
 
@@ -141,7 +156,7 @@ namespace SKL
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
         //! 
-        SKL_FORCEINLINE static void* Static_GetBlockPtr( TObjectDecay* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static void* Static_GetBlockPtr( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InPtr );
 
@@ -160,7 +175,7 @@ namespace SKL
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
         //! 
-        SKL_FORCEINLINE static std::pair<void*, size_t> Static_GetBlockPtrAndMetaBlockSize( TObjectDecay* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> Static_GetBlockPtrAndMetaBlockSize( TObjectDecay* InPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InPtr );
 
@@ -226,8 +241,9 @@ namespace SKL
                 MemoryPolicy::IncrementReferenceForObject( InPtr );
             }
         }
-
-        TObjectDecay* NewRefRaw() noexcept
+        
+        //! Increment the reference count and return raw ptr
+        SKL_FORCEINLINE SKL_NODISCARD TObjectDecay* NewRefRaw() noexcept
         {
             if( Pointer != nullptr )
             {
@@ -237,6 +253,7 @@ namespace SKL
             return Pointer;  
         }
         
+        //! Release the underlying pointer and return its value
         SKL_FORCEINLINE SKL_NODISCARD TObjectDecay* ReleaseRawRef() noexcept
         {
             TObjectDecay* Result{ Pointer };
@@ -245,7 +262,7 @@ namespace SKL
         }
 
     private:
-        TObjectDecay* Pointer { nullptr };
+        TObjectDecay* Pointer { nullptr }; //!< Raw ptr to shared object
 
         friend struct IAODSharedObjectTask;
         friend struct IAODCustomObjectTask;

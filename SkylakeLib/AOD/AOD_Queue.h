@@ -29,7 +29,6 @@ namespace SKL
             SKL_ASSERT( nullptr != InTask );
             SKL_ASSERT( nullptr == InTask->Next );
             auto* PrevNode{ std::atomic_exchange_explicit( &Head, InTask, std::memory_order_acq_rel ) };
-            TaskCount.increment();
             PrevNode->Next = InTask;
         }
 
@@ -39,12 +38,6 @@ namespace SKL
         //! Single consumer pop
         SKL_NODISCARD IAODTaskBase* Pop() noexcept  
         {
-            const auto IncResult { Guard.increment() };
-            if( IncResult != 0 )
-            {
-                SKL_BREAK();
-            }
-
             IAODTaskBase* LocalTail{ Tail };
             IAODTaskBase* LocalNext{ LocalTail->Next };
 
@@ -52,12 +45,6 @@ namespace SKL
             {
                 if( nullptr == LocalNext )
                 {       
-                    const auto DecResult { Guard.decrement() };
-                    if( DecResult != 1 )
-                    {
-                        SKL_BREAK();
-                    }
-
                     // Empty
                     return nullptr;
                 }
@@ -73,15 +60,6 @@ namespace SKL
             {
                 Tail = LocalNext;
 
-                TaskCount.decrement();
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
-                
-                const auto DecResult { Guard.decrement() };
-                if( DecResult != 1 )
-                {
-                    SKL_BREAK();
-                }
-
                 return LocalTail;
             }
 
@@ -89,12 +67,6 @@ namespace SKL
             const IAODTaskBase* LocalHead{ Head };
             if( LocalTail != LocalHead )
             {
-                const auto DecResult { Guard.decrement() };
-                if( DecResult != 1 )
-                {
-                    SKL_BREAK();
-                }
-
                 return nullptr;
             }
 
@@ -112,22 +84,7 @@ namespace SKL
             {
                 Tail = LocalNext;
 
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
-                TaskCount.decrement();
-
-                const auto DecResult { Guard.decrement() };
-                if( DecResult != 1 )
-                {
-                    SKL_BREAK();
-                }
-
                 return LocalTail;
-            }
-
-            const auto DecResult { Guard.decrement() };
-            if( DecResult != 1 )
-            {
-                SKL_BREAK();
             }
 
             return nullptr;
@@ -137,8 +94,5 @@ namespace SKL
         std::atomic<IAODTaskBase*> Head; //!< Head of the queue
         IAODTaskBase*              Tail; //!< Tail of the queue
         IAODTaskBase               Stub; //!< Stub item
-
-        std::relaxed_value<size_t> TaskCount{ 0 };
-        std::relaxed_value<int32_t> Guard{ 0 };
     };
 }
