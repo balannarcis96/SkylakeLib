@@ -94,30 +94,14 @@ namespace SKL
         template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
         SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> CastMoveTo() noexcept
         {
-            TNewObject* Result;
-
-            if constexpr( std::is_class_v<TNewObject> )
-            {
-                Result = static_cast<TNewObject*>( NewRefRaw() );
-            }
-            else
-            {
-                Result = reinterpret_cast<TNewObject*>( NewRefRaw() );
-            }
-
-            Pointer = nullptr;
-
-            return { Result };
+            return static_cast<TNewObject*>( ReleaseRawRef() );
         }    
 
         // reinterpret_cast the underlying pointer to TNewObject and move it out of this TSharedPtr instance
         template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>
         SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TNewObject, TNewDeallocator> ReinterpretCastMoveTo() noexcept
         {
-            TNewObject* Result;
-            Result  = reinterpret_cast<TNewObject*>( NewRefRaw() );
-            Pointer = nullptr;
-            return { Result };
+            return reinterpret_cast<TNewObject*>( ReleaseRawRef() );
         }    
     
         //! 
@@ -240,6 +224,34 @@ namespace SKL
             {
                 MemoryPolicy::IncrementReferenceForObject( InPtr );
             }
+        }
+        
+        //! 
+        //! Increment the reference count for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static TObjectDecay* Static_NewRawRef( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            Static_IncrementReference( InPtr );
+
+            return InPtr;
+        }
+        
+        //! 
+        //! Increment the reference count for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! 
+        SKL_FORCEINLINE static MyGenericType<TObjectDecay> Static_NewRef( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            Static_IncrementReference( InPtr );
+
+            return { InPtr };
         }
         
         //! Increment the reference count and return raw ptr

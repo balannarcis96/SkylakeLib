@@ -48,7 +48,7 @@ namespace SKL
         }
         
         //! Is this task valid
-        SKL_FORCEINLINE bool IsNull() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsNull() const noexcept
         {
             return CastSelfToProto().IsNull();
         }
@@ -63,7 +63,7 @@ namespace SKL
         void SetParent( AOD::SharedObject* InObject )noexcept;
 
         //! Get parent AOD Object ptr
-        SKL_FORCEINLINE AOD::SharedObject* GetParent() const noexcept { return Parent.get(); }
+        SKL_FORCEINLINE SKL_NODISCARD AOD::SharedObject* GetParent() const noexcept { return Parent.get(); }
 
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
@@ -78,20 +78,20 @@ namespace SKL
         }
 
         //! A > B
-        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const IAODSharedObjectTask& Other ) noexcept    
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const IAODSharedObjectTask& Other ) const noexcept    
         {
             return Due > Other.Due;
         }
 
     protected:
-        const TDispatchProto& CastSelfToProto() const noexcept
+        SKL_FORCEINLINE const TDispatchProto& CastSelfToProto() const noexcept
         {
             return *reinterpret_cast<const TDispatchProto*>( 
                 reinterpret_cast<const uint8_t*>( this ) + sizeof( IAODSharedObjectTask )
             );
         }
 
-        TDispatchProto& CastSelfToProto() noexcept
+        SKL_FORCEINLINE TDispatchProto& CastSelfToProto() noexcept
         {
             return *reinterpret_cast<TDispatchProto*>( 
                 reinterpret_cast<uint8_t*>( this ) + sizeof( IAODSharedObjectTask )
@@ -161,7 +161,7 @@ namespace SKL
         }
         
         //! Is this task valid
-        SKL_FORCEINLINE bool IsNull() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsNull() const noexcept
         {
             return CastSelfToProto().IsNull();
         }
@@ -179,7 +179,7 @@ namespace SKL
         }
         
         //! Get parent AOD Object ptr
-        SKL_FORCEINLINE AOD::StaticObject* GetParent() const noexcept { return Parent; }
+        SKL_FORCEINLINE SKL_NODISCARD AOD::StaticObject* GetParent() const noexcept { return Parent; }
 
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
@@ -188,26 +188,26 @@ namespace SKL
         }
 
         //! Is this task due
-        SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsDue( TEpochTimePoint InNow ) const noexcept
         {
             return InNow >= Due;
         }
 
         //! A > B
-        SKL_FORCEINLINE bool operator>( const IAODStaticObjectTask& Other ) noexcept    
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const IAODStaticObjectTask& Other ) const noexcept    
         {
             return Due > Other.Due;
         }
 
     protected:
-        const TDispatchProto& CastSelfToProto() const noexcept
+        SKL_FORCEINLINE const TDispatchProto& CastSelfToProto() const noexcept
         {
             return *reinterpret_cast<const TDispatchProto*>( 
                 reinterpret_cast<const uint8_t*>( this ) + sizeof( IAODStaticObjectTask )
             );
         }
 
-        TDispatchProto& CastSelfToProto() noexcept
+        SKL_FORCEINLINE TDispatchProto& CastSelfToProto() noexcept
         {
             return *reinterpret_cast<TDispatchProto*>( 
                 reinterpret_cast<uint8_t*>( this ) + sizeof( IAODStaticObjectTask )
@@ -299,7 +299,7 @@ namespace SKL
         }
         
         //! Is this task valid
-        SKL_FORCEINLINE bool IsNull() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsNull() const noexcept
         {
             return CastSelfToProto().IsNull();
         }
@@ -314,7 +314,7 @@ namespace SKL
         void SetParent( AOD::CustomObject* InObject )noexcept;
         
         //! Get parent AOD Object ptr
-        SKL_FORCEINLINE AOD::CustomObject* GetParent() const noexcept { return Parent.get(); }
+        SKL_FORCEINLINE SKL_NODISCARD AOD::CustomObject* GetParent() const noexcept { return Parent.get(); }
 
         //! Set due time
         SKL_FORCEINLINE void SetDue( TDuration AfterMilliseconds ) noexcept
@@ -323,13 +323,13 @@ namespace SKL
         }
 
         //! Is this task due
-        SKL_FORCEINLINE bool IsDue( TEpochTimePoint InNow ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsDue( TEpochTimePoint InNow ) const noexcept
         {
             return InNow >= Due;
         }
 
         //! A > B
-        SKL_FORCEINLINE bool operator>( const IAODCustomObjectTask& Other ) noexcept    
+        SKL_FORCEINLINE SKL_NODISCARD bool operator>( const IAODCustomObjectTask& Other ) const noexcept    
         {
             return Due > Other.Due;
         }
@@ -381,5 +381,41 @@ namespace SKL
 
     private:
         TDispatch OnDispatch; //!< The functor to dispatch for this task
+    };
+}
+
+namespace SKL
+{
+    struct IAODSharedObjectTaskPtrComparer
+    {
+        SKL_FORCEINLINE SKL_NODISCARD bool operator()( const IAODSharedObjectTask* Left, const IAODSharedObjectTask* Right ) const noexcept
+        {
+            SKL_ASSERT( nullptr != Left );
+            SKL_ASSERT( nullptr != Right );
+
+            return ( *Left ) > ( *Right );
+        }
+    };
+
+    struct IAODStaticObjectTaskPtrComparer
+    {
+        SKL_FORCEINLINE SKL_NODISCARD bool operator()( const IAODStaticObjectTask* Left, const IAODStaticObjectTask* Right ) const noexcept
+        {
+            SKL_ASSERT( nullptr != Left );
+            SKL_ASSERT( nullptr != Right );
+
+            return ( *Left ) > ( *Right );
+        }
+    };
+
+    struct IAODCustomObjectTaskPtrComparer
+    {
+        SKL_FORCEINLINE SKL_NODISCARD bool operator()( const IAODCustomObjectTask* Left, const IAODCustomObjectTask* Right ) const noexcept
+        {
+            SKL_ASSERT( nullptr != Left );
+            SKL_ASSERT( nullptr != Right );
+
+            return ( *Left ) > ( *Right );
+        }
     };
 }

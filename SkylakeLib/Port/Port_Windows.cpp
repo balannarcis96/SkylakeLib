@@ -630,12 +630,14 @@ namespace SKL
 
     RStatus AsyncIO::SendAsync( TSocket InSocket, TSharedPtr<IAsyncIOTask> InAsyncIOTask ) noexcept
     {
-        return SendAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
+        IBuffer* BufferInterface{ &InAsyncIOTask->GetInterface() };
+        return SendAsync( InSocket, BufferInterface, InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
     }
 
     RStatus AsyncIO::ReceiveAsync( TSocket InSocket, TSharedPtr<IAsyncIOTask> InAsyncIOTask ) noexcept
     {
-        return ReceiveAsync( InSocket, &InAsyncIOTask->GetInterface(), InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
+        IBuffer* BufferInterface{ &InAsyncIOTask->GetInterface() };
+        return ReceiveAsync( InSocket, BufferInterface, InAsyncIOTask.ReinterpretCastMoveTo<AsyncIOOpaqueType>() );
     }
 
     RStatus AsyncIO::AssociateToTheAPI( TSocket InSocket ) const noexcept

@@ -79,14 +79,17 @@ namespace SKL
             AODCustomObjectDelayedTasks.Push( InTask );
         }
 
+        //! Get the group owning this worker
+        SKL_FORCEINLINE SKL_NODISCARD WorkerGroup* GetGroup() const noexcept { return Group; }
+
     private:
         void RunImpl() noexcept;
         void Clear() noexcept;
                 
-        TaskQueue                                             DelayedTasks                {};          //!< Single consummer multiple producers queue for delayed tasks 
-        AODTaskQueue                                          AODSharedObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                                          AODStaticObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                                          AODCustomObjectDelayedTasks {};          //!< Single consummer multiple producers queue for AOD delayed tasks 
+        TaskQueue                                             DelayedTasks                {};          //!< Single consumer multiple producers queue for delayed tasks 
+        AODTaskQueue                                          AODSharedObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
+        AODTaskQueue                                          AODStaticObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
+        AODTaskQueue                                          AODCustomObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
         std::synced_value<uint32_t>                           bIsRunning                  { FALSE };   //!< Is this worker signaled to run
         std::synced_value<uint32_t>                           bIsMasterThread             { FALSE };   //!< Is this a master worker
         std::relaxed_value<TEpochTimePoint>                   StartedAt                   { 0 };       //!< Time point when the worker started

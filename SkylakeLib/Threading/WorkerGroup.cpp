@@ -299,10 +299,10 @@ namespace SKL
             if( RSystemFailure ==  Result )
             {
                 SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
-            }
         
-            // signal to terminate the worker group
-            return true;
+                // signal to terminate the worker group
+                return true;
+            }
         }
         
         SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );
@@ -327,10 +327,9 @@ namespace SKL
             if( RSystemFailure ==  Result )
             {
                 SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+                // signal to terminate the worker group
+                return true;
             }
-        
-            // signal to termiante the worker group
-            return true;
         }
         
         SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );

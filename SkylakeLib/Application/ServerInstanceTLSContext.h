@@ -11,6 +11,8 @@ namespace SKL
 {
     struct ServerInstanceTLSContext final : ITLSSingleton<ServerInstanceTLSContext>
     {
+        using PriorityTasksQueue = TLSManagedPriorityQueue<ITask*, ITaskComparer>;
+
         ServerInstanceTLSContext() noexcept = default;
         ~ServerInstanceTLSContext() noexcept;
 
@@ -27,16 +29,16 @@ namespace SKL
         SKL_FORCEINLINE const std::vector<WorkerGroup*>& GetDeferredTasksHandlingGroups() const noexcept { return DeferredTasksHandlingGroups; }
 
     private:
-        TLSManagedQueue<ITask*>                    PendingDelayedTasks        {};
-        TLSManagedPriorityQueue<ITask*>            DelayedTasks               {};
-        WorkerGroupTag                             ParentWorkerGroup          {};
-        ServerInstanceFlags                        ServerFlags                {};
-        std::vector<WorkerGroup*>                  DeferredTasksHandlingGroups{};
-        uint16_t                                   RRLastIndex                { 0 };
-        uint16_t                                   RRLastIndex2               { 0 };
-        uint32_t                                   Padding                    { 0 };
-        ServerInstance*                            SourceServerInstance       { nullptr };
-        char                                       NameBuffer[512]            { 0 };
+        TLSManagedQueue<ITask*>   PendingDelayedTasks        {};
+        PriorityTasksQueue        DelayedTasks               {};
+        WorkerGroupTag            ParentWorkerGroup          {};
+        ServerInstanceFlags       ServerFlags                {};
+        std::vector<WorkerGroup*> DeferredTasksHandlingGroups{};
+        uint16_t                  RRLastIndex                { 0 };
+        uint16_t                  RRLastIndex2               { 0 };
+        uint32_t                  Padding                    { 0 };
+        ServerInstance*           SourceServerInstance       { nullptr };
+        char                      NameBuffer[512]            { 0 };
 
         friend bool DeferTask( ITask* InTask ) noexcept;    
         friend bool DeferTaskAgain( ITask* InTask ) noexcept;

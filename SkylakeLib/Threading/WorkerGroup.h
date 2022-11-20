@@ -182,6 +182,9 @@ namespace SKL
         //! Get workers 
         SKL_FORCEINLINE const std::vector<std::unique_ptr<Worker>>& GetWorkers() const noexcept { return Workers; }
 
+        //! Get the async io instance for this worker group
+        SKL_FORCEINLINE AsyncIO& GetAsyncIOAPI() noexcept{ return AsyncIOAPI; }
+
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;
 

@@ -63,7 +63,7 @@ namespace SKL
             return InNow >= Due;
         }
 
-        SKL_FORCEINLINE bool operator>( const ITask& Other ) noexcept    
+        SKL_FORCEINLINE bool operator>( const ITask& Other ) const noexcept    
         {
             return Due > Other.Due;
         }
@@ -180,4 +180,18 @@ namespace SKL
         // cast to base and defer
         return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
     }
+}
+
+namespace SKL
+{
+    struct ITaskComparer
+    {
+        SKL_FORCEINLINE SKL_NODISCARD bool operator()( const ITask* Left, const ITask* Right ) const noexcept
+        {
+            SKL_ASSERT( nullptr != Left );
+            SKL_ASSERT( nullptr != Right );
+
+            return ( *Left ) > ( *Right );
+        }
+    };
 }
