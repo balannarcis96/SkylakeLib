@@ -37,14 +37,14 @@ namespace SKL
         using IndexType                                            = typename EntityId::TIndexType;
         using RootComponentData                                    = TRootComponentData;
         using Componenets                                          = std::tuple<TComponents...>;
-        static constexpr size_t MaxEntities                        = TMaxEntities;
+        static constexpr size_t MaxEntities                        = TMaxEntities + 1;
         static constexpr size_t ComponentsCount                    = 1 + sizeof...( TComponents );
         static constexpr IndexType IdentityValue                   = 0;
         static constexpr TEntityType EntityType                    = MyEntityType;
         static constexpr bool bPaddRootEntityToMultipleOfCacheLine = TPaddRootEntityToMultipleOfCacheLine;
         
         static_assert( std::is_unsigned_v<IndexType> );
-        static_assert( TMaxEntities <= static_cast<size_t>( std::numeric_limits<IndexType>::max() ) );
+        static_assert( MaxEntities <= static_cast<size_t>( std::numeric_limits<IndexType>::max() ) );
         static_assert( true == std::is_class_v<TRootComponentData>, "The root component data a class/struct type" );
         static_assert( false == std::is_polymorphic_v<TRootComponentData>, "The root component data must not be a polymorphic or abstract type" );
         
@@ -191,8 +191,8 @@ namespace SKL
         using TEntityPtr       = RootComponent*;
         using TEntityRef       = RootComponent&;
         using TEntityConstRef  = const RootComponent&;
-        using MyStore          = SymmetricStore<IndexType, TMaxEntities, SharedRootComponent, TComponents...>;
-        using MyIdStore        = UIDStore<IndexType, IdentityValue, static_cast<IndexType>( TMaxEntities )>;
+        using MyStore          = SymmetricStore<IndexType, MaxEntities, SharedRootComponent, TComponents...>;
+        using MyIdStore        = UIDStore<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities )>;
         using Variant          = typename TEntityId::Variant;
 
         //! initialize the store
@@ -207,7 +207,7 @@ namespace SKL
             } );
 
             // initialize the entities
-            for( size_t i = 0; i < TMaxEntities; ++i )
+            for( size_t i = 0; i < MaxEntities; ++i )
             {
                 auto& RComponent{ Store.GetComponent<SharedRootComponent>( static_cast<IndexType>( i ) ) };
              

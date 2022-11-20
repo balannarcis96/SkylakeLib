@@ -29,6 +29,7 @@ namespace SKL
         //! Multiple producers push
         SKL_FORCEINLINE void Push( ITask* InTask ) noexcept
         {
+            SKL_ASSERT( nullptr == InTask->Next );
             auto* PrevNode{ std::atomic_exchange_explicit( &Head, InTask, std::memory_order_acq_rel ) };
             PrevNode->Next = InTask;
         }

@@ -66,19 +66,22 @@ namespace SKL
         {
             TUIDType Result{ IdentityValue };
 
-            if( TRUE == bIsActive ) SKL_LIKELY
+            if( static_cast<TUIDType>( AllocationsCount.increment() + 1 ) < MaxUIDValue ) SKL_LIKELY
             {
-                SpinLockScopeGuard Guard{ IdsLock };
-                if( FALSE == FreeIds.empty() )
+                if( TRUE == bIsActive ) SKL_LIKELY
                 {
-                    Result = FreeIds.top();
-                    FreeIds.pop();
+                    SpinLockScopeGuard Guard{ IdsLock };
+                    if( FALSE == FreeIds.empty() )
+                    {
+                        Result = FreeIds.top();
+                        FreeIds.pop();
+                    }
                 }
             }
 
-            if( IdentityValue != Result ) SKL_LIKELY
+            if( IdentityValue == Result ) SKL_UNLIKELY
             {
-                AllocationsCount.increment();
+                ( void )AllocationsCount.decrement();
             }
 
             return Result;
