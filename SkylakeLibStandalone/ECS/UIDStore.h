@@ -66,7 +66,7 @@ namespace SKL
         {
             TUIDType Result{ IdentityValue };
 
-            if( static_cast<TUIDType>( AllocationsCount.increment() + 1 ) < MaxUIDValue ) SKL_LIKELY
+            if( static_cast<TUIDType>( AllocationsCount.increment() + 1 ) <= MaxUIDValue ) SKL_LIKELY
             {
                 if( TRUE == bIsActive ) SKL_LIKELY
                 {
