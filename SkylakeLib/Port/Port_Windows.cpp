@@ -27,7 +27,7 @@ namespace SKL
     static_assert( sizeof( int64_t ) == sizeof( LARGE_INTEGER ), "Timer must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TEpochTimePoint>, "TEpochTimePoint must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TSystemTimePoint>, "TSystemTimePoint must be updated!" );
-    static_assert( CInvalidSocket == INVALID_SOCKET, "Invalid [invlid] socket value!" );
+    static_assert( CInvalidSocket == INVALID_SOCKET, "Invalid [invalid] socket value!" );
 }
 
 namespace SKL
@@ -582,17 +582,17 @@ namespace SKL
         );
         if ( SOCKET_ERROR == Result ) SKL_LIKELY
         {    
-            const auto LastWSAError = WSAGetLastError( );
-            if( LastWSAError != WSA_IO_PENDING ) SKL_UNLIKELY
+            const int32_t LastWSAError{ WSAGetLastError() };
+            if( WSA_IO_PENDING != LastWSAError ) SKL_UNLIKELY
             {
                 SKLL_ERR_FMT( "AsyncIO::ReceiveAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
-
-            // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
-            // on the same AsyncIO handle that the socket was associated with
-            ( void )InOpaqueObject.ReleaseRawRef();
         }
+
+        // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
+        // on the same AsyncIO handle that the socket was associated with
+        ( void )InOpaqueObject.ReleaseRawRef();
 
         return RSuccess;
     }
@@ -613,17 +613,17 @@ namespace SKL
         );
         if ( SOCKET_ERROR == Result ) SKL_LIKELY
         {    
-            const auto LastWSAError = WSAGetLastError( );
-            if( LastWSAError != WSA_IO_PENDING ) SKL_UNLIKELY
+            const int32_t LastWSAError{ WSAGetLastError() };
+            if( WSA_IO_PENDING != LastWSAError ) SKL_UNLIKELY
             {
                 SKLL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
-
-            // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
-            // on the same AsyncIO handle that the socket was associated with
-            ( void )InOpaqueObject.ReleaseRawRef();
         }
+
+        // This reference must be released by the worker that calls GetCompletedAsyncRequest/TryGetCompletedAsyncRequest
+        // on the same AsyncIO handle that the socket was associated with
+        ( void )InOpaqueObject.ReleaseRawRef();
 
         return RSuccess;
     }
