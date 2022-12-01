@@ -9,13 +9,13 @@
 
 namespace SKL
 {
-    template< typename TUpper >
+    template<typename TUpper>
     struct ITLSSingleton
     {
-        using TLSSingletonType = TLSValue< TUpper >;
+        using TLSSingletonType = TLSValue<TUpper>;
 
-        ITLSSingleton( ) noexcept          = default;
-        virtual ~ITLSSingleton( ) noexcept = default;
+        ITLSSingleton() noexcept          = default;
+        virtual ~ITLSSingleton() noexcept = default;
 
         ITLSSingleton( const ITLSSingleton & ) noexcept = default;
         ITLSSingleton &operator=( const ITLSSingleton & ) noexcept = default;
@@ -26,13 +26,13 @@ namespace SKL
         template<typename ...TArgs>
         static RStatus Create( TArgs... Args ) noexcept
         {
-            auto *NewObject = new TUpper( );
+            auto *NewObject = new TUpper( std::forward<TArgs>( Args )... );
             if( !NewObject )
             {
                 return RStatus_AllocationFailed;
             }
             
-            if( const auto InitializeResult = NewObject->Initialize( std::forward<TArgs>( Args )... ); InitializeResult != RSuccess )
+            if( const auto InitializeResult = NewObject->Initialize(); InitializeResult != RSuccess )
             {
                 return InitializeResult;
             }
@@ -53,9 +53,9 @@ namespace SKL
             return TLSSingletonType::GetValuePtr( );
         }
 
-        static void Destroy( ) noexcept
+        static void Destroy() noexcept
         {
-            if( const auto *Instance = TLSSingletonType::GetValuePtr( ) )
+            if( const auto *Instance = TLSSingletonType::GetValuePtr() )
             {
                 SKLL_VER_FMT( "[TLSSingleton] %s Destroyed!", Instance->GetName() );
                 delete Instance;
@@ -64,8 +64,8 @@ namespace SKL
             TLSSingletonType::SetValuePtr( nullptr );
         }
 
-        virtual RStatus Initialize( ) noexcept { return RSuccess; }
+        virtual RStatus Initialize() noexcept { return RSuccess; }
 
-        virtual const char *GetName( ) const noexcept = 0;
+        virtual const char *GetName() const noexcept = 0;
     };
 }

@@ -19,5 +19,5 @@ foreach(Item IN LISTS ALL_PREQREQUISITES)
     add_custom_command(
                 TARGET SkylakeLibDBTests PRE_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Item} "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/"
-                COMMENT "Copying header: ${Item}")
+                COMMENT "Copying DLL: ${Item}")
 endforeach()

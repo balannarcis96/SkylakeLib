@@ -11,28 +11,26 @@
 
 namespace SKL
 {
+    AODTLSContext::AODTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept
+        : SourceServerInstance{ InServerInstance }
+        , ParentWorkerGroup{ InWorkerGroupTag } 
+        , bScheduleAODDelayedTasks{ false == InWorkerGroupTag.bIsActive }
+    {
+        SKL_ASSERT( nullptr != InServerInstance );
+        SKL_ASSERT( InWorkerGroupTag.IsValid() );
+    }
+
     AODTLSContext::~AODTLSContext() noexcept
     {
         Clear();
     }
 
-    RStatus AODTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
+    RStatus AODTLSContext::Initialize() noexcept 
     {
-        SKL_ASSERT( nullptr != InServerInstance );
-        
-        if( false == InWorkerGroupTag.Validate() )
-        {
-            return RInvalidParamters;
-        }
-    
-        SourceServerInstance     = InServerInstance;
-        ParentWorkerGroup        = InWorkerGroupTag;
-        bScheduleAODDelayedTasks = false == ParentWorkerGroup.bIsActive;
-
         Reset();
 
         // Build name
-        snprintf( NameBuffer, 512, "[%ws AODTLSContext]", SourceServerInstance->GetName() );
+        ( void )snprintf( NameBuffer, 512, "[%ws AODTLSContext]", SourceServerInstance->GetName() );
 
         return RSuccess;
     }

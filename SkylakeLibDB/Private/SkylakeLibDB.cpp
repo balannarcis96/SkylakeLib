@@ -90,8 +90,12 @@ DBConnection_Execute_Start:
                 }
             }
 
-            const char* MysqlErrorString{ GetLastMysqlError() };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ GetLastMysqlError() };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
+  
             return -1;
         }
         
@@ -144,8 +148,12 @@ DBConnection_Execute_Start:
                 }
             }
 
-            const char* MysqlErrorString{ GetLastMysqlError() };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ GetLastMysqlError() };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
+  
             return -1;
         }
         
@@ -182,8 +190,11 @@ DBConnection_Execute_Start:
         const auto PingResult{ ::mysql_ping( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
         if( 0 == PingResult ) SKL_LIKELY
         {
-            const char* MysqlErrorString{ GetLastMysqlError() };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString ); 
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ GetLastMysqlError() };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString ); 
+            } );
         }
 
         return 0 == PingResult;
@@ -258,11 +269,15 @@ DBConnection_Execute_Start:
     }
     void DBConnection::CloseConnection() noexcept
     {
+        if( bIsOpen )
+        {
+            SKLL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
+        }
+
         ::mysql_close( reinterpret_cast<MYSQL*>( &Mysql ) );
         Mysql.Reset();
         bIsOpen = false;
         bIsTransactionStarted = false;
-        SKLL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
     }
     bool DBConnection::SetOptions() noexcept
     {
@@ -324,7 +339,7 @@ DBConnection_Execute_Start:
      * DBConnectionFactory
      *------------------------------------------------------------*/
 
-    std::unique_ptr<DBConnection> DBConnectionFactory::TryOpenNewConnection() noexcept
+    std::unique_ptr<DBConnection> DBConnectionFactory::TryOpenNewConnection() const noexcept
     {
         SKL_ASSERT( true == Settings.IsValid() );
 

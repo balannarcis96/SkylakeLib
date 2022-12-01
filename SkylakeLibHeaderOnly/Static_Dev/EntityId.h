@@ -113,7 +113,7 @@ namespace SKL
 
         SKL_FORCEINLINE constexpr bool operator==( const TEntityId& Other ) const noexcept { return Id == Other.Id; }
         SKL_FORCEINLINE constexpr bool operator!=( const TEntityId& Other ) const noexcept { return Id != Other.Id; }
-        SKL_FORCEINLINE constexpr void operator=( TEntityIdBase InId ) noexcept { return Id = InId; }
+        SKL_FORCEINLINE constexpr void operator=( TEntityIdBase InId ) noexcept { Id = InId; }
         SKL_FORCEINLINE constexpr operator TEntityIdBase() const noexcept
         { 
             if constexpr( true == bAtomic )

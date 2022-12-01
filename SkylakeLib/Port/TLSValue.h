@@ -9,12 +9,12 @@
 
 namespace SKL
 {
-    template< typename T, uint32_t TypeIndex = 0, typename TDependentType = void, size_t TDependentSize = 0 >
+    template<typename T, uint32_t TypeIndex = 0, typename TDependentType = void, size_t TDependentSize = 0>
     struct TLSValue
     {
         static constexpr bool bFitsInTLSSlot = sizeof( T ) <= sizeof( void * );
         static constexpr bool bIsClassType   = std::is_class_v<T>;
-        static_assert( !bIsClassType || std::is_nothrow_default_constructible_v<T>, "Class types must be nothrow default constructible" );
+        //static_assert( !bIsClassType || std::is_nothrow_default_constructible_v<T>, "Class types must be nothrow default constructible" );
         static_assert( bIsClassType || bFitsInTLSSlot, "Non class types must be at most 8bytes" );
 
         struct TypeTraits
@@ -31,7 +31,7 @@ namespace SKL
 
         struct TLSSlot
         {
-            TLSSlot( ) noexcept
+            TLSSlot() noexcept
             {
                 TLSIndex = PlatformTLS::AllocTlsSlot( );
                 SKL_ASSERT( true == PlatformTLS::IsValidTlsSlot( TLSIndex ) );
@@ -49,7 +49,7 @@ namespace SKL
                 }
             }
 
-            ~TLSSlot( ) noexcept
+            ~TLSSlot() noexcept
             {
                 if( PlatformTLS::IsValidTlsSlot( TLSIndex ) )
                 {
@@ -69,14 +69,14 @@ namespace SKL
             }
 
             template<typename = std::enable_if<false == bIsClassType>>
-            SKL_FORCEINLINE T GetValue( ) noexcept
+            SKL_FORCEINLINE T GetValue() noexcept
             {
                 const void* TLSValue = PlatformTLS::GetTlsValue( TLSIndex );
                 return *reinterpret_cast<T*>( &TLSValue );
             }
 
             template<typename = std::enable_if<true == bIsClassType>>
-            SKL_FORCEINLINE T *GetValuePtr( ) noexcept
+            SKL_FORCEINLINE T *GetValuePtr() noexcept
             {
                 return reinterpret_cast<T*>( PlatformTLS::GetTlsValue( TLSIndex ) );
             }

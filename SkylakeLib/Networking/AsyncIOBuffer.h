@@ -23,7 +23,7 @@ namespace SKL
 
         IAsyncIOTask( IBuffer BufferInterface ) noexcept : Stream { 0, BufferInterface.Length, BufferInterface.Buffer, true }
         {
-            memset( &OsOpaqueType, 0, sizeof( AsyncIOOpaqueType ) );
+            OsOpaqueType.Reset();
         }
         ~IAsyncIOTask() noexcept 
         {
@@ -145,6 +145,12 @@ namespace SKL
         {
             SKL_ASSERT( 0 == ( reinterpret_cast<uint64_t>( Buffer ) % SKL_ALIGNMENT ) );
         }
+        
+        AsyncIOBuffer( IBuffer InInterface ) noexcept 
+            : IAsyncIOTask( InInterface ), OnDispatch{} 
+        {
+            SKL_ASSERT( 0 == ( reinterpret_cast<uint64_t>( Buffer ) % SKL_ALIGNMENT ) );
+        }
 
         ~AsyncIOBuffer() noexcept = default;
 
@@ -168,7 +174,7 @@ namespace SKL
     };
 
 #define SKL_ASYNCIO_BUFFER_TRANSACTION( BufferPtr )          \
-    if( auto Transaction{ NewTask->NewTransaction() }; true )
+    if( SKL::BinaryStreamTransaction Transaction{ BufferPtr->NewTransaction() }; true )
 }
 
 namespace SKL
@@ -186,6 +192,10 @@ namespace SKL
         static constexpr uint32_t CPacketReceiveHeaderState = 0;
         static constexpr uint32_t CPacketReceiveBodyState   = 1;
         static constexpr uint32_t CPacketSendState          = 2;
+
+        AsyncNetBuffer() noexcept
+            : Base( { GetPacketTotalBufferSize(), GetPacketHeaderBuffer() } ) {}
+        ~AsyncNetBuffer() noexcept = default;
 
         // The buffer description
         // ----------------------------------------------------------------
@@ -206,7 +216,7 @@ namespace SKL
         
         SKL_FORCEINLINE void SetCurrentState( uint32_t State ) noexcept
         {
-            return *reinterpret_cast<uint32_t*>( this->Buffer ) = State;
+            *reinterpret_cast<uint32_t*>( this->Buffer ) = State;
         }
         
         SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetPacketHeaderBuffer() noexcept
@@ -251,78 +261,117 @@ namespace SKL
             this->Stream.Buffer.Length = GetPacketTotalBufferSize();
         }
         
-        //! confirm n bytes as received into the buffer
-        //! \returns true if has received an entire packet and the extra data(if any) was written into the @OutExtraDataStream
-        //! \returns false if the received packet is not complete, post a new recv request with the same buffer
-        SKL_NODISCARD bool ConfirmReceivedAmmount( uint32_t NoOfBytesTransferred, StreamBase& OutExtraDataStream ) noexcept
+        //! call this to prepare the buffer for new receive request
+        SKL_FORCEINLINE void PrepareForReceivingHeader() noexcept
         {
+            SetCurrentState( CPacketReceiveHeaderState );
+
+            this->Stream.Position      = 0;
+            this->Stream.Buffer.Buffer = GetPacketHeaderBuffer();
+            this->Stream.Buffer.Length = CPacketHeaderSize;
+        }
+        
+        //! call this to prepare the buffer for new receive request
+        SKL_FORCEINLINE void PrepareForReceivingBody() noexcept
+        {
+            SetCurrentState( CPacketReceiveBodyState );
+
+            this->Stream.Position       = CPacketHeaderSize;
+            this->Stream.Buffer.Buffer += CPacketHeaderSize;
+            this->Stream.Buffer.Length  = GetPacketHeader().Size - CPacketHeaderSize;
+        }
+        
+        //! confirm n bytes as received into the buffer
+        //! \returns <bool hasReceivedWholePacket, bool bProcessedSuccessfully>
+        SKL_NODISCARD std::pair<bool,bool> ConfirmReceivedExactAmmount( uint32_t NoOfBytesTransferred ) noexcept
+        {
+            SKL_ASSERT( NoOfBytesTransferred <= CPacketMaximumSize );
+
             // acknowledge received bytes count
             this->Stream.Position      += NoOfBytesTransferred;
             this->Stream.Buffer.Buffer += NoOfBytesTransferred;
             this->Stream.Buffer.Length -= NoOfBytesTransferred;
 
             // get the total received count
-            const uint32_t CurrentlyReceived{ GetCurrentlyReceivedByteCount() };
+            const uint32_t CurrentlyReceived{ this->Stream.Position };
 
             // we must receive at least the header
             if( CurrentlyReceived < CPacketHeaderSize )
             {
-                return false;
+                return { false, true };
             }
+
+            const PacketHeader& Header{ GetPacketHeader() };
 
             // do we have the whole packet received
-            const uint32_t ExpectedPacketSize  { GetPacketHeader().Size };
-            const bool     bHasReceivedExpected{ CurrentlyReceived >= ExpectedPacketSize };
+            const uint32_t ExpectedPacketSize  { Header.Size };
+            const bool     bHasReceivedExpected{ CurrentlyReceived == ExpectedPacketSize };
 
-            // check for extra received data
-            if( CurrentlyReceived > ExpectedPacketSize )
-            {
-                // calculate the extra received data size
-                const uint32_t       ExtraDataSize{ CurrentlyReceived - ExpectedPacketSize };
-                IStreamObjectWriter& Writer       { IStreamObjectWriter::FromStreamBaseRef( OutExtraDataStream ) };
-
-                SKLL_INF_FMT( "AsyncNetBuffer::ConfirmReceivedAmmount() ExtraBytesReceived: %u bytes", ExtraDataSize );
-
-                // write the extra data into the OutExtraDataStream stream
-                const bool bResult{ Writer.Write( this->Stream.Buffer.Buffer, ExtraDataSize ) };
-                SKL_ASSERT( bResult );
-            }
-
-            return bHasReceivedExpected;
+            return { bHasReceivedExpected, CurrentlyReceived <= ExpectedPacketSize };
         }
         
-        //! place new data into the buffer and check if a packet was received or a new received request is needed
-        //! \returns true if has received an entire packet and the extra data(if any) was written into the @InOutDataStream
-        //! \returns false if the received packet is not complete, post a new recv request with the same buffer
-        SKL_FORCEINLINE bool PlaceDataIntoBufferBeforeReceiving( StreamBase& InOutDataStream ) noexcept
+        //! confirm n bytes as received into the buffer
+        //! \returns <bool hasReceivedWholePacket, bool bProcessedSuccessfully>
+        SKL_NODISCARD std::pair<bool,bool> ConfirmReceivedAmmount( uint32_t NoOfBytesTransferred, StreamBase& OutExtraData ) noexcept
         {
-            SKL_ASSERT( 0 < InOutDataStream.GetPosition() );
+            SKL_ASSERT( NoOfBytesTransferred <= CPacketMaximumSize );
 
-            IStreamObjectReader& Reader{ IStreamObjectReader::FromStreamBaseRef( InOutDataStream ) };
-            const uint32_t InDataSize  { InOutDataStream.GetPosition() };
+            // acknowledge received bytes count
+            this->Stream.Position      += NoOfBytesTransferred;
+            this->Stream.Buffer.Buffer += NoOfBytesTransferred;
+            this->Stream.Buffer.Length -= NoOfBytesTransferred;
 
-            // reset the in buffer position
-            InOutDataStream.Position = 0;
+            // get the total received count
+            const uint32_t CurrentlyReceived{ this->Stream.Position };
 
-            // copy in the data
-            const bool bResult{ Reader.Read( GetPacketHeaderBuffer(), InDataSize ) };
-            SKL_ASSERT( bResult );
+            // we must receive at least the header
+            if( CurrentlyReceived < CPacketHeaderSize )
+            {
+                return { false, true };
+            }
 
-            // reset the stream interface to the full buffer
-            PrepareForReceiving();
+            const PacketHeader& Header{ GetPacketHeader() };
 
-            // reset the out buffer position
-            InOutDataStream.Position = 0;
+            // do we have the whole packet received
+            const uint32_t ExpectedPacketSize  { Header.Size };
+            const bool     bHasReceivedExpected{ CurrentlyReceived >= ExpectedPacketSize };
 
-            return ConfirmReceivedAmmount( InDataSize, InOutDataStream );
+            // if we have extra data received copy it over in the extra data stream
+            if( CurrentlyReceived > ExpectedPacketSize )
+            {
+                const uint32_t       ExtraDataSize{ CurrentlyReceived - ExpectedPacketSize };
+                IStreamObjectWriter& Writer       { IStreamObjectWriter::FromStreamBaseRef( OutExtraData ) };
+
+                if( false == Writer.Write( GetPacketHeaderBuffer() + ExpectedPacketSize, ExtraDataSize, false ) ) SKL_UNLIKELY
+                {
+                    SKLL_WRN_FMT( "ConfirmReceivedAmmount( ... ) Failed to copy extra data %u", ExtraDataSize );
+                    return { false, false };
+                }
+
+                PrepareForPacketProcessing();
+            }
+
+            return { bHasReceivedExpected, true };
         }
-
+        
         //! after a packet was received completely, call this method to prepare this buffer to be used in the packet's processing
         SKL_FORCEINLINE void PrepareForPacketProcessing() noexcept
         {
             this->Stream.Position      = 0;
             this->Stream.Buffer.Buffer = GetPacketHeaderBuffer();
             this->Stream.Buffer.Length = GetPacketHeader().Size;
+        }
+
+        SKL_FORCEINLINE void PrepareForSending() noexcept
+        {
+            this->Stream.Buffer.Buffer = GetPacketHeaderBuffer();
+            this->Stream.Buffer.Length = this->Stream.Position;
+        }
+        
+        SKL_FORCEINLINE void PrepareForSending( uint32_t InSpecificByteCount ) noexcept
+        {
+            this->Stream.Buffer.Buffer = GetPacketHeaderBuffer();
+            this->Stream.Buffer.Length = InSpecificByteCount;
         }
     };
 }

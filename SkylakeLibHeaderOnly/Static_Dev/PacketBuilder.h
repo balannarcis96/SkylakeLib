@@ -152,7 +152,7 @@ namespace SKL
                 }
             }
 
-            return RFail;
+            //return RFail;
         }
     
     protected:
@@ -333,16 +333,28 @@ namespace SKL
         }
     };
 
-#define DEFINE_HEADER_ONLY_PACKET( Name, PacketOpcode ) \
+#define DEFINE_NAMED_HEADER_ONLY_PACKET( Name, PacketOpcode ) \
     struct Name##_Packet : SKL::HeaderOnlyPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> {};
 
-#define DEFINE_FIXED_LENGTH_PACKET( Name, PacketOpcode, Body ) \
+#define DEFINE_NAMED_FIXED_LENGTH_PACKET( Name, PacketOpcode, Body ) \
     struct Name##_Packet : SKL::FixedLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
     Body; \
     static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
 
-#define DEFINE_DYNAMIC_PACKET( Name, PacketOpcode, Body ) \
+#define DEFINE_NAMED_DYNAMIC_PACKET( Name, PacketOpcode, Body ) \
     struct Name##_Packet : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    Body
+    
+#define DEFINE_HEADER_ONLY_PACKET( PacketOpcode ) \
+    struct PacketOpcode##_Packet : SKL::HeaderOnlyPacketBuildContext<PacketOpcode##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> {};
+
+#define DEFINE_FIXED_LENGTH_PACKET( PacketOpcode, Body ) \
+    struct PacketOpcode##_Packet : SKL::FixedLengthPacketBuildContext<PacketOpcode##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    Body; \
+    static_assert( alignof( PacketOpcode##_Packet ) <= SKL::CPacketAlignment, "Packet [" #PacketOpcode "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
+
+#define DEFINE_DYNAMIC_PACKET( PacketOpcode, Body ) \
+    struct PacketOpcode##_Packet : SKL::DynamicLengthPacketBuildContext<PacketOpcode##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
     Body
 
 #define PAKCET_CalculateBodySize() \

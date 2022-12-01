@@ -13,10 +13,10 @@ namespace SKL
     {
         using PriorityTasksQueue = TLSManagedPriorityQueue<ITask*, ITaskComparer>;
 
-        ServerInstanceTLSContext() noexcept = default;
+        ServerInstanceTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
         ~ServerInstanceTLSContext() noexcept;
 
-        RStatus Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
+        RStatus Initialize() noexcept;
 
         SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED ServerInstanceTLSData]"; }
 

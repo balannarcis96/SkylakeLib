@@ -106,8 +106,12 @@ namespace SKL::DB
     {
         if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ), reinterpret_cast<::MYSQL_BIND*>( Statement->Output ) ) ) SKL_UNLIKELY
         {
-            const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
+            
             return false;
         }
 
@@ -134,8 +138,11 @@ namespace SKL::DB
                 , 0 ) };
         if( 0 != Result ) SKL_UNLIKELY
         {
-            const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
         }
 
         return 0 == Result;
@@ -155,8 +162,12 @@ namespace SKL::DB
         auto* NewStatement{ ::mysql_stmt_init( reinterpret_cast<::MYSQL*>( &InConnection->GetMysqlObject() ) ) };
         if( nullptr == NewStatement ) SKL_UNLIKELY
         {
-            const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
+  
             return false;
         }
 
@@ -171,8 +182,12 @@ namespace SKL::DB
         const int32_t Result{ ::mysql_stmt_prepare( reinterpret_cast<::MYSQL_STMT*>( Statement ), Query.get(), static_cast<unsigned long>( QueryStringLength ) ) };
         if( 0 != Result ) SKL_UNLIKELY
         {
-            const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-            SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!\n\tQuery: %s", MysqlErrorString, Query.get() );
+            } );
+
             return false;
         }
 
@@ -211,8 +226,12 @@ namespace SKL::DB
         {
             if( true == ::mysql_stmt_bind_param( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) ) SKL_UNLIKELY
             {
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
+
                 bSuccess = false;
             }
         }
@@ -221,8 +240,12 @@ namespace SKL::DB
         {
             if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Output ) ) )  SKL_UNLIKELY
             {
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
+
                 bSuccess = false;
             }
         }
@@ -248,8 +271,11 @@ DBStatement_Execute_Start:
                     }
                 }
 
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
             }
             else
             {
@@ -258,8 +284,11 @@ DBStatement_Execute_Start:
                 Result = ::mysql_stmt_store_result( reinterpret_cast<::MYSQL_STMT*>( Statement ) ); 
                 if( 0 != Result ) SKL_UNLIKELY
                 {
-                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                    SKLL_ERR_BLOCK(
+                    {
+                        const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    } );
                 }
                 else
                 {
@@ -303,8 +332,12 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_param( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) ) SKL_UNLIKELY
             {
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
+
                 bSuccess = false;
             }
         }
@@ -313,8 +346,12 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) )  SKL_UNLIKELY
             {
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
+
                 bSuccess = false;
             }
         }
@@ -340,8 +377,11 @@ DBStatement_ExecuteUpdate_Start:
                     }
                 }
 
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                SKLL_ERR_BLOCK(
+                {
+                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
+                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                } );
             }
             else
             {
@@ -365,8 +405,12 @@ DBStatement_ExecuteUpdate_Start:
             {
                 if( true == ::mysql_stmt_reset( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) ) SKL_UNLIKELY
                 {
-                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                    SKLL_ERR_BLOCK(
+                    {
+                        const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    } );
+
                     return false;
                 }
             }
@@ -374,8 +418,12 @@ DBStatement_ExecuteUpdate_Start:
             {
                if( true == ::mysql_stmt_free_result( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) ) SKL_UNLIKELY
                {
-                    const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_MSG_FMT( "MysqlError: %s!", MysqlErrorString );
+                    SKLL_ERR_BLOCK(
+                    {
+                        const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
+                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    } );
+
                     return false;
                }
             }
@@ -394,13 +442,13 @@ DBStatement_ExecuteUpdate_Start:
 
         if( false == Initialize( InConnection ) )
         {
-            SKLL_TRACE_MSG( "Failed to Initialize()!" );
+            SKLL_TRACE_ERR_FMT( "Failed to Initialize()!" );
             return false;
         }
         
         if( false == Prepare() )
         {
-            SKLL_TRACE_MSG( "Failed to Initialize()!" );
+            SKLL_TRACE_ERR_FMT( "Failed to Initialize()!" );
             return false;
         }
 

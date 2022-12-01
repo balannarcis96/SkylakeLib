@@ -11,27 +11,25 @@
 
 namespace SKL
 {
+    ServerInstanceTLSContext::ServerInstanceTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept
+        : SourceServerInstance{ InServerInstance }
+        , ParentWorkerGroup{ InWorkerGroupTag } 
+    {
+        SKL_ASSERT( nullptr != InServerInstance );
+        SKL_ASSERT( InWorkerGroupTag.IsValid() );
+    }
+
     ServerInstanceTLSContext::~ServerInstanceTLSContext() noexcept
     {
         Clear();
     }
 
-    RStatus ServerInstanceTLSContext::Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept 
+    RStatus ServerInstanceTLSContext::Initialize() noexcept 
     {
-        SKL_ASSERT( nullptr != InServerInstance );
-        
-        if( false == InWorkerGroupTag.Validate() )
-        {
-            return RInvalidParamters;
-        }
-    
-        SourceServerInstance = InServerInstance;
-        ParentWorkerGroup = InWorkerGroupTag;
-
         Reset();
 
         // Build name
-        snprintf( NameBuffer, 512, "[%ws ServerInstanceTLSContext]", SourceServerInstance->GetName() );
+        ( void )snprintf( NameBuffer, 512, "[%ws ServerInstanceTLSContext]", SourceServerInstance->GetName() );
 
         return RSuccess;
     }

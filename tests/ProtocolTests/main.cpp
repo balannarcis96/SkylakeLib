@@ -84,14 +84,14 @@ namespace SkylakePROTOCOLTests
         }
     };
 
-    DEFINE_HEADER_ONLY_PACKET( HeaderOnlyMacroTest, MyOpcodes::HEADER_ONLY_PACKET_2 );
-    DEFINE_FIXED_LENGTH_PACKET( FixedLengthMacroTest, MyOpcodes::FIXED_LENGTH_PACKET_2,
+    DEFINE_NAMED_HEADER_ONLY_PACKET( HeaderOnlyMacroTest, MyOpcodes::HEADER_ONLY_PACKET_2 );
+    DEFINE_NAMED_FIXED_LENGTH_PACKET( FixedLengthMacroTest, MyOpcodes::FIXED_LENGTH_PACKET_2,
     {
         uint32_t A;
         uint32_t B;
         uint32_t C;
     } );
-    DEFINE_DYNAMIC_PACKET( DynamicMacroTest, MyOpcodes::DYNAMIC_LENGTH_PACKET_2,
+    DEFINE_NAMED_DYNAMIC_PACKET( DynamicMacroTest, MyOpcodes::DYNAMIC_LENGTH_PACKET_2,
     {
         //Prerequisites
         uint32_t A;

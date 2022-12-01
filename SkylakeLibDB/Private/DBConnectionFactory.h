@@ -24,7 +24,7 @@ namespace SKL::DB
             return true;
         }
         
-        std::unique_ptr<DBConnection> TryOpenNewConnection() noexcept;
+        std::unique_ptr<DBConnection> TryOpenNewConnection() const noexcept;
 
     private:
         DBConnectionSettings Settings{};

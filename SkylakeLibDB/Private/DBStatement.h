@@ -56,7 +56,7 @@ namespace SKL::DB
             SKL_FORCEINLINE SKL_NODISCARD uint64_t GetNoOfRows() const noexcept { return NoOfRows; }
             SKL_FORCEINLINE SKL_NODISCARD bool IsEmpty() const noexcept { return 0 == NoOfRows; }
             SKL_FORCEINLINE SKL_NODISCARD bool IsValid() const noexcept { return nullptr != Statement; }
-            SKL_FORCEINLINE explicit operator bool() const noexcept { return true == IsValid() && false == IsEmpty(); }
+            SKL_FORCEINLINE operator bool() const noexcept { return true == IsValid() && false == IsEmpty(); }
             SKL_NODISCARD bool PrepareResult() const noexcept;
             SKL_NODISCARD bool Next() const noexcept;
             SKL_NODISCARD bool GetOneResult() const noexcept

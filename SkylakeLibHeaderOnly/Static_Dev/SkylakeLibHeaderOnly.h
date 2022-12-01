@@ -51,6 +51,14 @@
 //! Packet Builder
 #include "PacketBuilder.h"
 
+namespace SKL
+{
+    SKL_FORCEINLINE SKL_NODISCARD TEpochTimePoint GetCurrentEpochTime() noexcept
+    {
+        return static_cast<TEpochTimePoint>( std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count() );
+    }
+}
+
 #if defined(SKL_NO_NAMESPACE)
 #ifndef SKL_NO_NAMESPACE_STATEMENT
 #define SKL_NO_NAMESPACE_STATEMENT

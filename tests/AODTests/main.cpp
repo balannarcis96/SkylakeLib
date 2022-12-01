@@ -20,14 +20,26 @@ namespace AODTests
             ServerInstanceConfig.AddNewGroup( SKL::WorkerGroupTag{  .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } );        
             ASSERT_TRUE( SKL::RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
 
-            ASSERT_TRUE( SKL::RSuccess == SKL::ThreadLocalMemoryManager::Create() );
-            ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ 
+            SKL::WorkerGroupTag TempTag{ 
                 .Id = 1, 
                 .WorkersCount = 1, 
                 .bHandlesTasks = true, 
                 .Name = L"TEMP" 
-            } ) );
-            ASSERT_TRUE( SKL::RSuccess == SKL::AODTLSContext::Create( &ServerInstance, SKL::WorkerGroupTag{ .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } ) );
+            };
+            TempTag.Validate();
+
+            ASSERT_TRUE( SKL::RSuccess == SKL::ThreadLocalMemoryManager::Create() );
+            ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, TempTag ) );
+
+            SKL::WorkerGroupTag TempTag2
+            { 
+                .Id = 1, 
+                .WorkersCount = 1, 
+                .bHandlesTasks = true, 
+                .Name = L"TEMP" 
+            };
+            TempTag2.Validate();
+            ASSERT_TRUE( SKL::RSuccess == SKL::AODTLSContext::Create( &ServerInstance, TempTag2 ) );
         }
 
         void TearDown() override
@@ -404,14 +416,16 @@ namespace AODTests
 
             for( uint64_t i = 0; i < IterCount; ++i )
             {
-                SKL_ASSERT_ALLWAYS( SKL::RSuccess == obj->DoAsyncAfter( 5, [ this ]( SKL::AOD::CustomObject& InObj ) noexcept -> void 
+                const auto Result { obj->DoAsyncAfter( 5, [ this ]( SKL::AOD::CustomObject& InObj ) noexcept -> void 
                 {
                     auto& Self = reinterpret_cast<MyObject&>( InObj );
                     if( 0 == --Self.Counter )           
                     {
                         SignalToStop( true );
                     }
-                } ) );
+                } ) };
+
+                SKL_ASSERT_ALLWAYS( SKL::RSuccess == Result );
             }
 
             obj.reset();

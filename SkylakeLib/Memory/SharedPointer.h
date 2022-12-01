@@ -227,6 +227,26 @@ namespace SKL
         }
         
         //! 
+        //! Decrement the reference count for InPtr
+        //! 
+        //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
+        //! \important The resulted reference count must be greater than 0
+        //! 
+        SKL_FORCEINLINE static void Static_DecrementReference( TObjectDecay* InPtr ) noexcept
+        {
+            SKL_ASSERT( nullptr != InPtr );
+
+            if constexpr( std::is_array_v<TObject> )
+            {
+                MemoryPolicy::DecrementReferenceForArray( InPtr );
+            }
+            else
+            {
+                MemoryPolicy::DecrementReferenceForObject( InPtr );
+            }
+        }
+        
+        //! 
         //! Increment the reference count for InPtr
         //! 
         //! \invariant InPtr must be a valid pointer allocated using the same MemoryPolicy as this call
@@ -255,7 +275,7 @@ namespace SKL
         }
         
         //! Increment the reference count and return raw ptr
-        SKL_FORCEINLINE SKL_NODISCARD TObjectDecay* NewRefRaw() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TObjectDecay* NewRefRaw() const noexcept
         {
             if( Pointer != nullptr )
             {
@@ -416,6 +436,7 @@ namespace SKL
 
         SKL_FORCEINLINE static void SetRawPtr( TSharedPtrType& InSharedPtr, TRawPtr InPtr ) noexcept
         {
+            SKL_ASSERT( nullptr == InSharedPtr.Pointer );
             InSharedPtr.Pointer = InPtr;
         }
     };

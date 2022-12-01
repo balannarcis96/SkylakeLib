@@ -309,6 +309,18 @@ namespace SKL::MemoryPolicy
             auto& CBlock{ GetControlBlockForArray( InPtr ) };
             CBlock.AddReference();
         }
+        
+        SKL_FORCEINLINE static void DecrementReferenceForObject( void* InPtr ) noexcept
+        {
+            auto& CBlock{ GetControlBlockForObject( InPtr ) };
+            CBlock.ReleaseReferenceChecked();
+        }
+
+        SKL_FORCEINLINE static void DecrementReferenceForArray( void* InPtr ) noexcept
+        {
+            auto& CBlock{ GetControlBlockForArray( InPtr ) };
+            CBlock.ReleaseReferenceChecked();
+        }
 
         SKL_FORCEINLINE static void SetReferenceCountForObject( void* InPtr, uint32_t InRefCount ) noexcept
         {

@@ -27,10 +27,10 @@ namespace SKL
             uint16_t Flags = { 0 };
         };
 
-        AODTLSContext() noexcept = default;
+        AODTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
         ~AODTLSContext() noexcept;
 
-        RStatus Initialize( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept;
+        RStatus Initialize() noexcept;
 
         SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSContext]"; }
 

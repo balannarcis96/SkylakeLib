@@ -33,6 +33,9 @@ namespace SKL::AOD
         ~SharedObject() noexcept = default;
 
         //! Execute the functor thread safe relative to the object [void( AOD::SharedObject& ) noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RExecutedSync if the functor was dispatched sync (in this call)
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
@@ -57,6 +60,9 @@ namespace SKL::AOD
         }
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::SharedObject& ) noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RFail if scheduling the task failed
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
@@ -109,6 +115,9 @@ namespace SKL::AOD
         ~StaticObject() noexcept = default;
 
         //! Execute the functor thread safe relative to the object [void() noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RExecutedSync if the functor was dispatched sync (in this call)
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
@@ -132,6 +141,9 @@ namespace SKL::AOD
         }
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void() noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RFail if scheduling the task failed
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
@@ -177,6 +189,9 @@ namespace SKL::AOD
         ~CustomObject() noexcept = default;
         
         //! Execute the functor thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RExecutedSync if the functor was dispatched sync (in this call)
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
@@ -201,6 +216,9 @@ namespace SKL::AOD
         }
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
+        //! \returns RAllocationFailed if allocating the task object failed
+        //! \returns RFail if scheduling the task failed
+        //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {

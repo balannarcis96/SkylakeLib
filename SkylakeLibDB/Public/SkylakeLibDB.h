@@ -89,7 +89,7 @@ namespace SKL::DB
             ::memset( Buffer, 0, CSizeOfMYSQL );
         }
 
-        uint8_t Buffer[ CSizeOfMYSQL ];
+        uint8_t Buffer[CSizeOfMYSQL];
     };
     
     constexpr size_t CMysqlStmtSize = 696;

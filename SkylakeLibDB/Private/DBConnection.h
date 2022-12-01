@@ -25,10 +25,33 @@ namespace SKL::DB
                 return bHasReconnected;
             }
         };
-
-        DBConnection( DBConnection&& Other ) noexcept = delete;
-        DBConnection& operator=( DBConnection&& Other ) noexcept = delete;
+        
         ~DBConnection() noexcept;
+
+        DBConnection( DBConnection&& Other ) noexcept
+            : bIsOpen{ Other.bIsOpen }
+            , bIsTransactionStarted{ Other.bIsTransactionStarted }
+            , Padding{ 0 }
+            , Mysql{ std::move( Other.Mysql ) }
+            , Settings{ std::move( Other.Settings ) } 
+        {
+            Other.bIsOpen               = false;
+            Other.bIsTransactionStarted = false;
+        }
+        DBConnection& operator=( DBConnection&& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+
+            bIsOpen               = Other.bIsOpen;
+            bIsTransactionStarted = Other.bIsTransactionStarted;
+            Mysql                 = std::move( Other.Mysql );
+            Settings              = std::move( Other.Settings );
+
+            Other.bIsOpen               = false;
+            Other.bIsTransactionStarted = false;
+
+            return *this;
+        }
 
         DBConnection( const DBConnection& ) = delete;
         DBConnection& operator=( const DBConnection& ) = delete;

@@ -19,6 +19,7 @@ add_subdirectory(ServiceTests)
 add_subdirectory(TLSSyncTests)
 add_subdirectory(ECSTEsts)
 add_subdirectory(UtilsTests)
+add_subdirectory(ProtocolTests)
 
 if(SKL_BUILD_DB)
     add_subdirectory(DBTests)
@@ -28,9 +29,6 @@ if(SKL_MATH)
     add_subdirectory(MathTests)
 endif()
 
-if(SKL_BUILD_PROTOCOL)
-    add_subdirectory(ProtocolTests)
-endif()
 
 if(SKL_BUILD_DATACENTER)
     add_subdirectory(DatacenterTests)
