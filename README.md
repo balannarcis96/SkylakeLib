@@ -2,6 +2,8 @@
 ![CMake](https://github.com/balannarcis96/SkylakeLib/actions/workflows/cmake.yml/badge.svg?branch=main) 
 ![Version](https://img.shields.io/badge/Version-v0.5.0-blue) 
 ![Win64](https://img.shields.io/badge/Windows64-Full-brightgreen)
+![Win64-MSVC](https://img.shields.io/badge/WIN64_MSVC_v143-Full-brightgreen)
+![Win64-MSVC](https://img.shields.io/badge/WIN64_ClangCL-Full-brightgreen)
 ![Ubuntu64](https://img.shields.io/badge/Ubuntu64-WIP-yellow)
 ![FreeBSD64](https://img.shields.io/badge/FreeBSD64-WIP-yellow)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5bdf738cf8784fff846ceb7800f66a8e)](https://www.codacy.com/gh/balannarcis96/SkylakeLib/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=balannarcis96/SkylakeLib&amp;utm_campaign=Badge_Grade)
