@@ -23,7 +23,7 @@
     #define ASD_THISCALL   /* __attribute__((thiscall))  */ // GCC DOESNT ALLOW TO SPECIFY THE CALLING CONVENTION?
     #define ASD_FASTCALL   /* __attribute__((fastcall))  */ // GCC DOESNT ALLOW TO SPECIFY THE CALLING CONVENTION?
     #define ASD_VECTORCALL /* __attribute__((vectorcall))*/ // GCC DOESNT ALLOW TO SPECIFY THE CALLING CONVENTION?
-    #if defined(_WIN32)
+    #if !defined(_WIN32)
         #error "Unsupported yet!"
     #endif
 #elif defined(__clang__)
@@ -33,7 +33,7 @@
     #define ASD_THISCALL   __attribute__((cdecl))
     #define ASD_FASTCALL   __attribute__((cdecl))
     #define ASD_VECTORCALL __attribute__((vectorcall))
-    #if defined(_WIN32)
+    #if !defined(_WIN32)
         #error "Unsupported yet!"
     #endif
 #elif defined(_MSC_VER)
@@ -70,11 +70,15 @@ namespace ASD
     };
 }
 
-#if defined(__GNUC__) || defined(__clang__)
-    #define ASD_FORCEINLINE __attribute__((always_inline))
+#if defined(__GNUC__)
+    #define ASD_FORCEINLINE [[gnu::always_inline]]
+    #define ASD_NOINLINE    [[gnu::noinline]]
+#elif defined(__clang__)
+    #define ASD_FORCEINLINE [[clang::always_inline]]
+    #define ASD_NOINLINE    [[clang::noinline]]
 #elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
-    #define ASD_FORCEINLINE __forceinline
-    #define ASD_NOINLINE __declspec( noinline )
+    #define ASD_FORCEINLINE [[msvc::forceinline]]
+    #define ASD_NOINLINE    [[msvc::noinline]]
 #else
     #define ASD_FORCEINLINE 
     #define ASD_NOINLINE __attribute__((noinline))

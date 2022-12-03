@@ -51,13 +51,13 @@ namespace SKL
     constexpr TSocket CInvalidSocket = (TSocket)(~0);
 
     //! Allocate new ipv4 tcp socket ( returns 0 on failure )
-    TSocket AllocateNewIPv4TCPSocket( bool bAsync = true ) noexcept;
+    SKL_NODISCARD TSocket AllocateNewIPv4TCPSocket( bool bAsync = true ) noexcept;
 
     //! Allocate new ipv4 udp socket ( returns 0 on failure )
-    TSocket AllocateNewIPv4UDPSocket( bool bAsync = true ) noexcept;
+    SKL_NODISCARD TSocket AllocateNewIPv4UDPSocket( bool bAsync = true ) noexcept;
     
     //! Perform a TCP connect on socket to address and port
-    bool TCPConnectIPv4( TSocket InSocket, TIPv4Address InAddress, TNetPort InPort ) noexcept;
+    SKL_NODISCARD bool TCPConnectIPv4( TSocket InSocket, TIPv4Address InAddress, TNetPort InPort ) noexcept;
 }
 
 #include "TCPAsyncAccepter.h"
@@ -66,16 +66,16 @@ namespace SKL
 {
     //! \brief Enable ANSI color support in the main console window
     //! \return RSuccess on success 
-    RStatus EnableConsoleANSIColorSupport() noexcept;
+    SKL_NODISCARD RStatus EnableConsoleANSIColorSupport() noexcept;
 
     //! Get the number of milliseconds that have elapsed since the system was started
-    TEpochTimePoint GetSystemUpTickCount() noexcept;
+    SKL_NODISCARD TEpochTimePoint GetSystemUpTickCount() noexcept;
 
     //! Set the timer resolution of the OS
-    RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept;
+    SKL_NODISCARD RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept;
 
     //! Get the system l1 cache line size
-    size_t GetL1CacheLineSize() noexcept;
+    SKL_NODISCARD size_t GetL1CacheLineSize() noexcept;
 
     struct PlatformTLS
     {
@@ -86,32 +86,32 @@ namespace SKL
          * \param InSlotIndex the TLS index to check
          * \return true if InSlotIndex looks like a valid slot
          */
-        SKL_FORCEINLINE static bool IsValidTlsSlot( TLSSlot InSlotIndex ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static bool IsValidTlsSlot( TLSSlot InSlotIndex ) noexcept
         {
             return InSlotIndex != INVALID_SLOT_ID;
         }
         
         //! \brief Get the calling thread id
-        static uint32_t GetCurrentThreadId() noexcept;
+        SKL_NODISCARD static uint32_t GetCurrentThreadId() noexcept;
 
         //! \brief Allocate new thread local storage slot for all threads of the process
-        static TLSSlot AllocTlsSlot() noexcept;
+        SKL_NODISCARD static TLSSlot AllocTlsSlot() noexcept;
 
         //! \brief Set the TLS value at InSlot for the calling thread
         static void SetTlsValue( TLSSlot InSlot, void* InValue ) noexcept;
 
         //! \brief Get the TLS value at InSlot for the calling thread
-        static void* GetTlsValue( TLSSlot InSlot ) noexcept;
+        SKL_NODISCARD static void* GetTlsValue( TLSSlot InSlot ) noexcept;
 
         //! \brief Free a previously allocated TLS slot
-        static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
+        SKL_NODISCARD static void FreeTlsSlot( TLSSlot InSlot ) noexcept;
     };
 
     //! Very precise sleep
     void PreciseSleep( double InSeconds ) noexcept;
 
     //! Is socket valid
-    bool IsValidSocket( TSocket InSocket ) noexcept;
+    SKL_NODISCARD bool IsValidSocket( TSocket InSocket ) noexcept;
 
     //! Close socket
     bool CloseSocket( TSocket InSocket ) noexcept;
@@ -120,56 +120,56 @@ namespace SKL
     bool ShutdownSocket( TSocket InSocket ) noexcept;
     
     //! Get last OS error code
-    int32_t GGetLastError( ) noexcept;
+    SKL_NODISCARD int32_t GGetLastError( ) noexcept;
     
     //! Get last OS network operation related error code
-    int32_t GGetNetworkLastError( ) noexcept;
+    SKL_NODISCARD int32_t GGetNetworkLastError( ) noexcept;
 
     //! Convert ip v4 address string to binary
-    uint32_t IPv4FromStringA( const char* InIpString )noexcept;
+    SKL_NODISCARD uint32_t IPv4FromStringA( const char* InIpString )noexcept;
 
     //! Convert ip v4 address wide string to binary
-    uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
+    SKL_NODISCARD uint32_t IPv4FromStringW( const wchar_t* InIpString )noexcept;
 
     //! Get the cwd
-    bool GetCurrentWorkingDirectory( char* OutBuffer, size_t BufferSize ) noexcept;
+    SKL_NODISCARD bool GetCurrentWorkingDirectory( char* OutBuffer, size_t BufferSize ) noexcept;
 
     //! UTF16 -> UTF8
-    bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept;
+    SKL_NODISCARD bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept;
 
     //! UTF8 -> UTF16
-    bool GMultiByteToWideChar( const char * InBuffer, size_t InBufferSize, wchar_t* OutBuffer, int32_t InOutBufferSize ) noexcept;
+    SKL_NODISCARD bool GMultiByteToWideChar( const char * InBuffer, size_t InBufferSize, wchar_t* OutBuffer, int32_t InOutBufferSize ) noexcept;
 
     //! UTF16 -> UTF8
     template<size_t N>
-    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept
+    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept
     {
         return GWideCharToMultiByte( InBuffer, N, OutBuffer, OutBufferSize );
     }
 
     //! UTF8 -> UTF16
     template<size_t N>
-    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept
+    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept
     {
         return GMultiByteToWideChar( InBuffer, N, OutBuffer, OutBufferSize );
     }
 
     //! UTF16 -> UTF8
     template<size_t N, size_t M>
-    bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept
+    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept
     {
         return GWideCharToMultiByte( InBuffer, N, OutBuffer, M );
     }
 
     //! UTF8 -> UTF16
     template<size_t N, size_t M>
-    bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept
+    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept
     {
         return GMultiByteToWideChar( InBuffer, N, OutBuffer, M );
     }
 
     //! Get the current thread id as u32 
-    SKL_FORCEINLINE uint32_t GetCurrentThreadId() noexcept
+    SKL_FORCEINLINE inline uint32_t GetCurrentThreadId() noexcept
     {
         const auto ThreadId { std::this_thread::get_id() };
         static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
@@ -177,10 +177,10 @@ namespace SKL
     }
     
     //! Scan directory recursively and collect file names
-    std::vector<std::string> ScanForFilesInDirectory( const char* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& extensions ) noexcept;
+    SKL_NODISCARD std::vector<std::string> ScanForFilesInDirectory( const char* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::string>& extensions ) noexcept;
 
     //! Scan directory recursively and collect file names
-    std::vector<std::wstring> ScanForFilesInDirectoryW( const wchar_t* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::wstring>& extensions ) noexcept;
+    SKL_NODISCARD std::vector<std::wstring> ScanForFilesInDirectoryW( const wchar_t* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::wstring>& extensions ) noexcept;
 }
 
 #include "TLSValue.h"
@@ -200,7 +200,7 @@ namespace SKL
         int64_t Count   { 1 };
         
         RStatus Initialize() noexcept override;
-        const char *GetName( ) const noexcept override { return "[PreciseSleep_WaitableTimer]"; }
+        SKL_NODISCARD const char *GetName( ) const noexcept override { return "[PreciseSleep_WaitableTimer]"; }
     };
 }
 

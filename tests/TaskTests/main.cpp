@@ -33,7 +33,7 @@ namespace TaskTests
 
             auto NewLambda = [ SPtr, aaa ]( SKL::ITask* /*Self*/ ) noexcept -> void
             {
-                puts("This is from the task!");
+                printf( "This is from the task! aaa:%d\n", aaa );
             };
 
             NewTask += std::move( NewLambda );

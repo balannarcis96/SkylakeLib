@@ -43,7 +43,7 @@ namespace SKL
             }
         }
 
-        Type* alignas( SKL_CACHE_LINE_SIZE ) Array{ nullptr };
+        alignas( SKL_CACHE_LINE_SIZE ) Type* Array{ nullptr };
 
         template<size_t TCount, typename... TTypes>
         friend class MultiArray;

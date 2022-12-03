@@ -34,30 +34,30 @@ namespace SKL
         } while( Count <UINT16_MAX + 1 );
     }
 
-    const TVector2D<double> TVector2D<double>::ZeroVector{ 0.0, 0.0 };
-    const TVector2D<float>  TVector2D<float>::ZeroVector { 0.0f, 0.0f };
-    const TVector2D<double> TVector2D<double>::UnitVector{ 1.0, 1.0 };
-    const TVector2D<float>  TVector2D<float>::UnitVector { 1.0f, 1.0f };
+    template<> const TVector2D<double> TVector2D<double>::ZeroVector{ 0.0, 0.0 };
+    template<> const TVector2D<float>  TVector2D<float>::ZeroVector { 0.0f, 0.0f };
+    template<> const TVector2D<double> TVector2D<double>::UnitVector{ 1.0, 1.0 };
+    template<> const TVector2D<float>  TVector2D<float>::UnitVector { 1.0f, 1.0f };
 
-    const TVector<double> TVector<double>::ZeroVector{ 0.0, 0.0, 0.0 };
-    const TVector<float>  TVector<float>::ZeroVector { 0.0f, 0.0f, 0.0f };
-    const TVector<double> TVector<double>::UnitVector{ 1.0, 1.0, 1.0 };
-    const TVector<float>  TVector<float>::UnitVector { 1.0f, 1.0f, 1.0f };
+    template<> const TVector<double> TVector<double>::ZeroVector{ 0.0, 0.0, 0.0 };
+    template<> const TVector<float>  TVector<float>::ZeroVector { 0.0f, 0.0f, 0.0f };
+    template<> const TVector<double> TVector<double>::UnitVector{ 1.0, 1.0, 1.0 };
+    template<> const TVector<float>  TVector<float>::UnitVector { 1.0f, 1.0f, 1.0f };
 
-    const TVector4<double> TVector4<double>::ZeroVector{ TVector<double>{ 0.0, 0.0, 0.0 }, 1.0 };
-    const TVector4<float>  TVector4<float>::ZeroVector { TVector<float>{ 0.0f, 0.0f, 0.0f }, 1.0f };
-    const TVector4<double> TVector4<double>::UnitVector{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
-    const TVector4<float>  TVector4<float>::UnitVector { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
-
-    const TPlane<double> TPlane<double>::ZeroPlane{ TVector<double>{ 0.0, 0.0, 0.0 }, 0.0 };
-    const TPlane<float>  TPlane<float>::ZeroPlane { TVector<float>{ 0.0f, 0.0f, 0.0f }, 0.0f };
-    const TPlane<double> TPlane<double>::UnitPlane{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
-    const TPlane<float>  TPlane<float>::UnitPlane { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
-
-    const TSphere<double> TSphere<double>::ZeroSphere{ TVector<double>{ 0.0, 0.0, 0.0 }, 0.0 };
-    const TSphere<float>  TSphere<float>::ZeroSphere { TVector<float>{ 0.0f, 0.0f, 0.0f }, 0.0f };
-    const TSphere<double> TSphere<double>::UnitSphere{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
-    const TSphere<float>  TSphere<float>::UnitSphere { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
+    template<> const TVector4<double> TVector4<double>::ZeroVector{ TVector<double>{ 0.0, 0.0, 0.0 }, 1.0 };
+    template<> const TVector4<float>  TVector4<float>::ZeroVector { TVector<float>{ 0.0f, 0.0f, 0.0f }, 1.0f };
+    template<> const TVector4<double> TVector4<double>::UnitVector{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
+    template<> const TVector4<float>  TVector4<float>::UnitVector { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
+   
+    template<> const TPlane<double> TPlane<double>::ZeroPlane{ TVector<double>{ 0.0, 0.0, 0.0 }, 0.0 };
+    template<> const TPlane<float>  TPlane<float>::ZeroPlane { TVector<float>{ 0.0f, 0.0f, 0.0f }, 0.0f };
+    template<> const TPlane<double> TPlane<double>::UnitPlane{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
+    template<> const TPlane<float>  TPlane<float>::UnitPlane { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
+    
+    template<> const TSphere<double> TSphere<double>::ZeroSphere{ TVector<double>{ 0.0, 0.0, 0.0 }, 0.0 };
+    template<> const TSphere<float>  TSphere<float>::ZeroSphere { TVector<float>{ 0.0f, 0.0f, 0.0f }, 0.0f };
+    template<> const TSphere<double> TSphere<double>::UnitSphere{ TVector<double>{ 1.0, 1.0, 1.0 }, 1.0 };
+    template<> const TSphere<float>  TSphere<float>::UnitSphere { TVector<float>{ 1.0f, 1.0f, 1.0f }, 1.0f };
 }
 
 #endif

@@ -16,8 +16,8 @@ source_group("Public" FILES ${_Public_files})
 source_group("Internal" FILES ${_Internal_files})
 source_group("Private" FILES ${_Private_files})
 
-# Set C++17
-set_property(TARGET SkylakeDatacenterLib PROPERTY CXX_STANDARD 17)
+# Set C++20
+set_property(TARGET SkylakeDatacenterLib PROPERTY CXX_STANDARD 20)
 target_link_libraries(SkylakeDatacenterLib PUBLIC SkylakeLibStandalone)
 target_include_directories(SkylakeDatacenterLib PUBLIC "${_src_root_path}/Public/")
 

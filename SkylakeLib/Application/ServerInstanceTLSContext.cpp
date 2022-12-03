@@ -12,8 +12,8 @@
 namespace SKL
 {
     ServerInstanceTLSContext::ServerInstanceTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept
-        : SourceServerInstance{ InServerInstance }
-        , ParentWorkerGroup{ InWorkerGroupTag } 
+        : ParentWorkerGroup{ InWorkerGroupTag }
+        , SourceServerInstance{ InServerInstance }
     {
         SKL_ASSERT( nullptr != InServerInstance );
         SKL_ASSERT( InWorkerGroupTag.IsValid() );

@@ -17,7 +17,7 @@ namespace SKL
             if( nullptr == GetInstance() )
             {
                 const auto Result{ Create() };
-                SKL_ASSERT( RSuccess == Result );
+                SKL_ASSERT_ALLWAYS( RSuccess == Result );
             }
         }
         static void ShutdownThread() noexcept

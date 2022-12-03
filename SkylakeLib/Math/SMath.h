@@ -13,7 +13,7 @@ namespace SKL
      * \brief Add to a word angle, constraining it within a min (not to cross) and a max (not to cross).  Accounts for funkyness of word angles.
      * \remarks Assumes that angle is initially in the desired range.
      */
-    SKL_FORCEINLINE int16_t SAddAngleConfined( int32_t Angle, int32_t Delta, int32_t MinThresh, int32_t MaxThresh ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int16_t SAddAngleConfined( int32_t Angle, int32_t Delta, int32_t MinThresh, int32_t MaxThresh ) noexcept
     {
         if( Delta < 0 )
         {
@@ -32,13 +32,13 @@ namespace SKL
     /**
      * \brief Find the point on line segment from LineStart to LineEnd which is closest to Point
      */
-    SVector ClosestPointOnLine( const SVector &LineStart, const SVector &LineEnd, const SVector &Point ) noexcept;
+    SKL_NODISCARD SVector ClosestPointOnLine( const SVector &LineStart, const SVector &LineEnd, const SVector &Point ) noexcept;
 
     /**
      * \brief Converts given Cartesian coordinate pair to Polar coordinate system
      */
     template< typename TFloat >
-    SKL_FORCEINLINE void CartesianToPolar( TFloat X, TFloat Y, TFloat &OutRad, TFloat &OutAng ) noexcept requires( std::is_same_v< TFloat, float > || std::is_same_v< TFloat, double > )
+    SKL_FORCEINLINE inline void CartesianToPolar( TFloat X, TFloat Y, TFloat &OutRad, TFloat &OutAng ) noexcept requires( std::is_same_v< TFloat, float > || std::is_same_v< TFloat, double > )
     {
         OutRad = Sqrt( Square( X ) + Square( Y ) );
         OutAng = FAtan2( Y, X );
@@ -48,7 +48,7 @@ namespace SKL
      * \brief Converts given Polar coordinate pair to Cartesian coordinate system
      */
     template< typename TFloat >
-    SKL_FORCEINLINE void PolarToCartesian( TFloat Rad, TFloat Ang, TFloat &OutX, TFloat &OutY ) noexcept requires( std::is_same_v< TFloat, float > || std::is_same_v< TFloat, double > )
+    SKL_FORCEINLINE inline void PolarToCartesian( TFloat Rad, TFloat Ang, TFloat &OutX, TFloat &OutY ) noexcept requires( std::is_same_v< TFloat, float > || std::is_same_v< TFloat, double > )
     {
         OutX = Rad * FCos( Ang );
         OutY = Rad * FSin( Ang );
@@ -57,20 +57,20 @@ namespace SKL
     /**
      * \brief Interpolate a normal vector from Current to Target with constant step
      */
-    SVector VInterpNormalConstantTo( const SVector Current, const SVector &Target, skReal DeltaTime, skReal InterpSpeed ) noexcept;
+    SKL_NODISCARD SVector VInterpNormalConstantTo( const SVector Current, const SVector &Target, skReal DeltaTime, skReal InterpSpeed ) noexcept;
 
     /**
      * \brief Interpolate vector from Current to Target with constant step
      */
-    SVector VInterpConstantTo( const SVector Current, const SVector &Target, skReal DeltaTime, skReal InterpSpeed ) noexcept;
+    SKL_NODISCARD SVector VInterpConstantTo( const SVector Current, const SVector &Target, skReal DeltaTime, skReal InterpSpeed ) noexcept;
 
     /**
      * \brief Interpolate vector from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out
      */
-    SVector VInterpTo( const SVector &Current, const SVector &Target, const skReal &DeltaTime, skReal InterpSpeed ) noexcept;
+    SKL_NODISCARD SVector VInterpTo( const SVector &Current, const SVector &Target, const skReal &DeltaTime, skReal InterpSpeed ) noexcept;
 
-    template< typename T = float >
-    inline T SInterpTo( T Current, T Target, T DeltaTime, T InterpSpeed ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
+    template<typename T = float>
+    SKL_NODISCARD inline T SInterpTo( T Current, T Target, T DeltaTime, T InterpSpeed ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
     {
         // If no interp speed, jump to target value
         if( InterpSpeed == static_cast< T >( 0.0 ) )
@@ -93,8 +93,8 @@ namespace SKL
         return Current + DeltaMove;
     }
 
-    template< typename T = float >
-    inline T SInterpConstantTo( T Current, T Target, T DeltaTime, T InterpSpeed ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
+    template<typename T = float>
+    SKL_NODISCARD inline T SInterpConstantTo( T Current, T Target, T DeltaTime, T InterpSpeed ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
     {
         const T Dist = Target - Current;
 
@@ -109,7 +109,7 @@ namespace SKL
     }
 
     template< typename T = float >
-    inline T SInterpEaseInOut( T A, T B, T Alpha, T Exp ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
+    SKL_NODISCARD inline T SInterpEaseInOut( T A, T B, T Alpha, T Exp ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
     {
         T ModifiedAlpha;
 
@@ -128,9 +128,9 @@ namespace SKL
     /**
      * \brief Clamp of Vector A From Min to Max of XYZ
      */
-    SVector VClamp( SVector A, SVector Min, SVector Max ) noexcept;
+    SKL_NODISCARD SVector VClamp( SVector A, SVector Min, SVector Max ) noexcept;
 
-    SKL_FORCEINLINE int32_t ReduceAngle( int32_t Angle ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t ReduceAngle( int32_t Angle ) noexcept
     {
         return Angle & SGlobalMath::ANGLE_MASK;
     }
@@ -138,7 +138,7 @@ namespace SKL
     /**
      * \brief Convert a direction vector into a 'heading' angle between +/-PI. 0 is pointing down +X
      */
-    SKL_FORCEINLINE skReal HeadingAngle( SVector Dir ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal HeadingAngle( SVector Dir ) noexcept
     {
         // Project Dir into Z plane.
         SVector PlaneDir = Dir;
@@ -159,7 +159,7 @@ namespace SKL
      * \brief Given a heading which may be outside the +/- PI range, 'unwind' it back into that range
      */
     template< typename T = float >
-    SKL_FORCEINLINE T UnwindHeading( T A ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
+    SKL_FORCEINLINE SKL_NODISCARD inline T UnwindHeading( T A ) noexcept requires( std::is_same_v< T, float > || std::is_same_v< T, double > )
     {
         while( A > static_cast< T >( PI ) )
         {
@@ -178,7 +178,7 @@ namespace SKL
      * \brief Compare two points and see if they're the same, using a threshold.
      * \returns Returns true=yes, false=no. Uses fast distance approximation.
      */
-    SKL_FORCEINLINE bool SPointsAreSame( const SVector &P, const SVector &Q ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SPointsAreSame( const SVector &P, const SVector &Q ) noexcept
     {
         skReal Temp = P.X - Q.X;
         if( ( Temp > -THRESH_POINTS_ARE_SAME ) && ( Temp < THRESH_POINTS_ARE_SAME ) )
@@ -200,7 +200,7 @@ namespace SKL
      * \brief Compare two points and see if they're the same, using a threshold.
      * \returns Returns true=yes, false=no. Uses fast distance approximation.
      */
-    SKL_FORCEINLINE bool SPointsAreNear( const SVector &Point1, const SVector &Point2, skReal Dist ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SPointsAreNear( const SVector &Point1, const SVector &Point2, skReal Dist ) noexcept
     {
         skReal Temp = ( Point1.X - Point2.X );
         if( Abs( Temp ) >= Dist )
@@ -217,7 +217,7 @@ namespace SKL
     /**
      * \brief Calculate the signed distance (in the direction of the normal) between a point and a plane.
      */
-    SKL_FORCEINLINE skReal SPointPlaneDist( const SVector &Point, const SVector &PlaneBase, const SVector &PlaneNormal ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SPointPlaneDist( const SVector &Point, const SVector &PlaneBase, const SVector &PlaneNormal ) noexcept
     {
         return ( Point - PlaneBase ) | PlaneNormal;
     }
@@ -230,7 +230,7 @@ namespace SKL
      * \param C - three points in CCW order defining the plane
      * \returns Projection of Point onto plane ABC
      */
-    SKL_FORCEINLINE SVector SPointPlaneProject( const SVector &Point, const SVector &A, const SVector &B, const SVector &C ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline SVector SPointPlaneProject( const SVector &Point, const SVector &A, const SVector &B, const SVector &C ) noexcept
     {
         // Compute the plane normal from ABC
         const SPlane Plane( A, B, C );
@@ -247,7 +247,7 @@ namespace SKL
      * \param PlaneNorm - normal of the plane
      * \returns Projection of Point onto plane ABC
      */
-    SKL_FORCEINLINE SVector SPointPlaneProject( const SVector &Point, const SVector &PlaneBase, const SVector &PlaneNorm ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline SVector SPointPlaneProject( const SVector &Point, const SVector &PlaneBase, const SVector &PlaneNorm ) noexcept
     {
         // Find the distance of X from the plane
         // Add the distance back along the normal from the point
@@ -257,7 +257,7 @@ namespace SKL
     /**
      * \brief Euclidean distance between two points.
      */
-    SKL_FORCEINLINE skReal SDist( const SVector &V1, const SVector &V2 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SDist( const SVector &V1, const SVector &V2 ) noexcept
     {
         return Sqrt( Square( V2.X - V1.X ) + Square( V2.Y - V1.Y ) + Square( V2.Z - V1.Z ) );
     }
@@ -265,7 +265,7 @@ namespace SKL
     /**
      * \brief Squared distance between two points.
      */
-    SKL_FORCEINLINE skReal SDistSquared( const SVector &V1, const SVector &V2 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SDistSquared( const SVector &V1, const SVector &V2 ) noexcept
     {
         return Square( V2.X - V1.X ) + Square( V2.Y - V1.Y ) + Square( V2.Z - V1.Z );
     }
@@ -273,7 +273,7 @@ namespace SKL
     /**
      * \brief See if two normal vectors (or plane normals) are nearly parallel.
      */
-    SKL_FORCEINLINE skReal SParallel( const SVector &Normal1, const SVector &Normal2 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SParallel( const SVector &Normal1, const SVector &Normal2 ) noexcept
     {
         const skReal NormalDot = Normal1 | Normal2;
         return ( Abs( NormalDot - SK_REAL_ONE ) <= THRESH_VECTORS_ARE_PARALLEL );
@@ -282,7 +282,7 @@ namespace SKL
     /**
      * \brief See if two planes are coplanar.
      */
-    SKL_FORCEINLINE skReal SCoplanar( const SVector &Base1, const SVector &Normal1, const SVector &Base2, const SVector &Normal2 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SCoplanar( const SVector &Base1, const SVector &Normal1, const SVector &Base2, const SVector &Normal2 ) noexcept
     {
         if( SK_REAL_ZERO == SParallel( Normal1, Normal2 ) || SPointPlaneDist( Base2, Base1, Normal1 ) > THRESH_POINT_ON_PLANE )
         {
@@ -295,7 +295,7 @@ namespace SKL
     /**
      * \brief Triple product of three vectors.
      */
-    SKL_FORCEINLINE skReal STriple( const SVector &X, const SVector &Y, const SVector &Z ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal STriple( const SVector &X, const SVector &Y, const SVector &Z ) noexcept
     {
         return ( ( X.X * ( Y.Y * Z.Z - Y.Z * Z.Y ) ) + ( X.Y * ( Y.Z * Z.X - Y.X * Z.Z ) ) + ( X.Z * ( Y.X * Z.Y - Y.Y * Z.X ) ) );
     }
@@ -303,7 +303,7 @@ namespace SKL
     /**
      * \brief Compute pushout of a box from a plane.
      */
-    SKL_FORCEINLINE skReal SBoxPushOut( const SVector &Normal, const SVector &Size ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline skReal SBoxPushOut( const SVector &Normal, const SVector &Size ) noexcept
     {
         return Abs( Normal.X * Size.X ) + Abs( Normal.Y * Size.Y ) + Abs( Normal.Z * Size.Z );
     }
@@ -311,16 +311,16 @@ namespace SKL
     /**
      * \brief Return a uniformly distributed random unit vector.
      */
-    SVector VRand( ) noexcept;
+    SKL_NODISCARD SVector VRand() noexcept;
 
-    bool SPlaneAABBIntersects( const SPlane &P, const SBox &AABB ) noexcept;
+    SKL_NODISCARD bool SPlaneAABBIntersects( const SPlane &P, const SBox &AABB ) noexcept;
 
-    bool SLineExtentBoxIntersection( const SBox &inBox, const SVector &Start, const SVector &End, const SVector &Extent, SVector &HitLocation, SVector &HitNormal, skReal &HitTime ) noexcept;
+    SKL_NODISCARD bool SLineExtentBoxIntersection( const SBox &inBox, const SVector &Start, const SVector &End, const SVector &Extent, SVector &HitLocation, SVector &HitNormal, skReal &HitTime ) noexcept;
 
     /**
      * \brief Find the intersection of an infinite line (defined by two points) and a plane.  Assumes that the line and plane do indeed intersect; you must make sure they're not parallel before calling
      */
-    SKL_FORCEINLINE SVector SLinePlaneIntersection(
+    SKL_FORCEINLINE SKL_NODISCARD inline SVector SLinePlaneIntersection(
         const SVector &Point1,
         const SVector &Point2,
         const SVector &PlaneOrigin,
@@ -329,7 +329,7 @@ namespace SKL
         return Point1 + ( Point2 - Point1 ) * ( ( ( PlaneOrigin - Point1 ) | PlaneNormal ) / ( ( Point2 - Point1 ) | PlaneNormal ) );
     }
 
-    SKL_FORCEINLINE SVector SLinePlaneIntersection(
+    SKL_FORCEINLINE SKL_NODISCARD inline SVector SLinePlaneIntersection(
         const SVector &Point1,
         const SVector &Point2,
         const SPlane  &Plane ) noexcept
@@ -340,7 +340,7 @@ namespace SKL
     /**
      * \brief Determines whether a point is inside a box
      */
-    SKL_FORCEINLINE bool SPointBoxIntersection(
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SPointBoxIntersection(
         const SVector &Point,
         const SBox    &Box ) noexcept
     {
@@ -355,7 +355,7 @@ namespace SKL
     /**
      * \brief Determines whether a line intersects a box
      */
-    SKL_FORCEINLINE bool SLineBoxIntersection(
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SLineBoxIntersection(
         const SBox    &Box,
         const SVector &Start,
         const SVector &End,
@@ -479,7 +479,7 @@ namespace SKL
     /**
      * \brief Determines whether a line intersects a sphere
      */
-    SKL_FORCEINLINE bool SLineSphereIntersection( const SVector &Start, const SVector &Dir, skReal Length, const SVector &Origin, skReal Radius ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SLineSphereIntersection( const SVector &Start, const SVector &Dir, skReal Length, const SVector &Origin, skReal Radius ) noexcept
     {
         const SVector EO   = Start - Origin;
         const skReal  v    = ( Dir | ( Origin - Start ) );
@@ -501,7 +501,7 @@ namespace SKL
     /**
      * \brief Compute intersection point of three planes. Return 1 if valid, 0 if infinite
      */
-    SKL_FORCEINLINE bool SIntersectPlanes3( SVector &I, const SPlane &P1, const SPlane &P2, const SPlane &P3 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SIntersectPlanes3( SVector &I, const SPlane &P1, const SPlane &P2, const SPlane &P3 ) noexcept
     {
         // Compute determinant, the triple product P1|(P2^P3)==(P1^P2)|P3.
         const skReal Det = ( P1 ^ P2 ) | P3;
@@ -522,7 +522,7 @@ namespace SKL
      * \brief Compute intersection point and direction of line joining two planes.
      * \returns Return true if valid, false if infinite.
      */
-    SKL_FORCEINLINE bool SIntersectPlanes2( SVector &I, SVector &D, const SPlane &P1, const SPlane &P2 ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline bool SIntersectPlanes2( SVector &I, SVector &D, const SPlane &P1, const SPlane &P2 ) noexcept
     {
         // Compute line direction, perpendicular to both plane normals.
         D               = P1 ^ P2;
@@ -540,11 +540,11 @@ namespace SKL
         return true;
     }
 
-    SVectorf ClosestPointOnSegment( const SVectorf &Point, const SVectorf &StartPoint, const SVectorf &EndPoint ) noexcept;
+    SKL_NODISCARD SVectorf ClosestPointOnSegment( const SVectorf &Point, const SVectorf &StartPoint, const SVectorf &EndPoint ) noexcept;
 
-    SVectord ClosestPointOnSegment( const SVectord &Point, const SVectord &StartPoint, const SVectord &EndPoint ) noexcept;
+    SKL_NODISCARD SVectord ClosestPointOnSegment( const SVectord &Point, const SVectord &StartPoint, const SVectord &EndPoint ) noexcept;
 
-    SVectorf ClosestPointOnTriangleToPoint( const SVectorf &Point, const SVectorf &A, const SVectorf &B, const SVectorf &C ) noexcept;
+    SKL_NODISCARD SVectorf ClosestPointOnTriangleToPoint( const SVectorf &Point, const SVectorf &A, const SVectorf &B, const SVectorf &C ) noexcept;
 
-    SVectord ClosestPointOnTriangleToPoint( const SVectord &Point, const SVectord &A, const SVectord &B, const SVectord &C ) noexcept;
+    SKL_NODISCARD SVectord ClosestPointOnTriangleToPoint( const SVectord &Point, const SVectord &A, const SVectord &B, const SVectord &C ) noexcept;
 } // namespace SMath

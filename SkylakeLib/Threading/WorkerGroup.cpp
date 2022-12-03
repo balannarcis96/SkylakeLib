@@ -725,7 +725,7 @@ namespace SKL
         auto NewTCPAcceptor = std::make_unique<TCPAcceptor>( Config, &AsyncIOAPI );
         if( nullptr == NewTCPAcceptor ) SKL_UNLIKELY
         {
-            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Failed to allocate! id[%u] ip[%hu] port[%hu]!", Tag.Name, Config.Id, Config.IpAddress, Config.Port );
+            SKLL_VER_FMT( "WorkerGroup[%ws]::AddNewTCPAcceptor() Failed to allocate! id[%u] ip[%u] port[%hu]!", Tag.Name, Config.Id, Config.IpAddress, Config.Port );
             return RInvalidParamters;
         }
 

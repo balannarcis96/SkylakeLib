@@ -16,7 +16,7 @@ namespace SKL
     class StaticMultiArrayBase
     {
     protected:
-        Type alignas( SKL_CACHE_LINE_SIZE ) Array[ Count ]{};
+         alignas( SKL_CACHE_LINE_SIZE ) Type Array[ Count ]{};
 
         template<size_t TCount, typename... TTypes>
         friend class StaticMultiArray;

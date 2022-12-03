@@ -12,9 +12,9 @@
 namespace SKL
 {
     AODTLSContext::AODTLSContext( ServerInstance* InServerInstance, WorkerGroupTag InWorkerGroupTag ) noexcept
-        : SourceServerInstance{ InServerInstance }
-        , ParentWorkerGroup{ InWorkerGroupTag } 
-        , bScheduleAODDelayedTasks{ false == InWorkerGroupTag.bIsActive }
+        : bScheduleAODDelayedTasks{ false == InWorkerGroupTag.bIsActive }
+        , SourceServerInstance{ InServerInstance }
+        , ParentWorkerGroup{ InWorkerGroupTag }
     {
         SKL_ASSERT( nullptr != InServerInstance );
         SKL_ASSERT( InWorkerGroupTag.IsValid() );

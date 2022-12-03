@@ -116,13 +116,13 @@ namespace SKL
 
         //! Allocate new T
         template< typename... TArgs >
-        constexpr SKL_FORCEINLINE T *Allocate( TArgs... Args ) noexcept
+        SKL_FORCEINLINE constexpr T *Allocate( TArgs... Args ) noexcept
         {
             return AllocateImpl( std::forward< TArgs >( Args )... );
         }
 
         //! Allocate new T
-        constexpr SKL_FORCEINLINE T *Allocate( ) noexcept
+        SKL_FORCEINLINE constexpr T *Allocate( ) noexcept
         {
             return AllocateImpl();
         }
@@ -262,16 +262,16 @@ namespace SKL
             return Allocated;
         }
 
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TPoolHead     HeadPosition     { 0 };
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TPoolTail     TailPosition     { 0 };
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TPoolPtr      Pool[ PoolSize ] {};
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TPoolSpinLock SpinLock         {};
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TPoolHead     HeadPosition     { 0 };
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TPoolTail     TailPosition     { 0 };
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TPoolPtr      Pool[ PoolSize ] {};
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TPoolSpinLock SpinLock         {};
  
 #if defined(SKL_MEMORY_STATISTICS) 
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TStatisticsValue TotalAllocations;
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TStatisticsValue TotalDeallocations;
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TStatisticsValue TotalOSAllocations;
-        alignas( PoolTraits::InternalAlignment ) PoolTraits::TStatisticsValue TotalOSDeallocations;
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TStatisticsValue TotalAllocations;
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TStatisticsValue TotalDeallocations;
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TStatisticsValue TotalOSAllocations;
+        alignas( PoolTraits::InternalAlignment ) typename PoolTraits::TStatisticsValue TotalOSDeallocations;
 #endif
     };
 } // namespace SKL

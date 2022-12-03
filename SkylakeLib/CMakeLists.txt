@@ -75,6 +75,9 @@ source_group("Utils"                  FILES ${_Utils_files}                 )
 set_property(TARGET SkylakeLib PROPERTY CXX_STANDARD 20)
 target_include_directories(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/")
 target_link_libraries(SkylakeLib PUBLIC SkylakeLibStandalone)
-target_link_libraries(SkylakeLib PUBLIC mimalloc-static)
+
+if(SKL_USE_MIMALLOC)
+    target_link_libraries(SkylakeLib PUBLIC mimalloc-static)
+endif()
 
 target_precompile_headers(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLib.h")

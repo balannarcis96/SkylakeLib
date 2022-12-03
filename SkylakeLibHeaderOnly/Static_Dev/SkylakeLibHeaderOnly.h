@@ -53,7 +53,7 @@
 
 namespace SKL
 {
-    SKL_FORCEINLINE SKL_NODISCARD TEpochTimePoint GetCurrentEpochTime() noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline TEpochTimePoint GetCurrentEpochTime() noexcept
     {
         return static_cast<TEpochTimePoint>( std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count() );
     }

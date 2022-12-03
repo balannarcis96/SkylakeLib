@@ -4,9 +4,9 @@
 class TestApplication : public SKL::ServerInstance 
 {
 public:
-    TestApplication( const wchar_t* Name ) noexcept : 
-        ServerInstanceConfig{ Name },
-        ServerInstance{}
+    TestApplication( const wchar_t* Name ) noexcept 
+        : ServerInstance{} 
+        , ServerInstanceConfig{ Name }
     {}
 
     virtual bool Start( bool bIncludeCallignThread = true ) noexcept;

@@ -18,14 +18,14 @@ namespace SKL
     uint32_t Squirrel3( TRandPosition InPosition, TRandSeed InSeed ) noexcept;
 
     //! Reliable seedable 2D noise function
-    SKL_FORCEINLINE uint32_t Squirrel3_2D( int32_t InX, int32_t InY, TRandSeed InSeed ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline uint32_t Squirrel3_2D( int32_t InX, int32_t InY, TRandSeed InSeed ) noexcept
     {
         constexpr uint32_t PRIME{ Squirrel3_2D_PRIME };
         return Squirrel3( InX + ( PRIME * InY ), InSeed );
     }
     
     //! Reliable seedable 3D noise function
-    SKL_FORCEINLINE uint32_t Squirrel3_3D( int32_t InX, int32_t InY, int32_t InZ, TRandSeed InSeed ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline uint32_t Squirrel3_3D( int32_t InX, int32_t InY, int32_t InZ, TRandSeed InSeed ) noexcept
     {
         constexpr uint32_t PRIME1{ Squirrel3_3D_PRIME1 };
         constexpr uint32_t PRIME2{ Squirrel3_3D_PRIME2 };

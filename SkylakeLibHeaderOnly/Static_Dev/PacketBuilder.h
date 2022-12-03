@@ -46,7 +46,7 @@ namespace SKL
         return TestPacketBuildContextFlags( Flags, static_cast<TBuildPacketContextFlags>( TestFlag ) );
     }
     
-    SKL_FORCEINLINE void CommitPacket( StreamBase& InStream ) noexcept
+    SKL_FORCEINLINE inline void CommitPacket( StreamBase& InStream ) noexcept
     {
         SKL_ASSERT( CPacketHeaderSize <= InStream.GetBufferLength() );
 
@@ -54,7 +54,7 @@ namespace SKL
         Header.Size = static_cast<TPacketSize>( InStream.GetPosition() );
     }
 
-    SKL_FORCEINLINE void CommitPacket( StreamBase& InStream, TPacketSize InSize ) noexcept
+    SKL_FORCEINLINE inline void CommitPacket( StreamBase& InStream, TPacketSize InSize ) noexcept
     {
         SKL_ASSERT( CPacketHeaderSize <= InStream.GetBufferLength() );
         SKL_ASSERT( InSize <= InStream.GetBufferLength() );
@@ -202,7 +202,7 @@ namespace SKL
             return *static_cast<const typename Traits::Super*>( this );
         }
 
-        template<typename InSuper, TPacketOpcode InOpcode>
+        template<typename _InSuper, TPacketOpcode _InOpcode>
         friend struct HeaderOnlyPacketBuildContext;
     };
 

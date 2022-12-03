@@ -223,10 +223,18 @@ namespace SKL::DC
                 return CachedValueRef;
             }
             
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, AttributeEditData>>
-            SKL_FORCEINLINE TRet& GetEditData() noexcept { return *this; };
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, AttributeEditData>>
-            SKL_FORCEINLINE const TRet& GetEditData() const noexcept { return *this; };
+            template<typename TRet = AttributeEditData>
+            SKL_FORCEINLINE TRet& GetEditData() noexcept 
+            { 
+                static_assert( bEnableBuildCapabilities );
+                return *this; 
+            }
+            template<typename TRet = AttributeEditData>
+            SKL_FORCEINLINE const TRet& GetEditData() const noexcept 
+            { 
+                static_assert( bEnableBuildCapabilities );
+                return *this; 
+            }
 
             SKL_FORCEINLINE void SetNameIndex( TNameIndex InNameIndex ) noexcept { NameIndex = InNameIndex; }
             SKL_FORCEINLINE void SetValueIndices( TBlockIndices InValueIndices ) noexcept { Value = InValueIndices; }
@@ -318,10 +326,18 @@ namespace SKL::DC
             }
             SKL_FORCEINLINE Element* GetParent() const noexcept{ return Parent; }
 
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, ElementEditData>>
-            SKL_FORCEINLINE TRet& GetEditData() noexcept { return *this; };
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, ElementEditData>>
-            SKL_FORCEINLINE const TRet& GetEditData() const noexcept { return *this; };
+            template<typename TRet = ElementEditData>
+            SKL_FORCEINLINE TRet& GetEditData() noexcept 
+            { 
+                static_assert( bEnableBuildCapabilities );
+                return *this; 
+            }
+            template<typename TRet = ElementEditData>
+            SKL_FORCEINLINE const TRet& GetEditData() const noexcept 
+            { 
+                static_assert( bEnableBuildCapabilities );
+                return *this; 
+            }
             SKL_FORCEINLINE bool HasValueString() const noexcept { return CInvalidBlockIndex != ValueIndices.first && CInvalidBlockIndex != ValueIndices.second; }
 
             SKL_FORCEINLINE void SetChildrenCount( uint32_t InCount ) noexcept
@@ -797,9 +813,11 @@ namespace SKL::DC
                 return Block.GetString( InIndices.second );
             }
             
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, TStringIndex>>
-            TRet SearchIndex( const wchar_t* InString ) noexcept
+            template<typename TRet = TStringIndex>
+            SKL_NODISCARD TRet SearchIndex( const wchar_t* InString ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 for( uint32_t i = 0; i < AllStrings.Size(); ++i )
                 {
                     if( 0 == wcscmp( InString, AllStrings[i].CachedStringRef ) )
@@ -811,9 +829,11 @@ namespace SKL::DC
                 return CInvalidStringIndex;
             }
             
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, TStringIndex>>
-            TRet QueryIndex( const wchar_t* InString ) noexcept
+            template<typename TRet = TStringIndex>
+            SKL_NODISCARD TRet QueryIndex( const wchar_t* InString ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 const auto Item{ this->PresentStringsByIndex.find( InString ) };
                 if( this->PresentStringsByIndex.end() != Item )
                 {
@@ -823,9 +843,11 @@ namespace SKL::DC
                 return CInvalidStringIndex;
             }
             
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, TStringIndices>>
-            TRet QueryIndices( const wchar_t* InString ) noexcept
+            template<typename TRet = TStringIndices>
+            SKL_NODISCARD TRet QueryIndices( const wchar_t* InString ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 const auto Item{ this->PresentStringsByIndices.find( InString ) };
                 if( this->PresentStringsByIndices.end() != Item )
                 {
@@ -835,9 +857,11 @@ namespace SKL::DC
                 return { CInvalidBlockIndex, CInvalidBlockIndex };
             }
 
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, bool>>
-            TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TStringIndex& OutIndex ) noexcept
+            template<typename TRet = bool>
+            SKL_NODISCARD TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TStringIndex& OutIndex ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 auto ExistingItem{ this->PresentStringsByIndex.find( InString ) };
                 if( ExistingItem != this->PresentStringsByIndex.end() )
                 {
@@ -872,9 +896,11 @@ namespace SKL::DC
                 return true;
             }
 
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, bool>>
-            TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TBlockIndices& OutIndices ) noexcept
+            template<typename TRet = bool>
+            SKL_NODISCARD TRet InsertString( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TBlockIndices& OutIndices ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 auto ExistingItem{ this->PresentStringsByIndices.find( InString ) };
                 if( ExistingItem != this->PresentStringsByIndices.end() )
                 {
@@ -943,9 +969,11 @@ namespace SKL::DC
             }
 
         private:
-            template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, bool>>
-            TRet InsertStringInBlock( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TBlockIndices& OutIndices ) noexcept
+            template<typename TRet = bool>
+            SKL_NODISCARD TRet InsertStringInBlock( const wchar_t* InString, uint32_t InStringSizeInWideCharsNoNullTerm, TBlockIndices& OutIndices ) noexcept
             {
+                static_assert( bEnableBuildCapabilities );
+
                 for( uint32_t i = 0; i < StringBlocks.Size(); ++i )
                 {
                     if( nullptr != StringBlocks[i].TryAddString( InString, InStringSizeInWideCharsNoNullTerm, OutIndices.second ) )
@@ -1130,12 +1158,25 @@ namespace SKL::DC
         TFormatVersion GetFormatVersion() const noexcept{ return FormatVersion; }
         TLanguage GetLanguage() const noexcept{ return Language; }
         
-        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TVersion>> 
-        void SetVersion( TParam InVersion ) noexcept{ Version = InVersion; }
-        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TFormatVersion>> 
-        void SetFormatVersion( TParam InFormatVersion ) noexcept{ FormatVersion = InFormatVersion; }
-        template<typename TParam = std::enable_if_t<bEnableBuildCapabilities, TLanguage>> 
-        void SetLanguage( TParam InLanguage ) noexcept{ Language = InLanguage; }
+        template<typename TParam = TVersion> 
+        void SetVersion( TVersion InVersion ) noexcept 
+        { 
+            static_assert( bEnableBuildCapabilities );
+            Version = InVersion; 
+        }
+
+        template<typename TParam = TFormatVersion> 
+        void SetFormatVersion( TParam InFormatVersion ) noexcept
+        { 
+            static_assert( bEnableBuildCapabilities );
+            FormatVersion = InFormatVersion; 
+        }
+        template<typename TParam = TLanguage> 
+        void SetLanguage( TParam InLanguage ) noexcept
+        { 
+            static_assert( bEnableBuildCapabilities );
+            Language = InLanguage; 
+        }
 
         Element* GetRootElement() noexcept
         {
@@ -1166,14 +1207,30 @@ namespace SKL::DC
             return &Attributes[InIndices.first][InIndices.second];
         }
 
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, StringMap>> 
-        TRet& GetValuesMap() noexcept { return ValuesMap; }
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, StringMap>> 
-        TRet& GetNamesMap() noexcept { return NamesMap; }
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, DatacenterElements>> 
-        TRet& GetElementsBlock() noexcept { return Elements; }
-        template<typename TRet = std::enable_if_t<bEnableBuildCapabilities, DatacenterAttributes>> 
-        TRet& GetAttributesBlock() noexcept { return Attributes; }
+        template<typename TRet = StringMap> 
+        TRet& GetValuesMap() noexcept 
+        {
+            static_assert( bEnableBuildCapabilities );
+            return ValuesMap;
+        }
+        template<typename TRet = StringMap> 
+        TRet& GetNamesMap() noexcept 
+        { 
+            static_assert( bEnableBuildCapabilities );
+            return NamesMap;
+        }
+        template<typename TRet = DatacenterElements> 
+        TRet& GetElementsBlock() noexcept 
+        { 
+            static_assert( bEnableBuildCapabilities );
+            return Elements; 
+        }
+        template<typename TRet = DatacenterAttributes> 
+        TRet& GetAttributesBlock() noexcept 
+        {
+            static_assert( bEnableBuildCapabilities );
+            return Attributes;
+        }
         
         std::vector<const Element*> GetAllByNameStartsWith( const wchar_t* InStartsWithString ) const noexcept
         {

@@ -116,13 +116,13 @@ namespace SKL
 
         //! Allocate new T
         template< typename... TArgs >
-        constexpr SKL_FORCEINLINE static T *Allocate( TArgs... Args ) noexcept
+        SKL_FORCEINLINE constexpr static T *Allocate( TArgs... Args ) noexcept
         {
             return AllocateImpl( std::forward< TArgs >( Args )... );
         }
 
         //! Allocate new T
-        constexpr SKL_FORCEINLINE static T *Allocate( ) noexcept
+        SKL_FORCEINLINE constexpr static T *Allocate( ) noexcept
         {
             return AllocateImpl();
         }
@@ -269,30 +269,30 @@ namespace SKL
             return Allocated;
         }
 
-        static inline SKL_CACHE_ALIGNED PoolTraits::TPoolHead     HeadPosition     { 0 };
-        static inline SKL_CACHE_ALIGNED PoolTraits::TPoolTail     TailPosition     { 0 };
-        static inline SKL_CACHE_ALIGNED PoolTraits::TPoolPtr      Pool[ PoolSize ] {};
-        static inline SKL_CACHE_ALIGNED PoolTraits::TPoolSpinLock SpinLock         {};
+        SKL_CACHE_ALIGNED static inline typename PoolTraits::TPoolHead     HeadPosition     { 0 };
+        SKL_CACHE_ALIGNED static inline typename PoolTraits::TPoolTail     TailPosition     { 0 };
+        SKL_CACHE_ALIGNED static inline typename PoolTraits::TPoolPtr      Pool[ PoolSize ] {};
+        SKL_CACHE_ALIGNED static inline typename PoolTraits::TPoolSpinLock SpinLock         {};
 
 #if defined(SKL_MEMORY_STATISTICS) 
-        static SKL_CACHE_ALIGNED std::atomic<size_t> TotalAllocations;
-        static SKL_CACHE_ALIGNED std::atomic<size_t> TotalDeallocations;
-        static SKL_CACHE_ALIGNED std::atomic<size_t> TotalOSAllocations;
-        static SKL_CACHE_ALIGNED std::atomic<size_t> TotalOSDeallocations;
+        SKL_CACHE_ALIGNED static std::atomic<size_t> TotalAllocations;
+        SKL_CACHE_ALIGNED static std::atomic<size_t> TotalDeallocations;
+        SKL_CACHE_ALIGNED static std::atomic<size_t> TotalOSAllocations;
+        SKL_CACHE_ALIGNED static std::atomic<size_t> TotalOSDeallocations;
 #endif
     };
 
 #if defined(SKL_MEMORY_STATISTICS) 
-    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalAllocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment>
+    SKL_CACHE_ALIGNED inline std::atomic<size_t> ObjectPool<T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment>::TotalAllocations;
 
-    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalDeallocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment>
+    SKL_CACHE_ALIGNED inline std::atomic<size_t> ObjectPool<T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment>::TotalDeallocations;
 
-    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSAllocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment>
+    SKL_CACHE_ALIGNED inline std::atomic<size_t> ObjectPool<T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment>::TotalOSAllocations;
 
-    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment >
-    inline SKL_CACHE_ALIGNED std::atomic< size_t > ObjectPool< T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment >::TotalOSDeallocations;
+    template< typename T, size_t PoolSize, bool bNoSync, bool bUseSpinLock, bool bPerformConstruction, bool bPerformDestruction, size_t TAlignment>
+    SKL_CACHE_ALIGNED inline std::atomic<size_t> ObjectPool<T, PoolSize, bNoSync, bUseSpinLock, bPerformConstruction, bPerformDestruction, TAlignment>::TotalOSDeallocations;
 #endif
 } // namespace SKL

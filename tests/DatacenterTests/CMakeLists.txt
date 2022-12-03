@@ -20,7 +20,7 @@ add_custom_command(TARGET SkylakeLibDatacenterTests POST_BUILD
         "${CMAKE_CURRENT_SOURCE_DIR}/data"
         "$<TARGET_FILE_DIR:SkylakeLibDatacenterTests>/../")
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if (WIN32)
     set_target_properties(SkylakeLibDatacenterTests PROPERTIES COMPILE_FLAGS "/W3 /WX-")
 else()
     message(FATAL_ERROR "@TODO compiler flags")

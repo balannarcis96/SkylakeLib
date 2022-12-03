@@ -466,10 +466,10 @@ namespace SKL
         }
 
         // Stats variables
-        SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> CustomSizeAllocations   );
-        SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> CustomSizeDeallocations );
-        SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalAllocations        );
-        SKL_IFMEMORYSTATS( static SKL_CACHE_ALIGNED std::atomic<size_t> TotalDeallocations      );
+        SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED static std::atomic<size_t> CustomSizeAllocations   );
+        SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED static std::atomic<size_t> CustomSizeDeallocations );
+        SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED static std::atomic<size_t> TotalAllocations        );
+        SKL_IFMEMORYSTATS( SKL_CACHE_ALIGNED static std::atomic<size_t> TotalDeallocations      );
 
 #if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
         static inline std::mutex                         AllocationsMutex;

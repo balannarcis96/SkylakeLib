@@ -20,6 +20,20 @@
 #pragma comment( lib, "ws2_32.lib" )
 #pragma comment( lib, "winmm.lib" )
 
+#if !defined(SKL_USE_MIMALLOC)
+#include <malloc.h>
+
+void* GAllocAligned( size_t Size, size_t Alignment ) noexcept
+{
+    return _aligned_malloc( Size, Alignment );
+}
+
+void GFreeAligned( void* Ptr ) noexcept
+{
+    return _aligned_free( Ptr );
+}                   
+#endif
+
 namespace SKL
 {
     static_assert( std::is_same_v<TSocket, SOCKET>, "Invalid Socket type!" );
@@ -209,7 +223,7 @@ namespace SKL
         }
 
         // cache accept ex
-        CustomHandle.exchange( AcceptExPtr );
+        CustomHandle.exchange( reinterpret_cast<void*>( AcceptExPtr ) );
 
         // set is running 
         bIsRunning.exchange( true );

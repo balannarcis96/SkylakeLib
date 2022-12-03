@@ -35,17 +35,17 @@ namespace TLSSyncTests
                 return SKL::RSuccess;
             }
 
-            void OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 TLSCustomVal::SetValue( 0 );
             }
 
-            void OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnWorkerStopped( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 SKL_ASSERT_ALLWAYS( WorkersCount + 1 == Counter.load_relaxed() );
             }
 
-            void OnTickWorker( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnTickWorker( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 if( 1 == TLSCustomVal::GetValue() )
                 {
@@ -72,7 +72,7 @@ namespace TLSSyncTests
                 return false;
             }
 
-            SyncTLS( [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
+            SyncTLS( [ this ]( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/, bool bIsFinalzation ) noexcept -> void 
             {
                 if( false == bIsFinalzation )
                 {
@@ -137,7 +137,7 @@ namespace TLSSyncTests
 
             for( uint32_t i = 0; i < IterCount; ++i )
             {
-                SyncTLS( [ this ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup, bool bIsFinalzation ) noexcept -> void 
+                SyncTLS( [ this ]( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/, bool bIsFinalzation ) noexcept -> void 
                 {
                     if( true == bIsFinalzation )
                     {
@@ -184,7 +184,7 @@ namespace TLSSyncTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
-        }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void {  } ) );
+        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -215,7 +215,7 @@ namespace TLSSyncTests
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
             .Name                            = L"TLSSync_Global_GROUP"
-                                               }, []( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void {  } ) );
+                                               }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
 
         ASSERT_TRUE( true == Start( true ) );
 

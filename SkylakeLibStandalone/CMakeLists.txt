@@ -26,8 +26,8 @@ source_group("Tuning"                 FILES ${_Tuning_files}     )
 source_group("Utils"                  FILES ${_Utils_files}      )
 source_group("/"                      FILES ${_Root_files}       )
 
-# Set C++17
-set_property(TARGET SkylakeLibStandalone PROPERTY CXX_STANDARD 17)
+# Set C++20
+set_property(TARGET SkylakeLibStandalone PROPERTY CXX_STANDARD 20)
 
 target_include_directories(SkylakeLibStandalone PUBLIC "${SKYLAKE_SRC_ROOT}/")
 

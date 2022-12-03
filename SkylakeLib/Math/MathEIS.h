@@ -14,7 +14,7 @@
 namespace SKL
 {
 #if defined(SKL_USE_AVX2)
-    static SKL_FORCEINLINE float InvSqrtInternal( float InValue ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline float InvSqrtInternal( float InValue ) noexcept
     {
         const __m128 One = _mm_set_ss( 1.0f );
         const __m128 Y0     = _mm_set_ss( InValue );
@@ -25,7 +25,7 @@ namespace SKL
         return temp;
     }
 
-    static SKL_FORCEINLINE double InvSqrtInternal( double InValue ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline double InvSqrtInternal( double InValue ) noexcept
     {
         const __m128d One = _mm_set_sd( 1.0 );
         const __m128d Y0  = _mm_set_sd( InValue );
@@ -36,7 +36,7 @@ namespace SKL
         return temp;
     }
 
-    static SKL_FORCEINLINE float InvSqrtEstInternal( float F ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline float InvSqrtEstInternal( float F ) noexcept
     {
         // Performs one pass of Newton-Raphson iteration on the hardware estimate
         const __m128 fOneHalf = _mm_set_ss( 0.5f );
@@ -56,79 +56,79 @@ namespace SKL
         return temp;
     }
 
-    static SKL_FORCEINLINE double InvSqrtEstInternal( double InValue ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline double InvSqrtEstInternal( double InValue ) noexcept
     {
         return InvSqrtInternal( InValue );
     }
 
     //! Converts a float to an integer 32bit and truncates it towards zero.
-    SKL_FORCEINLINE int32_t FTrunc( float Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FTrunc( float Value ) noexcept
     {
         return _mm_cvtt_ss2si( _mm_set_ss( Value ) );
     }
 
     //! Converts a float to an integer 32bit and truncates it towards zero.
-    SKL_FORCEINLINE int32_t FTrunc( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FTrunc( double Value ) noexcept
     {
         return _mm_cvttsd_si32( _mm_set_sd( Value ) );
     }
 
     //! Converts a double to an integer 64bit and truncates it towards zero.
-    SKL_FORCEINLINE int64_t FTrunc64( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int64_t FTrunc64( double Value ) noexcept
     {
         return _mm_cvttsd_si64( _mm_set_sd( Value ) );
     }
 
     //! Converts a float to the nearest integer. Rounds up when the fraction is .5
-    SKL_FORCEINLINE int32_t FRound( float Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FRound( float Value ) noexcept
     {
         return _mm_cvt_ss2si( _mm_set_ss( Value + Value + 0.5f ) ) >> 1;
     }
 
     //! Converts a double to the nearest integer. Rounds up when the fraction is .5
-    SKL_FORCEINLINE int32_t FRound( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FRound( double Value ) noexcept
     {
         return _mm_cvtsd_si32( _mm_set_sd( Value + Value + 0.5 ) ) >> 1;
     }
 
     //! Converts a double to the nearest integer. Rounds up when the fraction is .5
-    SKL_FORCEINLINE int64_t FRound64( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int64_t FRound64( double Value ) noexcept
     {
         return _mm_cvtsd_si64( _mm_set_sd( Value + Value + 0.5 ) ) >> 1;
     }
 
     //! Converts a float to a less or equal integer.
-    SKL_FORCEINLINE int32_t FFloorToInt( float Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FFloorToInt( float Value ) noexcept
     {
         return _mm_cvt_ss2si( _mm_set_ss( Value + Value - 0.5f ) ) >> 1;
     }
 
     //! Converts a double to a less or equal integer.
-    SKL_FORCEINLINE int32_t FFloorToInt( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FFloorToInt( double Value ) noexcept
     {
         return _mm_cvtsd_si32( _mm_set_sd( Value + Value - 0.5 ) ) >> 1;
     }
 
     //! Converts a float to a less or equal integer.
-    SKL_FORCEINLINE int64_t FFloorToInt64( float Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int64_t FFloorToInt64( float Value ) noexcept
     {
         return _mm_cvtsd_si64( _mm_set_sd( static_cast<double>( Value ) + ( Value - 0.5 ) ) ) >> 1;
     }
 
     //! Converts a float to a greater or equal integer 32.
-    SKL_FORCEINLINE int32_t FCeilToInt( float Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FCeilToInt( float Value ) noexcept
     {
         return -( _mm_cvt_ss2si( _mm_set_ss( -0.5f - ( Value + Value ) ) ) >> 1 );
     }
 
     //! Converts a double to a greater or equal integer 32.
-    SKL_FORCEINLINE int32_t FCeilToInt( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int32_t FCeilToInt( double Value ) noexcept
     {
         return -( _mm_cvtsd_si32( _mm_set_sd( -0.5 - ( Value + Value ) ) ) >> 1 );
     }
 
     //! Converts a double to a greater or equal integer 64.
-    SKL_FORCEINLINE int64_t FCeilToInt64( double Value ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD inline int64_t FCeilToInt64( double Value ) noexcept
     {
         return -( _mm_cvtsd_si64( _mm_set_sd( -0.5 - ( Value + Value ) ) ) >> 1 );
     }

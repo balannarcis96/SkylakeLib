@@ -604,10 +604,10 @@ namespace DatacenterTests
             BuildDatacenter DC{};
             DC.SetStream( &Stream.GetStreamBase() );
 
-            auto& ValuesMap = DC.GetValuesMap();
+       /*     auto& ValuesMap = DC.GetValuesMap();
             auto& NamesMap = DC.GetNamesMap();
             auto& ElementsBlock = DC.GetElementsBlock();
-            auto& AttributesBlock = DC.GetAttributesBlock();
+            auto& AttributesBlock = DC.GetAttributesBlock();*/
         }
     }
 

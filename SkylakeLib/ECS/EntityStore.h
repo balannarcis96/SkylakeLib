@@ -114,9 +114,9 @@ namespace SKL
 
             static consteval size_t CalculatePaddingSize()
             {
-                const double BSize   { static_cast<double>( sizeof( TestType ) ) };
-                const double Multiple{ BSize / static_cast<double>( SKL_CACHE_LINE_SIZE ) };
-                const double Fraction{ Multiple - static_cast<double>( static_cast<size_t>( Multiple ) ) };
+                constexpr double BSize   { static_cast<double>( sizeof( TestType ) ) };
+                constexpr double Multiple{ BSize / static_cast<double>( SKL_CACHE_LINE_SIZE ) };
+                constexpr double Fraction{ Multiple - static_cast<double>( static_cast<size_t>( Multiple ) ) };
 
                 double FinalMultiple{ Multiple };
                 if constexpr( Fraction > 0.0 )

@@ -42,6 +42,8 @@ namespace SKL
 
             Other.Length = 0U;
             Other.Buffer = nullptr;
+
+            return *this;
         }
 
         ~IBuffer() noexcept = default;

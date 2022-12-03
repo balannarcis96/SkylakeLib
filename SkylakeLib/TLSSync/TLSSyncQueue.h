@@ -53,16 +53,24 @@ namespace SKL
         void Push( TObject* InTask ) noexcept
         {
             const uint64_t TaskIndex   { Head.increment() };
+#if defined(SKL_BUILD_SHIPPING)
+            ( void )Items[ TaskIndex & Mask ].exchange( InTask );
+#else
             auto*          ShouldBeNull{ Items[ TaskIndex & Mask ].exchange( InTask ) };
             SKL_ASSERT_MSG( nullptr == ShouldBeNull, "To many tasks at once, increase the TLSSync Tasks queue size!" );
+#endif
         }
 
         //! Pop tail for the front element for the calling thread
         void TLSPop() noexcept
         {
-            const uint64_t TaskIndex      { ThreadIndex::GetValue() };
+            const uint64_t TaskIndex{ ThreadIndex::GetValue() };
+#if defined(SKL_BUILD_SHIPPING)
+            ( void )Items[ TaskIndex & Mask ].exchange( nullptr );
+#else
             auto*          ShouldNotBeNull{ Items[ TaskIndex & Mask ].exchange( nullptr ) };
             SKL_ASSERT( nullptr != ShouldNotBeNull );
+#endif
         }
 
         //! Get the front element for the calling thread

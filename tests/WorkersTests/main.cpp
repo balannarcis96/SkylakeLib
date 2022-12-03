@@ -738,8 +738,6 @@ namespace WorkersTests
             };
             ASSERT_TRUE( true == Group1.Validate() );
 
-            using TT = ASD::CopyFunctorWrapper<16, void(*)(void)> ;        
-
             Group1.SetWorkerStartHandler( []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> bool {
                 SKLL_INF( "Worker Group1 WORKER STARTED!" );
                 return true;
@@ -780,7 +778,7 @@ namespace WorkersTests
                     .Name             = L"BACK_END_GROUP"
                 }
             };
-            Group2.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
+            Group2.SetWorkerTickHandler( [ /*&Manager*/ ]( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
             {
                 SKLL_INF( "Worker Group2 Tick()" );
             } );

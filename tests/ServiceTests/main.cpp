@@ -231,13 +231,13 @@ namespace ServicesTests
             }
 
             //! [Callback] Each time a worker started
-            void OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 TLSCounter::SetValue( 0 );
             }
 
             //! [Callback] Each time a worker stopped
-            void OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnWorkerStopped( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 const auto Value{ TLSCounter::GetValue() };
                 SKL_ASSERT_ALLWAYS( CIterCount <= Value );
@@ -245,7 +245,7 @@ namespace ServicesTests
             }
 
             //! [Callback] Tick for each active worker
-            void OnTickWorker( SKL::Worker& InWorker, SKL::WorkerGroup& InWorkerGroup ) noexcept override
+            void OnTickWorker( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 const auto LastValue{ TLSCounter::GetValue() };
 
@@ -514,7 +514,7 @@ namespace ServicesTests
 
             void OnServerStarted() noexcept override
             {
-                AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& SelfObj ) noexcept -> void
+                AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& /*SelfObj*/ ) noexcept -> void
                 {
                     SKLL_TRACE_MSG( "DO ASYNC" );
 

@@ -1274,15 +1274,15 @@ namespace SKL
             return ( &X )[ Index ];
         }
 
-        SKL_NODISCARD friend SKL_FORCEINLINE TReal Dot3( const TVector4 &V1, const TVector4 &V2 ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD friend TReal Dot3( const TVector4 &V1, const TVector4 &V2 ) noexcept
         {
             return V1.X * V2.X + V1.Y * V2.Y + V1.Z * V2.Z;
         }
-        SKL_NODISCARD friend SKL_FORCEINLINE TReal Dot4( const TVector4 &V1, const TVector4 &V2 ) noexcept
+         SKL_FORCEINLINE SKL_NODISCARD friend TReal Dot4( const TVector4 &V1, const TVector4 &V2 ) noexcept
         {
             return V1.X * V2.X + V1.Y * V2.Y + V1.Z * V2.Z + V1.W * V2.W;
         }
-        SKL_NODISCARD friend SKL_FORCEINLINE TVector4 operator*( TReal Scale, const TVector4 &V ) noexcept
+         SKL_FORCEINLINE SKL_NODISCARD friend TVector4 operator*( TReal Scale, const TVector4 &V ) noexcept
         {
             return V.operator*( Scale );
         }

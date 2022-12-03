@@ -11,7 +11,6 @@
 
 namespace SKL::DB
 {
-    constexpr auto t = sizeof( ::MYSQL_RES );
     static_assert( CMysqlStmtSize == sizeof( ::MYSQL_STMT ) );
     static_assert( CMysqlBindSize == sizeof( ::MYSQL_BIND ) );
     static_assert( sizeof( uint32_t ) == sizeof( unsigned long ) );

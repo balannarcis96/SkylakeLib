@@ -45,7 +45,7 @@ namespace SKL
 	}
 
 	template<typename Str>
-	std::vector<Str> SplitString( const Str& target, const Str& token, bool ommitEmptySpaces, bool keepTokens ) noexcept
+	SKL_NODISCARD static std::vector<Str> SplitString( const Str& target, const Str& token, bool ommitEmptySpaces, bool keepTokens ) noexcept
 	{
 		static_assert( std::is_same_v<Str, std::wstring> || std::is_same_v<Str, std::string> || std::is_same_v<Str, std::wstring_view> || std::is_same_v<Str, std::string_view>, "Utils::SplitString<Str>() Requires Str to be std::wstring or std::string>" );
 	
@@ -100,7 +100,7 @@ namespace SKL
 	
 	// trim from start (in place)
 	template<typename Str>
-	void LeftTrim( Str& s )
+	static void LeftTrim( Str& s )
 	{
 		static_assert( std::is_same_v<Str, std::wstring> || std::is_same_v<Str, std::string> || std::is_same_v<Str, std::wstring_view> || std::is_same_v<Str, std::string_view>, "Utils::LeftTrim<Str>() Requires Str to be std::wstring or std::string>" );
 	
@@ -112,7 +112,7 @@ namespace SKL
 	
 	// trim from end (in place)
 	template<typename Str>
-	void RightTrim( Str& s )
+	static void RightTrim( Str& s )
 	{
 		static_assert( std::is_same_v<Str, std::wstring> || std::is_same_v<Str, std::string> || std::is_same_v<Str, std::wstring_view> || std::is_same_v<Str, std::string_view>, "Utils::RightTrim<Str>() Requires Str to be std::wstring or std::string>" );
 	
@@ -124,7 +124,7 @@ namespace SKL
 	
 	// trim from both ends (in place)
 	template<typename Str>
-	void Trim( Str& s ) 
+	static void Trim( Str& s ) 
 	{
 		static_assert( std::is_same_v<Str, std::wstring> || std::is_same_v<Str, std::string> || std::is_same_v<Str, std::wstring_view> || std::is_same_v<Str, std::string_view>, "Utils::Trim<Str>() Requires Str to be std::wstring or std::string>" );
 	
@@ -133,26 +133,26 @@ namespace SKL
 	}
 
 	// return true is both strings are equal
-	SKL_FORCEINLINE bool StringEqual( const char* InFirstString, const char* InLastString, size_t InMaxmimCharactersToCompare ) noexcept
+	SKL_FORCEINLINE SKL_NODISCARD inline bool StringEqual( const char* InFirstString, const char* InLastString, size_t InMaxmimCharactersToCompare ) noexcept
 	{
 		return 0 == SKL_STRCMP( InFirstString, InLastString, InMaxmimCharactersToCompare );
 	}
 	
 	// return true is both strings are equal
-	SKL_FORCEINLINE bool StringEqual( const wchar_t* InFirstString, const wchar_t* InLastString, size_t InMaxmimCharactersToCompare ) noexcept
+	SKL_FORCEINLINE SKL_NODISCARD inline bool StringEqual( const wchar_t* InFirstString, const wchar_t* InLastString, size_t InMaxmimCharactersToCompare ) noexcept
 	{
 		return 0 == SKL_WSTRCMP( InFirstString, InLastString, InMaxmimCharactersToCompare );
 	}
 
 	// return true is both strings are equal
 	template<typename TChar, size_t InLastStringSize>
-	SKL_FORCEINLINE bool StringEqual( const TChar* InFirstString, const TChar(&InLastString)[InLastStringSize] ) noexcept
+	SKL_FORCEINLINE SKL_NODISCARD inline bool StringEqual( const TChar* InFirstString, const TChar(&InLastString)[InLastStringSize] ) noexcept
 	{
 		static_assert( true == std::is_same_v<TChar, char> || true == std::is_same_v<TChar, wchar_t> );
 		return StringEqual( InFirstString, InLastString, InLastStringSize );
 	}
 
-	SKL_FORCEINLINE std::wstring GetLastDirectoryW( const wchar_t* InPath ) noexcept
+	SKL_FORCEINLINE SKL_NODISCARD inline std::wstring GetLastDirectoryW( const wchar_t* InPath ) noexcept
 	{
 		const std::filesystem::path Temp{ InPath };
 		return Temp.parent_path().filename();

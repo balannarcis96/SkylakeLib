@@ -73,8 +73,8 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD          size_t        use_count()                  const noexcept { SKL_ASSERT( Pointer != nullptr ); return static_cast<size_t>( Static_GetReferenceCount( Pointer ) ); }
         SKL_FORCEINLINE SKL_NODISCARD explicit               operator bool()              const noexcept { return nullptr != Pointer; }
         SKL_FORCEINLINE                        void          reset()                            noexcept { if( nullptr != Pointer ) SKL_LIKELY { Static_Reset( Pointer ); Pointer = nullptr;  } }
-        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay& operator[]( uint32_t Index )       noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
-        SKL_FORCEINLINE SKL_NODISCARD const    TObjectDecay& operator[]( uint32_t Index ) const noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::template IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        SKL_FORCEINLINE SKL_NODISCARD          TObjectDecay& operator[]( uint32_t Index )       noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
+        SKL_FORCEINLINE SKL_NODISCARD const    TObjectDecay& operator[]( uint32_t Index ) const noexcept { SKL_ASSERT( Pointer != nullptr ); SKL_ASSERT( true == MemoryPolicy::IsValidIndexInArray( Pointer, Index ) ); return Pointer[ Index ]; }
         
         // static_cast the underlying pointer to TNewObject and increment reference count
         template<typename TNewObject, typename TNewDeallocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TNewObject>::DestructDeallocator>

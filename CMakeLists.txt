@@ -21,6 +21,7 @@ option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"               O
 option(SKL_MATH                     "Enable SkylakeLib Math abstractions"       ON)
 option(SKL_MYSQL_COMPRESS_NET       "Enable MYSQL network traffic compression"  ON)
 option(SKL_LINK_TIME_OPTIMIZATION   "Enable Link-time optimization"             ON)
+option(SKL_USE_MIMALLOC   			"Use MiMalloc instead of malloc"           OFF)
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -47,9 +48,9 @@ set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
 set(SKL_LIB_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process")
 set_property(CACHE SKL_LIB_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
-    set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /Zp8 /wd4577 /wd4201 /wd4100")
+if (WIN32)
+    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100")
+    set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100")
     
     if(SKL_LINK_TIME_OPTIMIZATION)
         set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /GL")
@@ -68,13 +69,36 @@ else()
     message(FATAL_ERROR "@TODO compiler flags")
 endif()
 
+if(SKL_USE_MIMALLOC)
+	# MiMalloc Options
+	option(MI_USE_CXX           "Use the C++ compiler to compile the library (instead of the C compiler)" ON)
+	option(MI_BUILD_SHARED      "Build shared library" OFF)
+	option(MI_BUILD_STATIC      "Build static library" ON)
+	option(MI_BUILD_OBJECT      "Build object library" OFF)
+	option(MI_BUILD_TESTS       "Build test executables" OFF)
+
+	if(!SKL_BUILD_SHIPPING)
+		option(MI_SECURE 			"Use full security mitigations (like guard pages, allocation randomization, double-free mitigation, and free-list corruption detection)" ON)
+		option(MI_DEBUG_FULL        "Use full internal heap invariant checking in DEBUG mode (expensive)" ON)
+		option(MI_PADDING           "Enable padding to detect heap block overflow (used only in DEBUG mode or with Valgrind)" ON)
+		option(MI_SKIP_COLLECT_ON_EXIT, "Skip collecting memory on program exit" OFF)
+	else()
+		option(MI_SECURE 			"Use full security mitigations (like guard pages, allocation randomization, double-free mitigation, and free-list corruption detection)" OFF)
+		option(MI_DEBUG_FULL        "Use full internal heap invariant checking in DEBUG mode (expensive)" OFF)
+		option(MI_PADDING           "Enable padding to detect heap block overflow (used only in DEBUG mode or with Valgrind)" OFF)
+		option(MI_SKIP_COLLECT_ON_EXIT, "Skip collecting memory on program exit" ON)
+	endif()
+endif()	
+
 ################################################################
 
 add_subdirectory("ThirdParty")
     
 add_subdirectory("SkylakeLibHeaderOnly")
 
-add_subdirectory("SkylakeLib/MiMalloc")
+if(SKL_USE_MIMALLOC)
+	add_subdirectory("SkylakeLib/MiMalloc")
+endif()
 
 add_subdirectory("SkylakeLibStandalone")
 
@@ -113,6 +137,10 @@ endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DSKL_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSKL_DEBUG")
+
+if(SKL_USE_MIMALLOC)
+    target_compile_definitions(SkylakeLib PUBLIC SKL_USE_MIMALLOC)
+endif()
 
 if(SKL_BUILD_TESTS)
     target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_TEST_ENABLED=1)
@@ -195,7 +223,7 @@ endif()
 if(SKL_DISABLE_EXCEPTIONS)
     # Disable std exceptions
     target_compile_definitions(SkylakeLibStandalone PUBLIC _HAS_EXCEPTIONS=0)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    if (WIN32)
         string(REPLACE "/GR" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS})   # Disable RTTI
         string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions

@@ -5,8 +5,6 @@
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
-#pragma once
-
 #include "SkylakeDatacenterXMLAdapter.h"
 
 #include <rapidxml.hpp>
@@ -21,9 +19,6 @@ namespace SKL::DC
         {
             return true;
         }
-
-        const auto* LanguageStr{ InAdaptor->GetLanguageString( InAdaptor->GetCurrentLanguageFilter() ) };
-        SKL_ASSERT( nullptr != LanguageStr );
 
         ::rapidxml::xml_attribute<char> * Attribute{ InNode->first_attribute() };
         while( nullptr != Attribute )
