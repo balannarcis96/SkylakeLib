@@ -10,13 +10,13 @@
 # SkylakeLib 
 [C++]Library containing basic building blocks for high performance servers.
 
-- [SkylakeLibHeaderOnly][C++17] Header only part of the SkylakeLib
-- [SkylakeLibStandalone][C++17] Standalone part of SkylakeLib
+- [SkylakeLibHeaderOnly][C++20] Header only part of the SkylakeLib
+- [SkylakeLibStandalone][C++20] Standalone part of SkylakeLib
     - Intended to be used as part of client (eg Static library linked in UE5 project)
 - [SkylakeLib][C++20] Library containing basic building blocks for high performance servers
    - Full SkylakeLibrary - Used as base library for building server applications
 - [SkylakeLibDB][C++20] Mysql database abstractions and facilities 
-- [SkylakeDatacenterLib][C++17] Datacenter facility
+- [SkylakeDatacenterLib][C++20] Datacenter facility
    - Allows for serializing of node-like data (eg. xml, json) into a flat binary file
    - Allows for node and attribute level data filtering and language based node filtering
    - With the filtering capabilities, separate binary files can be built from the same source data (eg. xml, json)
