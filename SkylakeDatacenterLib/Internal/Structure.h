@@ -43,10 +43,10 @@ namespace SKL::DC
 
     constexpr TFormatVersion CCurrentFormatVersion  = 0x01000000;
 
-	inline bool CWStringStartsWith( const wchar_t* InPre, size_t InPreLength, const wchar_t* InString ) noexcept
+	SKL_NODISCARD inline bool CWStringStartsWith( const wchar_t* InPre, size_t InPreLength, const wchar_t* InString ) noexcept
 	{
 		const size_t StrLength{ wcslen( InString ) };
-		return StrLength < StrLength ? false : 0 == memcmp( InPre, InString, InPreLength );
+		return StrLength < InPreLength ? false : 0 == memcmp( InPre, InString, InPreLength );
 	}
 
     template<bool bEnableBuildCapabilities>

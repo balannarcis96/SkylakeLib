@@ -116,10 +116,14 @@ namespace SKL::DC
         SKL_FORCEINLINE void SetCurrentLanguageFilter( TLanguage InLanguageFilter ) noexcept { LanguageFilter = InLanguageFilter; }
         SKL_FORCEINLINE TFilterIndex GetFilterIndex() const noexcept { return FilterIndex; }
         SKL_FORCEINLINE void SetFilterIndex( TFilterIndex InIndex ) noexcept { FilterIndex = InIndex; }
+        SKL_FORCEINLINE bool IsVerbose() const noexcept { return bIsVerbose; }
+        SKL_FORCEINLINE void SetVerbose( bool bInIserVerbose ) noexcept { bIsVerbose = bInIserVerbose; }
+
     protected:
         std::unique_ptr<RawElement> Root;
         TLanguage                   LanguageFilter { CNoSpecificLanguage };
         TFilterIndex                FilterIndex{ CNoParticularFilter };
+        bool                        bIsVerbose        { false };
 
         friend Builder;
     };

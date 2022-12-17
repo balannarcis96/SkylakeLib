@@ -101,6 +101,7 @@ namespace SKL
         auto* NewTask { MakeSharedRaw<TaskType>() };
         SKL_ASSERT( nullptr != NewTask );
         
+        // set reference count to workers count
         TSharedPtr<TaskType>::Static_SetReferenceCount( NewTask, WorkersCount );
 
         // set functor

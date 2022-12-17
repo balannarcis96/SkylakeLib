@@ -590,6 +590,17 @@ namespace DatacenterTests
     {
        Attribute_ValueAPIDummy_Validate();
     }
+    
+    TEST_F( DatacenterTestsFixture, Adaptor_API )
+    {
+        TestDatacenterAdapter Adapter{};
+
+        ASSERT_TRUE ( 0 == SKL_STRICMP( "language", "language", 8 ) );
+        ASSERT_TRUE ( 0 != SKL_STRICMP( "language", "langague", 8 ) );
+        ASSERT_TRUE ( Adapter.IsLanguageAttributeByName( "language" ) );
+        ASSERT_FALSE( Adapter.IsLanguageAttributeByName( "langague" ) );
+        ASSERT_FALSE( Adapter.IsLanguageAttributeByName( "lane" ) );
+    }
 
     TEST_F( DatacenterTestsFixture, Datacenter_API )
     {

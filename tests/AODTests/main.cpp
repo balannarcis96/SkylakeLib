@@ -470,8 +470,8 @@ namespace AODTests
 
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
-        ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+        ASSERT_EQ( TotalAllocationsBefore + 1 , TotalAllocationsAfter );
+        ASSERT_EQ( TotalDeallocationsBefore + 1, TotalDeallocationsAfter );
     }
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread_MultipleCalls )

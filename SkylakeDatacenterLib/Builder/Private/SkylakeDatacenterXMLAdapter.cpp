@@ -29,9 +29,19 @@ namespace SKL::DC
                 SKL_ASSERT( nullptr != ValueStr );
 
                 const auto Language{ InAdaptor->ParseLanguageFromUtf8String( ValueStr ) };
-                if( InAdaptor->GetCurrentLanguageFilter() == Language )
+
+                if( InAdaptor->IsVerbose() )
                 {
-                    return true;
+                    SKLL_LOG_FMT( "Found element with language attribute!\n\tElement:%s\n\tAttribute:%s=\"%s\"\n\tFilterLanguage:%s"
+                                , InNode->name()
+                                , Attribute->name()
+                                , Attribute->value() 
+                                , InAdaptor->GetLanguageString( InAdaptor->GetCurrentLanguageFilter() ) );
+                }
+
+                if( InAdaptor->GetCurrentLanguageFilter() != Language )
+                {
+                    return false;
                 }
 
                 break;
@@ -39,11 +49,11 @@ namespace SKL::DC
 
             Attribute = Attribute->next_attribute();
         }
-
-        return false;
+        
+        return true;
     }
 
-    std::unique_ptr<RawElement> ParseXmlFileNode( DatacenterXMLAdapter* InAdaptor, RawElement* InParent, ::rapidxml::xml_node<char>* InNode ) noexcept
+    std::unique_ptr<RawElement> ParseXmlFileNode( std::string_view FileName, DatacenterXMLAdapter* InAdaptor, RawElement* InParent, ::rapidxml::xml_node<char>* InNode ) noexcept
     {
         if( InNode->type() != rapidxml::node_element )
         {
@@ -52,11 +62,26 @@ namespace SKL::DC
 
         if( true == InAdaptor->ShouldSkipElementByName( InNode->name() ) )
         {
+            if( InAdaptor->IsVerbose() )
+            {
+                SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
+                            , FileName.data()
+                            , InNode->name() );
+            }
+
             return nullptr;
         }
 
         if( false == IsElementEligibleForLanguage( InAdaptor, InNode ) )
         {
+            if( InAdaptor->IsVerbose() )
+            {
+                SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
+                            , FileName.data()
+                            , InNode->name()
+                            , InAdaptor->GetLanguageString( static_cast<TLanguage>( InAdaptor->GetCurrentLanguageFilter() ) ) );
+            }
+
             return nullptr;
         }
         
@@ -141,7 +166,7 @@ namespace SKL::DC
         auto* ChildNode{ InNode->first_node() };
         while( nullptr != ChildNode )
         {
-            auto ChildElement{ ParseXmlFileNode( InAdaptor, NewElement.get(), ChildNode ) };
+            auto ChildElement{ ParseXmlFileNode( FileName, InAdaptor, NewElement.get(), ChildNode ) };
             if( nullptr != ChildElement )
             {
                 NewElement->AddChild( ChildElement.release() );
@@ -156,6 +181,13 @@ namespace SKL::DC
 
     std::unique_ptr<RawElement> DatacenterXMLAdapter::BuildRawStructure() noexcept 
     {
+        if( IsVerbose() )
+        {
+            SKLL_LOG_FMT( "Building the raw structure:\n\tLanguageFilter:%s\n\tFilterIndex:%d"
+                       , GetLanguageString( GetCurrentLanguageFilter() )
+                       , GetFilterIndex() );
+        }
+
         size_t MaxFileSize     { 0 };
         auto   FilesInDirectory{ ScanForFilesInDirectory( GetTargetDirectory(), MaxFileSize, AcceptedFileExtensions ) };
         if( true == FilesInDirectory.empty() )
@@ -226,15 +258,29 @@ namespace SKL::DC
 
             if( true == ShouldSkipElementByName( { XmlDoc->first_node()->name() } ) )
             {
+                if( IsVerbose() )
+                {
+                    SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
+                                , FileName.data()
+                                , XmlDoc->first_node()->name() );
+                }
+
                 continue;
             }
 
             if( false == IsElementEligibleForLanguage( this, XmlDoc->first_node() ) )
             {
+                if( IsVerbose() )
+                {
+                    SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
+                                , FileName.data()
+                                , XmlDoc->first_node()->name()
+                                , GetLanguageString( static_cast<TLanguage>( GetCurrentLanguageFilter() ) ) );
+                }
                 continue;
             }
 
-            auto FileRootNode{ ParseXmlFileNode( this, nullptr, XmlDoc->first_node() ) };
+            auto FileRootNode{ ParseXmlFileNode( FileName, this, nullptr, XmlDoc->first_node() ) };
             if( nullptr == FileRootNode )
             {
                 SKLL_TRACE_MSG_FMT( "Failed to parse xml file %s!", FileName.c_str() );

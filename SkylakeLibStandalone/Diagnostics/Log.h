@@ -19,6 +19,12 @@ namespace SKL
 #define SKLL_LOG_LEVEL_INF 4
 #define SKLL_LOG_LEVEL_MUTE 5
 
+#define SKLL_LOG( InString ) fprintf( SKL::GLogOutput.load(),  InString "\n" )
+#define SKLL_LOG_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(),  InFormatString "\n", __VA_ARGS__ )
+
+#define SKLL_LOG_PLACE( InString ) fprintf( SKL::GLogOutput.load(), "%s():%u\n\t" InString "\n", __FUNCTION__, static_cast<uint32_t>( __LINE__ ) )
+#define SKLL_LOG_PLACE_FMT( InFormatString, ... ) fprintf( SKL::GLogOutput.load(), "%s():%u\n\t" InFormatString "\n", __FUNCTION__, static_cast<uint32_t>( __LINE__ ), __VA_ARGS__ )
+
 #if SKLL_LOG_LEVEL == SKLL_LOG_LEVEL_DEBUG 
 
     #define SKLL_INF( InString )       fprintf( SKL::GLogOutput.load(), "\u001b[37m[SkylakeLib::INF] " InString "\n\u001b[37m" )

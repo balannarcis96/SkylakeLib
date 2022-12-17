@@ -81,7 +81,7 @@ namespace SKL
 
         if( 0 < NoOfWorkersThatSupportTLSSync )
         {
-            MyTLSSyncSystem.reset( new TLSSyncSystem() );
+            MyTLSSyncSystem = std::make_unique_cacheline<TLSSyncSystem>();
             if( nullptr == MyTLSSyncSystem.get() )
             {
                 SKLL_ERR_FMT( "[ServerInstance:%ws]::Initialize() Failed to allocate TLSSyncSystem!", Config.Name );
@@ -298,13 +298,17 @@ namespace SKL
             return false;
         }
 
-        if( true == InGroup.GetTag().bSupportsAOD )
+        if( nullptr == AODTLSContext::GetInstance() )
         {
             if( RSuccess != AODTLSContext::Create( this, InGroup.GetTag() ) )
             {
                 SKLL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", InGroup.GetTag().Name );
                 return false;
             }
+        }
+
+        if( true == InGroup.GetTag().bSupportsAOD )
+        {
         }
 
         for( auto& Service : WorkerServices )
@@ -329,9 +333,10 @@ namespace SKL
 
         if( true == InGroup.GetTag().bSupportsAOD )
         {
-            AODTLSContext::Destroy();
-            SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", InGroup.GetTag().Name );
         }
+
+        AODTLSContext::Destroy();
+        SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", InGroup.GetTag().Name );
 
         ServerInstanceTLSContext::Destroy();
         SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", InGroup.GetTag().Name );

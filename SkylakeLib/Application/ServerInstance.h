@@ -336,6 +336,12 @@ namespace SKL
         bool CreateWorkerGroup( const WorkerGroupConfig& InConfig, bool bCreateMaster ) noexcept;
 
     private:
+        std::cacheline_unique_ptr<TLSSyncSystem>    MyTLSSyncSystem                { nullptr }; //!< Instance of the TLSSyncSystem
+        std::vector<TServicePtr<SimpleService>>     SimpleServices                 {};          //!< All simple service instances
+        std::vector<TServicePtr<AODService>>        AODServices                    {};          //!< All AOD service instances
+        std::vector<TServicePtr<ActiveService>>     ActiveServices                 {};          //!< All Active service instances
+        std::vector<TServicePtr<WorkerService>>     WorkerServices                 {};          //!< All Worker service instances
+        std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
         std::vector<WorkerGroup*>                   WorkerGroups                   {};          //!< List of all workers groups
         Worker*                                     MasterWorker                   { nullptr }; //!< Cached pointer to the master worker
         ServerInstanceFlags                         ServerBuiltFlags               {};          //!< Server instance flags
@@ -348,15 +354,9 @@ namespace SKL
         std::relaxed_value<uint32_t>                bIsRunning                     { FALSE };   //!< Is the server running
         std::relaxed_value<uint32_t>                TotalNumberOfRunningWorkers    { 0 };       //!< Total number of running workers
         ServerInstanceConfig                        Config                         {};          //!< Config
-        std::vector<TServicePtr<SimpleService>>     SimpleServices                 {};          //!< All simple service instances
-        std::vector<TServicePtr<AODService>>        AODServices                    {};          //!< All AOD service instances
-        std::vector<TServicePtr<ActiveService>>     ActiveServices                 {};          //!< All Active service instances
-        std::vector<TServicePtr<WorkerService>>     WorkerServices                 {};          //!< All Worker service instances
-        std::vector<IService*>                      AllServices                    {};          //!< Base interface pointer to all services
         std::relaxed_value<uint32_t>                TotalNumberOfInitServices      { 0 };       //!< Total number initialized services
         std::unique_ptr<std::latch>                 SyncWorkerStartup              {};          //!< Latch used to sync all workers startup
         std::unique_ptr<std::latch>                 SyncWorkerShutdown             {};          //!< Latch used to sync all workers shutdown
-        std::unique_ptr<TLSSyncSystem>              MyTLSSyncSystem                { nullptr }; //!< Instance of the TLSSyncSystem
 
         friend class Worker;
         friend class WorkerGroup;

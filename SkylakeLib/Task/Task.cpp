@@ -12,7 +12,7 @@ namespace SKL
     bool ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept
     {
         //Select target worker group
-        auto TaskHandlingWGs{ TLSContext.GetDeferredTasksHandlingGroups() };
+        const std::vector<WorkerGroup*>& TaskHandlingWGs{ TLSContext.GetDeferredTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
         auto* TargetWG{ TaskHandlingWGs[ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() ] };
         SKL_ASSERT( true == TargetWG->GetTag().bHandlesTimerTasks );

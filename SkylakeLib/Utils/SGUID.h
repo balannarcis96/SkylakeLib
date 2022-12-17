@@ -58,34 +58,34 @@ namespace SKL
             return Value != Other.Value;
         }
 
-        SKL_NODISCARD bool IsNone( ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool IsNone() const noexcept
         {
             return Value == None.Value;
         }
 
-        SKL_NODISCARD uint32_t GetRaw( ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetRaw() const noexcept
         {
             return Value;
         }
 
-        static SGUID New( ) noexcept
+        SKL_NODISCARD static SGUID New() noexcept
         {
             SGUID SGuid;
 
-            SGuid.B1 = static_cast< uint8_t >( MyRand::NextRandom() % UINT8_MAX );
-            SGuid.B2 = static_cast< uint8_t >( MyRand::NextRandom() % UINT8_MAX );
-            SGuid.B3 = static_cast< uint8_t >( MyRand::NextRandom() % UINT8_MAX );
-            SGuid.B4 = static_cast< uint8_t >( MyRand::NextRandom() % UINT8_MAX );
+            SGuid.B1 = static_cast<uint8_t>( MyRand::NextRandom() % UINT8_MAX );
+            SGuid.B2 = static_cast<uint8_t>( MyRand::NextRandom() % UINT8_MAX );
+            SGuid.B3 = static_cast<uint8_t>( MyRand::NextRandom() % UINT8_MAX );
+            SGuid.B4 = static_cast<uint8_t>( MyRand::NextRandom() % UINT8_MAX );
 
             return SGuid;
         }
 
-        SKL_FORCEINLINE static SGUID NewSimple( ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static SGUID NewSimple() noexcept
         {
             return static_cast< uint32_t >( MyRand::NextRandom() );
         }
 
-        SKL_NODISCARD std::string ToString( ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD std::string ToString() const noexcept
         {
             char TempBuffer[ 32 ];
 
@@ -93,10 +93,10 @@ namespace SKL
                             , 32
                             , 32
                             , "%02X%02X_%02X%02X"
-                            , static_cast< int32_t >( B1 )
-                            , static_cast< int32_t >( B2 )
-                            , static_cast< int32_t >( B3 )
-                            , static_cast< int32_t >( B4 ) ) )
+                            , static_cast<int32_t>( B1 )
+                            , static_cast<int32_t>( B2 )
+                            , static_cast<int32_t>( B3 )
+                            , static_cast<int32_t>( B4 ) ) )
             {
                 return L"[SGUID_STR_FAILED]";
             }
@@ -104,7 +104,7 @@ namespace SKL
             return { TempBuffer };
         }
 
-        SKL_NODISCARD std::wstring ToWString( ) const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD std::wstring ToWString() const noexcept
         {
             wchar_t TempBuffer[ 32 ];
 
@@ -112,10 +112,10 @@ namespace SKL
                              , 32
                              , 32
                              , L"%02X%02X_%02X%02X"
-                             , static_cast< int32_t >( B1 )
-                             , static_cast< int32_t >( B2 )
-                             , static_cast< int32_t >( B3 )
-                             , static_cast< int32_t >( B4 ) ) )
+                             , static_cast<int32_t>( B1 )
+                             , static_cast<int32_t>( B2 )
+                             , static_cast<int32_t>( B3 )
+                             , static_cast<int32_t>( B4 ) ) )
             {
                 return L"[SGUID_WSTR_FAILED]";
             }
@@ -125,4 +125,7 @@ namespace SKL
 
         static const SGUID None;
     };
+
+    // Requires TRand to be a valid TLS singleton ( initialized )
+    using TLSGUID = SGUID<TRand>;
 }

@@ -19,7 +19,7 @@ namespace SKL::AOD
                || std::is_same_v<TTask, IAODCustomObjectTask> );
 
         //Select target worker group
-        auto TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
+        const std::vector<WorkerGroup*>& TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
         const auto TargetWGIndex{ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() };
         auto* TargetWG{ TaskHandlingWGs[ TargetWGIndex ] };

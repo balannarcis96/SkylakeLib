@@ -224,7 +224,7 @@ namespace SKL
         friend Worker;    
         friend ServerInstance;    
         friend struct AODObject;
-        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive>
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
         friend struct WorkerGroupRunVariant;
     }; 
 }

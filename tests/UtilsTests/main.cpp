@@ -218,6 +218,23 @@ namespace UtilsTests
         ASSERT_TRUE( true == SKL::StringEqual( L"asdasd", L"asdasd" ) );
         ASSERT_TRUE( false == SKL::StringEqual( L"asdasd", L"asdAsd" ) );
     }
+    
+    TEST( UtilsTests, std_aligned_unique_ptr )
+    {
+        {
+            std::aligned_unique_ptr<MyTrivialType, 16> ptr{ nullptr };
+            ptr = std::make_unique_aligned<MyTrivialType, 16>();
+            ASSERT_NE( nullptr, ptr.get() );
+            ASSERT_TRUE( ( reinterpret_cast<uint64_t>( ptr.get() ) % 16 ) == 0 );
+        }
+
+        {
+            std::cacheline_unique_ptr<MyTrivialType> ptr{ nullptr };
+            ptr = std::make_unique_cacheline<MyTrivialType>();
+            ASSERT_NE( nullptr, ptr.get() );
+            ASSERT_TRUE( ( reinterpret_cast<uint64_t>( ptr.get() ) % SKL_CACHE_LINE_SIZE ) == 0 );
+        }
+    }
 }
 
 int main( int argc, char** argv )

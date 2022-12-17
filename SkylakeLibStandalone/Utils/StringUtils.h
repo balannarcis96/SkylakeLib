@@ -157,4 +157,84 @@ namespace SKL
 		const std::filesystem::path Temp{ InPath };
 		return Temp.parent_path().filename();
 	}
+
+	SKL_NODISCARD inline bool BreakString_InTwoParts_InPlace_NoModify( const char* InString, const char*& OutFirstPart, const char*& OutSecondPart, const char SplitChar ) noexcept
+	{
+		const char* Cursor{ InString };
+
+		while( *Cursor != '\0' && *Cursor != SplitChar )
+		{
+			++Cursor;
+		}
+
+		if( *Cursor == SplitChar )
+		{
+			OutFirstPart  = InString;
+			OutSecondPart = Cursor + 1;
+		}
+
+		return *Cursor == SplitChar;
+	}
+	
+	SKL_NODISCARD inline bool BreakString_InTwoParts_InPlace( char* InString, const char*& OutFirstPart, const char*& OutSecondPart, const char SplitChar ) noexcept
+	{
+		char* Cursor { InString };
+		bool  bResult{ false };
+
+		while( *Cursor != '\0' && *Cursor != SplitChar )
+		{
+			++Cursor;
+		}
+
+		if( *Cursor == SplitChar )
+		{
+			OutFirstPart  = InString;
+			OutSecondPart = Cursor + 1;
+
+			bResult = true;
+			*Cursor = '\0';
+		}
+
+		return bResult;
+	}
+	
+	SKL_NODISCARD inline bool BreakStringW_InTwoParts_InPlace_NoModify( const wchar_t* InString, const wchar_t*& OutFirstPart, const wchar_t*& OutSecondPart, const wchar_t SplitChar ) noexcept
+	{
+		const wchar_t* Cursor{ InString };
+
+		while( *Cursor != L'\0' && *Cursor != SplitChar )
+		{
+			++Cursor;
+		}
+
+		if( *Cursor == SplitChar )
+		{
+			OutFirstPart  = InString;
+			OutSecondPart = Cursor + 1;
+		}
+
+		return *Cursor == SplitChar;
+	}
+	
+	SKL_NODISCARD inline bool BreakStringW_InTwoParts_InPlace( wchar_t* InString, const wchar_t*& OutFirstPart, const wchar_t*& OutSecondPart, const wchar_t SplitChar ) noexcept
+	{
+		wchar_t* Cursor { InString };
+		bool     bResult{ false };
+
+		while( *Cursor != L'\0' && *Cursor != SplitChar )
+		{
+			++Cursor;
+		}
+
+		if( *Cursor == SplitChar )
+		{
+			OutFirstPart  = InString;
+			OutSecondPart = Cursor + 1;
+
+			bResult = true;
+			*Cursor = L'\0';
+		}
+
+		return bResult;
+	}
 }

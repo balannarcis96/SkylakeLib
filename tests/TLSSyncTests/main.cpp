@@ -183,6 +183,7 @@ namespace TLSSyncTests
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = true,
+            .bTickWorkerServices             = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
         }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
 

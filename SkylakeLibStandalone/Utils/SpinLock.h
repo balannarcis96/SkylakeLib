@@ -30,7 +30,7 @@ namespace SKL
             for(;;)
             {
                 // Optimistically assume the lock is free on the first try
-                if( !LockFlag.exchange( true, std::memory_order_acquire ) ) 
+                if( false == LockFlag.exchange( true, std::memory_order_acquire ) ) 
                 {
                     return;
                 }

@@ -675,6 +675,7 @@ namespace ServicesTests
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
             .bCallTickHandler                = false,
+            .bTickWorkerServices             = true,
             .Name                            = L"ActiveService_BasicAPI_ACTIVE"
         }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 

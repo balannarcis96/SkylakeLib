@@ -36,26 +36,27 @@ namespace SKL::MemoryPolicy
         //! \remarks Only call this function while holding a valid reference to this instance
         SKL_FORCEINLINE void AddReference() noexcept
         {
-            uint32_t RefCountValue{ ReferenceCount.load( std::memory_order_relaxed ) };
-            while( false == std::atomic_compare_exchange_strong_explicit( &ReferenceCount
-                                                                        , &RefCountValue
-                                                                        , RefCountValue + 1
-                                                                        , std::memory_order_release
-                                                                        , std::memory_order_relaxed ) ) { }
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+		    // We do a regular SC increment here because it maps to an _InterlockedIncrement (lock inc).
+		    // The codegen for a relaxed fetch_add is actually much worse under MSVC (lock xadd).
+		    ++ReferenceCount;
+#else
+		    ( void )ReferenceCount.fetch_add( 1, std::memory_order_relaxed );
+#endif
         }
 
         //! Removes 1 from the reference count of this instance
         //! \remarks Only call this function when you know that removing 1 reference will not 0 reference count
         SKL_FORCEINLINE void ReleaseReferenceChecked() noexcept
         {
-            ( void )--ReferenceCount;
+            ( void )ReferenceCount.fetch_sub( 1, std::memory_order_acq_rel );
         }
 
         //! Removes 1 from the reference count of this instance
         //! \returns true if reached 0 ref count
         SKL_FORCEINLINE bool ReleaseReference() noexcept
         {
-            return 0 == --ReferenceCount;
+            return 1U == ReferenceCount.fetch_sub( 1, std::memory_order_acq_rel );
         }
 
         std::atomic<uint32_t>  ReferenceCount{ 0 }; //!< ref count

@@ -11,18 +11,18 @@
 
 namespace std
 {
-    template< typename T, bool bDefaultTo_Relaxed_AcquireRelease = true >
+    template<typename T, bool bDefaultTo_Relaxed_AcquireRelease = true>
     class interlocked_value
     {
         using TOutType  = T;
         using TType     = T;
-        using MyType    = interlocked_value< T, bDefaultTo_Relaxed_AcquireRelease >;
+        using MyType    = interlocked_value<T, bDefaultTo_Relaxed_AcquireRelease>;
 
-        static_assert( is_pointer_v< TOutType > || is_integral_v< TOutType > || is_enum_v< TOutType >, "T can not be used!" );
-        static_assert( std::atomic< TType >::is_always_lock_free, "T can not be used, not lock free!" );
+        static_assert( is_pointer_v<TOutType> || is_integral_v<TOutType> || is_enum_v<TOutType>, "T can not be used!" );
+        static_assert( std::atomic<TType>::is_always_lock_free, "T can not be used, not lock free!" );
 
     public:
-        interlocked_value( ) noexcept :
+        interlocked_value() noexcept :
             AtomicWrappedValue{ }
         {}
 
@@ -57,32 +57,32 @@ namespace std
         }
 
         // Load relaxed
-        SKL_FORCEINLINE TOutType load_relaxed( ) const noexcept
+        SKL_FORCEINLINE TOutType load_relaxed() const noexcept
         {
             return AtomicWrappedValue.load( std::memory_order_relaxed );
         }
 
         // Load acquire
-        SKL_FORCEINLINE TOutType load_acquire( ) const noexcept
+        SKL_FORCEINLINE TOutType load_acquire() const noexcept
         {
             return AtomicWrappedValue.load( std::memory_order_acquire );
         }
 
         // Load
-        SKL_FORCEINLINE TOutType load( ) const noexcept
+        SKL_FORCEINLINE TOutType load() const noexcept
         {
             if constexpr( bDefaultTo_Relaxed_AcquireRelease )
             {
-                return load_relaxed( );
+                return load_relaxed();
             }
             else
             {
-                return load_acquire( );
+                return load_acquire();
             }
         }
 
         // Implicit and explicit load
-        SKL_FORCEINLINE operator TOutType( ) const noexcept
+        SKL_FORCEINLINE operator TOutType() const noexcept
         {
             return load( );
         }
@@ -94,7 +94,7 @@ namespace std
         }
 
         // Operator ->, available only for pointer types
-        SKL_FORCEINLINE TType operator->( ) noexcept
+        SKL_FORCEINLINE TType operator->() noexcept
         {
             static_assert( std::is_pointer_v< TType >, "TType must of ptr type" );
 
@@ -102,7 +102,7 @@ namespace std
         }
 
         // Operator -> const, available only for pointer types
-        SKL_FORCEINLINE TType operator->( ) const noexcept
+        SKL_FORCEINLINE TType operator->() const noexcept
         {
             static_assert( std::is_pointer_v< TType >, "TType must of ptr type" );
 
@@ -110,18 +110,18 @@ namespace std
         }
 
         // Copy
-        template< typename TOther, bool _bDefaultTo_Relaxed_AcquireRelease >
-        SKL_FORCEINLINE interlocked_value( const interlocked_value< TOther, _bDefaultTo_Relaxed_AcquireRelease > &Other ) noexcept
+        template<typename TOther, bool _bDefaultTo_Relaxed_AcquireRelease>
+        SKL_FORCEINLINE interlocked_value( const interlocked_value<TOther, _bDefaultTo_Relaxed_AcquireRelease> &Other ) noexcept
         {
             store( static_cast< TOutType >( Other.load( ) ) );
         }
 
         // Copy
-        template< typename TOther, bool _bDefaultTo_Relaxed_AcquireRelease >
-        SKL_FORCEINLINE MyType &operator=( const interlocked_value< TOther, _bDefaultTo_Relaxed_AcquireRelease > &Other ) noexcept
+        template<typename TOther, bool _bDefaultTo_Relaxed_AcquireRelease>
+        SKL_FORCEINLINE MyType &operator=( const interlocked_value<TOther, _bDefaultTo_Relaxed_AcquireRelease> &Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
-            store( static_cast< TOutType >( Other.load( ) ) );
+            store( static_cast< TOutType >( Other.load() ) );
             return *this;
         }
 
@@ -140,7 +140,7 @@ namespace std
         //@TODO math and logic operators
 
         // Decrease the value by 1 and return the value before the decrement.
-        SKL_FORCEINLINE TOutType decrement( ) noexcept
+        SKL_FORCEINLINE TOutType decrement() noexcept
         {
             return AtomicWrappedValue.fetch_sub( 1, std::memory_order_acq_rel );
         }
@@ -152,7 +152,7 @@ namespace std
         }
 
         // Increments the value by 1 and return the value before the increment.
-        SKL_FORCEINLINE TOutType increment( ) noexcept
+        SKL_FORCEINLINE TOutType increment() noexcept
         {
             return AtomicWrappedValue.fetch_add( 1, std::memory_order_acq_rel );
         }
@@ -171,14 +171,14 @@ namespace std
      * \brief All operations on this value are atomic with relaxed loads and stores
      * \notice cas() and exchange() calls are synced (not relaxed)
      */
-    template< typename T >
-    using relaxed_value = interlocked_value< T, true >;
+    template<typename T>
+    using relaxed_value = interlocked_value<T, true>;
 
     /**
      * \brief All operations on this value are atomic with acquire loads and release stores
      * \notice cas() and exchange() calls are synced (not relaxed)
      */
-    template< typename T >
-    using synced_value = interlocked_value< T, false >;
+    template<typename T>
+    using synced_value = interlocked_value<T, false>;
 
 } // namespace std
