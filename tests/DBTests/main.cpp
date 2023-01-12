@@ -34,6 +34,36 @@ namespace SkylakeDBTests
         SKL::DB::DBConnectionFactory DBConnectionFactory{};
     };
 
+    class SkylakeDBTestsFixture2: public ::testing::Test
+    {
+        void SetUp() override
+        {
+            EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
+
+            SKL::DB::DBConnectionSettings Settings
+            {
+                  .Username                    = "developer"
+                , .Password                    = "123456aA!"
+                , .Database                    = "skylake_db"
+                , .Host                        = "localhost"
+                , .Port                        = 3306
+                , .ReacquireConnectionMaxTries = 3
+                , .ConnectionTimeoutMs         = 100
+                , .bAutocommit                 = true       
+            };
+
+            EXPECT_TRUE( true == DBConnectionFactory.Initialize( std::move( Settings ) ) );
+        }
+
+        void TearDown() override
+        {
+            EXPECT_TRUE( true == SKL::DB::DBLibGuard::IsValidLib() );
+        }
+
+    protected:
+        SKL::DB::DBConnectionFactory DBConnectionFactory{};
+    };
+
     TEST( SkylakeDBTests, DBString_BasicAPI )
     {
         {
@@ -157,6 +187,44 @@ namespace SkylakeDBTests
                             , SetTime.Minute
                             , SetTime.Second
                             , SetBy.GetUtf8() );
+            } 
+        }
+    }
+    
+    TEST_F( SkylakeDBTestsFixture2, DISABLED_DBStatement_BasicAPI_2 )
+    {
+        {
+            auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
+            ASSERT_TRUE( nullptr != Connection );
+            ASSERT_TRUE( true == Connection->IsOpen() );
+
+            std::unique_ptr<SKL::DB::DBStatement> NewStatement{ new SKL::DB::DBStatement() };
+            NewStatement->SetQuery( "SELECT email, lastOnlineUTC FROM accounts WHERE username=? AND password=?" );
+            ASSERT_TRUE( true == NewStatement->InitializeAndPrepare( Connection.get() ) );
+            ASSERT_TRUE( true == NewStatement->IsInitialized() );
+            
+            SKL::DB::DBString<128> Username = SKL::DB::DBString<128>::FromUtf8( "test123" );
+            SKL::DB::DBString<128> Password = SKL::DB::DBString<128>::FromUtf8( "cc03e747a6afbbcbf8be7668acfebee5" );
+
+            NewStatement->BindString( 1, Username );
+            NewStatement->BindString( 2, Password );
+            
+            SKL::DB::DBString<128> Email;
+            uint64_t               LastOnlineUTC { 0 };
+            
+            NewStatement->BindOutputString( 1, Email );
+            NewStatement->BindOutput( 2, &LastOnlineUTC );
+
+            auto Result{ NewStatement->Execute() };
+            ASSERT_TRUE( true == Result.IsValid() );
+            ASSERT_TRUE( false == Result.IsEmpty() );
+            ASSERT_TRUE( 1 == Result.GetNoOfRows() );
+            
+            while( true == Result.Next() )
+            {
+                SKLL_INF_FMT( "[ Email: %s LastOnlineUTC:%llu"
+                            , Email.GetUtf8()
+                            , LastOnlineUTC );
             } 
         }
     }

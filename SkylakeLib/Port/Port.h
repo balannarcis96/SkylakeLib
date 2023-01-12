@@ -133,7 +133,10 @@ namespace SKL
 
     //! Get the cwd
     SKL_NODISCARD bool GetCurrentWorkingDirectory( char* OutBuffer, size_t BufferSize ) noexcept;
-
+    
+    //! Get last OS error code
+    void SetConsoleWindowTitleText( const char* InText ) noexcept;
+    
     //! UTF16 -> UTF8
     SKL_NODISCARD bool GWideCharToMultiByte( const wchar_t * InBuffer, size_t InBufferSize, char* OutBuffer, int32_t InOutBufferSize ) noexcept;
 

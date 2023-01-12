@@ -457,7 +457,7 @@ namespace AODTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         
-        obj->DoAsync( []( SKL::AOD::SharedObject& Obj ) noexcept -> void
+        ( void )obj->DoAsync( []( SKL::AOD::SharedObject& Obj ) noexcept -> void
         {
             auto& Self = reinterpret_cast<MyObject&>( Obj );
         
@@ -492,7 +492,7 @@ namespace AODTests
         
         for( int i = 0; i < 50; ++i )
         {
-            obj->DoAsync( [i]( SKL::AOD::SharedObject& Obj ) noexcept -> void
+            ( void )obj->DoAsync( [i]( SKL::AOD::SharedObject& Obj ) noexcept -> void
             {
                 auto& Self = Obj.GetParentObject<MyObject>();
                 Self.a = i;
@@ -543,7 +543,7 @@ namespace AODTests
         {
             for( uint64_t i = 0; i < IterCount; ++i )
             {
-                Ptr->DoAsync( []( SKL::AOD::SharedObject& InObj ) noexcept -> void
+                ( void )Ptr->DoAsync( []( SKL::AOD::SharedObject& InObj ) noexcept -> void
                 {
                     auto& Self = InObj.GetParentObject<MyObject>();
                     ++Self.a;

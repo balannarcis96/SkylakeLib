@@ -1032,6 +1032,10 @@ namespace SKL
         return 0 != GetCurrentDirectory( static_cast<DWORD>( BufferSize ), OutBuffer );
     }
 
+    void SetConsoleWindowTitleText( const char* InText ) noexcept
+    {
+        ( void )SetWindowTextA( GetConsoleWindow(), InText );
+    }
 }
 
 // String Utils

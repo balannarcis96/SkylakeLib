@@ -9,6 +9,28 @@
 
 namespace SKL::DB
 {
+    struct Parameter
+    {
+        Parameter() noexcept{ Bind.Zero(); }
+        ~Parameter() = default;
+
+        Parameter( const Parameter& ) = delete;
+        Parameter( Parameter&& ) = delete;
+        Parameter& operator=( const Parameter& ) = delete;
+        Parameter& operator=( Parameter&& ) = delete;
+
+        void Reset( void* InBuffer ) noexcept;
+        void Reset( void* InBuffer, uint32_t InBufferLength ) noexcept;
+        void Reset( void* InBuffer, uint32_t InBufferLength, EFieldType InType, bool bIsUnsigned = false ) noexcept;
+        void Reset( void* InBuffer, uint32_t InBufferLength, uint32_t* OutFieldLengthDestiantion, EFieldType InType, bool bIsUnsigned = false ) noexcept;
+        void SetType( EFieldType InType, bool bIsUnsigned = false ) noexcept;
+
+    private:
+        MysqlBindOpaue Bind;
+
+        friend DBStatement;
+    };
+
     struct DBConnection
     {
         struct AcquireResult
@@ -133,11 +155,15 @@ namespace SKL::DB
         bool SetOptions() noexcept;
 
     private:
-        bool                                bIsOpen              { false };
-        bool                                bIsTransactionStarted{ false };
-        uint8_t                             Padding[6];
-        MYSQL_Opaque                        Mysql                {};
-        DBConnectionSettings                Settings             {};
+        bool                                bIsOpen                                   { false };
+        bool                                bIsTransactionStarted                     { false };
+        uint8_t                             Padding[6];                               
+        MYSQL_Opaque                        Mysql                                     {};
+        DBConnectionSettings                Settings                                  {};
+        Parameter                           Input[CDBStatementMaxInputParams]         {};
+        Parameter                           Output[CDBStatementMaxOutputParams]       {};
+        uint32_t                            InputLengths[CDBStatementMaxInputParams]  {};
+        uint32_t                            OutputLengths[CDBStatementMaxOutputParams]{};
 
         friend DBConnectionFactory;
         friend DBStatement;

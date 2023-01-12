@@ -198,6 +198,18 @@ namespace SKL::DB
             bHasUTF16     = false;
         }
 
+        SKL_FORCEINLINE void ResetUtf16() noexcept
+        {
+            Utf16[0]  = L'\0';
+            bHasUTF16 = false;
+        }
+        
+        SKL_FORCEINLINE void ResetUtf8() noexcept
+        {
+            Utf8[0]  = '\0';
+            bHasUTF8 = false;
+        }
+
     private:
         explicit DBString( const char *Utf8 ) noexcept 
             : bHasSource{ true }

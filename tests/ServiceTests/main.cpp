@@ -514,7 +514,7 @@ namespace ServicesTests
 
             void OnServerStarted() noexcept override
             {
-                AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& /*SelfObj*/ ) noexcept -> void
+                ( void )AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& /*SelfObj*/ ) noexcept -> void
                 {
                     SKLL_TRACE_MSG( "DO ASYNC" );
 

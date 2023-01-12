@@ -11,6 +11,8 @@ namespace SKL::DB
 {
     struct DBStatement
     {
+        using TOnConnectionReaquired = ::ASD::TrivialFunctorWrapper<16, bool(*)(DBStatement*) noexcept>;
+
         DBStatement() noexcept
         {
             Query.reset( new char[CDBStatementQueryMaxLength] );
@@ -23,35 +25,9 @@ namespace SKL::DB
         DBStatement& operator=( const DBStatement& ) = delete;
         DBStatement& operator=( DBStatement&& ) = delete;
 
-        struct Parameter
-        {
-            Parameter() noexcept{ Bind.Zero(); }
-            ~Parameter() = default;
-
-            Parameter( const Parameter& ) = delete;
-            Parameter( Parameter&& ) = delete;
-            Parameter& operator=( const Parameter& ) = delete;
-            Parameter& operator=( Parameter&& ) = delete;
-
-            void Reset( void* InBuffer, uint32_t InBufferLength ) noexcept;
-            void Reset( void* InBuffer, uint32_t InBufferLength, EFieldType InType, bool bIsUnsigned = false ) noexcept;
-            void Reset( void* InBuffer, uint32_t InBufferLength, uint32_t* OutFieldLengthDestiantion, EFieldType InType, bool bIsUnsigned = false ) noexcept;
-            void SetType( EFieldType InType, bool bIsUnsigned = false ) noexcept;
-
-        private:
-            MysqlBindOpaue Bind;
-
-            friend DBStatement;
-        };
         struct Result
         {
-            ~Result() noexcept
-            {
-                if( nullptr != ResultMetadata )
-                {
-                    FreeResultMetadata();
-                }
-            }
+            ~Result() noexcept = default;
 
             SKL_FORCEINLINE SKL_NODISCARD uint64_t GetNoOfRows() const noexcept { return NoOfRows; }
             SKL_FORCEINLINE SKL_NODISCARD bool IsEmpty() const noexcept { return 0 == NoOfRows; }
@@ -61,7 +37,7 @@ namespace SKL::DB
             SKL_NODISCARD bool Next() const noexcept;
             SKL_NODISCARD bool GetOneResult() const noexcept
             {
-                if( false == PrepareResult() )
+                if( false == PrepareResult() ) SKL_UNLIKELY
                 {
                     return false;
                 }
@@ -70,7 +46,7 @@ namespace SKL::DB
             }
             
             template<typename TType>
-            bool Get( int32_t InIndex, char* OutUtf8Buffer, TType* OutValue ) noexcept
+            bool Get( int32_t InIndex, TType* OutValue ) noexcept
             {
                 DBStatement::BindImpl( reinterpret_cast<Parameter*>( &GetBind ), OutValue );
                 return FetchColumn( InIndex );
@@ -95,38 +71,28 @@ namespace SKL::DB
             }
 
         private:
-            Result( DBStatement* Statement, MysqlResOpaue* ResultMetadata, uint64_t NoOfRows ) noexcept
+            Result( DBStatement* Statement, uint64_t NoOfRows ) noexcept
                 : GetBind{}
                 , Statement{ Statement }
-                , ResultMetadata{ ResultMetadata }
                 , NoOfRows{ NoOfRows } 
                 {}
 
             Result( Result&& Other ) noexcept
                 : GetBind{}
                 , Statement{ Other.Statement }
-                , ResultMetadata{ Other.ResultMetadata }
                 , NoOfRows{ Other.NoOfRows } 
             {
                 Other.Statement      = nullptr;
-                Other.ResultMetadata = nullptr;
                 Other.NoOfRows       = 0;
             }
             Result& operator=( Result&& Other ) noexcept
             {
                 SKL_ASSERT( this != &Other );
 
-                if( nullptr != Statement )
-                {
-                    FreeResultMetadata();
-                }
-
                 Statement      = Other.Statement;
-                ResultMetadata = Other.ResultMetadata;
                 NoOfRows       = Other.NoOfRows;
 
                 Other.Statement      = nullptr;
-                Other.ResultMetadata = nullptr;
                 Other.NoOfRows       = 0;
 
                 return *this;
@@ -134,13 +100,10 @@ namespace SKL::DB
 
             bool FetchColumn( int32_t InIndex ) noexcept;
 
-            void FreeResultMetadata() noexcept;
-
         private:
-            MysqlBindOpaue GetBind;
             DBStatement*   Statement;
-            MysqlResOpaue* ResultMetadata;
             uint64_t       NoOfRows;
+            MysqlBindOpaue GetBind;
 
             friend DBStatement;
         };
@@ -209,6 +172,8 @@ namespace SKL::DB
             if constexpr( true == bIsInput )
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxInputParams );
+                
+                ++BoundInputsCount;
 
                 InputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( TType ) );
                 NewParameter              = &Input[InIndex - 1];
@@ -216,6 +181,8 @@ namespace SKL::DB
             else
             {
                 SKL_ASSERT( InIndex < CDBStatementMaxOutputParams );
+                
+                ++BoundOutputsCount;
 
                 OutputLengths[InIndex - 1] = static_cast<uint32_t>( sizeof( TType ) );
                 NewParameter               = &Output[InIndex - 1];
@@ -362,11 +329,31 @@ namespace SKL::DB
             SKL_ASSERT( InIndex > 0 && InIndex <= CDBStatementMaxOutputParams );
             return OutputLengths[ InIndex - 1 ];
         }
+        
+        //! Rebind the results buffer to the prepared statements
+        bool RebindResultsBuffer() noexcept;
+
+        //! Set the functor to call when the connection was reaquired during the execution of this statement
+        //! \remarks This must call OnConnectionLost() and InitializeAndPrepare( ... ) for this statement (and all other statements that were prepared on the old connection)
+        //! \remarks This statement can be executed after this callback succeeded
+        template<typename TFunctor>
+        void SetOnConnectionReaquiredCallback( TFunctor&& InFunctor ) noexcept
+        {
+            OnConnectionReaquired.SetFunctor( std::forward<TFunctor>( InFunctor ) );
+        }
+
+        //! Destroy and release all resources of this prepared statement related to the connection
+        //! \remarks This must be used in the connection re-acquiring logic
+        void OnConnectionLost() noexcept;
 
     private:
         bool Initialize( DBConnection* InConnection ) noexcept;
         bool Prepare() noexcept;
-
+        
+        //! Destroy and release all resources of this prepared statement
+        //! \remarks The query string is preserved and so, this statement can do InitializeAndPrepare() with new connection
+        void Destroy() noexcept;
+        
         template<typename TType>
         static void BindImpl( Parameter* InParameter, TType *InValue ) noexcept
         {
@@ -377,7 +364,7 @@ namespace SKL::DB
 
             using BindType = std::decay_t<TType>;
 
-            InParameter->Reset( static_cast<void*>( InParameter ), static_cast<uint32_t>( sizeof( BindType ) ) );
+            InParameter->Reset( static_cast<void*>( InValue ) );
             
             if constexpr( std::is_same_v<BindType, int> || std::is_same_v<BindType, long> )
             {
@@ -394,6 +381,14 @@ namespace SKL::DB
             else if constexpr( std::is_same_v<BindType, unsigned short> )
             {
                 InParameter->SetType( EFieldType::TYPE_SHORT, true );
+            }
+            else if constexpr( std::is_same_v<BindType, char> )
+            {
+                InParameter->SetType( EFieldType::TYPE_TINY );
+            }
+            else if constexpr( std::is_same_v<BindType, unsigned char> )
+            {
+                InParameter->SetType( EFieldType::TYPE_TINY, true );
             }
             else if constexpr( std::is_same_v<BindType, long long> )
             {
@@ -449,14 +444,15 @@ namespace SKL::DB
         bool                    bNeedsReinitialization                    { false };
         DBConnection*           Connection                                { nullptr };
         MysqlStmtOpaque*        Statement                                 { nullptr };
-        Parameter               Input[CDBStatementMaxInputParams]         {};
-        Parameter               Output[CDBStatementMaxOutputParams]       {};
-        uint32_t                InputLengths[CDBStatementMaxInputParams]  {};
-        uint32_t                OutputLengths[CDBStatementMaxOutputParams]{};
+        Parameter*              Input                                     { nullptr };
+        Parameter*              Output                                    { nullptr };
+        uint32_t*               InputLengths                              { nullptr };
+        uint32_t*               OutputLengths                             { nullptr };
         std::unique_ptr<char[]> Query                                     { nullptr };      
         size_t                  QueryStringLength                         { 0 };
         uint32_t                QueryParametersCount                      { 0 };
         uint32_t                BoundInputsCount                          { 0 };
         uint32_t                BoundOutputsCount                         { 0 };
+        TOnConnectionReaquired  OnConnectionReaquired                     {};
     };
 }

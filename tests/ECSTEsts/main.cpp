@@ -24,6 +24,7 @@ namespace ECSTests
                                       , 1024
                                       , Component1
                                       , Component2>;
+    
     TEST( ECSTests, ECS_StaticSymmetricStore )
     {
        MyStaticStore Store{};
@@ -96,6 +97,63 @@ namespace ECSTests
         }
 
         ASSERT_TRUE( 1 == Counter );
+    }
+    
+    TEST( ECSTests, UIDAllocationCache_API )
+    {
+        struct UIDAllocationCacheToIndexConvert
+        {
+            SKL_NODISCARD SKL_FORCEINLINE static size_t ConvertToIndex( uint16_t Id ) noexcept
+            {
+                // We assume TUIDType its uint16_t
+                return static_cast<size_t>( Id );
+            }
+        };
+
+        SKL::UIDAllocationCache<uint16_t, 0, 1024, UIDAllocationCacheToIndexConvert> UIDCache{};
+
+        int32_t Counter = 0;
+
+        UIDCache.SetOnAllFreed( [&Counter]() noexcept -> void
+        {
+            ++Counter;
+        } );
+
+        ASSERT_EQ( false, UIDCache.Allocate( 1 ) );
+
+        UIDCache.Activate();
+
+        for( int32_t i = 0; i < 1024; ++i )
+        {
+            ASSERT_EQ( true, UIDCache.Allocate( i + 1 ) );
+        }
+
+        ASSERT_EQ( false, UIDCache.Allocate( 1 ) );
+
+        for( uint16_t i = 1; i <= 1024; ++i )
+        {
+            ASSERT_EQ( true, UIDCache.Deallocate( i ) );
+        }
+
+        ASSERT_EQ( 0, Counter );
+
+        for( int32_t i = 0; i < 1024; ++i )
+        {
+            ASSERT_EQ( true, UIDCache.Allocate( i + 1 ) );
+        }
+
+        ASSERT_EQ( 0, Counter );
+
+        UIDCache.Deactivate();
+
+        ASSERT_EQ( false, UIDCache.Allocate( 1 ) );
+
+        for( uint16_t i = 1; i <= 1024; ++i )
+        {
+            ASSERT_EQ( true, UIDCache.Deallocate( i ) );
+        }
+
+        ASSERT_EQ( 1, Counter );
     }
 
     TEST( ECSTests, EntityId_API )
@@ -315,7 +373,7 @@ namespace ECSTests
         const size_t aa{ sizeof( MyEntityStore::SharedRootComponent ) };
         const size_t bb{ MyEntityStore::PaddToMultipleOfCachelineBase::BaseSize };
         const size_t cc{ MyEntityStore::PaddToMultipleOfCachelineBase::PaddingSize };
-        const size_t dd{ MyEntityStore::FirstCacheLineUsedBytesSize };
+        const size_t dd{ MyEntityStore::FirstCacheLineUsedBytesCount };
         printf( "\n%llu %llu %llu L1-line-used:%llu\n", aa, bb, cc,dd );
 
         MyEntityStore Store{};
@@ -412,6 +470,299 @@ namespace ECSTests
 
         {
             auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr == AllocResult.get() );
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+    }
+    
+    TEST( ECSTests, EntityStoreEx_ExtendedId_API )
+    {   
+        constexpr SKL::EntityStoreExFlags MyEntityStoreExFlags {
+              .bExtendRootComponentToAsyncDispatchedObject = false
+            , .bPaddRootEntityToMultipleOfCacheLine        = true
+            , .bRequireOnDestroy                           = true
+            , .bRequireOnCreate                            = true
+            , .bUseCachedAllocationUIDStore                = false
+        };
+
+        struct RootComponentData
+        {
+             RootComponentData() noexcept = default;
+             ~RootComponentData() noexcept = default;
+
+             uint32_t A { 55 };
+             uint8_t Buffer[16];
+
+             void OnDestroy() noexcept
+             {
+                
+             }
+
+             void OnCreate() noexcept
+             {
+             
+             }
+        };
+        struct OtherComponent
+        {
+             OtherComponent() noexcept = default;
+             ~OtherComponent() noexcept = default;
+
+             int32_t A{ 123 };
+        };
+
+        constexpr SKL::TEntityType CMyEntityType = 2;
+
+        using MyEntityId = SKL::TEntityId<uint32_t, true, true>;
+        using MyEntityStore = SKL::EntityStoreEx<CMyEntityType, MyEntityId, 1024, MyEntityStoreExFlags, RootComponentData, OtherComponent>;
+        using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
+
+        const size_t aa{ MyEntityStore::CRootComponent_BytesLeftOnFirstCacheLine };
+        const size_t bb{ MyEntityStore::CRootComponent_UsedBytesByUser };
+        const size_t cc{ MyEntityStore::CRootComponent_UsedBytesByStore };
+        const size_t dd{ MyEntityStore::CRootComponent_AvailableBytesForUserOnFirstCacheLine };
+        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc,dd );
+
+        MyEntityStore Store{};
+
+        int32_t Counter = 0;
+
+        Store.SetOnAllFreed( [&Counter]() noexcept -> void 
+        {
+            ++Counter;
+        } );
+
+        {
+            ASSERT_TRUE( true == Store.IsValid() );
+            ASSERT_TRUE( SKL::RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( false == Store.IsActive() );
+
+            const auto InactiveAllocResult{ Store.AllocateEntity( 56 ) };
+            ASSERT_TRUE( nullptr == InactiveAllocResult.get() );
+
+            Store.Activate();
+            ASSERT_TRUE( true == Store.IsActive() );
+
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+             auto AllocResult2{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult2.get() );
+            ASSERT_TRUE( 2 == AllocResult2->GetId().GetIndex() );
+
+            auto AllocResult3{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult3.get() );
+            ASSERT_TRUE( 3 == AllocResult3->GetId().GetIndex() );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 141 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            const auto CB{ reinterpret_cast<SKL::MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            ASSERT_TRUE( nullptr != CB );
+            ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
+
+            ASSERT_TRUE( 1 == MyEntitySharedPtr::Static_GetReferenceCount( AllocResult.get() ) );
+        }
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 142 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( CMyEntityType == AllocResult->GetId().GetType() );
+            ASSERT_TRUE( 142 == AllocResult->GetId().GetVariant() );
+            ASSERT_TRUE( 55 == AllocResult->A );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            auto& RawEntity{ Store.GetEntityRaw( AllocResult->GetId() ) };
+            ASSERT_TRUE( &RawEntity == AllocResult.get() );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            auto& OComponent{ AllocResult->GetComponent<OtherComponent>() };
+            ASSERT_TRUE( 123 == OComponent.A );
+
+            auto& OComponent2{ Store.GetComponent<OtherComponent>( AllocResult->GetId() ) };
+            ASSERT_TRUE( 123 == OComponent2.A );
+        }
+
+        ASSERT_TRUE( 0 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            Store.Deactivate();
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateEntity( 141 ) };
+            ASSERT_TRUE( nullptr == AllocResult.get() );
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+    }
+    
+    TEST( ECSTests, EntityStoreEx_ExtendedId_API_CacheAllocations )
+    {   
+        constexpr SKL::EntityStoreExFlags MyEntityStoreExFlags {
+              .bExtendRootComponentToAsyncDispatchedObject = false
+            , .bPaddRootEntityToMultipleOfCacheLine        = true
+            , .bRequireOnDestroy                           = true
+            , .bRequireOnCreate                            = true
+            , .bUseCachedAllocationUIDStore                = true
+        };
+
+        struct RootComponentData
+        {
+             RootComponentData() noexcept = default;
+             ~RootComponentData() noexcept = default;
+
+             uint32_t A { 55 };
+             uint8_t Buffer[16];
+
+             void OnDestroy() noexcept
+             {
+                
+             }
+
+             void OnCreate() noexcept
+             {
+             
+             }
+        };
+        struct OtherComponent
+        {
+             OtherComponent() noexcept = default;
+             ~OtherComponent() noexcept = default;
+
+             int32_t A{ 123 };
+        };
+
+        constexpr SKL::TEntityType CMyEntityType = 2;
+
+        using MyEntityId = SKL::TEntityId<uint32_t, true, true>;
+        using MyEntityStore = SKL::EntityStoreEx<CMyEntityType, MyEntityId, 1024, MyEntityStoreExFlags, RootComponentData, OtherComponent>;
+        using MyEntitySharedPtr = MyEntityStore::TEntitySharedPtr;
+
+        const size_t aa{ MyEntityStore::CRootComponent_BytesLeftOnFirstCacheLine };
+        const size_t bb{ MyEntityStore::CRootComponent_UsedBytesByUser };
+        const size_t cc{ MyEntityStore::CRootComponent_UsedBytesByStore };
+        const size_t dd{ MyEntityStore::CRootComponent_AvailableBytesForUserOnFirstCacheLine };
+        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc,dd );
+
+        MyEntityStore Store{};
+
+        int32_t Counter = 0;
+
+        Store.SetOnAllFreed( [&Counter]() noexcept -> void 
+        {
+            ++Counter;
+        } );
+
+        {
+            ASSERT_TRUE( true == Store.IsValid() );
+            ASSERT_TRUE( SKL::RSuccess == Store.Initialize( ) );
+            ASSERT_TRUE( false == Store.IsActive() );
+
+            const MyEntitySharedPtr InactiveAllocResult{ Store.AllocateSpecificEntity( 1, 56 ) };
+            ASSERT_TRUE( nullptr == InactiveAllocResult.get() );
+
+            Store.Activate();
+            ASSERT_TRUE( true == Store.IsActive() );
+
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+            
+            auto AllocResult_again{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr == AllocResult_again.get() );
+
+            AllocResult.reset();
+            
+            auto AllocResult_again2{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult_again2.get() );
+            ASSERT_TRUE( 1 == AllocResult_again2->GetId().GetIndex() );
+
+            auto AllocResult2{ Store.AllocateSpecificEntity( 2, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult2.get() );
+            ASSERT_TRUE( 2 == AllocResult2->GetId().GetIndex() );
+
+            auto AllocResult3{ Store.AllocateSpecificEntity( 3, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult3.get() );
+            ASSERT_TRUE( 3 == AllocResult3->GetId().GetIndex() );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            EXPECT_EQ( 141, AllocResult->GetId().GetVariant() );
+            EXPECT_EQ( 55, AllocResult->A );
+            EXPECT_EQ( 1, AllocResult->GetId().GetIndex() );
+
+            const auto CB{ reinterpret_cast<SKL::MemoryPolicy::ControlBlock*>( MyEntitySharedPtr::Static_GetBlockPtr( AllocResult.get() ) ) };
+            ASSERT_TRUE( nullptr != CB );
+            ASSERT_TRUE( 1 == CB->ReferenceCount.load( std::memory_order_relaxed ) );
+
+            ASSERT_TRUE( 1 == MyEntitySharedPtr::Static_GetReferenceCount( AllocResult.get() ) );
+        }
+        
+        {
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            auto& OComponent{ AllocResult->GetComponent<OtherComponent>() };
+            ASSERT_TRUE( 123 == OComponent.A );
+
+            auto& OComponent2{ Store.GetComponent<OtherComponent>( AllocResult->GetId() ) };
+            ASSERT_TRUE( 123 == OComponent2.A );
+        }
+
+        ASSERT_TRUE( 0 == Counter );
+        
+        {
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
+            ASSERT_TRUE( nullptr != AllocResult.get() );
+
+            ASSERT_TRUE( 1 == AllocResult->GetId().GetIndex() );
+
+            Store.Deactivate();
+        }
+
+        ASSERT_TRUE( 1 == Counter );
+
+        {
+            auto AllocResult{ Store.AllocateSpecificEntity( 1, 141 ) };
             ASSERT_TRUE( nullptr == AllocResult.get() );
         }
 

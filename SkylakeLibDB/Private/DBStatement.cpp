@@ -48,84 +48,15 @@ namespace SKL::DB
     static_assert( static_cast<size_t>( EFieldType::TYPE_STRING      ) == static_cast<size_t>( ::MYSQL_TYPE_STRING      ) );
     static_assert( static_cast<size_t>( EFieldType::TYPE_GEOMETRY    ) == static_cast<size_t>( ::MYSQL_TYPE_GEOMETRY    ) );
 
-    void DBStatement::Parameter::Reset( void* InBuffer, uint32_t InBufferLength ) noexcept
-    {
-        SKL_ASSERT( InBufferLength == 0 || nullptr != InBuffer );
-
-        memset( &Bind, 0, sizeof( decltype( Bind ) ) );
-
-        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
-        MysqlBind.buffer        = InBuffer;
-        MysqlBind.buffer_length = InBufferLength;
-        MysqlBind.is_null_value = InBuffer == nullptr;
-    }
-
-    void DBStatement::Parameter::Reset( void* InBuffer, uint32_t InBufferLength, EFieldType InType, bool bIsUnsigned ) noexcept
-    {
-        SKL_ASSERT( InBufferLength == 0 || nullptr != InBuffer );
-
-        memset( &Bind, 0, sizeof( decltype( Bind ) ) );
-
-        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
-        MysqlBind.buffer        = InBuffer;
-        MysqlBind.buffer_length = InBufferLength;
-        MysqlBind.is_null_value = InBuffer == nullptr;
-        MysqlBind.buffer_type   = static_cast<enum_field_types>( InType );
-        MysqlBind.is_unsigned   = bIsUnsigned;
-    }
-
-    void DBStatement::Parameter::Reset( void* InBuffer, uint32_t InBufferLength, uint32_t* OutFieldLengthDestiantion, EFieldType InType, bool bIsUnsigned ) noexcept
-    {
-        memset( &Bind, 0, sizeof( decltype( Bind ) ) );
-
-        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
-        MysqlBind.buffer        = InBuffer;
-        MysqlBind.buffer_length = InBufferLength;
-        MysqlBind.is_null_value = InBuffer == nullptr;
-        MysqlBind.buffer_type   = static_cast<enum_field_types>( InType );
-        MysqlBind.is_unsigned   = bIsUnsigned;
-        MysqlBind.length        = reinterpret_cast<unsigned long*>( OutFieldLengthDestiantion );
-    }
-
-    void DBStatement::Parameter::SetType( EFieldType InType, bool bIsUnsigned ) noexcept
-    {
-        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
-        MysqlBind.buffer_type = static_cast<enum_field_types>( InType );
-        MysqlBind.is_unsigned = bIsUnsigned;
-    }
-
-    void DBStatement::Result::FreeResultMetadata() noexcept
-    {
-        SKL_ASSERT( nullptr != ResultMetadata );
-        ::mysql_free_result( reinterpret_cast<::MYSQL_RES*>( ResultMetadata ) );
-        ResultMetadata = nullptr;
-    }
-
     bool DBStatement::Result::PrepareResult() const noexcept
     {
-        if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ), reinterpret_cast<::MYSQL_BIND*>( Statement->Output ) ) ) SKL_UNLIKELY
-        {
-            SKLL_ERR_BLOCK(
-            {
-                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
-            } );
-            
-            return false;
-        }
-
-        return true;
+        return Statement->RebindResultsBuffer();
     }
 
     bool DBStatement::Result::Next() const noexcept
     {
-        const auto Status{ ::mysql_stmt_fetch( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
-        if( 1 == Status )
-        {
-            return false;    
-        }
-
-        return MYSQL_NO_DATA != Status;
+        const int32_t Status{ ::mysql_stmt_fetch( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
+        return 0 == Status;
     }
     
     bool DBStatement::Result::FetchColumn( int32_t InIndex ) noexcept
@@ -149,16 +80,30 @@ namespace SKL::DB
 
     DBStatement::~DBStatement() noexcept
     {
-        Reset( true );
-        ReleaseStatement();
-        Connection = nullptr;
+        Destroy();
+    }
+
+    bool DBStatement::RebindResultsBuffer() noexcept
+    {
+        if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Output ) ) ) SKL_UNLIKELY
+        {
+            SKLL_ERR_BLOCK(
+            {
+                const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
+                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+            } );
+
+            return false;
+        }
+
+        return true;
     }
 
     bool DBStatement::Initialize( DBConnection* InConnection ) noexcept
     {
         SKL_ASSERT( nullptr != InConnection );
 
-        auto* NewStatement{ ::mysql_stmt_init( reinterpret_cast<::MYSQL*>( &InConnection->GetMysqlObject() ) ) };
+        ::MYSQL_STMT* NewStatement{ ::mysql_stmt_init( reinterpret_cast<::MYSQL*>( &InConnection->GetMysqlObject() ) ) };
         if( nullptr == NewStatement ) SKL_UNLIKELY
         {
             SKLL_ERR_BLOCK(
@@ -170,8 +115,12 @@ namespace SKL::DB
             return false;
         }
 
-        Connection = InConnection;
-        Statement  = reinterpret_cast<MysqlStmtOpaque*>( NewStatement );
+        Connection    = InConnection;
+        Statement     = reinterpret_cast<MysqlStmtOpaque*>( NewStatement );
+        Input         = InConnection->Input;
+        Output        = InConnection->Output;
+        InputLengths  = InConnection->InputLengths;
+        OutputLengths = InConnection->OutputLengths;
 
         return true;
     }
@@ -193,6 +142,19 @@ namespace SKL::DB
         QueryParametersCount = ::mysql_stmt_param_count( reinterpret_cast<::MYSQL_STMT*>( Statement ) );
 
         return true;
+    }
+
+    void DBStatement::Destroy() noexcept
+    {
+        Reset( true );
+        ReleaseStatement();
+        Connection = nullptr;
+    }
+
+    void DBStatement::OnConnectionLost() noexcept
+    {
+        ReleaseStatement();
+        Connection = nullptr;
     }
 
     void DBStatement::ReleaseStatement() noexcept
@@ -217,10 +179,11 @@ namespace SKL::DB
 
     DBStatement::Result DBStatement::Execute() noexcept
     {
-        DBStatement::Result OutResult{ this, nullptr, 0 };
+        DBStatement::Result OutResult{ this, 0 };
         bool bHasReaquiredConnectionOnce{ false };
         bool bSuccess{ true };
 
+DBStatement_Execute_Start:
         if( 0 != BoundInputsCount )
         {
             if( true == ::mysql_stmt_bind_param( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) ) SKL_UNLIKELY
@@ -249,7 +212,6 @@ namespace SKL::DB
             }
         }
 
-DBStatement_Execute_Start:
         if( true == bSuccess ) SKL_LIKELY
         {
             int32_t Result{ ::mysql_stmt_execute( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
@@ -258,15 +220,36 @@ DBStatement_Execute_Start:
                 const auto LastErrorNo{ reinterpret_cast<::MYSQL_STMT*>( Statement )->last_errno };
                 if( false == bHasReaquiredConnectionOnce && ( CR_SERVER_LOST == LastErrorNo || CR_SERVER_GONE_ERROR == LastErrorNo ) )
                 {
-                    const auto AcquireResult{ Connection->TryReacquireConnection() };
-                    if( true == AcquireResult.IsSuccess() )
+                    if( false == OnConnectionReaquired.IsNull() ) SKL_LIKELY
                     {
-                        bHasReaquiredConnectionOnce = true;
-                        goto DBStatement_Execute_Start;
+                        const auto AcquireResult{ Connection->TryReacquireConnection() };
+                        if( true == AcquireResult.IsSuccess() )
+                        {
+                            bHasReaquiredConnectionOnce = true;
+
+                            if( true == OnConnectionReaquired( this ) )
+                            {
+                                goto DBStatement_Execute_Start;
+                            }
+                            else
+                            {
+                                SKLL_ERR_BLOCK(
+                                {
+                                    SKLL_TRACE_ERR_FMT( "MysqlError: CONNECTION LOST! RE-ACQUIRE HANDLER FAILED!" );
+                                } );          
+                            }
+                        }
+                        else
+                        {
+                            SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                        }
                     }
                     else
                     {
-                        SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                        SKLL_ERR_BLOCK(
+                        {
+                            SKLL_TRACE_ERR_FMT( "MysqlError: CONNECTION LOST! NO RE-ACQUIRE HANDLER PRESENT!" );
+                        } );      
                     }
                 }
 
@@ -278,8 +261,6 @@ DBStatement_Execute_Start:
             }
             else
             {
-                MYSQL_RES* ResultMetadata{ ::mysql_stmt_result_metadata( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-
                 Result = ::mysql_stmt_store_result( reinterpret_cast<::MYSQL_STMT*>( Statement ) ); 
                 if( 0 != Result ) SKL_UNLIKELY
                 {
@@ -294,7 +275,6 @@ DBStatement_Execute_Start:
                     // Success
                     const auto NoOfRowsAffected{ mysql_stmt_num_rows( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
                     OutResult.Statement      = this;
-                    OutResult.ResultMetadata = reinterpret_cast<MysqlResOpaue*>( ResultMetadata );
                     OutResult.NoOfRows       = NoOfRowsAffected;
                 }
             }

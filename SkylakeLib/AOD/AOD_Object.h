@@ -37,7 +37,7 @@ namespace SKL::AOD
         //! \returns RExecutedSync if the functor was dispatched sync (in this call)
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODSharedObjectTask<sizeof(TFunctor)>;
             
@@ -64,7 +64,7 @@ namespace SKL::AOD
         //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODSharedObjectTask<sizeof(TFunctor)>;
             
@@ -87,12 +87,12 @@ namespace SKL::AOD
             return RSuccess;
         }
 
-        //! Get the cached pointe to the parent instance
+        //! Get the cached pointer to the parent instance
         void* GetParentObjectPointer() const noexcept { return TargetSharedPointer; }
 
-        //! Get the cached pointe to the parent instance
+        //! Get the cached pointer to the parent instance
         template<typename T>
-        T& GetParentObject() const noexcept { return *reinterpret_cast<T*>( TargetSharedPointer ); }
+        SKL_FORCEINLINE SKL_NODISCARD T& GetParentObject() const noexcept { return *reinterpret_cast<T*>( TargetSharedPointer ); }
 
     private:
         void Flush() noexcept;
@@ -119,7 +119,7 @@ namespace SKL::AOD
         //! \returns RExecutedSync if the functor was dispatched sync (in this call)
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODStaticObjectTask<sizeof(TFunctor)>;
             
@@ -145,7 +145,7 @@ namespace SKL::AOD
         //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODStaticObjectTask<sizeof(TFunctor)>;
             
@@ -193,7 +193,7 @@ namespace SKL::AOD
         //! \returns RExecutedSync if the functor was dispatched sync (in this call)
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsync( TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsync( TFunctor&& InFunctor ) noexcept
         {
             using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;
             
@@ -220,7 +220,7 @@ namespace SKL::AOD
         //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
-        SKL_FORCEINLINE RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
             SKLL_TRACE();
             using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;

@@ -188,7 +188,7 @@ DBConnection_Execute_Start:
     bool DBConnection::Ping() noexcept
     {
         const auto PingResult{ ::mysql_ping( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
-        if( 0 == PingResult ) SKL_LIKELY
+        if( 0 != PingResult ) SKL_LIKELY
         {
             SKLL_ERR_BLOCK(
             {
@@ -238,7 +238,7 @@ DBConnection_Execute_Start:
             return false;
         }
 
-        const uint32_t Flags{ /*Settings.bEnableMultistatements ? CLIENT_MULTI_STATEMENTS : */0 };
+        const uint32_t Flags{/* Settings.bEnableMultistatements ? CLIENT_MULTI_STATEMENTS : 0*/ 0 };
         if( const auto Result{ ::mysql_real_connect( 
               reinterpret_cast<MYSQL*>( &Mysql )
             , Settings.Host.c_str()
@@ -351,5 +351,65 @@ DBConnection_Execute_Start:
         }
 
         return NewConnection;
+    }
+    
+    /*------------------------------------------------------------
+     * Parameter
+     *------------------------------------------------------------*/
+    void Parameter::Reset( void* InBuffer ) noexcept
+    {
+        SKL_ASSERT( nullptr != InBuffer );
+
+        Bind.Zero();
+
+        ::MYSQL_BIND& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
+        MysqlBind.buffer        = InBuffer;
+        MysqlBind.is_null_value = InBuffer == nullptr;
+    }
+
+    void Parameter::Reset( void* InBuffer, uint32_t InBufferLength ) noexcept
+    {
+        SKL_ASSERT( InBufferLength == 0 || nullptr != InBuffer );
+
+        Bind.Zero();
+
+        ::MYSQL_BIND& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
+        MysqlBind.buffer        = InBuffer;
+        MysqlBind.buffer_length = InBufferLength;
+        MysqlBind.is_null_value = InBuffer == nullptr;
+    }
+
+    void Parameter::Reset( void* InBuffer, uint32_t InBufferLength, EFieldType InType, bool bIsUnsigned ) noexcept
+    {
+        SKL_ASSERT( InBufferLength == 0 || nullptr != InBuffer );
+
+        Bind.Zero();
+
+        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
+        MysqlBind.buffer        = InBuffer;
+        MysqlBind.buffer_length = InBufferLength;
+        MysqlBind.is_null_value = InBuffer == nullptr;
+        MysqlBind.buffer_type   = static_cast<enum_field_types>( InType );
+        MysqlBind.is_unsigned   = bIsUnsigned;
+    }
+
+    void Parameter::Reset( void* InBuffer, uint32_t InBufferLength, uint32_t* OutFieldLengthDestiantion, EFieldType InType, bool bIsUnsigned ) noexcept
+    {
+        Bind.Zero();
+
+        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
+        MysqlBind.buffer        = InBuffer;
+        MysqlBind.buffer_length = InBufferLength;
+        MysqlBind.is_null_value = InBuffer == nullptr;
+        MysqlBind.buffer_type   = static_cast<enum_field_types>( InType );
+        MysqlBind.is_unsigned   = bIsUnsigned;
+        MysqlBind.length        = reinterpret_cast<unsigned long*>( OutFieldLengthDestiantion );
+    }
+
+    void Parameter::SetType( EFieldType InType, bool bIsUnsigned ) noexcept
+    {
+        auto& MysqlBind{ reinterpret_cast<::MYSQL_BIND&>( Bind ) };
+        MysqlBind.buffer_type = static_cast<enum_field_types>( InType );
+        MysqlBind.is_unsigned = bIsUnsigned;
     }
 }

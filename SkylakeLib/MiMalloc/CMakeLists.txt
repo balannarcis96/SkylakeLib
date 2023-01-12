@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 project(libmimalloc C CXX)
 
 set(CMAKE_C_STANDARD 11)
@@ -11,10 +11,11 @@ option(MI_OVERRIDE          "Override the standard malloc interface (e.g. define
 option(MI_XMALLOC           "Enable abort() call on memory allocation failure by default" OFF)
 option(MI_SHOW_ERRORS       "Show error and warning messages by default (only enabled by default in DEBUG mode)" OFF)
 option(MI_VALGRIND          "Compile with Valgrind support (adds a small overhead)" OFF)
+option(MI_ASAN              "Compile with address sanitizer support (adds a small overhead)" OFF)
 option(MI_USE_CXX           "Use the C++ compiler to compile the library (instead of the C compiler)" OFF)
 option(MI_SEE_ASM           "Generate assembly files" OFF)
 option(MI_OSX_INTERPOSE     "Use interpose to override standard malloc on macOS" ON)
-option(MI_OSX_ZONE          "Use malloc zone to override standard malloc on macOS" ON) 
+option(MI_OSX_ZONE          "Use malloc zone to override standard malloc on macOS" ON)
 option(MI_WIN_REDIRECT      "Use redirection module ('mimalloc-redirect') on Windows if compiling mimalloc as a DLL" ON)
 option(MI_LOCAL_DYNAMIC_TLS "Use slightly slower, dlopen-compatible TLS mechanism (Unix)" OFF)
 option(MI_BUILD_SHARED      "Build shared library" ON)
@@ -35,27 +36,26 @@ include(GNUInstallDirs)
 include("cmake/mimalloc-config-version.cmake")
 
 set(mi_sources
-    src/stats.c
-    src/random.c
-    src/os.c
-    src/bitmap.c
-    src/arena.c
-    src/segment-cache.c
-    src/segment.c
-    src/page.c
-    src/alloc.c
-    src/alloc-aligned.c
-    src/alloc-posix.c
-    src/heap.c
-    src/options.c
-    src/init.c)
-
+    src/stats.cpp
+    src/random.cpp
+    src/os.cpp
+    src/bitmap.cpp
+    src/arena.cpp
+    src/segment-cache.cpp
+    src/segment.cpp
+    src/page.cpp
+    src/alloc.cpp
+    src/alloc-aligned.cpp
+    src/alloc-posix.cpp
+    src/heap.cpp
+    src/options.cpp
+    src/init.cpp)
 
 # -----------------------------------------------------------------------------
 # Convenience: set default build type depending on the build directory
 # -----------------------------------------------------------------------------
 
-message(STATUS "")    
+message(STATUS "")
 if (NOT CMAKE_BUILD_TYPE)
   if ("${CMAKE_BINARY_DIR}" MATCHES ".*(D|d)ebug$" OR  MI_DEBUG_FULL)
     message(STATUS "No build type selected, default to: Debug")
@@ -86,8 +86,8 @@ if(MI_OVERRIDE)
     if(MI_OSX_ZONE)
       # use zone's on macOS
       message(STATUS "  Use malloc zone to override malloc (MI_OSX_ZONE=ON)")
-      list(APPEND mi_sources src/alloc-override-osx.c)
-      list(APPEND mi_defines MI_OSX_ZONE=1)      
+      list(APPEND mi_sources src/alloc-override-osx.cpp)
+      list(APPEND mi_defines MI_OSX_ZONE=1)
       if (NOT MI_OSX_INTERPOSE)
         message(STATUS "  WARNING: zone overriding usually also needs interpose (use -DMI_OSX_INTERPOSE=ON)")
       endif()
@@ -139,6 +139,25 @@ if(MI_VALGRIND)
   endif()
 endif()
 
+if(MI_ASAN)
+  if (MI_VALGRIND)
+    set(MI_ASAN OFF)
+    message(WARNING "Cannot enable address sanitizer support with also Valgrind support enabled (MI_ASAN=OFF)")
+  else()
+    CHECK_INCLUDE_FILES("sanitizer/asan_interface.h" MI_HAS_ASANH)
+    if (NOT MI_HAS_ASANH)
+      set(MI_ASAN OFF)
+      message(WARNING "Cannot find the 'sanitizer/asan_interface.h' -- install address sanitizer support first")
+      message(STATUS  "Compile **without** address sanitizer support (MI_ASAN=OFF)")
+    else()
+      message(STATUS "Compile with address sanitizer support (MI_ASAN=ON)")
+      list(APPEND mi_defines MI_ASAN=1)
+      list(APPEND mi_cflags -fsanitize=address)
+      list(APPEND CMAKE_EXE_LINKER_FLAGS -fsanitize=address)
+    endif()
+  endif()
+endif()
+
 if(MI_SEE_ASM)
   message(STATUS "Generate assembly listings (MI_SEE_ASM=ON)")
   list(APPEND mi_cflags -save-temps)
@@ -181,12 +200,12 @@ if(MI_DEBUG_TSAN)
     list(APPEND mi_cflags -fsanitize=thread -g -O1)
     list(APPEND CMAKE_EXE_LINKER_FLAGS -fsanitize=thread)
   else()
-    message(WARNING "Can only use thread sanitizer with clang (MI_DEBUG_TSAN=ON but ignored)")    
-  endif()  
+    message(WARNING "Can only use thread sanitizer with clang (MI_DEBUG_TSAN=ON but ignored)")
+  endif()
 endif()
 
 if(MI_DEBUG_UBSAN)
-  if(CMAKE_BUILD_TYPE MATCHES "Debug")    
+  if(CMAKE_BUILD_TYPE MATCHES "Debug")
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       message(STATUS "Build with undefined-behavior sanitizer (MI_DEBUG_UBSAN=ON)")
       list(APPEND mi_cflags -fsanitize=undefined -g -fno-sanitize-recover=undefined)
@@ -196,17 +215,17 @@ if(MI_DEBUG_UBSAN)
         set(MI_USE_CXX "ON")
       endif()
     else()
-      message(WARNING "Can only use undefined-behavior sanitizer with clang++ (MI_DEBUG_UBSAN=ON but ignored)")    
-    endif()  
+      message(WARNING "Can only use undefined-behavior sanitizer with clang++ (MI_DEBUG_UBSAN=ON but ignored)")
+    endif()
   else()
-    message(WARNING "Can only use thread sanitizer with a debug build (CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})")    
+    message(WARNING "Can only use thread sanitizer with a debug build (CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})")
   endif()
 endif()
 
 if(MI_USE_CXX)
   message(STATUS "Use the C++ compiler to compile (MI_USE_CXX=ON)")
   set_source_files_properties(${mi_sources} PROPERTIES LANGUAGE CXX )
-  set_source_files_properties(src/static.c test/test-api.c test/test-api-fill test/test-stress PROPERTIES LANGUAGE CXX )
+  set_source_files_properties(src/static.cpp test/test-api.c test/test-api-fill test/test-stress PROPERTIES LANGUAGE CXX )
   if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang")
     list(APPEND mi_cflags -Wno-deprecated)
   endif()
@@ -217,10 +236,10 @@ endif()
 
 # Compiler flags
 if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
-  list(APPEND mi_cflags -Wall -Wextra -Wno-unknown-pragmas) #-fvisibility=hidden
+  list(APPEND mi_cflags -Wall -Wextra -Wno-unknown-pragmas  ) #-fvisibility=hidden
   if(NOT MI_USE_CXX)
     list(APPEND mi_cflags -Wstrict-prototypes)
-  endif()  
+  endif()
   if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang")
     list(APPEND mi_cflags -Wpedantic -Wno-static-in-inline)
   endif()
@@ -234,7 +253,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang|GNU|Intel" AND NOT CMAKE_SYSTEM
   if(MI_LOCAL_DYNAMIC_TLS)
     list(APPEND mi_cflags -ftls-model=local-dynamic)
   else()
-    #list(APPEND mi_cflags -ftls-model=initial-exec)
+   # list(APPEND mi_cflags -ftls-model=initial-exec)
   endif()
   if(MI_OVERRIDE)
     list(APPEND mi_cflags -fno-builtin-malloc)
@@ -252,7 +271,7 @@ if(WIN32)
 else()
   set(pc_libraries "")
   find_library(MI_LIBPTHREAD pthread)
-  if (MI_LIBPTHREAD)                      
+  if (MI_LIBPTHREAD)
     list(APPEND mi_libraries ${MI_LIBPTHREAD})
     set(pc_libraries "${pc_libraries} -pthread")
   endif()
@@ -262,10 +281,10 @@ else()
     set(pc_libraries "${pc_libraries} -lrt")
   endif()
   find_library(MI_LIBATOMIC atomic)
-  if (NOT MI_LIBATOMIC AND MI_USE_LIBATOMIC) 
+  if (NOT MI_LIBATOMIC AND MI_USE_LIBATOMIC)
     set(MI_LIBATOMIC atomic)
   endif()
-  if (MI_LIBATOMIC) 
+  if (MI_LIBATOMIC)
     list(APPEND mi_libraries ${MI_LIBATOMIC})
     set(pc_libraries "${pc_libraries} -latomic")
   endif()
@@ -282,7 +301,7 @@ set(mi_install_libdir   "${CMAKE_INSTALL_LIBDIR}")
 # are either installed at top level, or use versioned directories for side-by-side installation (default)
 if (MI_INSTALL_TOPLEVEL)
   set(mi_install_objdir     "${CMAKE_INSTALL_LIBDIR}")
-  set(mi_install_incdir     "${CMAKE_INSTALL_INCLUDEDIR}")        
+  set(mi_install_incdir     "${CMAKE_INSTALL_INCLUDEDIR}")
   set(mi_install_cmakedir   "${CMAKE_INSTALL_LIBDIR}/cmake/mimalloc")
 else()
   set(mi_install_objdir     "${CMAKE_INSTALL_LIBDIR}/mimalloc-${mi_version}")       # for static library and object files
@@ -296,6 +315,9 @@ if(MI_SECURE)
 endif()
 if(MI_VALGRIND)
   set(mi_basename "${mi_basename}-valgrind")
+endif()
+if(MI_ASAN)
+  set(mi_basename "${mi_basename}-asan")
 endif()
 string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LC)
 if(NOT(CMAKE_BUILD_TYPE_LC MATCHES "^(release|relwithdebinfo|minsizerel|none)$"))
@@ -340,7 +362,7 @@ if(MI_BUILD_SHARED)
   set_target_properties(mimalloc PROPERTIES VERSION ${mi_version} SOVERSION ${mi_version_major} OUTPUT_NAME ${mi_basename} )
   target_compile_definitions(mimalloc PRIVATE ${mi_defines} MI_SHARED_LIB MI_SHARED_LIB_EXPORT)
   target_compile_options(mimalloc PRIVATE ${mi_cflags})
-  target_link_libraries(mimalloc PUBLIC ${mi_libraries})
+  target_link_libraries(mimalloc PRIVATE ${mi_libraries})
   target_include_directories(mimalloc PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:${mi_install_incdir}>
@@ -360,7 +382,7 @@ if(MI_BUILD_SHARED)
     install(FILES "$<TARGET_FILE_DIR:mimalloc>/mimalloc-redirect${MIMALLOC_REDIRECT_SUFFIX}.dll" DESTINATION ${mi_install_libdir})
   endif()
 
-  install(TARGETS mimalloc EXPORT mimalloc DESTINATION ${mi_install_libdir} LIBRARY)  
+  install(TARGETS mimalloc EXPORT mimalloc DESTINATION ${mi_install_libdir} LIBRARY)
   install(EXPORT mimalloc DESTINATION ${mi_install_cmakedir})
 endif()
 
@@ -370,7 +392,7 @@ if (MI_BUILD_STATIC)
   set_property(TARGET mimalloc-static PROPERTY POSITION_INDEPENDENT_CODE ON)
   target_compile_definitions(mimalloc-static PRIVATE ${mi_defines} MI_STATIC_LIB)
   target_compile_options(mimalloc-static PRIVATE ${mi_cflags})
-  target_link_libraries(mimalloc-static PUBLIC ${mi_libraries})
+  target_link_libraries(mimalloc-static PRIVATE ${mi_libraries})
   target_include_directories(mimalloc-static PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:${mi_install_incdir}>
@@ -398,7 +420,7 @@ install(FILES cmake/mimalloc-config-version.cmake DESTINATION ${mi_install_cmake
 
 # single object file for more predictable static overriding
 if (MI_BUILD_OBJECT)
-  add_library(mimalloc-obj OBJECT src/static.c)
+  add_library(mimalloc-obj OBJECT src/static.cpp)
   set_property(TARGET mimalloc-obj PROPERTY POSITION_INDEPENDENT_CODE ON)
   target_compile_definitions(mimalloc-obj PRIVATE ${mi_defines})
   target_compile_options(mimalloc-obj PRIVATE ${mi_cflags})
@@ -412,7 +434,7 @@ if (MI_BUILD_OBJECT)
 
   # the FILES expression can also be: $<TARGET_OBJECTS:mimalloc-obj>
   # but that fails cmake versions less than 3.10 so we leave it as is for now
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/mimalloc-obj.dir/src/static.c${CMAKE_C_OUTPUT_EXTENSION}
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/mimalloc-obj.dir/src/static.cpp${CMAKE_C_OUTPUT_EXTENSION}
           DESTINATION ${mi_install_objdir}
           RENAME ${mi_basename}${CMAKE_C_OUTPUT_EXTENSION} )
 endif()
