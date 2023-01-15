@@ -205,7 +205,7 @@ namespace ASD
         FunctionTraits() : Pointer{ nullptr } {}                                                                                
         FunctionTraits( TPointer Pointer ) : Pointer{ Pointer } {}                                                                
         FunctionTraits( const FunctionTraits& Other ) = default;                                                                
-                                                                                                                                
+        
         ASD_FORCEINLINE ReturnType ASD_CDECL operator()( Args... args ) const                                                    
         {                                                                                                                        
             if constexpr ( !std::is_void<ReturnType>() )                                                                        
@@ -331,6 +331,8 @@ namespace ASD
         FnPtr() : TFunctionTraits( nullptr ) {}
         FnPtr( TFunctionPointer Pointer ) :  TFunctionTraits( Pointer ) {}
         
+        TFunctionPointer GetPointer() const noexcept { return Pointer; }
+
         ASD_FORCEINLINE void operator =( TFunctionPointer InPointer )
         {
              this->Pointer = InPointer;

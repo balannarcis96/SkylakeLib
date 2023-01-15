@@ -255,23 +255,9 @@ namespace SKL
     namespace AOD
     {
         struct CustomObject;
-
-        struct CustomObjectDeallocator
-        {
-            using TDecayObject          = CustomObject;
-            using MyMemoryPolicy        = MemoryPolicy::SharedMemoryPolicy;
-            using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
-
-            SKL_FORCEINLINE void operator()( CustomObject* InPtr ) const noexcept
-            {
-                Deallocate( InPtr );
-            }
-
-            static void Deallocate( CustomObject* InPtr ) noexcept;
-        };
     }
 
-    using TCustomObjectSharedPtr = TSharedPtr<AOD::CustomObject, AOD::CustomObjectDeallocator>;
+    using TCustomObjectSharedPtr = TSharedPtr<AOD::CustomObject, MemoryStrategy::SharedMemoryStrategy<AOD::CustomObject, true>>;
 
     //! 
     //! \brief Single level dispatched task

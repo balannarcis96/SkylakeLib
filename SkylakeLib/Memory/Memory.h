@@ -15,14 +15,14 @@ namespace SKL
     template<typename T>
     SKL_FORCEINLINE constexpr void GDestruct( T* Ptr ) noexcept
     {
-        Ptr->~T( );
+        Ptr->~T();
     }
 
     template<typename T>
     SKL_FORCEINLINE constexpr void GDestructNothrow( T* Ptr ) noexcept
     {
         static_assert( std::is_nothrow_destructible_v<T>, "T::~T() must be noexcept!" );
-        Ptr->~T( );
+        Ptr->~T();
     }
 
     template<typename T, typename ...TArgs>

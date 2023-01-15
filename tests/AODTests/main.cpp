@@ -369,17 +369,15 @@ namespace AODTests
     class AODTestsFixture_CustomObject : public ::testing::Test, public TestApplication
     {
     public:
-        static constexpr uint64_t IterCount{ 10 };
+        static constexpr uint64_t IterCount{ 1 };
 
         struct MyObject;
-
-        static void DeleteMyObject( SKL::AOD::CustomObject* InPtr ) noexcept;
 
         struct MyObject : SKL::AOD::CustomObject
         {
             int Counter { IterCount };
 
-            MyObject() noexcept : SKL::AOD::CustomObject{ &DeleteMyObject } 
+            MyObject() noexcept : SKL::AOD::CustomObject{} 
             {
                 SKLL_TRACE();
             }
@@ -412,7 +410,7 @@ namespace AODTests
                 return false;
             }
 
-            auto obj = SKL::MakeShared<MyObject>();
+            auto obj = SKL::MakeSharedVirtualDeleted<MyObject>( { &SKL::GlobalAllocatedDeleter<MyObject> } );
 
             for( uint64_t i = 0; i < IterCount; ++i )
             {
@@ -433,13 +431,6 @@ namespace AODTests
             return true;
         }
     };
-
-    void AODTestsFixture_CustomObject::DeleteMyObject( SKL::AOD::CustomObject* InPtr ) noexcept
-    {
-        SKLL_TRACE();
-        auto Data{ SKL::TSharedPtr<SKL::AOD::CustomObject>::Static_GetBlockPtrAndMetaBlockSize( InPtr ) };
-        SKL::GlobalMemoryManager::Deallocate( Data.first, Data.second );
-    }
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread )
     {

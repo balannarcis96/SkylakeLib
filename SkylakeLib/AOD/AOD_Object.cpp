@@ -357,15 +357,6 @@ namespace SKL::AOD
 
         return ScheduleTask( TLSData, InTask );
     }
-
-    void CustomObjectDeallocator::Deallocate( CustomObject* InPtr ) noexcept
-    {
-        auto* CB{ reinterpret_cast<MemoryPolicy::ControlBlock*>( TSharedPtr<CustomObject>::Static_GetBlockPtr( InPtr ) ) };
-        if( true == CB->ReleaseReference() )
-        {
-            InPtr->Deleter( InPtr );
-        }
-    }
 }
 
 namespace SKL
@@ -382,7 +373,7 @@ namespace SKL
     {
         // Increment ref count for self (the reinterpret_cast should not affect the end result, the pointer is used as base to jump to the control block only)
         // The type here is used only to tell the shared ptr that we have an object not an array
-        TSharedPtr<AOD::CustomObject>::Static_IncrementReference( InObject );
+        TCustomObjectSharedPtr::Static_IncrementReference( InObject );
         Parent.Pointer = InObject;
     }
 }

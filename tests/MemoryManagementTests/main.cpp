@@ -321,6 +321,31 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
+
+    TEST( MManagementTests, MakeSharedVirtualDeleted_API )
+    {
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
+
+        int32_t b = 5;
+
+        {
+            auto VirtualDeletedObject = SKL::MakeSharedVirtualDeleted<MyType>( { &SKL::GlobalAllocatedDeleter<MyType> }, &b );
+            ASSERT_TRUE( nullptr != VirtualDeletedObject.get() );
+            ASSERT_TRUE( 1 == VirtualDeletedObject.use_count() );
+
+
+            SKL::TVirtualDeleter<MyType>& Deleter = VirtualDeletedObject.get_virtual_deleter();
+            ASSERT_EQ( Deleter.GetPointer(), &SKL::GlobalAllocatedDeleter<MyType> );
+        }
+
+        ASSERT_EQ( 23, b );
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
+        SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
+        SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+    }
 }
 
 int main( int argc, char** argv )

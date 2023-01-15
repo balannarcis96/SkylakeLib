@@ -1113,3 +1113,43 @@ namespace SKL
         return reinterpret_cast<const wchar_t*>( Buffer.GetBuffer() );
     }
 }
+
+namespace std
+{
+    static_assert( sizeof( PSRWLOCK ) == sizeof( void * ) );
+    static_assert( sizeof( PSRWLOCK ) == sizeof( rw_lock ) );
+
+    rw_lock::rw_lock() noexcept
+        : LockHandle SRWLOCK_INIT { }
+
+    // std::shared_mutex compatible API
+    void rw_lock::lock() noexcept
+    {
+        ( void )AcquireSRWLockExclusive( reinterpret_cast<PSRWLOCK>( &LockHandle ) );
+    }
+
+    void rw_lock::unlock() noexcept
+    {
+        ReleaseSRWLockExclusive( reinterpret_cast<PSRWLOCK>( &LockHandle ) );
+    }
+
+    bool rw_lock::try_lock() noexcept
+    {
+        return static_cast<bool>( TryAcquireSRWLockExclusive( reinterpret_cast<PSRWLOCK>( &LockHandle ) ) );
+    }
+
+    bool rw_lock::try_lock_shared() noexcept
+    {
+        return static_cast<bool>( TryAcquireSRWLockShared( reinterpret_cast<PSRWLOCK>( &LockHandle ) ) );
+    }
+
+    void rw_lock::lock_shared() noexcept
+    {
+        AcquireSRWLockShared( reinterpret_cast<PSRWLOCK>( &LockHandle ) );
+    }
+
+    void rw_lock::unlock_shared() noexcept
+    {
+        ReleaseSRWLockShared( reinterpret_cast<PSRWLOCK>( &LockHandle ) );
+    }
+}

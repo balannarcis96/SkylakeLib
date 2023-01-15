@@ -380,19 +380,21 @@ namespace ServicesTests
         public:
             using MyEntityId = SKL::TEntityId<uint32_t>;
             static constexpr SKL::TEntityType MyEntityType = 1;
+            static constexpr SKL::EntityStoreFlags MyEntityStoreFlags {};
 
             struct RootComponentData
             {
                 int32_t a { 5 };
+
+                void OnDestroy() noexcept {}
             };
             struct OtherComponent
             {
                 int32_t b { 55 };
             };
 
-            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, false, RootComponentData, OtherComponent>;
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, MyEntityStoreFlags, RootComponentData, OtherComponent>;
             using TEntityPtr = MyEntityStore::TEntitySharedPtr;
-
 
             MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }
 
@@ -475,17 +477,20 @@ namespace ServicesTests
         public:
             using MyEntityId = SKL::TEntityId<uint32_t>;
             static constexpr SKL::TEntityType MyEntityType = 1;
+            static constexpr SKL::EntityStoreFlags MyEntityStoreFlags {};
 
             struct RootComponentData
             {
                 int32_t a { 5 };
+
+                void OnDestroy() noexcept {}
             };
             struct OtherComponent
             {
                 int32_t b { 55 };
             };
 
-            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, true, RootComponentData, OtherComponent>;
+            using MyEntityStore = SKL::EntityStore<MyEntityType, MyEntityId, 1024, MyEntityStoreFlags, RootComponentData, OtherComponent>;
             using TEntityPtr = MyEntityStore::TEntitySharedPtr;
 
             MySimpleService() noexcept: SKL::SimpleService{ 1 }{ }

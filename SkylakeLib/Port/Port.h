@@ -7,6 +7,12 @@
 //! 
 #pragma once
 
+namespace std
+{
+    //! Reader/Writer lock
+    struct rw_lock;
+}
+
 namespace SKL
 {
     //! Platform agnostic socket type 

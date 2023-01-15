@@ -235,6 +235,77 @@ namespace UtilsTests
             ASSERT_TRUE( ( reinterpret_cast<uint64_t>( ptr.get() ) % SKL_CACHE_LINE_SIZE ) == 0 );
         }
     }
+    
+    TEST( UtilsTests, std_rw_lock )
+    {
+        {
+            std::rw_lock lock;
+
+            {
+                lock.lock();
+
+                EXPECT_EQ( false, lock.try_lock() );
+                EXPECT_EQ( false, lock.try_lock_shared() );
+
+                lock.unlock();
+            }
+            
+            {
+                EXPECT_EQ( true, lock.try_lock() );
+                EXPECT_EQ( false, lock.try_lock_shared() );
+                lock.unlock();
+            }
+            
+            {
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+
+                EXPECT_EQ( false, lock.try_lock() );
+
+                lock.unlock_shared();
+                lock.unlock_shared();
+                lock.unlock_shared();
+
+                EXPECT_EQ( true, lock.try_lock() );
+                lock.unlock();
+            }
+
+            {
+                std::unique_lock guard{ lock };
+
+                EXPECT_EQ( false, lock.try_lock() );
+                EXPECT_EQ( false, lock.try_lock_shared() );
+            }
+
+            {
+                std::shared_lock guard{ lock };
+
+                EXPECT_EQ( false, lock.try_lock() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                lock.unlock_shared();
+                lock.unlock_shared();
+            }
+            
+            {
+                std::unique_lock guard{ lock };
+
+                EXPECT_EQ( false, lock.try_lock() );
+                EXPECT_EQ( false, lock.try_lock_shared() );
+            }
+
+            {
+                std::shared_lock guard{ lock };
+
+                EXPECT_EQ( false, lock.try_lock() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                EXPECT_EQ( true, lock.try_lock_shared() );
+                lock.unlock_shared();
+                lock.unlock_shared();
+            }
+        }
+    }
 }
 
 int main( int argc, char** argv )

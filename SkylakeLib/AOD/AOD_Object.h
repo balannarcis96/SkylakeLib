@@ -180,12 +180,12 @@ namespace SKL::AOD
 //CustomObject
 namespace SKL::AOD
 {
+    // Custom AOD object
+    // \remarks Expects that the memory right above it is the ControlBlock
+    // \remarks Expects that it is part of an shared object with virtual deleter
     struct CustomObject : public Object
     {
-        using ObjectDeleter = ASD::FnPtr<void(SKL_CDECL*)( CustomObject* ) noexcept>;
-
-        //! \param Deleter void(SKL_CDECL*)( CustomObject* )
-        CustomObject( ObjectDeleter Deleter ) noexcept : Deleter{ Deleter } {}
+        CustomObject() noexcept = default;
         ~CustomObject() noexcept = default;
         
         //! Execute the functor thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
@@ -249,10 +249,7 @@ namespace SKL::AOD
         bool Dispatch( IAODCustomObjectTask* InTask ) noexcept;
         bool DelayTask( IAODCustomObjectTask* InTask ) noexcept;
 
-        ObjectDeleter Deleter{ nullptr };
-
         friend IAODCustomObjectTask;
-        friend CustomObjectDeallocator;
         friend class WorkerGroup;
     };
 }

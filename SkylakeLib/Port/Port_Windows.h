@@ -51,6 +51,26 @@ namespace SKL
     };
 }
 
+namespace std
+{
+    struct rw_lock
+    {
+        rw_lock() noexcept;
+        ~rw_lock() noexcept = default;
+
+        // std::shared_mutex compatible API
+        void lock() noexcept;
+        void unlock() noexcept;
+        SKL_NODISCARD bool try_lock() noexcept;
+        SKL_NODISCARD bool try_lock_shared() noexcept;
+        void lock_shared() noexcept;
+        void unlock_shared() noexcept;
+
+    private:
+        void* LockHandle;
+    };
+}
+
 namespace SKL
 {
     constexpr TOSError OS_ERROR_NET_TIMEOUT = 10060L;
