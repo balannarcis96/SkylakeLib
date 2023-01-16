@@ -95,4 +95,6 @@ namespace SKL
         IAODTaskBase*              Tail; //!< Tail of the queue
         IAODTaskBase               Stub; //!< Stub item
     };
+
+    static_assert( sizeof( AODTaskQueue ) == ( sizeof( void* ) * 3 ) );
 }

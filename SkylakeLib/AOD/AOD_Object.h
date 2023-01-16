@@ -12,7 +12,7 @@
 //Object
 namespace SKL::AOD
 {
-    struct Object
+    struct alignas( alignof( void* ) ) Object
     {
         Object() noexcept = default;
         ~Object() noexcept = default;
@@ -22,6 +22,8 @@ namespace SKL::AOD
         std::relaxed_value<uint64_t> RemainingTasksCount; //!< Remaining tasks to execute on this object
         AODTaskQueue                 TaskQueue;           //!< Task queue
     };  
+
+    static_assert( sizeof( Object ) == ( sizeof( void* ) * 4 ) );
 }
 
 //SharedObject
@@ -252,4 +254,6 @@ namespace SKL::AOD
         friend IAODCustomObjectTask;
         friend class WorkerGroup;
     };
+
+    static_assert( sizeof( CustomObject ) == ( sizeof( void* ) * 4 ) );
 }

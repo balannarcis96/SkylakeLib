@@ -41,6 +41,9 @@ namespace SKL
     template<TEntityType MyEntityType, typename TEntityId, size_t TMaxEntities, EntityStoreFlags TFlags, typename TRootComponentData, typename ...TComponents>
     struct EntityStore
     {
+        static_assert( alignof( TRootComponentData ) <= SKL_ALIGNMENT, "RootComponentData must be max aligned to SKL_ALIGNMENT" );
+        static_assert( ( sizeof( TRootComponentData ) % SKL_ALIGNMENT ) == 0U, "Size of RootComponentData must be a multiple of SKL_ALIGNMENT" );
+
         using MyType           = EntityStore<MyEntityType, TEntityId, TMaxEntities, TFlags, TRootComponentData, TComponents...>;
         using OnAllFreedTask   = ASD::UniqueFunctorWrapper<32, void(SKL_CDECL*)()noexcept>;
     
@@ -61,7 +64,7 @@ namespace SKL
         static_assert( true == std::is_class_v<TRootComponentData>, "The root component data a class/struct type" );
         static_assert( false == std::is_polymorphic_v<TRootComponentData>, "The root component data must not be a polymorphic or abstract type" );
         
-        struct RootComponentInternalData
+        struct alignas( SKL_ALIGNMENT ) RootComponentInternalData
         {
             //! get the id of this entity
             SKL_FORCEINLINE SKL_NODISCARD NonAtomicEntityId GetId() const noexcept { return Id; }
@@ -101,7 +104,9 @@ namespace SKL
             friend MyType;
         };
 
-        struct RootComponent_AsyncDispatched: 
+        static_assert( sizeof( RootComponentInternalData ) == ( sizeof( void* ) * 2 ) );
+
+        struct alignas( SKL_ALIGNMENT ) RootComponent_AsyncDispatched: 
               AOD::CustomObject
             , RootComponentInternalData
             , TRootComponentData
@@ -114,8 +119,10 @@ namespace SKL
 
             friend MyType;
         };
+
+        static_assert( ( sizeof( RootComponent_AsyncDispatched ) - sizeof( TRootComponentData ) ) == ( sizeof( void* ) * 6 ) );
         
-        struct RootComponent_Not_AsyncDispatched: 
+        struct alignas( SKL_ALIGNMENT ) RootComponent_Not_AsyncDispatched: 
               RootComponentInternalData
             , TRootComponentData
         {
@@ -126,6 +133,8 @@ namespace SKL
 
             friend MyType;
         };
+
+        static_assert( ( sizeof( RootComponent_Not_AsyncDispatched ) - sizeof( TRootComponentData ) ) == ( sizeof( void* ) * 2 ) );
 
         using RootComponentBase = std::conditional_t<Flags.bExtendRootComponentToAsyncDispatchedObject, RootComponent_AsyncDispatched, RootComponent_Not_AsyncDispatched>;
 
@@ -142,9 +151,9 @@ namespace SKL
 
         struct PaddToMultipleOfCachelineBase
         {
-            struct TestType 
+            struct alignas( SKL_ALIGNMENT ) TestType 
                 : protected MemoryPolicy::ControlBlock
-                , RootComponent {};
+                , TEntityType {};
 
             static consteval size_t CalculatePaddingSize()
             {
@@ -163,51 +172,78 @@ namespace SKL
 
             static constexpr size_t BaseSize    = sizeof( TestType );
             static constexpr size_t PaddingSize = CalculatePaddingSize();
-
-            PaddToMultipleOfCachelineBase() noexcept = default;
-            ~PaddToMultipleOfCachelineBase() noexcept = default;
-
-        private:
-            uint8_t Padding[PaddingSize];
         };
 
-        static constexpr bool bNeedsToPaddToMultipleOfCacheLine = ( TRUE == Flags.bPaddRootEntityToMultipleOfCacheLine ) && ( 0 != PaddToMultipleOfCachelineBase::PaddingSize );
+        //! does the store need to pad the root component to multiple of cache line (size)
+        static constexpr bool CNeedsToPaddToMultipleOfCacheLine = ( TRUE == Flags.bPaddRootEntityToMultipleOfCacheLine ) && ( 0 != PaddToMultipleOfCachelineBase::PaddingSize );
 
-        struct PaddedSharedRootComponent: 
+        struct alignas( SKL_ALIGNMENT ) PaddedSharedRootComponent: 
                   protected MemoryPolicy::ControlBlock
-                , RootComponent
-                , PaddToMultipleOfCachelineBase
+                , TEntityType
         {
             PaddedSharedRootComponent() noexcept
-                : MemoryPolicy::ControlBlock( 0, sizeof( RootComponent ) + sizeof( MemoryPolicy::ControlBlock ) ), RootComponent(), PaddToMultipleOfCachelineBase() 
+                : MemoryPolicy::ControlBlock( 0, sizeof( TEntityType ) + sizeof( MemoryPolicy::ControlBlock ) ), TEntityType() 
             {
                 SKL_ASSERT( 0 == ( reinterpret_cast<uint64_t>( this ) % SKL_CACHE_LINE_SIZE ) );
             }
             ~PaddedSharedRootComponent() noexcept = default;
 
             friend MyType;
+        private:
+            uint8_t Padding[PaddToMultipleOfCachelineBase::PaddingSize];
         };
 
-        struct NotPaddedSharedRootComponent: 
+        struct alignas( SKL_ALIGNMENT ) NotPaddedSharedRootComponent: 
                   protected MemoryPolicy::ControlBlock
-                , RootComponent
+                , TEntityType
         {
             NotPaddedSharedRootComponent() noexcept
-                : MemoryPolicy::ControlBlock( 0, sizeof( RootComponent ) + sizeof( MemoryPolicy::ControlBlock ) ), RootComponent() {}
+                : MemoryPolicy::ControlBlock( 0, sizeof( TEntityType ) + sizeof( MemoryPolicy::ControlBlock ) ), TEntityType() {}
             ~NotPaddedSharedRootComponent() noexcept = default;
 
             friend MyType;
         };
 
-        using SharedRootComponent = std::conditional_t<bNeedsToPaddToMultipleOfCacheLine, PaddedSharedRootComponent, NotPaddedSharedRootComponent>;
+        using SharedRootComponent = std::conditional_t<CNeedsToPaddToMultipleOfCacheLine, PaddedSharedRootComponent, NotPaddedSharedRootComponent>;
 
-        static constexpr size_t CRootComponent_TotalSize        = sizeof( SharedRootComponent );
-        static constexpr size_t CRootComponent_UsedBytesByUser  = sizeof( TRootComponentData );
-        static constexpr size_t CRootComponent_UsedBytesByStore = sizeof( MemoryPolicy::ControlBlock ) + sizeof( TEntityType );
-        static constexpr size_t CRootComponent_IsAllUserDataOnFirstCacheLine = SKL_CACHE_LINE_SIZE >= CRootComponent_TotalSize;
-        static constexpr size_t CRootComponent_IsAnyUserDataOnFirstCacheLine = SKL_CACHE_LINE_SIZE >  CRootComponent_UsedBytesByStore;
-        static constexpr size_t CRootComponent_AvailableBytesForUserOnFirstCacheLine = static_cast<size_t>( SKL_CACHE_LINE_SIZE ) > CRootComponent_UsedBytesByStore ? static_cast<size_t>( SKL_CACHE_LINE_SIZE ) - CRootComponent_UsedBytesByStore : 0;
-        static constexpr size_t CRootComponent_BytesLeftOnFirstCacheLine = static_cast<size_t>( SKL_CACHE_LINE_SIZE ) > ( CRootComponent_UsedBytesByStore + CRootComponent_UsedBytesByUser ) ? static_cast<size_t>( SKL_CACHE_LINE_SIZE ) - ( CRootComponent_UsedBytesByStore + CRootComponent_UsedBytesByUser ) : 0;
+        //! total size of the root component in memory (bytes)
+        static constexpr size_t CRootComponent_TotalSize        
+                = sizeof( SharedRootComponent );
+
+        //! portion of the root component memory used by the user (bytes)
+        static constexpr size_t CRootComponent_UsedBytesByUser  
+                = sizeof( TRootComponentData );
+
+        //! portion of the root component memory used by the store ( we don't take in calculation the 8 bytes for the virtual deleter here )
+        static constexpr size_t CRootComponent_UsedBytesByStore 
+                = PaddToMultipleOfCachelineBase::BaseSize 
+                - CRootComponent_UsedBytesByUser 
+                - ( Flags.bExtendRootComponentToAsyncDispatchedObject ? sizeof( TVirtualDeleter<TEntityType> ) : 0U ); 
+
+        //! is all user data on the first cache line of the root component
+        static constexpr size_t CRootComponent_IsAllUserDataOnFirstCacheLine 
+                = SKL_CACHE_LINE_SIZE >= CRootComponent_TotalSize;
+
+        //! is any of the user data on the first cache line of the root component
+        static constexpr size_t CRootComponent_IsAnyUserDataOnFirstCacheLine 
+                = SKL_CACHE_LINE_SIZE > CRootComponent_UsedBytesByStore;
+
+        //! how many bytes of the user type reside on the first cache line of the root component
+        static constexpr size_t CRootComponent_AvailableBytesForUserOnFirstCacheLine = static_cast<size_t>( SKL_CACHE_LINE_SIZE ) > CRootComponent_UsedBytesByStore ? 
+                                                                                       static_cast<size_t>( SKL_CACHE_LINE_SIZE ) - CRootComponent_UsedBytesByStore : 0U;
+
+        //! how many bytes are left on the first cache line for the whole root component to use
+        static constexpr size_t CRootComponent_BytesLeftOnFirstCacheLine = static_cast<size_t>( SKL_CACHE_LINE_SIZE ) > ( CRootComponent_UsedBytesByStore + CRootComponent_UsedBytesByUser ) ? 
+                                                                           static_cast<size_t>( SKL_CACHE_LINE_SIZE ) - ( CRootComponent_UsedBytesByStore + CRootComponent_UsedBytesByUser ) : 0U;
+
+        //! how many bytes of padding must the store add to the root component to rich cache line size multiplicity
+        static constexpr size_t CRootComponent_BytesOfPadding = PaddToMultipleOfCachelineBase::PaddingSize;
+
+        //! does the store use virtual deleter for the root component
+        static constexpr bool CHasVirtualDeleter = Flags.bExtendRootComponentToAsyncDispatchedObject;
+
+        // at least 8 bytes available for the user on the first cache line of the root component
+        static_assert( sizeof( void* ) <= CRootComponent_AvailableBytesForUserOnFirstCacheLine );
 
         static_assert( ( false == Flags.bPaddRootEntityToMultipleOfCacheLine )
                     || ( 0U == ( sizeof( SharedRootComponent ) % SKL_CACHE_LINE_SIZE ) ), "Internal bug!?!?" );
@@ -218,7 +254,7 @@ namespace SKL
             {
             private:
                 template<typename  > static std::false_type test( ... );
-                template<typename U> static auto            test( int ) -> decltype( std::declval<U>().OnDestroy(), std::true_type() );
+                template<typename U> static auto            test( int32_t ) -> decltype( std::declval<U>().OnDestroy(), std::true_type() );
             public:
                 static constexpr bool value = std::is_same_v<decltype( test<TRootComponentData>( 0 ) ), std::true_type>;
             };
@@ -228,7 +264,7 @@ namespace SKL
             {
             private:
                 template<typename  > static std::false_type test( ... );
-                template<typename U> static auto            test( int, TArgs... Args ) -> decltype( std::declval<U>().OnCreate( Args... ), std::true_type() );
+                template<typename U> static auto            test( int32_t, TArgs... Args ) -> decltype( std::declval<U>().OnCreate( Args... ), std::true_type() );
             public:
                 static constexpr bool value = std::is_same_v<decltype( test<TRootComponentData>( 0, std::declval<TArgs>()... ) ), std::true_type>;
             };
@@ -302,6 +338,8 @@ namespace SKL
         using MyCachedAllocationsIdStore = UIDAllocationCache<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities ), CustomUIDAllocationCacheToIndexConvert>;
         using MyIdStore                  = std::conditional_t<Flags.bUseCachedAllocationUIDStore, MyCachedAllocationsIdStore, MyBasicIdStore>;
         using Variant                    = typename TEntityId::Variant;
+
+        static_assert( CHasVirtualDeleter == TEntitySharedPtr::CHasVirtualDeleter );
 
         //! initialize the store
         SKL_NODISCARD RStatus Initialize() noexcept

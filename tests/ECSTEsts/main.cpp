@@ -240,8 +240,8 @@ namespace ECSTests
              RootComponentData() noexcept = default;
              ~RootComponentData() noexcept = default;
 
-             uint32_t A { 55 };
-             uint8_t Buffer[16];
+             uint32_t A { 55U };
+             uint32_t B { 0U };
 
              void OnDestroy() noexcept
              {
@@ -271,7 +271,7 @@ namespace ECSTests
         const size_t bb{ MyEntityStore::CRootComponent_UsedBytesByUser };
         const size_t cc{ MyEntityStore::CRootComponent_UsedBytesByStore };
         const size_t dd{ MyEntityStore::CRootComponent_AvailableBytesForUserOnFirstCacheLine };
-        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc,dd );
+        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc, dd );
 
         MyEntityStore Store{};
 
@@ -390,7 +390,7 @@ namespace ECSTests
              ~RootComponentData() noexcept = default;
 
              uint32_t A { 55 };
-             uint8_t Buffer[16];
+             uint32_t B { 55 };
 
              void OnDestroy() noexcept
              {
@@ -420,7 +420,7 @@ namespace ECSTests
         const size_t bb{ MyEntityStore::CRootComponent_UsedBytesByUser };
         const size_t cc{ MyEntityStore::CRootComponent_UsedBytesByStore };
         const size_t dd{ MyEntityStore::CRootComponent_AvailableBytesForUserOnFirstCacheLine };
-        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc,dd );
+        printf( "\n\tBytesLeftOnFirstCacheLine:%llu\n\tUsedBytesByUser:%llu\n\tUsedBytesByStore:%llu\n\tAvailableBytesForUserOnFirstCacheLine:%llu\n", aa, bb, cc, dd );
 
         MyEntityStore Store{};
 
@@ -518,7 +518,6 @@ namespace ECSTests
 
         ASSERT_TRUE( 1 == Counter );
     }
-
     
     TEST( ECSTests, EntityStore_ExtendedId_DestrucEntity )
     {   
@@ -537,7 +536,7 @@ namespace ECSTests
              ~RootComponentData() noexcept = default;
 
              uint32_t A { 55 };
-             uint8_t Buffer[16];
+             uint32_t B { 55 };
 
              void OnDestroy() noexcept
              {

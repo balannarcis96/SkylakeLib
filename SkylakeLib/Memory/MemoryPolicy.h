@@ -1,7 +1,7 @@
 //!
 //! \file MemoryPolicy.h
 //! 
-//! \brief Global allocation policies
+//! \brief Unique and shared memory policies
 //! 
 //! \author Balan Narcis (balannarcis96@gmail.com)
 //! 
@@ -805,6 +805,14 @@ namespace SKL
             GDestruct<TObject>( InObj );
         }
 
+        SKL_ASSERT( nullptr != InObj );
+        auto Data{ SKL::TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
+        SKL::GlobalMemoryManager::Deallocate( Data.first, Data.second );
+    }
+    
+    template<typename TObject>
+    void GlobalAllocatedDeleter_NoDestruct( TObject* InObj ) noexcept
+    {
         SKL_ASSERT( nullptr != InObj );
         auto Data{ SKL::TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
         SKL::GlobalMemoryManager::Deallocate( Data.first, Data.second );
