@@ -25,30 +25,6 @@ file( GLOB_RECURSE _Threading_files              LIST_DIRECTORIES false "${SKYLA
 file( GLOB_RECURSE _TLSSync_files                LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/TLSSync/*.cpp"                "${SKYLAKE_SRC_ROOT}/TLSSync/*.h" )
 file( GLOB_RECURSE _Utils_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Utils/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Utils/*.h" )
 
-add_library (SkylakeLib STATIC  
-    ${_AdvancedSingleDispatch_files}
-    ${_Application_files}
-    ${_AOD_files}                 
-    ${_Diagnostics_files}               
-    ${_ECS_files}              
-    ${_Enums_files}                 
-    ${_Math_files}                   
-    ${_Macros_files}                  
-    ${_Math_files}                
-    ${_Memory_files}                 
-    ${_Networking_files}                   
-    ${_Root_files}                     
-    ${_Port_files}                 
-    ${_Service_files}                     
-    ${_Std_files}     
-    ${_Task_files}
-    ${_Tuning_files}                 
-    ${_Types_files}                 
-    ${_Threading_files}             
-    ${_TLSSync_files}     
-    ${_Utils_files}
-)
-
 source_group("AdvancedSingleDispatch" FILES ${_AdvancedSingleDispatch_files})
 source_group("Application"            FILES ${_Application_files}           )
 source_group("AOD"                    FILES ${_AOD_files}                   )
@@ -71,13 +47,51 @@ source_group("Threading"              FILES ${_Threading_files}             )
 source_group("TLSSync"                FILES ${_TLSSync_files}               )
 source_group("Utils"                  FILES ${_Utils_files}                 )
 
-# Set C++20
-set_property(TARGET SkylakeLib PROPERTY CXX_STANDARD 20)
-target_include_directories(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/")
-target_link_libraries(SkylakeLib PUBLIC SkylakeLibStandalone)
+function(Create_SkylakeLibTarget target_name)
+    add_library (${target_name} STATIC  
+        ${_AdvancedSingleDispatch_files}
+        ${_Application_files}
+        ${_AOD_files}                 
+        ${_Diagnostics_files}               
+        ${_ECS_files}              
+        ${_Enums_files}                 
+        ${_Math_files}                   
+        ${_Macros_files}                  
+        ${_Math_files}                
+        ${_Memory_files}                 
+        ${_Networking_files}                   
+        ${_Root_files}                     
+        ${_Port_files}                 
+        ${_Service_files}                     
+        ${_Std_files}     
+        ${_Task_files}
+        ${_Tuning_files}                 
+        ${_Types_files}                 
+        ${_Threading_files}             
+        ${_TLSSync_files}     
+        ${_Utils_files}
+    )
 
-if(SKL_USE_MIMALLOC)
-    target_link_libraries(SkylakeLib PUBLIC mimalloc-static)
-endif()
+    # Set C++20
+    set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 20)
 
-target_precompile_headers(SkylakeLib PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLib.h")
+    # Set include directory
+    target_include_directories(${target_name} PUBLIC "${SKYLAKE_SRC_ROOT}/")
+
+    # Link SkylakeLibStandalone
+    target_link_libraries(${target_name} PUBLIC SkylakeLibStandalone)
+
+    # Link mimalloc-static
+    if(SKL_USE_MIMALLOC)
+        target_link_libraries(${target_name} PUBLIC mimalloc-static)
+    endif()
+
+    # Set precompiled headers
+    target_precompile_headers(${target_name} PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLib.h")
+
+endfunction(Create_SkylakeLibTarget)
+
+# Create all skylake lib targets
+foreach(target_name ${SKL_LIB_TARGETS})
+    Create_SkylakeLibTarget(${target_name})
+endforeach()

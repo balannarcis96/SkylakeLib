@@ -18,6 +18,7 @@ namespace SKL
         WorkerGroup* TargetWG;
         if constexpr( CTaskScheduling_AssumeThatTaskHandlingWorkerGroupCountIsPowerOfTwo )
         {
+            // Fastest
             const size_t TargetWGIndexMask{ TaskHandlingWGs.size() - 1 };
             SKL_ASSERT( IsPowerOfTwo( TargetWGIndexMask + 1 ) );
             TargetWG = TaskHandlingWGs[static_cast<size_t>( TLSContext.RRLastIndex++ ) & TargetWGIndexMask];
@@ -26,6 +27,7 @@ namespace SKL
         {
             if constexpr( CTaskScheduling_UseIfInsteadOfModulo )
             {
+                // Potentially faster than modulo (if correct branch is predicted)
                 size_t TargetWGIndex{ static_cast<size_t>( TLSContext.RRLastIndex++ ) };
                 if( TargetWGIndex >= TaskHandlingWGs.size() )
                 {
@@ -36,6 +38,7 @@ namespace SKL
             }
             else
             {
+                // Slowest (beats branch miss-predict though)
                 TargetWG = TaskHandlingWGs[static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size()];
             }
         }
@@ -55,8 +58,7 @@ namespace SKL
         Worker* TargetW;
         if constexpr( CTaskScheduling_AssumeThatWorkersCountIsPowerOfTwo )
         {
-            // Fast
-
+            // Fastest
             const size_t TargetWIndexMask{ WorkersCountWithoutInvalid - 1 };
             SKL_ASSERT( IsPowerOfTwo( TargetWIndexMask + 1 ) );
             TargetW = Workers[( static_cast<size_t>( TLSContext.RRLastIndex2++ ) & TargetWIndexMask ) + 1U].get();
@@ -65,7 +67,7 @@ namespace SKL
         {
             if constexpr( CTaskScheduling_UseIfInsteadOfModulo )
             {
-                // Potentially fastest (if correct branch is predicted)
+                // Potentially faster than modulo (if correct branch is predicted)
                 size_t TargetWIndex{ static_cast<size_t>( TLSContext.RRLastIndex2++ ) };
                 if( TargetWIndex >= WorkersCountWithoutInvalid )
                 {
@@ -76,7 +78,7 @@ namespace SKL
             }
             else
             {
-                // Slowest (beats branch miss-predict)
+                // Slowest (beats branch miss-predict though)
                 TargetW = Workers[( static_cast<size_t>( TLSContext.RRLastIndex2++ ) % WorkersCountWithoutInvalid ) + 1U].get();        
             }
         }
