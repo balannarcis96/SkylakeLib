@@ -12,7 +12,7 @@ namespace SKL
     struct EntityStoreFlags
     {
         bool bExtendRootComponentToAsyncDispatchedObject{ true };
-        bool bPaddRootEntityToMultipleOfCacheLine       { true };
+        bool bPaddEntityRootToMultipleOfCacheLine       { true };
         bool bRequireOnDestroy                          { true };
         bool bRequireOnCreate                           { false };
         bool bUseCachedAllocationUIDStore               { false };
@@ -175,7 +175,7 @@ namespace SKL
         };
 
         //! does the store need to pad the root component to multiple of cache line (size)
-        static constexpr bool CNeedsToPaddToMultipleOfCacheLine = ( TRUE == Flags.bPaddRootEntityToMultipleOfCacheLine ) && ( 0 != PaddToMultipleOfCachelineBase::PaddingSize );
+        static constexpr bool CNeedsToPaddToMultipleOfCacheLine = ( TRUE == Flags.bPaddEntityRootToMultipleOfCacheLine ) && ( 0 != PaddToMultipleOfCachelineBase::PaddingSize );
 
         struct alignas( SKL_ALIGNMENT ) PaddedSharedRootComponent: 
                   protected MemoryPolicy::ControlBlock
@@ -245,7 +245,7 @@ namespace SKL
         // at least 8 bytes available for the user on the first cache line of the root component
         static_assert( sizeof( void* ) <= CRootComponent_AvailableBytesForUserOnFirstCacheLine );
 
-        static_assert( ( false == Flags.bPaddRootEntityToMultipleOfCacheLine )
+        static_assert( ( false == Flags.bPaddEntityRootToMultipleOfCacheLine )
                     || ( 0U == ( sizeof( SharedRootComponent ) % SKL_CACHE_LINE_SIZE ) ), "Internal bug!?!?" );
 
         struct TRootComponentDataTraits
@@ -367,7 +367,10 @@ namespace SKL
                 RComponent.MyStore = this;
 
                 // initialize the components as needed
-                InitializeComponents<TComponents...>( static_cast<IndexType>( i ) );
+                if constexpr( 0 < sizeof...( TComponents ) )
+                {
+                    InitializeComponents<TComponents...>( static_cast<IndexType>( i ) );
+                }
             }
 
             return RSuccess;

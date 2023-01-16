@@ -385,6 +385,7 @@ namespace ServicesTests
             struct RootComponentData
             {
                 int32_t a { 5 };
+                int32_t b { 5 };
 
                 void OnDestroy() noexcept {}
             };
@@ -482,6 +483,7 @@ namespace ServicesTests
             struct RootComponentData
             {
                 int32_t a { 5 };
+                int32_t b { 5 };
 
                 void OnDestroy() noexcept {}
             };

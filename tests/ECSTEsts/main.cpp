@@ -228,7 +228,7 @@ namespace ECSTests
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = false
-            , .bPaddRootEntityToMultipleOfCacheLine        = true
+            , .bPaddEntityRootToMultipleOfCacheLine        = true
             , .bRequireOnDestroy                           = true
             , .bRequireOnCreate                            = true
             , .bUseCachedAllocationUIDStore                = false
@@ -377,7 +377,7 @@ namespace ECSTests
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = true
-            , .bPaddRootEntityToMultipleOfCacheLine        = true
+            , .bPaddEntityRootToMultipleOfCacheLine        = true
             , .bRequireOnDestroy                           = true
             , .bRequireOnCreate                            = true
             , .bUseCachedAllocationUIDStore                = true
@@ -523,7 +523,7 @@ namespace ECSTests
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = true
-            , .bPaddRootEntityToMultipleOfCacheLine        = true
+            , .bPaddEntityRootToMultipleOfCacheLine        = true
             , .bRequireOnDestroy                           = true
             , .bRequireOnCreate                            = true
             , .bUseCachedAllocationUIDStore                = false
