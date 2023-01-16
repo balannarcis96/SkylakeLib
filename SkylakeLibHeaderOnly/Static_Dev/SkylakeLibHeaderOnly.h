@@ -53,9 +53,17 @@
 
 namespace SKL
 {
+    //! Get the current epoch time (milliseconds since 01/01/1970)
     SKL_FORCEINLINE SKL_NODISCARD inline TEpochTimePoint GetCurrentEpochTime() noexcept
     {
         return static_cast<TEpochTimePoint>( std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count() );
+    }
+    
+    //! Returns true if Value is a power of two
+    SKL_FORCEINLINE SKL_NODISCARD inline constexpr bool IsPowerOfTwo( auto Value ) noexcept
+    {
+        static_assert( std::is_integral_v<decltype( Value )> );
+        return ( ( Value & ( Value - 1 ) ) == 0 );
     }
 }
 

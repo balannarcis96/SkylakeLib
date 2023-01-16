@@ -40,10 +40,10 @@ namespace SKL
         ServerInstance*           SourceServerInstance       { nullptr };
         char                      NameBuffer[512]            { 0 };
 
-        friend bool DeferTask( ITask* InTask ) noexcept;    
-        friend bool DeferTaskAgain( ITask* InTask ) noexcept;
-        friend bool DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
-        friend bool ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept;
+        friend void DeferTask( ITask* InTask ) noexcept;    
+        friend void DeferTaskAgain( ITask* InTask ) noexcept;
+        friend void DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
+        friend void ScheduleTask( ServerInstanceTLSContext& TLSContext, ITask* InTask ) noexcept;
 
         friend class WorkerGroup;
     };

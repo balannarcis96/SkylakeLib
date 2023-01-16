@@ -7,8 +7,32 @@
 //! 
 #pragma once
 
+#ifndef SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO
+#define SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO false
+#endif
+
+#ifndef SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO
+#define SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO false
+#endif
+
+#ifndef SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS
+#define SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS false
+#endif
+
+#ifndef SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO
+#define SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO false
+#endif
+
 namespace SKL
 {
+    /*------------------------------------------------------------
+        Feature flags
+      ------------------------------------------------------------*/
+    constexpr bool CTaskScheduling_AssumeThatTaskHandlingWorkerGroupCountIsPowerOfTwo = SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO;
+    constexpr bool CTaskScheduling_AssumeThatWorkersCountIsPowerOfTwo = SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO;
+    constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS;
+    constexpr bool CTaskScheduling_UseIfInsteadOfModulo = SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO;
+
     /*------------------------------------------------------------
         MemoryManager
       ------------------------------------------------------------*/

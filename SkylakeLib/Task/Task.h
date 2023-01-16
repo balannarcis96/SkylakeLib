@@ -139,13 +139,13 @@ namespace SKL
     }
 
     //! Defer an newly allocated task [void(__cdecl*)( ITask* )]
-    bool DeferTask( ITask* InTask ) noexcept;
+    void DeferTask( ITask* InTask ) noexcept;
 
     //! Defer an already deferred task [void(__cdecl*)( ITask* )]
-    bool DeferTaskAgain( ITask* InTask ) noexcept;
+    void DeferTaskAgain( ITask* InTask ) noexcept;
 
     //! Defer an already deferred task [void(__cdecl*)( ITask* )]
-    bool DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
+    void DeferTaskAgain( TDuration AfterMilliseconds, ITask* InTask ) noexcept;
 
     //! Defer functor execution asap [void(__cdecl*)( ITask* )]
     template<typename TFunctor>
@@ -153,7 +153,11 @@ namespace SKL
     {
         // allocate
         auto* NewTask { MakeSharedRaw<Task<sizeof( TFunctor )>>() };
-        
+        if( nullptr == NewTask ) SKL_UNLIKELY
+        {
+            return false;
+        }
+
         // set functor
         NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
@@ -161,7 +165,9 @@ namespace SKL
         //NewTask->SetDue( AfterMilliseconds ); due = 0 -> ASAP
 
         // cast to base and defer
-        return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
+        DeferTask( reinterpret_cast<ITask*>( NewTask ) );
+
+        return true;
     }
 
     //! Defer functor execution after AfterMilliseconds [void(__cdecl*)( ITask* )]
@@ -170,6 +176,10 @@ namespace SKL
     {
         // allocate
         auto* NewTask { MakeSharedRaw<Task<sizeof( TFunctor )>>() };
+        if( nullptr == NewTask ) SKL_UNLIKELY
+        {
+            return false;
+        }
         
         // set functor
         NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
@@ -178,7 +188,9 @@ namespace SKL
         NewTask->SetDue( AfterMilliseconds );
 
         // cast to base and defer
-        return DeferTask( reinterpret_cast<ITask*>( NewTask ) );
+        DeferTask( reinterpret_cast<ITask*>( NewTask ) );
+
+        return true;
     }
 }
 

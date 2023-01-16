@@ -312,13 +312,6 @@ namespace SKL
         }
     }
 
-    //! Counts the number of leading zeros in the bit representation of @Value
-    template<std::TInt32Or64 T>
-    SKL_FORCEINLINE SKL_NODISCARD inline constexpr bool IsPowerOfTwo( T Value ) noexcept
-    {
-        return ( ( Value & ( Value - 1 ) ) == 0 );
-    }
-
     //! Computes the linear interpolation between @Start and @End by @Alpha
     template<std::TBasicMathEnabled T, std::TFloat U>
     SKL_FORCEINLINE SKL_NODISCARD inline constexpr T Lerp( const T &Start, const T &End, const U &Alpha ) noexcept
