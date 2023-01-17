@@ -2,7 +2,7 @@
 
 #include <SkylakeLib.h>
 
-namespace ECSTests
+namespace ECSTests44
 {
     struct Component1
     {
@@ -25,7 +25,7 @@ namespace ECSTests
                                       , Component1
                                       , Component2>;
     
-    TEST( ECSTests, ECS_StaticSymmetricStore )
+    TEST( EntityComponentSystemTestSuite, ECS_StaticSymmetricStore )
     {
        MyStaticStore Store{};
        
@@ -37,7 +37,7 @@ namespace ECSTests
        }
     }
     
-    TEST( ECSTests, ECS_SymmetricStore )
+    TEST( EntityComponentSystemTestSuite, ECS_SymmetricStore )
     {
        MyStore Store{};
        
@@ -50,7 +50,7 @@ namespace ECSTests
        }
     }
 
-    TEST( ECSTests, UIDStore_API )
+    TEST( EntityComponentSystemTestSuite, UIDStore_API_Test )
     {
         SKL::UIDStore<uint16_t, 0, 1024> UIDStore{};
 
@@ -99,7 +99,7 @@ namespace ECSTests
         ASSERT_TRUE( 1 == Counter );
     }
     
-    TEST( ECSTests, UIDAllocationCache_API )
+    TEST( EntityComponentSystemTestSuite, UIDAllocationCache_API )
     {
         struct UIDAllocationCacheToIndexConvert
         {
@@ -125,7 +125,7 @@ namespace ECSTests
 
         for( int32_t i = 0; i < 1024; ++i )
         {
-            ASSERT_EQ( true, UIDCache.Allocate( i + 1 ) );
+            ASSERT_EQ( true, UIDCache.Allocate( static_cast<uint16_t>( i + 1 ) ) );
         }
 
         ASSERT_EQ( false, UIDCache.Allocate( 1 ) );
@@ -139,7 +139,7 @@ namespace ECSTests
 
         for( int32_t i = 0; i < 1024; ++i )
         {
-            ASSERT_EQ( true, UIDCache.Allocate( i + 1 ) );
+            ASSERT_EQ( true, UIDCache.Allocate( static_cast<uint16_t>( i + 1 ) ) );
         }
 
         ASSERT_EQ( 0, Counter );
@@ -156,7 +156,7 @@ namespace ECSTests
         ASSERT_EQ( 1, Counter );
     }
 
-    TEST( ECSTests, EntityId_API )
+    TEST( EntityComponentSystemTestSuite, EntityId_API_Test )
     {
         struct PlayerIdDescription
         {
@@ -224,7 +224,7 @@ namespace ECSTests
         }
     }
 
-    TEST( ECSTests, EntityStore_ExtendedId_API )
+    TEST( EntityComponentSystemTestSuite, EntityStore_ExtendedId_API )
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = false
@@ -373,7 +373,7 @@ namespace ECSTests
         ASSERT_TRUE( 1 == Counter );
     }
     
-    TEST( ECSTests, EntityStore_ExtendedId_API_CacheAllocations )
+    TEST( EntityComponentSystemTestSuite, EntityStore_ExtendedId_API_CacheAllocations )
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = true
@@ -519,7 +519,7 @@ namespace ECSTests
         ASSERT_TRUE( 1 == Counter );
     }
     
-    TEST( ECSTests, EntityStore_ExtendedId_DestrucEntity )
+    TEST( EntityComponentSystemTestSuite, EntityStore_ExtendedId_DestrucEntity )
     {   
         constexpr SKL::EntityStoreFlags MyEntityStoreFlags {
               .bExtendRootComponentToAsyncDispatchedObject = true
@@ -667,7 +667,6 @@ namespace ECSTests
 
         ASSERT_TRUE( 1 == Counter );
     }
-    
 }
 
 int main( int argc, char** argv )

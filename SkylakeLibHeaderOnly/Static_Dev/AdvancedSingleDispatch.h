@@ -331,7 +331,7 @@ namespace ASD
         FnPtr() : TFunctionTraits( nullptr ) {}
         FnPtr( TFunctionPointer Pointer ) :  TFunctionTraits( Pointer ) {}
         
-        TFunctionPointer GetPointer() const noexcept { return Pointer; }
+        TFunctionPointer GetPointer() const noexcept { return this->Pointer; }
 
         ASD_FORCEINLINE void operator =( TFunctionPointer InPointer )
         {

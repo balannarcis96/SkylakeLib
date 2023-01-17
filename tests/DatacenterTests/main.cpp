@@ -426,7 +426,7 @@ namespace DatacenterTests
         }
     };
 
-    TEST_F( DatacenterTestsFixture, Attribute_API )
+    TEST_F( DatacenterTestsFixture, Attribute_API_Test )
     {
         SKL::BufferStream Stream{ 4096 };
 
@@ -446,7 +446,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, Element_API )
+    TEST_F( DatacenterTestsFixture, Element_API_Test )
     {
         SKL::BufferStream Stream{ 4096 };
 
@@ -466,7 +466,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, Array_API )
+    TEST_F( DatacenterTestsFixture, Array_API_Test )
     {
         SKL::BufferStream Stream{ 4096 };
 
@@ -486,7 +486,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, BlockArray_API )
+    TEST_F( DatacenterTestsFixture, BlockArray_API_Test )
     {
         SKL::BufferStream Stream{ 4096 };
 
@@ -506,7 +506,7 @@ namespace DatacenterTests
         }
     }
 
-    TEST_F( DatacenterTestsFixture, StringBlock_API )
+    TEST_F( DatacenterTestsFixture, StringBlock_API_Test )
     {
         SKL::BufferStream Stream{ 4096 * 1024 };
 
@@ -526,7 +526,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, StringEntry_API )
+    TEST_F( DatacenterTestsFixture, StringEntry_API_Test )
     {
         SKL::BufferStream Stream{ 4096 };
 
@@ -546,7 +546,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, StringMap_API )
+    TEST_F( DatacenterTestsFixture, StringMap_API_Test )
     {
         SKL::BufferStream Stream{ 4096 * 1024 };
 
@@ -586,12 +586,12 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, Attribute_ValueAPI )
+    TEST_F( DatacenterTestsFixture, Attribute_ValueAPI_Test )
     {
        Attribute_ValueAPIDummy_Validate();
     }
     
-    TEST_F( DatacenterTestsFixture, Adaptor_API )
+    TEST_F( DatacenterTestsFixture, Adaptor_API_Test )
     {
         TestDatacenterAdapter Adapter{};
 
@@ -602,7 +602,7 @@ namespace DatacenterTests
         ASSERT_FALSE( Adapter.IsLanguageAttributeByName( "lane" ) );
     }
 
-    TEST_F( DatacenterTestsFixture, Datacenter_API )
+    TEST_F( DatacenterTestsFixture, Datacenter_API_Test )
     {
         {
             SKL::BufferStream Stream{ 4096 * 1024 };
@@ -622,7 +622,7 @@ namespace DatacenterTests
         }
     }
 
-    TEST_F( DatacenterTestsFixture, Client_Builder_API )
+    TEST_F( DatacenterTestsFixture, Client_Builder_API_Test )
     {
         {
              SKL::DC::Builder      DCBuilder{};
@@ -680,7 +680,7 @@ namespace DatacenterTests
         }
     }
     
-    TEST_F( DatacenterTestsFixture, Server_Builder_API )
+    TEST_F( DatacenterTestsFixture, Server_Builder_API_Test )
     {
         {
              SKL::DC::Builder      DCBuilder{};

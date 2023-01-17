@@ -2,14 +2,14 @@
 
 #include <SkylakeLib.h>
 
-namespace ObjectPoolTests
+namespace ObjectPoolTestsSuite
 {
     struct MyType
     {
         int a { 0 };
     };
 
-    TEST( ObjectPoolTests, ObjectPool_NoThreads )
+    TEST( ObjectPoolTestsSuite, ObjectPool_NoThreads_Test )
     {
         using TMyThreadPool = SKL::ObjectPool<MyType, 1024, true>;
      
@@ -27,8 +27,7 @@ namespace ObjectPoolTests
         ASSERT_TRUE( nullptr == TMyThreadPool::Debug_ProbeAt( 0 ) );
     }
 
-
-    TEST( ObjectPoolTests, ObjectPool_MultiThreads_SpinLock )
+    TEST( ObjectPoolTestsSuite, ObjectPool_MultiThreads_SpinLock_Test )
     {
         using TMyThreadPool = SKL::ObjectPool<MyType, 1024>;
      

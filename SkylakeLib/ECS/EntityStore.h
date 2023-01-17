@@ -259,17 +259,22 @@ namespace SKL
                 static constexpr bool value = std::is_same_v<decltype( test<TRootComponentData>( 0 ) ), std::true_type>;
             };
             
-            template<typename ...TArgs>
-            struct HasOnCreate
-            {
-            private:
-                template<typename  > static std::false_type test( ... );
-                template<typename U> static auto            test( int32_t, TArgs... Args ) -> decltype( std::declval<U>().OnCreate( Args... ), std::true_type() );
-            public:
-                static constexpr bool value = std::is_same_v<decltype( test<TRootComponentData>( 0, std::declval<TArgs>()... ) ), std::true_type>;
-            };
-
             static constexpr bool has_ondestroy_v = HasOnDestroy::value;
+        };  
+        
+        template<typename ...TArgs>
+        struct HasOnCreate
+        {
+        private:
+            template<typename  > static std::false_type test( ... );
+            template<typename U> static auto            test( int32_t, TArgs... Args ) -> decltype( std::declval<U>().OnCreate( Args... ), std::true_type() );
+        public:
+            static constexpr bool value = std::is_same_v<decltype( test<TRootComponentData>( 0, std::declval<TArgs>()... ) ), std::true_type>;
+
+            static consteval bool HasOnCreateFun() noexcept
+            {
+                return value;
+            }
         };
 
         static_assert( ( false == Flags.bRequireOnDestroy )
@@ -403,7 +408,8 @@ namespace SKL
         {
             static_assert( FALSE == Flags.bUseCachedAllocationUIDStore, "Use AllocateSpecificEntity( ... )" );
 
-            constexpr bool bHasOnCreate = TRootComponentDataTraits::HasOnCreate<TArgs...>::value;
+            using HasOnCreate = HasOnCreate<TArgs...>;
+            constexpr bool bHasOnCreate = HasOnCreate::value;
 
             static_assert( ( FALSE == Flags.bRequireOnCreate )
                         || ( true == bHasOnCreate ), "TRootComponentData must define a method [void OnCreate( TArgs... )] with TArgs as parameters!" );
@@ -452,7 +458,7 @@ namespace SKL
         {
             static_assert( TRUE == Flags.bUseCachedAllocationUIDStore, "Use AllocateEntity( ... )" );
 
-            constexpr bool bHasOnCreate = TRootComponentDataTraits::HasOnCreate<TArgs...>::value;
+            constexpr bool bHasOnCreate = HasOnCreate<TArgs...>::value;
 
             static_assert( ( FALSE == Flags.bRequireOnCreate )
                         || ( true == bHasOnCreate ), "TRootComponentData must define a method [void OnCreate( TArgs... )] with TArgs as parameters!" );

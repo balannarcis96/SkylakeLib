@@ -15,14 +15,14 @@ SKL::ITask* CreateTask( TLambda&& lambda )
     return NewTask;
 }
 
-namespace TaskTests
+namespace Task_Tests_Suite
 {
     struct MyType
     {
         int a { 0 };
     };
 
-    TEST( TaskTests, Task_Construct_Destruct )
+    TEST( Task_Tests_Suite, Task_Construct_Destruct )
     {
         auto SPtr = std::make_shared<MyType>();
         ASSERT_TRUE( SPtr.use_count() == 1 );
@@ -60,11 +60,14 @@ namespace TaskTests
         ASSERT_TRUE( SPtr.use_count() == 1 );
     }
 
-    TEST( TaskTests, Task_Construct_Destruct_Dynamic )
+    TEST( Task_Tests_Suite, Task_Construct_Destruct_Dynamic )
     {
         auto SPtr = std::make_shared<MyType>();
         ASSERT_TRUE( SPtr.use_count() == 1 );
         
+        //Assumed task type
+        using ProtoTaskType = SKL::Task<sizeof( SPtr )>;
+
         SKL::ITask* NewTask = CreateTask([ SPtr ]( SKL::ITask* /*Self*/ ) noexcept 
         {
             printf( "FromTask value:%d\n", SPtr->a );
@@ -84,11 +87,16 @@ namespace TaskTests
 
         //ASSERT_TRUE( NewTask->GetTotalSize() == 40 );
 
-        delete NewTask;
+        // We cast back here for correct size deletion.
+        // Inside the library all of the tasks are allocated through the memory manager
+        // which tracks the allocated block size indifferent of the allocated type so the 
+        // block size is known at deallocation indifferent of the pointer type.
+        ProtoTaskType* SupposedTask{ reinterpret_cast<ProtoTaskType*>( NewTask ) };
+        delete SupposedTask;
         NewTask = nullptr;
     }
 
-    TEST( TaskTests, AsyncIoTask_API )
+    TEST( Task_Tests_Suite, AsyncIoTask_API_Test )
     {
         using BufferType = SKL::AsyncIOBuffer<128, 32>;
         uint32_t nbt { 400 };
@@ -116,7 +124,7 @@ namespace TaskTests
         ASSERT_TRUE( SPtr.use_count() == 1 );
     }
 
-    TEST( TaskTests, AsyncIoTask_Stream_API )
+    TEST( Task_Tests_Suite, AsyncIoTask_Stream_API )
     {
         using BufferType = SKL::AsyncIOBuffer<1024, 32>;
         auto NewTask { SKL::MakeShared<BufferType>() };
@@ -162,7 +170,7 @@ namespace TaskTests
         ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
     }
 
-    TEST( TaskTests, AsyncIoTask_Transaction_API )
+    TEST( Task_Tests_Suite, AsyncIoTask_Transaction_API )
     {
         using BufferType = SKL::AsyncIOBuffer<128, 32>;
         auto NewTask { SKL::MakeShared<BufferType>() };

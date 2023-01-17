@@ -2,9 +2,9 @@
 
 #include <SkylakeLib.h>
 
-namespace AODQueueTests
+namespace AODQueueTestsSuite
 {
-    TEST( AODQueueTests, SameThread )
+    TEST( AODQueueTestsSuite, SameThread_API_Test )
     {
         constexpr uint32_t           IterCount { 10000 };
         SKL::AODTaskQueue            Queue;
@@ -27,7 +27,12 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
-                    delete Task;
+                    // We cast back here for correct size deletion.
+                    // Inside the library all of the tasks are allocated through the memory manager
+                    // which tracks the allocated block size indifferent of the allocated type so the 
+                    // block size is known at deallocation indifferent of the pointer type.
+                    const TaskType* TempUpperType{ static_cast<const TaskType*>( Task ) };
+                    delete TempUpperType;
                     break;
                 }
                 
@@ -39,7 +44,7 @@ namespace AODQueueTests
         }
     }
     
-    TEST( AODQueueTests, TwoThreads_Produce_Then_Consume )
+    TEST( AODQueueTestsSuite, TwoThreads_Produce_Then_Consume )
     {
         constexpr uint32_t           IterCount { 10000 };
         SKL::AODTaskQueue            Queue;
@@ -65,11 +70,17 @@ namespace AODQueueTests
         {
             const auto* Task{ Queue.Pop() };
             ASSERT_TRUE( nullptr != Task );
-            delete Task;
+
+            // We cast back here for correct size deletion.
+            // Inside the library all of the tasks are allocated through the memory manager
+            // which tracks the allocated block size indifferent of the allocated type so the 
+            // block size is known at deallocation indifferent of the pointer type.
+            const TaskType* TempUpperType{ static_cast<const TaskType*>( Task ) };
+            delete TempUpperType;
         }
     }
     
-    TEST( AODQueueTests, TwoThreads_Produce_And_Consume )
+    TEST( AODQueueTestsSuite, TwoThreads_Produce_And_Consume )
     {
         constexpr uint32_t           IterCount { 10000 };
         SKL::AODTaskQueue            Queue;
@@ -99,7 +110,12 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
-                    delete Task;
+                    // We cast back here for correct size deletion.
+                    // Inside the library all of the tasks are allocated through the memory manager
+                    // which tracks the allocated block size indifferent of the allocated type so the 
+                    // block size is known at deallocation indifferent of the pointer type.
+                    const TaskType* TempUpperType{ static_cast<const TaskType*>( Task ) };
+                    delete TempUpperType;
                     break;
                 }
                 
@@ -111,7 +127,7 @@ namespace AODQueueTests
         }
     }
 
-    TEST( AODQueueTests, MultipleProducers_SingleConsummer_SyncStart )
+    TEST( AODQueueTestsSuite, MultipleProducers_SingleConsummer_SyncStart )
     {
         constexpr uint32_t           IterCount { 10000 };
         constexpr uint32_t           ProducersCount { 16 };
@@ -147,7 +163,12 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
-                    delete Task;
+                    // We cast back here for correct size deletion.
+                    // Inside the library all of the tasks are allocated through the memory manager
+                    // which tracks the allocated block size indifferent of the allocated type so the 
+                    // block size is known at deallocation indifferent of the pointer type.
+                    const TaskType* TempUpperType{ static_cast<const TaskType*>( Task ) };
+                    delete TempUpperType;
                     break;
                 }
                 
@@ -159,7 +180,7 @@ namespace AODQueueTests
         }
     }
     
-    TEST( AODQueueTests, MultipleProducers_SingleConsummer )
+    TEST( AODQueueTestsSuite, MultipleProducers_SingleConsummer )
     {
         constexpr uint32_t           IterCount { 10000 };
         constexpr uint32_t           ProducersCount { 16 };
@@ -191,7 +212,12 @@ namespace AODQueueTests
                 const auto* Task{ Queue.Pop() };
                 if( nullptr != Task )
                 {
-                    delete Task;
+                    // We cast back here for correct size deletion.
+                    // Inside the library all of the tasks are allocated through the memory manager
+                    // which tracks the allocated block size indifferent of the allocated type so the 
+                    // block size is known at deallocation indifferent of the pointer type.
+                    const TaskType* TempUpperType{ static_cast<const TaskType*>( Task ) };
+                    delete TempUpperType;
                     break;
                 }
                 

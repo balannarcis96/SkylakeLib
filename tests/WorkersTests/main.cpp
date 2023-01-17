@@ -11,9 +11,9 @@ namespace WorkersTests
         int a;
     };
 
-    struct TestFixture1: public ::testing::Test, TestApplication
+    struct Test_Fixture_____1: public ::testing::Test, TestApplication
     {
-         TestFixture1()
+         Test_Fixture_____1()
                 : ::testing::Test(),
                   TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
 
@@ -227,9 +227,9 @@ namespace WorkersTests
         std::latch StartLath{ 2 };
     };
     
-    struct TestFixture2: public ::testing::Test, TestApplication
+    struct Test_Fixture_____2: public ::testing::Test, TestApplication
     {
-         TestFixture2()
+         Test_Fixture_____2()
                 : ::testing::Test(),
                   TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
 
@@ -443,9 +443,9 @@ namespace WorkersTests
         std::latch StartLath{ 2 };
     };
     
-    struct TestFixture3: public ::testing::Test, TestApplication
+    struct Test_Fixture_____3: public ::testing::Test, TestApplication
     {
-         TestFixture3()
+         Test_Fixture_____3()
                 : ::testing::Test(),
                   TestApplication( L"WORKERSTESTS_TESTS_APP" ) {}      
 
@@ -708,7 +708,7 @@ namespace WorkersTests
         std::latch StartLath{ 2 };
     };
 
-    TEST( WorkersTests, MainTest )
+    TEST( WorkersTestsSuite, Main_Test__Case )
     {
         SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr );
 
@@ -801,7 +801,7 @@ namespace WorkersTests
         SKL::Skylake_TerminateLibrary();
     }
 
-    TEST_F( TestFixture1, FullFlow_OneReactiveWorker )
+    TEST_F( Test_Fixture_____1, FullFlow_OneReactiveWorker )
     {
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
@@ -833,7 +833,7 @@ namespace WorkersTests
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
     }
     
-    TEST_F( TestFixture2, FullFlow_MultipleReactiveWorkers )
+    TEST_F( Test_Fixture_____2, FullFlow_MultipleReactiveWorkers )
     {
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
@@ -865,7 +865,7 @@ namespace WorkersTests
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
     }
     
-    TEST_F( TestFixture3, FullFlow_MultipleReactiveAndActiveWorkers )
+    TEST_F( Test_Fixture_____3, FullFlow_MultipleReactiveAndActiveWorkers )
     {
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };

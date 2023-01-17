@@ -151,8 +151,24 @@ namespace SKL
     template<typename TFunctor>
     bool DeferTask( TFunctor&& InFunctor ) noexcept
     {
-        // allocate
-        auto* NewTask { MakeSharedRaw<Task<sizeof( TFunctor )>>() };
+        using TaskType = Task<sizeof( TFunctor )>;
+
+        TaskType* NewTask;
+
+        if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks 
+                   && CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement )
+        {
+            SKL_ASSERT( nullptr != ThreadLocalMemoryManager::GetInstance() );
+
+            // allocate from the thread local memory manager (fast)
+            NewTask = TLSMakeSharedRaw<TaskType>();
+        }
+        else
+        {
+            // allocate from the global memory manager
+            NewTask = MakeSharedRaw<TaskType>();
+        }
+        
         if( nullptr == NewTask ) SKL_UNLIKELY
         {
             return false;
@@ -174,13 +190,29 @@ namespace SKL
     template<typename TFunctor>
     bool DeferTask( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
     {
-        // allocate
-        auto* NewTask { MakeSharedRaw<Task<sizeof( TFunctor )>>() };
+        using TaskType = Task<sizeof( TFunctor )>;
+
+        TaskType* NewTask;
+
+        if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks 
+                   && CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement )
+        {
+            SKL_ASSERT( nullptr != ThreadLocalMemoryManager::GetInstance() );
+
+            // allocate from the thread local memory manager (fast)
+            NewTask = TLSMakeSharedRaw<TaskType>();
+        }
+        else
+        {
+            // allocate from the global memory manager
+            NewTask = MakeSharedRaw<TaskType>();
+        }
+        
         if( nullptr == NewTask ) SKL_UNLIKELY
         {
             return false;
         }
-        
+
         // set functor
         NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 

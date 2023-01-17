@@ -64,7 +64,7 @@ namespace SkylakeDBTests
         SKL::DB::DBConnectionFactory DBConnectionFactory{};
     };
 
-    TEST( SkylakeDBTests, DBString_BasicAPI )
+    TEST( SkylakeDBTestsSuite, DBString_BasicAPI_Test )
     {
         {
             auto Str{  SKL::DB::DBString<32>::FromUtf8( "TEST_STR" ) };
@@ -129,7 +129,7 @@ namespace SkylakeDBTests
         }
     }
 
-    TEST_F( SkylakeDBTestsFixture, DISABLED_DBConnection_BasicAPI )
+    TEST_F( SkylakeDBTestsFixture, DISABLED_DBConnection_BasicAPI_Test )
     {
         {
             auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
@@ -148,7 +148,7 @@ namespace SkylakeDBTests
         }
     }
     
-    TEST_F( SkylakeDBTestsFixture, DISABLED_DBStatement_BasicAPI )
+    TEST_F( SkylakeDBTestsFixture, DISABLED_DBStatement_BasicAPI_Test )
     {
         {
             auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };
@@ -191,7 +191,7 @@ namespace SkylakeDBTests
         }
     }
     
-    TEST_F( SkylakeDBTestsFixture2, DISABLED_DBStatement_BasicAPI_2 )
+    TEST_F( SkylakeDBTestsFixture2, DISABLED_DBStatement_BasicAPI_Test_2 )
     {
         {
             auto Connection{ DBConnectionFactory.TryOpenNewConnection()  };

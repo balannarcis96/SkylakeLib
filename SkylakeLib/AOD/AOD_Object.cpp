@@ -12,7 +12,7 @@
 namespace SKL::AOD
 {
     template<typename TTask>
-    bool ScheduleTask( AODTLSContext& TLSContext, TTask* InTask ) noexcept 
+    void ScheduleTask( AODTLSContext& TLSContext, TTask* InTask ) noexcept 
     {
         static_assert( std::is_same_v<TTask, IAODSharedObjectTask> 
                || std::is_same_v<TTask, IAODStaticObjectTask> 
@@ -21,40 +21,79 @@ namespace SKL::AOD
         //Select target worker group
         const std::vector<WorkerGroup*>& TaskHandlingWGs{ TLSContext.GetDeferredAODTasksHandlingGroups() };
         SKL_ASSERT( false == TaskHandlingWGs.empty() );
-        const auto TargetWGIndex{ static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size() };
-        auto* TargetWG{ TaskHandlingWGs[ TargetWGIndex ] };
-        SKL_ASSERT( true == TargetWG->GetTag().bSupportsAOD );
-        SKL_ASSERT( nullptr != TargetWG );
-        SKL_ASSERT( 0 < TargetWG->GetNumberOfRunningWorkers() );
-        
-        constexpr int32_t MaxTries   { 3 };
-        int32_t           HandleTries{ 0 };
-        
-        while( MaxTries > HandleTries )
+
+        WorkerGroup* TargetWG;
+        if constexpr( CTaskScheduling_AssumeThatTaskHandlingWorkerGroupCountIsPowerOfTwo )
         {
-            //Select target worker
-            auto& Workers{ TargetWG->GetWorkers() };
-            const auto TargetWIndex{ 1 + ( static_cast<size_t>( TLSContext.RRLastIndex2++ ) % ( Workers.size() - 1 ) ) };
-            SKL_ASSERT( 0 != TargetWIndex && TargetWIndex < Workers.size() );
-            auto* TargetW{ Workers[ TargetWIndex ].get() };
-            if( nullptr != TargetW ) SKL_LIKELY
-            {
-                //Defer task to worker
-                TargetW->Defer( InTask );
-                break;
-            }
-        
-            ++HandleTries;
+            // Fastest
+            const size_t TargetWGIndexMask{ TaskHandlingWGs.size() - 1 };
+            SKL_ASSERT( IsPowerOfTwo( TargetWGIndexMask + 1 ) );
+            TargetWG = TaskHandlingWGs[static_cast<size_t>( TLSContext.RRLastIndex++ ) & TargetWGIndexMask];
         }
-        
-        if( HandleTries > MaxTries ) SKL_UNLIKELY
+        else 
         {
-            SKLL_ERR( "AODObject::ScheduleTask() Failed to schedule task to workers!" );
-            TSharedPtr<TTask>::Static_Reset( InTask );
-            return false;
+            if constexpr( CTaskScheduling_UseIfInsteadOfModulo )
+            {
+                // Potentially faster than modulo (if correct branch is predicted)
+                size_t TargetWGIndex{ static_cast<size_t>( TLSContext.RRLastIndex++ ) };
+                if( TargetWGIndex >= TaskHandlingWGs.size() )
+                {
+                    TargetWGIndex = 0U;
+                }
+
+                TargetWG = TaskHandlingWGs[TargetWGIndex];
+            }
+            else
+            {
+                // Slowest (beats branch miss-predict though)
+                TargetWG = TaskHandlingWGs[static_cast<size_t>( TLSContext.RRLastIndex++ ) % TaskHandlingWGs.size()];
+            }
         }
 
-        return true;
+        SKL_ASSERT( nullptr != TargetWG );
+        SKL_ASSERT( true == TargetWG->GetTag().bSupportsAOD );
+        SKL_ASSERT( 0U < TargetWG->GetNumberOfRunningWorkers() );
+        
+        auto&        Workers                   { TargetWG->GetWorkers() };
+        const size_t WorkersCount              { Workers.size() };
+        const size_t WorkersCountWithoutInvalid{ WorkersCount - 1U };
+        
+        // 1 more than the invalid slot must be present
+        SKL_ASSERT( 1U < WorkersCount );
+
+        //Select target worker(round-robin) (we offset by one because index 0 is reserved for invalid worker and is nullptr)
+        Worker* TargetW;
+        if constexpr( CTaskScheduling_AssumeThatWorkersCountIsPowerOfTwo )
+        {
+            // Fastest
+            const size_t TargetWIndexMask{ WorkersCountWithoutInvalid - 1 };
+            SKL_ASSERT( IsPowerOfTwo( TargetWIndexMask + 1 ) );
+            TargetW = Workers[( static_cast<size_t>( TLSContext.RRLastIndex2++ ) & TargetWIndexMask ) + 1U].get();
+        }
+        else
+        {
+            if constexpr( CTaskScheduling_UseIfInsteadOfModulo )
+            {
+                // Potentially faster than modulo (if correct branch is predicted)
+                size_t TargetWIndex{ static_cast<size_t>( TLSContext.RRLastIndex2++ ) };
+                if( TargetWIndex >= WorkersCountWithoutInvalid )
+                {
+                    TargetWIndex = 0U;
+                }
+
+                TargetW = Workers[TargetWIndex].get();
+            }
+            else
+            {
+                // Slowest (beats branch miss-predict though)
+                TargetW = Workers[( static_cast<size_t>( TLSContext.RRLastIndex2++ ) % WorkersCountWithoutInvalid ) + 1U].get();        
+            }
+        }
+
+        SKL_ASSERT( nullptr != TargetW );
+
+        //Defer task to worker
+        TargetW->Defer( InTask );
     }
 }
 
@@ -145,19 +184,30 @@ namespace SKL::AOD
         return true;
     }
 
-    bool StaticObject::DelayTask( IAODStaticObjectTask* InTask ) noexcept
+    void StaticObject::DelayTask( IAODStaticObjectTask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
 
-        if( FALSE == TLSData.bScheduleAODDelayedTasks )
+        if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleAOD )
         {
             // Push task
             TLSData.DelayedStaticObjectTasks.push( InTask );
-            return true;
         }
+        else
+        {
 
-        return ScheduleTask( TLSData, InTask );
+            if( FALSE == TLSData.bScheduleAODDelayedTasks )
+            {
+                // Push task
+                TLSData.DelayedStaticObjectTasks.push( InTask );
+            }
+            else
+            {
+                // Schedule task to other workers
+                ScheduleTask( TLSData, InTask );        
+            }
+        }
     }
 }
 
@@ -245,19 +295,29 @@ namespace SKL::AOD
         return true;
     }
 
-    bool SharedObject::DelayTask( IAODSharedObjectTask* InTask ) noexcept
+    void SharedObject::DelayTask( IAODSharedObjectTask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
-
-        if( FALSE == TLSData.bScheduleAODDelayedTasks )
+        
+        if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleAOD )
         {
             // Push task
             TLSData.DelayedSharedObjectTasks.push( InTask );
-            return true;
         }
-
-        return ScheduleTask( TLSData, InTask );
+        else
+        {
+            if( FALSE == TLSData.bScheduleAODDelayedTasks )
+            {
+                // Push task
+                TLSData.DelayedSharedObjectTasks.push( InTask );
+            }
+            else
+            {
+                // Schedule task to other workers
+                ScheduleTask( TLSData, InTask );
+            }
+        }
     }
 }
 
@@ -343,19 +403,29 @@ namespace SKL::AOD
         return true;
     }
 
-    bool CustomObject::DelayTask( IAODCustomObjectTask* InTask ) noexcept
+    void CustomObject::DelayTask( IAODCustomObjectTask* InTask ) noexcept
     {
         SKL_ASSERT( nullptr != AODTLSContext::GetInstance() );
         auto& TLSData{ *AODTLSContext::GetInstance() };
-
-        if( FALSE == TLSData.bScheduleAODDelayedTasks )
+        
+        if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleAOD )
         {
             // Push task
             TLSData.DelayedCustomObjectTasks.push( InTask );
-            return true;
         }
-
-        return ScheduleTask( TLSData, InTask );
+        else
+        {
+            if( FALSE == TLSData.bScheduleAODDelayedTasks )
+            {
+                // Push task
+                TLSData.DelayedCustomObjectTasks.push( InTask );
+            }
+            else
+            {
+                // Schedule task to other workers
+                ScheduleTask( TLSData, InTask );
+            }
+        }
     }
 }
 

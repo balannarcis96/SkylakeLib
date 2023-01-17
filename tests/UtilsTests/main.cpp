@@ -2,7 +2,7 @@
 
 #include <SkylakeLib.h>
 
-namespace UtilsTests
+namespace Utils_Tests_Suite
 {
     constexpr uint32_t CBufferSize { 1024 }; // multiple of sizeof( uint32_t )
 
@@ -13,7 +13,7 @@ namespace UtilsTests
 
     const char* FileNamePtr{ nullptr };
 
-    TEST( UtilsTests, GRand_API )
+    TEST( Utils_Tests_Suite, GRand_API_Test_Case )
     {
         constexpr size_t IterCount{ 1024 };
 
@@ -48,7 +48,7 @@ namespace UtilsTests
         }
     }
 
-    TEST( UtilsTests, BufferStream_API )
+    TEST( Utils_Tests_Suite, BufferStream_API_Test_Case )
     {
         SKL::BufferStream Stream{ CBufferSize };
         ASSERT_TRUE( nullptr != Stream.GetBuffer() );
@@ -99,7 +99,7 @@ namespace UtilsTests
         ASSERT_TRUE( Stream.GetBufferSize() == Stream.GetPosition() );
     }
 
-    TEST( UtilsTests, BufferStream_API_2 )
+    TEST( Utils_Tests_Suite, BufferStream_API_Test_Case_2 )
     {
         SKL::BufferStream Stream{ CBufferSize };
         SKL_ASSERT( nullptr != Stream.GetBuffer() );
@@ -126,7 +126,7 @@ namespace UtilsTests
         ASSERT_TRUE( Stream.GetBufferSize() - static_cast<uint32_t>( sizeof( MyTrivialType ) ) == Stream.GetRemainingSize() );
     }
 
-    TEST( UtilsTests, BufferStream_CSTR_API_1 )
+    TEST( Utils_Tests_Suite, BufferStream_CSTR_API_Test_Case_1 )
     {
         SKL::BufferStream Stream{ CBufferSize };
         SKL_ASSERT( nullptr != Stream.GetBuffer() );
@@ -142,7 +142,7 @@ namespace UtilsTests
         ASSERT_TRUE( 0 == SKL_STRCMP( "TEST_STRING", Stream.GetFrontAsString(), Stream.GetRemainingSize() ) );
     }
 
-    TEST( UtilsTests, BufferStream_CSTR_API_2 )
+    TEST( Utils_Tests_Suite, BufferStream_CSTR_API_Test_Case_2 )
     {
         const char* MyStr { "TEST_STRING" };
 
@@ -160,7 +160,7 @@ namespace UtilsTests
         ASSERT_TRUE( 0 == SKL_STRCMP( "TEST_STRING", Stream.GetFrontAsString(), Stream.GetRemainingSize() ) );
     }
 
-    TEST( UtilsTests, BufferStream_WCSTR_API_1 )
+    TEST( Utils_Tests_Suite, BufferStream_WCSTR_API_Test_Case_1 )
     {
         SKL::BufferStream Stream{ CBufferSize };
         SKL_ASSERT( nullptr != Stream.GetBuffer() );
@@ -176,7 +176,7 @@ namespace UtilsTests
         ASSERT_TRUE( 0 == SKL_WSTRCMP( L"TEST_STRING", Stream.GetFrontAsWString(), Stream.GetRemainingSize() / 2 ) );
     }
 
-    TEST( UtilsTests, BufferStream_WCSTR_API_2 )
+    TEST( Utils_Tests_Suite, BufferStream_WCSTR_API_Test_Case_2 )
     {
         const wchar_t* MyStr { L"TEST_STRING" };
 
@@ -194,7 +194,7 @@ namespace UtilsTests
         ASSERT_TRUE( 0 == SKL_WSTRCMP( L"TEST_STRING", Stream.GetFrontAsWString(), Stream.GetRemainingSize() / 2 ) );
     }
 
-    TEST( UtilsTests, BufferStream_File_API_2 )
+    TEST( Utils_Tests_Suite, BufferStream_File_API_Test_Case_2 )
     {
         auto Stream{ SKL::BufferStream::OpenFile( FileNamePtr ) };
         ASSERT_TRUE( true == Stream.has_value() );
@@ -206,7 +206,7 @@ namespace UtilsTests
 
     }
     
-    TEST( UtilsTests, STR_CMP_API )
+    TEST( Utils_Tests_Suite, STR_CMP_API_Test_Case )
     {
         ASSERT_TRUE( true == SKL::StringEqual( "", "" ) );
         ASSERT_TRUE( true == SKL::StringEqual( "1", "1" ) );
@@ -219,7 +219,7 @@ namespace UtilsTests
         ASSERT_TRUE( false == SKL::StringEqual( L"asdasd", L"asdAsd" ) );
     }
     
-    TEST( UtilsTests, std_aligned_unique_ptr )
+    TEST( Utils_Tests_Suite, std_aligned_unique_ptr_Test_Case )
     {
         {
             std::aligned_unique_ptr<MyTrivialType, 16> ptr{ nullptr };
@@ -236,7 +236,7 @@ namespace UtilsTests
         }
     }
     
-    TEST( UtilsTests, std_rw_lock )
+    TEST( Utils_Tests_Suite, std_rw_lock_Test_Case )
     {
         {
             std::rw_lock lock;
@@ -310,7 +310,7 @@ namespace UtilsTests
 
 int main( int argc, char** argv )
 {
-    UtilsTests::FileNamePtr = argv[0];
+    Utils_Tests_Suite::FileNamePtr = argv[0];
 
     testing::InitGoogleTest( &argc, argv );
     return RUN_ALL_TESTS( );

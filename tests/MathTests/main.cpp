@@ -4,7 +4,7 @@
 
 namespace MathTests
 {
-    TEST( MathTests, SVector )
+    TEST( MathTestsSuite, SVector_TestCase )
     {
         {
             SKL::SVector Vec;

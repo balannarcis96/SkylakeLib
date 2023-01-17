@@ -23,7 +23,7 @@ namespace SKL
     //! \remark if bConstruct is false don't pass any construction arguments
     //! 
     template<typename TObject, typename ...TArgs>
-    skl_unique_ptr<TObject> MakeUnique( TArgs... Args ) noexcept 
+    SKL_NODISCARD skl_unique_ptr<TObject> MakeUnique( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeArrayUnique()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
@@ -36,12 +36,12 @@ namespace SKL
     //! 
     //! \tparam bConstruct if true the item will be constructed not otherwise
     //! 
-    //! \remark if bConstruct is false don't pass any construction arguments
+    //! \remark if bConstruct is false don't pass any construction arguments 
     //! 
     //! \remark the object will not be destructed
     //! 
     template<typename TObject, bool bConstruct = false, typename ...TArgs>
-    skl_unique_nd_ptr<TObject> MakeUniqueNoDeconstruct( TArgs... Args ) noexcept 
+    SKL_NODISCARD skl_unique_nd_ptr<TObject> MakeUniqueNoDeconstruct( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeArrayUnique()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
@@ -55,7 +55,7 @@ namespace SKL
     //! \tparam bConstructAllItems if true and TItemType is class type all items in the array will be default constructed
     //! 
     template<typename TItemType>
-    SKL_FORCEINLINE skl_unique_ptr<TItemType[]> MakeUniqueArray( uint32_t ItemCount ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD skl_unique_ptr<TItemType[]> MakeUniqueArray( uint32_t ItemCount ) noexcept
     {
         static_assert( false == std::is_array_v<TItemType>, "Can't allocate array of arrays!" );
         using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TItemType[]>::Allocator;
@@ -81,7 +81,7 @@ namespace SKL
     //! \remark if true and TItemType is class type all items will not be destructed
     //! 
     template<typename TItemType, bool bConstructAllItems = false>
-    skl_unique_nd_ptr<TItemType[]> MakeUniqueArrayWithNoDestruct( uint32_t ItemCount ) noexcept
+    SKL_NODISCARD skl_unique_nd_ptr<TItemType[]> MakeUniqueArrayWithNoDestruct( uint32_t ItemCount ) noexcept
     {
         static_assert( false == std::is_array_v<TItemType>, "Can't allocate array of arrays!" );
         using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TItemType[]>::Allocator;
@@ -110,7 +110,7 @@ namespace SKL
     //! \remark if bConstruct is false don't pass any construction arguments
     //! 
     template<typename TObject, bool bConstruct = true, typename ...TArgs>
-    SKL_FORCEINLINE TObject* MakeSharedRaw( TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TObject* MakeSharedRaw( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArrayRaw()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
@@ -120,7 +120,7 @@ namespace SKL
 
     //! Allocate new shared object through the MemoryManager
     template<typename TObject, typename ...TArgs>
-    SKL_FORCEINLINE TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TObject> MakeShared( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArray()" ); 
         return { MakeSharedRaw<TObject, true>( std::forward<TArgs>( Args )... ) };
@@ -136,7 +136,7 @@ namespace SKL
     //! \remark the object will not be deconstructed
     //! 
     template<typename TObject, bool bConstruct = false, typename ...TArgs>
-    SKL_FORCEINLINE TSharedPtrNoDestruct<TObject> MakeSharedNoDestruct( TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TSharedPtrNoDestruct<TObject> MakeSharedNoDestruct( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArray()" ); 
         return { MakeSharedRaw<TObject, bConstruct>( std::forward<TArgs>( Args )... ) };
@@ -150,7 +150,7 @@ namespace SKL
     //! \remark if bConstruct is false don't pass any construction arguments
     //! 
     template<typename TObject, bool bConstruct = true, typename ...TArgs>
-    SKL_FORCEINLINE TObject* MakeSharedVirtualDeletedRaw( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TObject* MakeSharedVirtualDeletedRaw( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Shared array with virtual deleter is not yet supported!" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
@@ -160,7 +160,7 @@ namespace SKL
 
     //! Allocate new shared object through the MemoryManager with virtual deleter
     template<typename TObject, typename ...TArgs>
-    SKL_FORCEINLINE TVirtualDeletedSharedPtr<TObject> MakeSharedVirtualDeleted( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TVirtualDeletedSharedPtr<TObject> MakeSharedVirtualDeleted( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Shared array with virtual deleter is not yet supported!" ); 
         return { MakeSharedVirtualDeletedRaw<TObject, true>( std::move( VirtualDeleter ), std::forward<TArgs>( Args )... ) };
@@ -176,19 +176,59 @@ namespace SKL
     //! \remark the object will not be deconstructed
     //! 
     template<typename TObject, bool bConstruct = false, typename ...TArgs>
-    SKL_FORCEINLINE TVirtualDeletedSharedPtr<TObject, false> MakeSharedVirtualDeletedNoDestruct( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TVirtualDeletedSharedPtr<TObject, false> MakeSharedVirtualDeletedNoDestruct( TVirtualDeleter<TObject>&& VirtualDeleter, TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Shared array with virtual deleter is not yet supported!" ); 
         return { MakeSharedVirtualDeletedRaw<TObject, bConstruct>( std::move( VirtualDeleter ), std::forward<TArgs>( Args )... ) };
     }
     
     //! 
+    //! Allocate new shared object (raw ptr) through the ThreadLocalMemoryManager
+    //! 
+    //! \tparam bConstruct if true the item will be constructed not otherwise
+    //! 
+    //! \remark if bConstruct is false don't pass any construction arguments
+    //! 
+    template<typename TObject, bool bConstruct = true, typename ...TArgs>
+    SKL_FORCEINLINE SKL_NODISCARD TObject* TLSMakeSharedRaw( TArgs... Args ) noexcept 
+    {
+        static_assert( false == std::is_array_v<TObject>, "Please use TLSMakeSharedArrayRaw()" ); 
+        static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        using Allocator = typename SKL::TLSMemoryStrategy::SharedMemoryStrategy<TObject>::Allocator;
+        return Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... );
+    }
+    
+    //! Allocate new shared object through the ThreadLocalMemoryManager
+    template<typename TObject, typename ...TArgs>
+    SKL_FORCEINLINE SKL_NODISCARD TLSSharedPtr<TObject> TLSMakeShared( TArgs... Args ) noexcept 
+    {
+        static_assert( false == std::is_array_v<TObject>, "Please use TLSMakeSharedArrayRaw()" ); 
+        return { TLSMakeSharedRaw<TObject, true>( std::forward<TArgs>( Args )... ) };
+    }
+    
+    //! 
+    //! Allocate new shared object through the ThreadLocalMemoryManager
+    //! 
+    //! \tparam bConstruct if true the item will be constructed not otherwise
+    //! 
+    //! \remark if bConstruct is false don't pass any construction arguments
+    //! 
+    //! \remark the object will not be deconstructed
+    //! 
+    template<typename TObject, bool bConstruct = false, typename ...TArgs>
+    SKL_FORCEINLINE SKL_NODISCARD TLSSharedPtrNoDestruct<TObject> TLSMakeSharedNoDestruct( TArgs... Args ) noexcept 
+    {
+        static_assert( false == std::is_array_v<TObject>, "Please use TLSMakeSharedArray()" ); 
+        return { MakeSharedRaw<TObject, bConstruct>( std::forward<TArgs>( Args )... ) };
+    }
+
+    //! 
     //! Allocate new shared array (raw ptr) through the MemoryManager
     //! 
     //! \tparam bConstructAllItems if true all array items will be default constructed (if TItemType is class type)
     //! 
     template<typename TItemType, bool bConstructAllItems = true>
-    SKL_FORCEINLINE TItemType* MakeSharedArrayRaw( uint32_t ItemCount ) noexcept
+    SKL_FORCEINLINE SKL_NODISCARD TItemType* MakeSharedArrayRaw( uint32_t ItemCount ) noexcept
     {
         static_assert( false == std::is_array_v<TItemType>, "Cannot allocate array of arrays" ); 
         using Allocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TItemType[]>::Allocator;
@@ -208,7 +248,7 @@ namespace SKL
 
     //! Allocate new shared array through the MemoryManager
     template<typename TItemType>
-    SKL_FORCEINLINE TSharedPtr<TItemType[]> MakeSharedArray( uint32_t ItemCount ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TSharedPtr<TItemType[]> MakeSharedArray( uint32_t ItemCount ) noexcept 
     {
         return { MakeSharedArrayRaw<TItemType, true>( ItemCount ) };
     }
@@ -221,7 +261,7 @@ namespace SKL
     //! \remark if TItemType is class type, all items in the array will not be deconstructed
     //! 
     template<typename TItemType, bool bConstructAllItems = false>
-    SKL_FORCEINLINE TSharedPtrNoDestruct<TItemType[]> MakeSharedArrayNoDestruct( uint32_t ItemCount ) noexcept 
+    SKL_FORCEINLINE SKL_NODISCARD TSharedPtrNoDestruct<TItemType[]> MakeSharedArrayNoDestruct( uint32_t ItemCount ) noexcept 
     {
         return { MakeSharedArrayRaw<TItemType, bConstructAllItems>( ItemCount ) };
     }

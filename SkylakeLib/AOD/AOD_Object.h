@@ -63,7 +63,6 @@ namespace SKL::AOD
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::SharedObject& ) noexcept]
         //! \returns RAllocationFailed if allocating the task object failed
-        //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
@@ -81,10 +80,7 @@ namespace SKL::AOD
             NewTask->SetDue( AfterMilliseconds );
             NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
-            if ( false == DelayTask( NewTask ) ) SKL_UNLIKELY
-            {
-                return RFail;
-            }
+            DelayTask( NewTask );
 
             return RSuccess;
         }
@@ -99,7 +95,7 @@ namespace SKL::AOD
     private:
         void Flush() noexcept;
         bool Dispatch( IAODSharedObjectTask* InTask ) noexcept;
-        bool DelayTask( IAODSharedObjectTask* InTask ) noexcept;
+        void DelayTask( IAODSharedObjectTask* InTask ) noexcept;
 
         void* TargetSharedPointer{ nullptr }; //!< Cached pointer to base the shared memory policy off of
 
@@ -144,7 +140,6 @@ namespace SKL::AOD
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void() noexcept]
         //! \returns RAllocationFailed if allocating the task object failed
-        //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
@@ -162,10 +157,7 @@ namespace SKL::AOD
             NewTask->SetDue( AfterMilliseconds );
             NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
-            if ( false == DelayTask( NewTask ) ) SKL_UNLIKELY
-            {
-                return RFail;
-            }
+            DelayTask( NewTask );
 
             return RSuccess;
         }
@@ -173,7 +165,7 @@ namespace SKL::AOD
     private:
         void Flush() noexcept;
         bool Dispatch( IAODStaticObjectTask* InTask ) noexcept;
-        bool DelayTask( IAODStaticObjectTask* InTask ) noexcept;
+        void DelayTask( IAODStaticObjectTask* InTask ) noexcept;
 
         friend class WorkerGroup;
     };
@@ -219,7 +211,6 @@ namespace SKL::AOD
 
         //! Execute the functor after [AfterMilliseconds], thread safe relative to the object [void( AOD::CustomObject& ) noexcept]
         //! \returns RAllocationFailed if allocating the task object failed
-        //! \returns RFail if scheduling the task failed
         //! \returns RSuccess if the functor will be dispatched async
         template<typename TFunctor>
         SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
@@ -238,10 +229,7 @@ namespace SKL::AOD
             NewTask->SetDue( AfterMilliseconds );
             NewTask->SetDispatch( std::forward<TFunctor>( InFunctor ) );
 
-            if ( false == DelayTask( NewTask ) ) SKL_UNLIKELY
-            {
-                return RFail;
-            }
+            DelayTask( NewTask );
 
             return RSuccess;
         }
@@ -249,7 +237,7 @@ namespace SKL::AOD
     private:
         void Flush() noexcept;
         bool Dispatch( IAODCustomObjectTask* InTask ) noexcept;
-        bool DelayTask( IAODCustomObjectTask* InTask ) noexcept;
+        void DelayTask( IAODCustomObjectTask* InTask ) noexcept;
 
         friend IAODCustomObjectTask;
         friend class WorkerGroup;

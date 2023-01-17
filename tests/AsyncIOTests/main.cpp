@@ -2,9 +2,9 @@
 
 #include <SkylakeLib.h>
 
-namespace AsyncIOTests
+namespace AsyncIOTestsSuite
 {
-    TEST( AsyncIOTests, InitializeSystem_And_ShutdownSystem )
+    TEST( AsyncIOTestsSuite, InitializeSystem_And_ShutdownSystem )
     {
         auto Result = SKL::AsyncIO::InitializeSystem();
         ASSERT_TRUE( SKL::RSuccess == Result );
@@ -13,7 +13,7 @@ namespace AsyncIOTests
         ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
-    TEST( AsyncIOTests, Start_Stop_Instance )
+    TEST( AsyncIOTestsSuite, Start_Stop_Instance )
     {
         auto Result = SKL::AsyncIO::InitializeSystem();
         ASSERT_TRUE( SKL::RSuccess == Result );
@@ -30,7 +30,7 @@ namespace AsyncIOTests
         ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
-    TEST( AsyncIOTests, Timeout_TryGetCompletedAsyncRequest_Instance )
+    TEST( AsyncIOTestsSuite, Timeout_TryGetCompletedAsyncRequest_Instance )
     {
         auto Result = SKL::SetOsTimeResolution( 1 );
         ASSERT_TRUE( SKL::RSuccess == Result );
@@ -63,7 +63,7 @@ namespace AsyncIOTests
         ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
-    TEST( AsyncIOTests, Block_GetCompletedAsyncRequest_Instance )
+    TEST( AsyncIOTestsSuite, Block_GetCompletedAsyncRequest_Instance )
     {
         auto Result = SKL::SetOsTimeResolution( 1 );
         ASSERT_TRUE( SKL::RSuccess == Result );
@@ -96,7 +96,7 @@ namespace AsyncIOTests
         ASSERT_TRUE( SKL::RSuccess == Result );
     }
 
-    TEST( AsyncIOTests, Block_GetCompletedAsyncRequest_ValidWork )
+    TEST( AsyncIOTestsSuite, Block_GetCompletedAsyncRequest_ValidWork )
     {
         struct CustomWorkType
         {

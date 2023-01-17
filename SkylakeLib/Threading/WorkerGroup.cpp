@@ -523,29 +523,12 @@ namespace SKL
 
     bool WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
     {
+        SKL_ASSERT( false == CTaskScheduling_AssumeAllWorkerGroupsHandleAOD );
         //SKLL_TRACE();
 
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
-
-        //Shared Object tasks
-        while( auto* NewTask{ reinterpret_cast<IAODSharedObjectTask*>( Worker.AODSharedObjectDelayedTasks.Pop() ) } )
-        {
-            if( true == NewTask->IsDue( Now ) )
-            {
-                auto* Parent{ NewTask->GetParent() };
-                SKL_ASSERT( nullptr != Parent );
-                ( void )Parent->Dispatch( NewTask );
-            }
-            else
-            {
-                TLSContext.DelayedSharedObjectTasks.push( NewTask );
-            }
-        }
-
-        //Update now
-        Now = GetSystemUpTickCount();
-
+        
         //Custom Object tasks
         while( auto* NewTask{ reinterpret_cast<IAODCustomObjectTask*>( Worker.AODCustomObjectDelayedTasks.Pop() ) } )
         {
@@ -558,6 +541,24 @@ namespace SKL
             else
             {
                 TLSContext.DelayedCustomObjectTasks.push( NewTask );
+            }
+        }
+
+        //Update now
+        Now = GetSystemUpTickCount();
+        
+        //Shared Object tasks
+        while( auto* NewTask{ reinterpret_cast<IAODSharedObjectTask*>( Worker.AODSharedObjectDelayedTasks.Pop() ) } )
+        {
+            if( true == NewTask->IsDue( Now ) )
+            {
+                auto* Parent{ NewTask->GetParent() };
+                SKL_ASSERT( nullptr != Parent );
+                ( void )Parent->Dispatch( NewTask );
+            }
+            else
+            {
+                TLSContext.DelayedSharedObjectTasks.push( NewTask );
             }
         }
 
@@ -611,7 +612,17 @@ namespace SKL
 
                 Task->Dispatch();
 
-                TSharedPtr<ITask>::Static_Reset( Task );
+                if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks 
+                           && CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement )
+                {
+                    SKL_ASSERT( nullptr != ThreadLocalMemoryManager::GetInstance() );
+
+                    TLSSharedPtr<ITask>::Static_Reset( Task );
+                }
+                else
+                {
+                    TSharedPtr<ITask>::Static_Reset( Task );
+                }
             }
             else
             {
@@ -624,6 +635,8 @@ namespace SKL
 
     bool WorkerGroup::HandleTimerTasks_Global( Worker& Worker ) noexcept
     {
+        SKL_ASSERT( false == CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks );
+
         auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
         const auto Now{ GetSystemUpTickCount() };
 

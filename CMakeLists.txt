@@ -22,6 +22,7 @@ option(SKL_MATH                     "Enable SkylakeLib Math abstractions"       
 option(SKL_MYSQL_COMPRESS_NET       "Enable MYSQL network traffic compression"  ON)
 option(SKL_LINK_TIME_OPTIMIZATION   "Enable Link-time optimization"             ON)
 option(SKL_USE_MIMALLOC   			"Use MiMalloc instead of malloc"           OFF)
+option(SKL_ENABLE_ASAN              "Enable asan"                              OFF)
 
 # Override this to create as many skylake lib targets as you need
 set(SKL_LIB_TARGETS "SkylakeLib" CACHE STRING "Skyalke lib targets to create")
@@ -64,6 +65,11 @@ if (WIN32)
         set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:SSE2")
     elseif(SKL_USE_EIS STREQUAL AVX2)
         set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:AVX2")
+    endif()
+
+    if(SKL_ENABLE_ASAN)
+        set(MSVC_COMPILE_DEBUG_OPTIONS "${MSVC_COMPILE_DEBUG_OPTIONS} /fsanitize=address")
+        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /fsanitize=address")
     endif()
 
     set(CMAKE_CXX_FLAGS_DEBUG "${MSVC_COMPILE_DEBUG_OPTIONS}")

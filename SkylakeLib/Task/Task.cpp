@@ -43,9 +43,9 @@ namespace SKL
             }
         }
 
-        SKL_ASSERT( true == TargetWG->GetTag().bHandlesTimerTasks );
         SKL_ASSERT( nullptr != TargetWG );
-        SKL_ASSERT( 0 < TargetWG->GetNumberOfRunningWorkers() );
+        SKL_ASSERT( true == TargetWG->GetTag().bHandlesTimerTasks );
+        SKL_ASSERT( 0U < TargetWG->GetNumberOfRunningWorkers() );
         
         auto&        Workers                   { TargetWG->GetWorkers() };
         const size_t WorkersCount              { Workers.size() };
@@ -109,7 +109,7 @@ namespace SKL
             }
             else
             {
-                return ScheduleTask( TLSContext, InTask );
+                ScheduleTask( TLSContext, InTask );
             }
         }
     }

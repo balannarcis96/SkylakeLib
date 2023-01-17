@@ -289,17 +289,10 @@ namespace SKL
         //! 
         SKL_FORCEINLINE static TVirtualDeleter<TObjectDecay>& Static_GetVirtualDeleter( TObjectDecay* InPtr ) noexcept
         {
-            static_assert( CHasVirtualDeleter );
+            static_assert( CHasVirtualDeleter && false == std::is_array_v<TObject> );
             SKL_ASSERT( nullptr != InPtr );
 
-            if constexpr( std::is_array_v<TObject> )
-            {
-                return MemoryPolicy::GetVirtualDeleterForArray<TObjectDecay>( InPtr );
-            }
-            else
-            {
-                return MemoryPolicy::GetVirtualDeleterForObject<TObjectDecay>( InPtr );
-            }
+            return MemoryPolicy::GetVirtualDeleterForObject<TObjectDecay>( InPtr );
         }
 
         //! Increment the reference count and return raw ptr
@@ -332,6 +325,12 @@ namespace SKL
 
         friend EditSharedPtr<MyType>;
     };
+
+    template<typename TObject, bool bVirtualDeleter = false>
+    using TLSSharedPtr = TSharedPtr<TObject, typename SKL::TLSMemoryStrategy::SharedMemoryStrategy<TObject, bVirtualDeleter>>;
+    
+    template<typename TObject, bool bVirtualDeleter = false>
+    using TLSSharedPtrNoDestruct = TSharedPtr<TObject, typename SKL::TLSMemoryStrategy::SharedMemoryStrategy<TObject, bVirtualDeleter>, false>;
 
     template<typename TObject, bool bVirtualDeleter = false>
     using TSharedPtrNoDestruct = TSharedPtr<TObject, typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject, bVirtualDeleter>, false>;

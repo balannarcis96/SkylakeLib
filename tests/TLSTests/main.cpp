@@ -2,7 +2,7 @@
 
 #include <SkylakeLib.h>
 
-namespace TLSValueTests
+namespace TLSValueTestsSuite
 {
     struct MyType { int a; };
 
@@ -20,14 +20,14 @@ namespace TLSValueTests
 
     using MyTLSPtr = SKL::TLSValue<MyType>;
 
-    TEST( TLSValueTests, Get_Set_TLS_Value )
+    TEST( TLSValueTestsSuite, Get_Set_TLS_Value_Test )
     {
         MyTLSValue_u32::SetValue( 55 );
         const uint32_t Value = MyTLSValue_u32::GetValue();
         ASSERT_TRUE( 55 == Value );
     }
 
-    TEST( TLSValueTests, Get_Set_TLS_Value_Signed_Unsigned_Limits )
+    TEST( TLSValueTestsSuite, Get_Set_TLS_Value_Signed_Unsigned_Limits_Test )
     {
         MyTLSValue_i8::SetValue( std::numeric_limits<int8_t>::max() );
         MyTLSValue_u8::SetValue( std::numeric_limits<uint8_t>::max() );
@@ -74,7 +74,7 @@ namespace TLSValueTests
         ASSERT_TRUE( std::numeric_limits<double>::min() == MyTLSValue_double::GetValue() );
     }
 
-    TEST( TLSValueTests, Get_Set_TLS_Ptr )
+    TEST( TLSValueTestsSuite, Get_Set_TLS_Ptr_Test )
     {
         // nullptr is the default 
         MyType* Value = MyTLSPtr::GetValuePtr();
@@ -93,7 +93,7 @@ namespace TLSValueTests
         MyTLSPtr::SetValuePtr( nullptr );
     }
 
-    TEST( TLSValueTests, Get_Set_TLS_Ptr_Ex )
+    TEST( TLSValueTestsSuite, Get_Set_TLS_Ptr_Ex_Test )
     {
         // nullptr is the default 
         std::string* Value = MyTLSValue_string::GetValuePtr();
@@ -113,7 +113,7 @@ namespace TLSValueTests
     }
 }
 
-namespace TLSSingletonTests
+namespace TLSSingletonTestsSuite
 {
     struct MyTSLSingletonType : SKL::ITLSSingleton<MyTSLSingletonType>
     {
@@ -128,7 +128,7 @@ namespace TLSSingletonTests
         }
     };
 
-    TEST( TLSSingletonTests, Create_Ptr )
+    TEST( TLSSingletonTestsSuite, Create_Ptr_Test_Case )
     {
         auto* ptr = MyTSLSingletonType::GetInstance();
         ASSERT_TRUE( nullptr == ptr );

@@ -2,7 +2,7 @@
 
 #include <SkylakeLib.h>
 
-namespace MManagementTests
+namespace MManagementTestsSuite
 {
     struct MyType
     {
@@ -18,7 +18,7 @@ namespace MManagementTests
         int *a;
     };
 
-    TEST( MManagementTests, Init )
+    TEST( MManagementTestsSuite, Init_Test_Case___ )
     {
         //SKL::SkylakeGlobalMemoryManager::Preallocate();
         //SKL::SkylakeGlobalMemoryManager::LogStatistics();
@@ -38,7 +38,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeUnique )
+    TEST( MManagementTestsSuite, MakeUnique_Test_Case )
     {
         int b = 5;
     
@@ -59,7 +59,7 @@ namespace MManagementTests
         ASSERT_TRUE( 23 == b );
     }
 
-    TEST( MManagementTests, MakeUniqueNoDeconstructAndConstruct )
+    TEST( MManagementTestsSuite, MakeUniqueNoDeconstructAndConstruct )
     {
         int b = 5;
     
@@ -80,7 +80,7 @@ namespace MManagementTests
         ASSERT_TRUE( 5 == b );
     }
 
-    TEST( MManagementTests, MakeUniqueArray )
+    TEST( MManagementTestsSuite, MakeUniqueArray_Test_Case )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -101,7 +101,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeUniqueArrayWithNoDestructAndConstruct )
+    TEST( MManagementTestsSuite, MakeUniqueArrayWithNoDestructAndConstruct )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -122,7 +122,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeUniqueArrayWithNoDestructButConstruct )
+    TEST( MManagementTestsSuite, MakeUniqueArrayWithNoDestructButConstruct )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -143,7 +143,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeShared )
+    TEST( MManagementTestsSuite, MakeShared_Test_Case )
     {
         int b = 5;
      
@@ -181,7 +181,7 @@ namespace MManagementTests
         ASSERT_TRUE( 23 == b );
     }
 
-    TEST( MManagementTests, MakeSharedNoDestructAndConstruct )
+    TEST( MManagementTestsSuite, MakeSharedNoDestructAndConstruct )
     {
         int b = 5;
      
@@ -219,7 +219,7 @@ namespace MManagementTests
         ASSERT_TRUE( 5 == b );
     }
 
-    TEST( MManagementTests, MakeSharedNoDestructButWithConstruct )
+    TEST( MManagementTestsSuite, MakeSharedNoDestructButWithConstruct )
     {
         int b = 5;
      
@@ -257,7 +257,7 @@ namespace MManagementTests
         ASSERT_TRUE( 5 == b ); // the destructor was not called
     }
 
-    TEST( MManagementTests, MakeSharedArray )
+    TEST( MManagementTestsSuite, MakeSharedArray_Test_Case )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -278,7 +278,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeSharedArrayNoDestructAndConstruct )
+    TEST( MManagementTestsSuite, MakeSharedArrayNoDestructAndConstruct )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -300,7 +300,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeSharedArrayNoDestructButWithConstruct )
+    TEST( MManagementTestsSuite, MakeSharedArrayNoDestructButWithConstruct )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
@@ -322,7 +322,7 @@ namespace MManagementTests
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
     }
 
-    TEST( MManagementTests, MakeSharedVirtualDeleted_API )
+    TEST( MManagementTestsSuite, MakeSharedVirtualDeleted_API )
     {
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );

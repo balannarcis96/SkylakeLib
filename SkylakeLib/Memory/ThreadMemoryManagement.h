@@ -14,12 +14,12 @@ namespace SKL
         using MemoryManager = LocalMemoryManager<ThreadLocalMemoryManagerConfig>;
         using AllocResult   = typename MemoryManager::AllocResult;        
 
-        RStatus Initialize( ) noexcept override
+        RStatus Initialize() noexcept override
         { 
             return RSuccess; 
         }
 
-        const char *GetName( ) const noexcept override
+        const char *GetName() const noexcept override
         { 
             return "[ThreadLocalMemoryManager]"; 
         }
@@ -32,14 +32,14 @@ namespace SKL
         }        
 
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
-        SKL_FORCEINLINE static void ZeroAllMemory( ) noexcept
+        SKL_FORCEINLINE static void ZeroAllMemory() noexcept
         {
             auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
             Instance->Manager.ZeroAllMemory();
         }
         
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
-        SKL_FORCEINLINE static void FreeAllPools( ) noexcept
+        SKL_FORCEINLINE static void FreeAllPools() noexcept
         {
             auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
             Instance->Manager.FreeAllPools();
