@@ -308,8 +308,7 @@ namespace SKL
 
         struct MySharedMemoryStrategy
         {
-            using MemoryPolicy        = SKL::MemoryPolicy::SharedMemoryPolicy<false>;
-            using MemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MemoryPolicy>;
+            using MemoryPolicy = SKL::MemoryPolicy::SharedMemoryPolicy<false>;
 
             struct Deallocator
             {

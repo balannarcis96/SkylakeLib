@@ -76,93 +76,101 @@ namespace SKL::MemoryPolicy
         static constexpr bool   CHasVirtualDeleter = false;
 
         //! Get unique array header
-        SKL_FORCEINLINE static ArrayHeader& GetArrayHeader( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static ArrayHeader& GetArrayHeader( void* InPtr ) noexcept
         {
             return *reinterpret_cast<ArrayHeader*>( reinterpret_cast<uint8_t*>( InPtr ) - CArrayHeaderSize );
         }
+        
+        //! Get memory block pointer and memory block size for shared object
+        template<typename TObject>
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr std::pair<void*, size_t> GetMemoryBlockAndBlockSizeForObject( void* InPtr ) noexcept
+        {
+            return { InPtr, sizeof( TObject ) };
+        }
 
         //! Get memory block pointer and memory block size for unique object or array
-        static std::pair<void*, size_t> GetArrayMemoryBlockAndBlockSize( void* InPtr ) noexcept
+        template<typename TArrayItem>
+        SKL_NODISCARD SKL_NODISCARD static std::pair<void*, size_t> GetMemoryBlockAndBlockSizeForArray( void* InPtr ) noexcept
         {
             auto& Header { GetArrayHeader( InPtr ) };
             return { reinterpret_cast<void*>( &Header ), static_cast<size_t>( Header.GetTotalArraySizeInBytes() + CArrayHeaderSize ) };
         }
     
         //! Get the total memory block size
-        SKL_FORCEINLINE static size_t GetMemoryBlockSizeForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static size_t GetMemoryBlockSizeForArray( void* InPtr ) noexcept
         {
             return GetArrayHeader( InPtr ).GetTotalArraySizeInBytes() + CArrayHeaderSize;
         }
 
         //! Get the total memory block size
         template<typename TObject>
-        SKL_FORCEINLINE constexpr static size_t GetMemoryBlockSizeForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t GetMemoryBlockSizeForObject( void* InPtr ) noexcept
         {
             return sizeof( TObject );
         }
 
         //! Get the total memory block size
         template<typename TArrayItem>
-        SKL_FORCEINLINE constexpr static size_t CalculateNeededSizeForArray( uint32_t ItemCount ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t CalculateNeededSizeForArray( uint32_t ItemCount ) noexcept
         {
             return ( sizeof( TArrayItem ) * ItemCount ) + CArrayHeaderSize;
         }
 
         //! Get the total memory block size
         template<typename TObject>
-        SKL_FORCEINLINE constexpr static size_t CalculateNeededSizeForObject() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t CalculateNeededSizeForObject() noexcept
         {
             return sizeof( TObject );
         }
 
         //! Is the given index valid withing the given array block
-        SKL_FORCEINLINE static bool IsValidIndexInArray( void *InPtr, uint32_t Index ) noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD static bool IsValidIndexInArray( void *InPtr, uint32_t Index ) noexcept 
         {
             const auto& Header{ GetArrayHeader( InPtr ) };
             return Header.ItemCount > Index;
         }
 
         //! Get the pointer to the whole memory block for array allocation
-        SKL_FORCEINLINE static void* GetBlockPointerForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static void* GetBlockPointerForArray( void* InPtr ) noexcept
         {
             auto& Header{ GetArrayHeader( InPtr ) };
             return reinterpret_cast<void*>( &Header );
         }
 
         //! Get the pointer to the whole memory block for object allocation
-        SKL_FORCEINLINE static void* GetBlockPointerForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static void* GetBlockPointerForObject( void* InPtr ) noexcept
         {
             return InPtr;
         }
 
         //! Get the pointer to the whole memory block and block size for array allocation
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
         {
             auto& Header { GetArrayHeader( InPtr ) };
             return { reinterpret_cast<void*>( &Header ), CArrayHeaderSize };
         }
 
         //! Get the pointer to the whole memory block and block size for object allocation
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
         {
             return { InPtr, 0 };
         }
 
         //! Get the size that the policy uses internally for array allocations
-        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForArray() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static consteval size_t GetMetaBlockSizeForArray() noexcept
         {
             return CArrayHeaderSize;
         }
 
         //! Get the size that the policy uses internally for object allocations
-        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForObject() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static consteval size_t GetMetaBlockSizeForObject() noexcept
         {
             return 0;
         }
 
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
         template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
-        static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
+        SKL_NODISCARD static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
             SKL_ASSERT( 0 != ItemCount );
@@ -203,7 +211,7 @@ namespace SKL::MemoryPolicy
 
         //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
         template<typename TObject, bool bConstruct, bool bAcceptThrowConstructor, typename ...TArgs>
-        static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
+        SKL_NODISCARD static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
 
@@ -235,7 +243,7 @@ namespace SKL::MemoryPolicy
 
         //! Deconstruct objects in the array if possible/wanted and return a pointer to the memory block and the memory block size
         template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
+        SKL_NODISCARD static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InArrayPtr );
 
@@ -268,7 +276,7 @@ namespace SKL::MemoryPolicy
         
         //! Destroy the policy and deconstruct the object if possible and wanted
         template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        static void* DestroyForObject( TObject* InObjectPtr ) noexcept
+        SKL_NODISCARD static void* DestroyForObject( TObject* InObjectPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InObjectPtr );
 
@@ -305,13 +313,13 @@ namespace SKL::MemoryPolicy
         static constexpr size_t CSharedArrayHeaderSize  = CControlBlockSize + CArrayHeaderSize;
 
         //! Get control block header pointer for the shared object
-        SKL_FORCEINLINE static ControlBlock& GetControlBlockForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static ControlBlock& GetControlBlockForObject( void* InPtr ) noexcept
         {
             return *reinterpret_cast<ControlBlock*>( reinterpret_cast<uint8_t*>( InPtr ) - CSharedObjectHeaderSize );
         }
 
         //! Get control block header pointer for the shared array
-        SKL_FORCEINLINE static ControlBlock& GetControlBlockForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static ControlBlock& GetControlBlockForArray( void* InPtr ) noexcept
         {
             return *reinterpret_cast<ControlBlock*>( reinterpret_cast<uint8_t*>( InPtr ) - CSharedArrayHeaderSize );
         }
@@ -359,97 +367,99 @@ namespace SKL::MemoryPolicy
         }
 
         //! Get reference count for object allocation
-        SKL_FORCEINLINE static uint32_t GetReferenceCountForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static uint32_t GetReferenceCountForObject( void* InPtr ) noexcept
         {
             return GetControlBlockForObject( InPtr ).ReferenceCount.load( std::memory_order_relaxed );
         }
 
         //! Get reference count for array allocation
-        SKL_FORCEINLINE static uint32_t GetReferenceCountForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static uint32_t GetReferenceCountForArray( void* InPtr ) noexcept
         {
             return GetControlBlockForArray( InPtr ).ReferenceCount.load( std::memory_order_relaxed );
         }
 
         //! Get array header pointer for the shared array
-        SKL_FORCEINLINE static ArrayHeader& GetArrayHeader( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static ArrayHeader& GetArrayHeader( void* InPtr ) noexcept
         {
             return *reinterpret_cast<ArrayHeader*>( reinterpret_cast<uint8_t*>( InPtr ) - CArrayHeaderSize );
         }
 
         //! Get the total memory block size
-        SKL_FORCEINLINE static size_t GetMemoryBlockSizeForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static size_t GetMemoryBlockSizeForArray( void* InPtr ) noexcept
         {
             return GetArrayHeader( InPtr ).GetTotalArraySizeInBytes() + CSharedArrayHeaderSize;
         }
 
         //! Get the total memory block size
         template<typename TObject>
-        SKL_FORCEINLINE constexpr static size_t GetMemoryBlockSizeForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t GetMemoryBlockSizeForObject( void* InPtr ) noexcept
         {
             return sizeof( TObject ) + CControlBlockSize;
         }
 
         //! Get memory block pointer and memory block size for shared object
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetObjectMemoryBlockAndBlockSize( void* InPtr ) noexcept
+        template<typename TObject>
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetMemoryBlockAndBlockSizeForObject( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForObject( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), static_cast<size_t>( ControlBlock.BlockSize ) };
         }
 
         //! Get memory block pointer and memory block size for shared array
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetArrayMemoryBlockAndBlockSize( void* InPtr ) noexcept
+        template<typename TArrayItem>
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetMemoryBlockAndBlockSizeForArray( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForArray( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), static_cast<size_t>( ControlBlock.BlockSize ) };
         }
 
         //! Get the pointer to the whole memory block for array allocation
-        SKL_FORCEINLINE static void* GetBlockPointerForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static void* GetBlockPointerForArray( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForArray( InPtr ) };
             return reinterpret_cast<void*>( &ControlBlock );
         }
 
         //! Get the pointer to the whole memory block for object allocation
-        SKL_FORCEINLINE static void* GetBlockPointerForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static void* GetBlockPointerForObject( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForObject( InPtr ) };
             return reinterpret_cast<void*>( &ControlBlock );
         }
 
         //! Get the pointer to the whole memory block and block size for array allocation
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForArray( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForArray( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), CSharedArrayHeaderSize };
         }
 
         //! Get the pointer to the whole memory block and block size for object allocation
-        SKL_FORCEINLINE static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static std::pair<void*, size_t> GetBlockPointerAndMetaBlockSizeForObject( void* InPtr ) noexcept
         {
             auto& ControlBlock { GetControlBlockForObject( InPtr ) };
             return { reinterpret_cast<void*>( &ControlBlock ), CSharedObjectHeaderSize };
         }
 
         //! Get the size that the policy uses internally for array allocations
-        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForArray() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static consteval size_t GetMetaBlockSizeForArray() noexcept
         {
             return CSharedArrayHeaderSize;
         }
 
         //! Get the size that the policy uses internally for object allocations
-        SKL_FORCEINLINE static consteval size_t GetMetaBlockSizeForObject() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static consteval size_t GetMetaBlockSizeForObject() noexcept
         {
             return CSharedObjectHeaderSize;
         }
         
         //! Get the virtual deleter for object allocation
         template<typename TObject>
-        SKL_FORCEINLINE static TVirtualDeleter<TObject>& GetVirtualDeleterForObject( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static TVirtualDeleter<TObject>& GetVirtualDeleterForObject( void* InPtr ) noexcept
         {
             static_assert( false == std::is_array_v<TObject> );
 
-            auto[ Ptr, Size ] = GetObjectMemoryBlockAndBlockSize( InPtr );
+            auto[Ptr, Size] = GetMemoryBlockAndBlockSizeForObject<TObject>( InPtr );
             SKL_ASSERT( sizeof( TVirtualDeleter<TObject> ) < static_cast<size_t>( Size ) );
 
             const size_t OffsetFromBaseWhereTheDeleterResides{ Size - sizeof( TVirtualDeleter<TObject> ) };
@@ -470,7 +480,7 @@ namespace SKL::MemoryPolicy
         
         //! Get the virtual deleter for array allocation
         template<typename TArrayItem>
-        SKL_FORCEINLINE static TVirtualDeleter<TArrayItem>& GetVirtualDeleterForArray( void* InPtr ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static TVirtualDeleter<TArrayItem>& GetVirtualDeleterForArray( void* InPtr ) noexcept
         {
             //static_assert( false, "Virtual deleter for array not yet supported" );
             return {};
@@ -485,7 +495,7 @@ namespace SKL::MemoryPolicy
 
         //! Get the total memory block size
         template<typename TArrayItem>
-        SKL_FORCEINLINE constexpr static size_t CalculateNeededSizeForArray( uint32_t ItemCount ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t CalculateNeededSizeForArray( uint32_t ItemCount ) noexcept
         {
             static_assert( false == CHasVirtualDeleter, "Virtual deleter for arrays is not yet supported!" );
 
@@ -494,7 +504,7 @@ namespace SKL::MemoryPolicy
 
         //! Get the total memory block size
         template<typename TObject>
-        SKL_FORCEINLINE constexpr static size_t CalculateNeededSizeForObject() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr static size_t CalculateNeededSizeForObject() noexcept
         {
             size_t Result{ sizeof( TObject ) + CSharedObjectHeaderSize };
 
@@ -515,7 +525,7 @@ namespace SKL::MemoryPolicy
 
         //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
         template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
-        static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
+        SKL_NODISCARD static TArrayItem* ConstructArray( void* InMemoryBlockPointer, uint32_t ItemCount ) noexcept
         {
             static_assert( false == CHasVirtualDeleter, "Virtual deleter for arrays is not yet supported!" );
 
@@ -561,7 +571,7 @@ namespace SKL::MemoryPolicy
 
         //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
         template<typename TObject, bool bConstruct, bool bAcceptThrowConstructor, typename ...TArgs>
-        static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
+        SKL_NODISCARD static TObject* ConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
         {
             SKL_ASSERT( nullptr != InMemoryBlockPointer );
 
@@ -599,7 +609,7 @@ namespace SKL::MemoryPolicy
         //! Try to destroy the policy (release reference) and deconstruct all objects in the array if possible 
         //! \returns a pointer to the memory block and the memory block size
         template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
+        SKL_NODISCARD static std::pair<void*, size_t> DestroyForArray( TArrayItem* InArrayPtr ) noexcept
         {
             static_assert( false == CHasVirtualDeleter, "Virtual deleter for arrays is not yet supported!" );
 
@@ -644,7 +654,7 @@ namespace SKL::MemoryPolicy
         
         //! Try to destroy the policy (release reference) and deconstruct the object if possible and wanted
         template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        static void* DestroyForObject( TObject* InObjectPtr ) noexcept
+        SKL_NODISCARD static void* DestroyForObject( TObject* InObjectPtr ) noexcept
         {
             SKL_ASSERT( nullptr != InObjectPtr );
 
@@ -680,64 +690,6 @@ namespace SKL::MemoryPolicy
             return nullptr;
         }
     };
-
-    template<typename TPolicy> requires( std::is_same_v<TPolicy, UniqueMemoryPolicy> || std::is_same_v<TPolicy, SharedMemoryPolicy<true>> || std::is_same_v<TPolicy, SharedMemoryPolicy<false>> )
-    struct MemoryPolicyApplier 
-    {
-        //! Get the total memory block size
-        SKL_FORCEINLINE static size_t GetMemoryBlockSizeForArray( void* InPtr ) noexcept
-        {
-            return TPolicy::GetMemoryBlockSizeForArray( InPtr );
-        }
-
-        //! Get the total memory block size
-        template<typename TObject>
-        SKL_FORCEINLINE static size_t GetMemoryBlockSizeForObject( void* InPtr ) noexcept
-        {
-            return TPolicy::template GetMemoryBlockSizeForObject<TObject>( InPtr );
-        }
-
-        //! Apply memory policy for array on memory block and, if possible/wanted, default construct each array item
-        template<typename TArrayItem, bool bConstruct = true, bool bAcceptThrowConstructor = false>
-        SKL_FORCEINLINE static TArrayItem* ApplyPolicyAndConstructArray( void* InMemoryBlockPointer, uint32_t ItemsCount ) noexcept
-        {
-            return TPolicy::template ConstructArray<TArrayItem, bConstruct, bAcceptThrowConstructor>( InMemoryBlockPointer, ItemsCount );
-        }
-
-        //! Apply memory policy for object policy on memory block and, if possible/wanted, construct the object
-        template<typename TObject, bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
-        SKL_FORCEINLINE static TObject* ApplyPolicyAndConstructObject( void* InMemoryBlockPointer, TArgs... Args ) noexcept
-        {
-            return TPolicy::template ConstructObject<TObject, bConstruct, bAcceptThrowConstructor, TArgs...>( InMemoryBlockPointer, std::forward<TArgs>( Args )... );
-        }
-
-        //! \brief Try to destroy the policy (release reference) and deconstruct all objects in the array if possible and wanted
-        //! \returns a pointer to the memory block and the memory block size
-        template<typename TArrayItem, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        SKL_FORCEINLINE static std::pair<void*, size_t> TryDestroyPolicyForArray( TArrayItem* IArrayPtr ) noexcept
-        {
-            return TPolicy::template DestroyForArray<TArrayItem, bDeconstruct, bAcceptThrowConstructor>( IArrayPtr );
-        }
-
-        //! Try to destroy the policy and deconstruct the object if possible and wanted
-        template<typename TObject, bool bDeconstruct = true, bool bAcceptThrowConstructor = false>
-        SKL_FORCEINLINE static void* TryDestroyPolicyForObject( TObject* InObjectPtr ) noexcept
-        {
-            return TPolicy::template DestroyForObject<TObject, bDeconstruct, bAcceptThrowConstructor>( InObjectPtr );
-        }
-
-        template<typename TObject>
-        SKL_FORCEINLINE static TVirtualDeleter<TObject>& GetVirtualDeleterForObject( TObject* InObjectPtr ) noexcept
-        {
-            return TPolicy::template GetVirtualDeleterForObject<TObject>( InObjectPtr );
-        }
-
-        template<typename TObject>
-        SKL_FORCEINLINE static void SetVirtualDeleterForObject( TObject* InObjectPtr, TVirtualDeleter<TObject>&& InDeleter ) noexcept
-        {
-            TPolicy::template SetVirtualDeleterForObject<TObject>( InObjectPtr, std::move( InDeleter ) );
-        }
-    };
 }
 
 namespace SKL::MemoryDeallocation
@@ -745,9 +697,8 @@ namespace SKL::MemoryDeallocation
     template<typename TObject, typename TMyMemoryPolicy, bool bDestruct = true> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::UniqueMemoryPolicy> )
     struct UniqueMemoryDeallocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
 
         // std api
         void operator()( TDecayObject* InPtr ) const noexcept
@@ -759,12 +710,12 @@ namespace SKL::MemoryDeallocation
         {
             if constexpr( true == std::is_array_v<TObject> )
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 GlobalMemoryManager::Deallocate( Result.first, Result.second );
             }
             else
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForObject<TObject, bDestruct, false>( InPtr ) };
                 GlobalMemoryManager::Deallocate<sizeof( TObject )>( Result );
             }
         }
@@ -773,9 +724,8 @@ namespace SKL::MemoryDeallocation
     template<typename TObject, typename TMyMemoryPolicy, bool bDestruct = true> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<true>> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<false>> )
     struct SharedMemoryDeallocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
 
         static constexpr bool CHasVirtualDeleter = MyMemoryPolicy::CHasVirtualDeleter;
 
@@ -791,7 +741,7 @@ namespace SKL::MemoryDeallocation
 
             if constexpr( true == std::is_array_v<TObject> )
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result.first )
                 {
                     GlobalMemoryManager::Deallocate( Result.first, Result.second );
@@ -799,12 +749,12 @@ namespace SKL::MemoryDeallocation
             }
             else
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForObject<TObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result )
                 {
                     if constexpr( CHasVirtualDeleter )
                     {
-                        TVirtualDeleter<TDecayObject>& VirtualDeleter{ MyMemoryPolicyApplier::template GetVirtualDeleterForObject<TDecayObject>( InPtr ) };
+                        TVirtualDeleter<TDecayObject>& VirtualDeleter{ MyMemoryPolicy::template GetVirtualDeleterForObject<TDecayObject>( InPtr ) };
                         VirtualDeleter( InPtr );
                     }
                     else
@@ -823,9 +773,8 @@ namespace SKL::TLSMemoryDeallocation
     template<typename TObject, typename TMyMemoryPolicy, bool bDestruct = true> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::UniqueMemoryPolicy> )
     struct UniqueMemoryDeallocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
 
         // std api
         void operator()( TDecayObject* InPtr ) const noexcept
@@ -837,12 +786,12 @@ namespace SKL::TLSMemoryDeallocation
         {
             if constexpr( true == std::is_array_v<TObject> )
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 ThreadLocalMemoryManager::Deallocate( Result.first, Result.second );
             }
             else
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForObject<TObject, bDestruct, false>( InPtr ) };
                 ThreadLocalMemoryManager::Deallocate<sizeof( TObject )>( Result );
             }
         }
@@ -851,9 +800,8 @@ namespace SKL::TLSMemoryDeallocation
     template<typename TObject, typename TMyMemoryPolicy, bool bDestruct = true> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<true>> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<false>> )
     struct SharedMemoryDeallocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
 
         static constexpr bool CHasVirtualDeleter = MyMemoryPolicy::CHasVirtualDeleter;
 
@@ -869,7 +817,7 @@ namespace SKL::TLSMemoryDeallocation
 
             if constexpr( true == std::is_array_v<TObject> )
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForArray<TDecayObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForArray<TDecayObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result.first )
                 {
                     ThreadLocalMemoryManager::Deallocate( Result.first, Result.second );
@@ -877,12 +825,12 @@ namespace SKL::TLSMemoryDeallocation
             }
             else
             {
-                auto Result{ MyMemoryPolicyApplier::template TryDestroyPolicyForObject<TObject, bDestruct, false>( InPtr ) };
+                auto Result{ MyMemoryPolicy::template DestroyForObject<TObject, bDestruct, false>( InPtr ) };
                 if ( nullptr != Result )
                 {
                     if constexpr( CHasVirtualDeleter )
                     {
-                        TVirtualDeleter<TDecayObject>& VirtualDeleter{ MyMemoryPolicyApplier::template GetVirtualDeleterForObject<TDecayObject>( InPtr ) };
+                        TVirtualDeleter<TDecayObject>& VirtualDeleter{ MyMemoryPolicy::template GetVirtualDeleterForObject<TDecayObject>( InPtr ) };
                         VirtualDeleter( InPtr );
                     }
                     else
@@ -911,7 +859,7 @@ namespace SKL
         }
 
         SKL_ASSERT( nullptr != InObj );
-        auto Data{ TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
+        auto Data = TVirtualDeletedSharedPtr<TObject>::Static_GetMemoryBlockAndBlockSize( InObj );
         GlobalMemoryManager::Deallocate( Data.first, Data.second );
     }
     
@@ -919,7 +867,7 @@ namespace SKL
     void GlobalAllocatedDeleter_NoDestruct( TObject* InObj ) noexcept
     {
         SKL_ASSERT( nullptr != InObj );
-        auto Data{ TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
+        auto Data = TVirtualDeletedSharedPtr<TObject>::Static_GetMemoryBlockAndBlockSize( InObj );
         GlobalMemoryManager::Deallocate( Data.first, Data.second );
     }
     
@@ -936,7 +884,7 @@ namespace SKL
         }
 
         SKL_ASSERT( nullptr != InObj );
-        auto Data{ TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
+        auto Data = TVirtualDeletedSharedPtr<TObject>::Static_GetMemoryBlockAndBlockSize( InObj );
         ThreadLocalMemoryManager::Deallocate( Data.first, Data.second );
     }
     
@@ -944,7 +892,7 @@ namespace SKL
     void TLSAllocatedDeleter_NoDestruct( TObject* InObj ) noexcept
     {
         SKL_ASSERT( nullptr != InObj );
-        auto Data{ TVirtualDeletedSharedPtr<TObject>::Static_GetBlockPtrAndMetaBlockSize( InObj ) };
+        auto Data = TVirtualDeletedSharedPtr<TObject>::Static_GetMemoryBlockAndBlockSize( InObj );
         ThreadLocalMemoryManager::Deallocate( Data.first, Data.second );
     }
 }
@@ -954,10 +902,9 @@ namespace SKL::MemoryAllocation
     template<typename TObject, typename TMyMemoryPolicy> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::UniqueMemoryPolicy> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<true>> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<false>> )
     struct MemoryAllocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
-        using VirtualDeleter        = TVirtualDeleter<TObject>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
+        using VirtualDeleter = TVirtualDeleter<TObject>;
 
         static constexpr bool CHasVirtualDeleter = MyMemoryPolicy::CHasVirtualDeleter;
 
@@ -976,6 +923,7 @@ namespace SKL::MemoryAllocation
             return MyMemoryPolicy::template CalculateNeededSizeForObject<TObjectType>();
         }
 
+        //! Allocate new object 
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         static TDecayObject* AllocateObject( TArgs... Args ) noexcept
         {
@@ -986,11 +934,11 @@ namespace SKL::MemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ GlobalMemoryManager::Allocate<AllocSize>() };
+            auto AllocResult = GlobalMemoryManager::Allocate<AllocSize>();
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
+                Result = MyMemoryPolicy::template ConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
             }
             else
             {
@@ -1001,6 +949,7 @@ namespace SKL::MemoryAllocation
             return Result;
         }
         
+        //! Allocate new virtual deleted object 
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         static TDecayObject* AllocateObject( VirtualDeleter&& Deleter, TArgs... Args ) noexcept
         {
@@ -1011,14 +960,14 @@ namespace SKL::MemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ GlobalMemoryManager::Allocate<AllocSize>() };
+            auto AllocResult = GlobalMemoryManager::Allocate<AllocSize>();
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
+                Result = MyMemoryPolicy::template ConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
 
                 // set virtual deleter
-                MyMemoryPolicyApplier::template SetVirtualDeleterForObject<TDecayObject>( Result, std::move( Deleter ) );
+                MyMemoryPolicy::template SetVirtualDeleterForObject<TDecayObject>( Result, std::move( Deleter ) );
             }
             else
             {
@@ -1029,6 +978,7 @@ namespace SKL::MemoryAllocation
             return Result;
         }
 
+        //! Allocate new array 
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false>
         static TDecayObject* AllocateArray( uint32_t ItemCount ) noexcept
         {
@@ -1039,11 +989,11 @@ namespace SKL::MemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ GlobalMemoryManager::Allocate( AllocSize ) };
+            auto AllocResult = GlobalMemoryManager::Allocate( AllocSize );
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the array policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructArray<TDecayObject, bConstruct, bAcceptThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
+                Result = MyMemoryPolicy::template ConstructArray<TDecayObject, bConstruct, bAcceptThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
             }
             else
             {
@@ -1061,10 +1011,9 @@ namespace SKL::TLSMemoryAllocation
     template<typename TObject, typename TMyMemoryPolicy> requires( std::is_same_v<TMyMemoryPolicy, MemoryPolicy::UniqueMemoryPolicy> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<true>> || std::is_same_v<TMyMemoryPolicy, MemoryPolicy::SharedMemoryPolicy<false>> )
     struct MemoryAllocator final
     {
-        using TDecayObject          = std::remove_all_extents_t<TObject>;
-        using MyMemoryPolicy        = TMyMemoryPolicy;
-        using MyMemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MyMemoryPolicy>;
-        using VirtualDeleter        = TVirtualDeleter<TObject>;
+        using TDecayObject   = std::remove_all_extents_t<TObject>;
+        using MyMemoryPolicy = TMyMemoryPolicy;
+        using VirtualDeleter = TVirtualDeleter<TObject>;
 
         static constexpr bool CHasVirtualDeleter = MyMemoryPolicy::CHasVirtualDeleter;
 
@@ -1083,6 +1032,7 @@ namespace SKL::TLSMemoryAllocation
             return MyMemoryPolicy::template CalculateNeededSizeForObject<TObjectType>();
         }
 
+        //! Allocate new object
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         static TDecayObject* AllocateObject( TArgs... Args ) noexcept
         {
@@ -1093,11 +1043,11 @@ namespace SKL::TLSMemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ ThreadLocalMemoryManager::Allocate<AllocSize>() };
+            auto AllocResult = ThreadLocalMemoryManager::Allocate<AllocSize>();
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
+                Result = MyMemoryPolicy::template ConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
             }
             else
             {
@@ -1108,6 +1058,7 @@ namespace SKL::TLSMemoryAllocation
             return Result;
         }
         
+        //! Allocate new virtual deleted object
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false, typename ...TArgs>
         static TDecayObject* AllocateObject( VirtualDeleter&& Deleter, TArgs... Args ) noexcept
         {
@@ -1118,14 +1069,14 @@ namespace SKL::TLSMemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ ThreadLocalMemoryManager::Allocate<AllocSize>() };
+            auto AllocResult = ThreadLocalMemoryManager::Allocate<AllocSize>();
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the object policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
+                Result = MyMemoryPolicy::template ConstructObject<TDecayObject, bConstruct, bAcceptThrowConstructor, TArgs...>( AllocResult.MemoryBlock, std::forward<TArgs>( Args )... );
 
                 // set virtual deleter
-                MyMemoryPolicyApplier::template SetVirtualDeleterForObject<TDecayObject>( Result, std::move( Deleter ) );
+                MyMemoryPolicy::template SetVirtualDeleterForObject<TDecayObject>( Result, std::move( Deleter ) );
             }
             else
             {
@@ -1136,6 +1087,7 @@ namespace SKL::TLSMemoryAllocation
             return Result;
         }
 
+        //! Allocate array
         template<bool bConstruct = true, bool bAcceptThrowConstructor = false>
         static TDecayObject* AllocateArray( uint32_t ItemCount ) noexcept
         {
@@ -1146,11 +1098,11 @@ namespace SKL::TLSMemoryAllocation
             TDecayObject* Result;
 
             // allocate block
-            auto AllocResult{ ThreadLocalMemoryManager::Allocate( AllocSize ) };
+            auto AllocResult = ThreadLocalMemoryManager::Allocate( AllocSize );
             if( AllocResult.IsValid() ) SKL_LIKELY
             {
                 // apply the array policy on the block
-                Result = MyMemoryPolicyApplier::template ApplyPolicyAndConstructArray<TDecayObject, bConstruct, bAcceptThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
+                Result = MyMemoryPolicy::template ConstructArray<TDecayObject, bConstruct, bAcceptThrowConstructor>( AllocResult.MemoryBlock, ItemCount );
             }
             else
             {
@@ -1171,7 +1123,6 @@ namespace SKL::MemoryStrategy
         static_assert( false == bVirtualDeleter, "Virtual deleter for unique objects not yet supported" );
 
         using MemoryPolicy        = SKL::MemoryPolicy::UniqueMemoryPolicy;
-        using MemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MemoryPolicy>;
         using Deallocator         = SKL::MemoryDeallocation::UniqueMemoryDeallocator<TObject, MemoryPolicy, false>;
         using DestructDeallocator = SKL::MemoryDeallocation::UniqueMemoryDeallocator<TObject, MemoryPolicy>;
         using Allocator           = SKL::MemoryAllocation::MemoryAllocator<TObject, MemoryPolicy>;
@@ -1181,7 +1132,6 @@ namespace SKL::MemoryStrategy
     struct SharedMemoryStrategy
     {
         using MemoryPolicy        = SKL::MemoryPolicy::SharedMemoryPolicy<bVirtualDeleter>;
-        using MemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MemoryPolicy>;
         using Deallocator         = SKL::MemoryDeallocation::SharedMemoryDeallocator<TObject, MemoryPolicy, false>;
         using DestructDeallocator = SKL::MemoryDeallocation::SharedMemoryDeallocator<TObject, MemoryPolicy>;
         using Allocator           = SKL::MemoryAllocation::MemoryAllocator<TObject, MemoryPolicy>;
@@ -1196,7 +1146,6 @@ namespace SKL::TLSMemoryStrategy
         static_assert( false == bVirtualDeleter, "Virtual deleter for unique objects not yet supported" );
 
         using MemoryPolicy        = SKL::MemoryPolicy::UniqueMemoryPolicy;
-        using MemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MemoryPolicy>;
         using Deallocator         = SKL::TLSMemoryDeallocation::UniqueMemoryDeallocator<TObject, MemoryPolicy, false>;
         using DestructDeallocator = SKL::TLSMemoryDeallocation::UniqueMemoryDeallocator<TObject, MemoryPolicy>;
         using Allocator           = SKL::TLSMemoryAllocation::MemoryAllocator<TObject, MemoryPolicy>;
@@ -1206,7 +1155,6 @@ namespace SKL::TLSMemoryStrategy
     struct SharedMemoryStrategy
     {
         using MemoryPolicy        = SKL::MemoryPolicy::SharedMemoryPolicy<bVirtualDeleter>;
-        using MemoryPolicyApplier = SKL::MemoryPolicy::MemoryPolicyApplier<MemoryPolicy>;
         using Deallocator         = SKL::TLSMemoryDeallocation::SharedMemoryDeallocator<TObject, MemoryPolicy, false>;
         using DestructDeallocator = SKL::TLSMemoryDeallocation::SharedMemoryDeallocator<TObject, MemoryPolicy>;
         using Allocator           = SKL::TLSMemoryAllocation::MemoryAllocator<TObject, MemoryPolicy>;
