@@ -103,12 +103,12 @@ namespace SKL
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         void ZeroAllMemory( ) noexcept
         {
-            Pool1.Pool.ZeroAllMemory( );
-            Pool2.Pool.ZeroAllMemory( );
-            Pool3.Pool.ZeroAllMemory( );
-            Pool4.Pool.ZeroAllMemory( );
-            Pool5.Pool.ZeroAllMemory( );
-            Pool6.Pool.ZeroAllMemory( );
+            Pool1.Pool.ZeroAllMemory();
+            Pool2.Pool.ZeroAllMemory();
+            Pool3.Pool.ZeroAllMemory();
+            Pool4.Pool.ZeroAllMemory();
+            Pool5.Pool.ZeroAllMemory();
+            Pool6.Pool.ZeroAllMemory();
         }
         
         //! Allocate new memory block with the size known at compile time
@@ -117,7 +117,7 @@ namespace SKL
         {
             static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < StaticConfig::MaxAllocationSize, "LocalMemoryManager Cannot alloc this much memory at once!" );
 
-            AllocResult Result { };
+            AllocResult Result{};
          
             if constexpr( AllocateSize <= TStaticConfig::Pool1_BlockSize )
             {
@@ -421,10 +421,8 @@ namespace SKL
             InAllocResult->MemoryBlock = nullptr;
         }
 
-        //! 
-        //! \brief Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
-        //! 
-        void LogStatistics( ) noexcept
+        //! Log manager statistics
+        void LogStatistics() noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
             SKLL_INF_FMT( "LocalMemoryManager[%ws] ###############################################################", Name );
@@ -500,13 +498,13 @@ namespace SKL
 #endif
         }
         
-        const wchar_t* Name{ TStaticConfig::PoolName };
-        TPool1         Pool1   {};
-        TPool2         Pool2   {};
-        TPool3         Pool3   {};
-        TPool4         Pool4   {};
-        TPool5         Pool5   {};
-        TPool6         Pool6   {};
+        TPool1         Pool1{};
+        TPool2         Pool2{};
+        TPool3         Pool3{};
+        TPool4         Pool4{};
+        TPool5         Pool5{};
+        TPool6         Pool6{};
+        const wchar_t* Name { TStaticConfig::PoolName };
         
         // Stats variables
         SKL_IFMEMORYSTATS( alignas( InternalAlignment ) TStatisticsValue CustomSizeAllocations  { 0 }; );

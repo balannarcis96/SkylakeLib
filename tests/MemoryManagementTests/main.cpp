@@ -17,6 +17,135 @@ namespace MManagementTestsSuite
 
         int *a;
     };
+    
+    TEST( MManagementTestsSuite, LocalObjectPool_Atomic_Test )
+    {
+        using PoolType = SKL::LocalObjectPool<MyType, 128, false, false, false, false>;
+
+        PoolType MyPool{};
+
+        EXPECT_EQ( SKL::RSuccess, MyPool.Preallocate() );
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsBefore = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsBefore = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, AllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, DeallocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsBefore ) );
+
+        for( int32_t i = 0 ; i < 4096; ++i )
+        {
+            MyType* AllocResult{ MyPool.Allocate() };
+            EXPECT_NE( nullptr, AllocResult );
+            MyPool.Deallocate( AllocResult );
+        }
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsAfter = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsAfter = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 4096, AllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 4096, DeallocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsAfter ) );
+    }
+    
+    TEST( MManagementTestsSuite, LocalObjectPool_Atomic_Test_2 )
+    {
+        using PoolType = SKL::LocalObjectPool<MyType, 128, false, false, false, false>;
+
+        PoolType MyPool{};
+
+        EXPECT_EQ( SKL::RSuccess, MyPool.Preallocate() );
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsBefore = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsBefore = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, AllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, DeallocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsBefore ) );
+
+        std::jthread Threads[4];
+
+        constexpr uint64_t AllocationsCount = 64;
+
+        for( auto& t : Threads )
+        {
+            t = std::jthread( [&MyPool]() noexcept
+            {
+                for( uint64_t i = 0 ; i < AllocationsCount; ++i )
+                {
+                    MyType* AllocResult{ MyPool.Allocate() };
+                    EXPECT_NE( nullptr, AllocResult );
+                    MyPool.Deallocate( AllocResult );
+                }
+            } );
+        }
+
+        for( auto& t : Threads )
+            t.join();
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsAfter = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsAfter = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( AllocationsCount * 4, AllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( AllocationsCount * 4, DeallocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsAfter ) );
+    }
+    
+    TEST( MManagementTestsSuite, LocalObjectPool_SpinLock_Test )
+    {
+        using PoolType = SKL::LocalObjectPool<MyType, 128, false, true, false, false>;
+
+        PoolType MyPool{};
+
+        EXPECT_EQ( SKL::RSuccess, MyPool.Preallocate() );
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsBefore = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsBefore = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, AllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, DeallocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsBefore ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsBefore ) );
+
+        std::jthread Threads[4];
+
+        constexpr uint64_t AllocationsCount = 4096;
+
+        for( auto& t : Threads )
+        {
+            t = std::jthread( [&MyPool]() noexcept
+            {
+                for( uint64_t i = 0 ; i < AllocationsCount; ++i )
+                {
+                    MyType* AllocResult{ MyPool.Allocate() };
+                    EXPECT_NE( nullptr, AllocResult );
+                    MyPool.Deallocate( AllocResult );
+                }
+            } );
+        }
+
+        for( auto& t : Threads )
+            t.join();
+
+        SKL_IFMEMORYSTATS( const uint64_t AllocationsAfter = MyPool.GetTotalAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = MyPool.GetTotalDeallocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSAllocationsAfter = MyPool.GetTotalOSAllocations() );
+        SKL_IFMEMORYSTATS( const uint64_t OSDeallocationsAfter = MyPool.GetTotalOSDeallocations() );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( AllocationsCount * 4, AllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( AllocationsCount * 4, DeallocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSAllocationsAfter ) );
+        SKL_IFMEMORYSTATS( EXPECT_EQ( 0, OSDeallocationsAfter ) );
+    }
+
 
     TEST( MManagementTestsSuite, Init_Test_Case___ )
     {
