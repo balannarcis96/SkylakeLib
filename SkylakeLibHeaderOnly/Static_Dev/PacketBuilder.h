@@ -131,10 +131,10 @@ namespace SKL
                 }
                 else if constexpr( true == Traits::bIsFixedLength )
                 {
-                    IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
-                    const auto           Result{ Writer.Write( reinterpret_cast<const uint8_t*>( &GetPacketData() )
-                                                             , static_cast<uint32_t>( sizeof( typename Traits::PacketDataType ) )
-                                                             , false ) };
+                    IByteStreamObjectWriter& Writer{ IByteStreamObjectWriter::FromStreamBaseRef( InStream ) };
+                    const auto               Result{ Writer.Write( reinterpret_cast<const uint8_t*>( &GetPacketData() )
+                                                                 , static_cast<uint32_t>( sizeof( typename Traits::PacketDataType ) )
+                                                                 , false ) };
 
                     if constexpr( bCommitPacket )
                     {
@@ -158,8 +158,8 @@ namespace SKL
     protected:
         SKL_FORCEINLINE static constexpr void WritePacketHeader( StreamBase& InStream ) noexcept
         {
-            IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
-            PacketHeader&        Header{ Writer.BuildObjectRef<PacketHeader>() };
+            IByteStreamObjectWriter& Writer{ IByteStreamObjectWriter::FromStreamBaseRef( InStream ) };
+            PacketHeader&            Header{ Writer.BuildObjectRef<PacketHeader>() };
 
             Header.Size   = 0;
             Header.Opcode = Traits::Opcode;
@@ -168,8 +168,8 @@ namespace SKL
         }
         SKL_FORCEINLINE static constexpr void WritePacketHeader( StreamBase& InStream, TPacketSize InSize ) noexcept
         {
-            IStreamObjectWriter& Writer{ IStreamObjectWriter::FromStreamBaseRef( InStream ) };
-            PacketHeader&        Header{ Writer.BuildObjectRef<PacketHeader>() };
+            IByteStreamObjectWriter& Writer{ IByteStreamObjectWriter::FromStreamBaseRef( InStream ) };
+            PacketHeader&            Header{ Writer.BuildObjectRef<PacketHeader>() };
 
             Header.Size   = InSize;
             Header.Opcode = Traits::Opcode;

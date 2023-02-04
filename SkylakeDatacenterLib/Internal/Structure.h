@@ -84,14 +84,14 @@ namespace SKL::DC
             {
                 if ( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     
                     NameIndex = Reader->ReadT<decltype( NameIndex )>();
                     Value     = Reader->ReadT<decltype( Value )>();
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( NameIndex );
                     Writer->WriteT( Value );
@@ -269,7 +269,7 @@ namespace SKL::DC
             {
                 if ( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     
                     NameIndex        = Reader->ReadT<decltype( NameIndex )>();
                     ValueIndices     = Reader->ReadT<decltype( ValueIndices )>();
@@ -280,7 +280,7 @@ namespace SKL::DC
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( NameIndex );
                     Writer->WriteT( ValueIndices );
@@ -379,7 +379,7 @@ namespace SKL::DC
             {
                 if ( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     
                     Count = Reader->ReadT<decltype( Count )>();
 
@@ -398,7 +398,7 @@ namespace SKL::DC
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( Count );
 
@@ -472,7 +472,7 @@ namespace SKL::DC
             {
                 if( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     
                     TotalBlockCount     = Reader->ReadT<decltype( TotalBlockCount )>();
                     TotalUsedBlockCount = Reader->ReadT<decltype( TotalUsedBlockCount )>();
@@ -492,7 +492,7 @@ namespace SKL::DC
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( TotalBlockCount );
                     Writer->WriteT( TotalUsedBlockCount );
@@ -513,7 +513,7 @@ namespace SKL::DC
 
                 if( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     if( false == Reader->TryForward( Remaining * ElementSerialSize ) )
                     {
                         SKLL_TRACE_MSG( "No space left in the stream" );                            
@@ -619,7 +619,7 @@ namespace SKL::DC
             {
                 if( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     
                     BlockTotalSize = Reader->ReadT<decltype( BlockTotalSize )>();
                     BlockUsedSize  = Reader->ReadT<decltype( BlockUsedSize )>();
@@ -645,7 +645,7 @@ namespace SKL::DC
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     
                     Writer->WriteT( BlockTotalSize );
                     Writer->WriteT( BlockUsedSize );
@@ -748,12 +748,12 @@ namespace SKL::DC
             {
                 if( true == bIsLoadingOrSaving )
                 {
-                    auto* Reader{ IStreamReader<true>::FromStreamBase( InStream ) };
+                    auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     Indices = Reader->ReadT<decltype( Indices )>();
                 }
                 else
                 {
-                    auto* Writer{ IStreamWriter<true>::FromStreamBase( InStream ) };
+                    auto* Writer{ IByteStreamObjectWriter::FromStreamBase( InStream ) };
                     Writer->WriteT( Indices );
                 }
 
@@ -1044,7 +1044,7 @@ namespace SKL::DC
 
             if ( true == bIsLoadingOrSaving )
             {
-                auto* Reader{ IStreamReader<true>::FromStreamBase( TargetStream ) };
+                auto* Reader{ IByteStreamObjectReader::FromStreamBase( TargetStream ) };
                 
                 Version       = Reader->ReadT<decltype( Version )>();
                 FormatVersion = Reader->ReadT<decltype( FormatVersion )>();
@@ -1052,7 +1052,7 @@ namespace SKL::DC
             }
             else
             {
-                auto* Writer{ IStreamWriter<true>::FromStreamBase( TargetStream ) };
+                auto* Writer{ IByteStreamObjectWriter::FromStreamBase( TargetStream ) };
 
                 Writer->WriteT( Version );
                 Writer->WriteT( FormatVersion );
@@ -1150,7 +1150,7 @@ namespace SKL::DC
             }
 
             SKL_ASSERT( nullptr != SourceStream );
-            auto* Reader{ IStreamReader<true>::FromStreamBase( *SourceStream ) };
+            auto* Reader{ IByteStreamObjectReader::FromStreamBase( *SourceStream ) };
             return Reader->SaveToFile( InFileName, false, true, false );
         }
 

@@ -496,8 +496,8 @@ namespace SKL
             // if we have extra data received copy it over in the extra data stream
             if( CurrentlyReceived > ExpectedPacketSize )
             {
-                const uint32_t       ExtraDataSize{ CurrentlyReceived - ExpectedPacketSize };
-                IStreamObjectWriter& Writer       { IStreamObjectWriter::FromStreamBaseRef( OutExtraData ) };
+                const uint32_t           ExtraDataSize{ CurrentlyReceived - ExpectedPacketSize };
+                IByteStreamObjectWriter& Writer       { IByteStreamObjectWriter::FromStreamBaseRef( OutExtraData ) };
 
                 if( false == Writer.Write( GetPacketBuffer() + ExpectedPacketSize, ExtraDataSize, false ) ) SKL_UNLIKELY
                 {

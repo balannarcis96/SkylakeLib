@@ -44,7 +44,7 @@ namespace SkylakePROTOCOLTests
         }
         SKL::RStatus WritePacket( SKL::StreamBase& InStream ) const noexcept override
         {
-            auto Writer{ SKL::IStreamWriter<true>::FromStreamBase( InStream ) };
+            auto Writer{ SKL::IByteStreamObjectWriter::FromStreamBase( InStream ) };
 
             Writer->WriteT( A );
             Writer->WriteT( B );
@@ -72,7 +72,7 @@ namespace SkylakePROTOCOLTests
         }
         SKL::RStatus ReadPacket( SKL::StreamBase& InStream ) noexcept override
         {
-            auto Reader{ SKL::IStreamReader<true>::FromStreamBase( InStream ) };
+            auto Reader{ SKL::IByteStreamObjectReader::FromStreamBase( InStream ) };
 
             A = Reader->ReadT<decltype( A )>();
             B = Reader->ReadT<decltype( B )>();
@@ -112,7 +112,7 @@ namespace SkylakePROTOCOLTests
 
         PAKCET_WritePacket()
         {
-            auto Writer{ SKL::IStreamWriter<true>::FromStreamBase( InStream ) };
+            auto Writer{ SKL::IByteStreamObjectWriter::FromStreamBase( InStream ) };
             
             Writer->WriteT( A );
             Writer->WriteT( B );
@@ -141,7 +141,7 @@ namespace SkylakePROTOCOLTests
 
         PAKCET_ReadPacket()
         {
-            auto Reader{ SKL::IStreamReader<true>::FromStreamBase( InStream ) };
+            auto Reader{ SKL::IByteStreamObjectReader::FromStreamBase( InStream ) };
 
             A = Reader->ReadT<decltype( A )>();
             B = Reader->ReadT<decltype( B )>();

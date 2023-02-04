@@ -113,11 +113,16 @@ namespace SKL
         IBuffer  Buffer;
     };
 
-    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
+    template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IStreamReader
     {
+        static constexpr uint32_t CUnitSize = static_cast<uint32_t>( sizeof( TUnit ) );
+
+        //! Get the size of this interface's TUnit
+        SKL_FORCEINLINE SKL_NODISCARD static consteval uint32_t GetUnitSize() noexcept { return CUnitSize; }
+
         //! Get the target data this interface operates on
-        SKL_FORCEINLINE StreamBase& GetStream() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD StreamBase& GetStream() noexcept
         {
             if constexpr( true == bIsBase_StreamObjectOrPtrToStreamObject )
             {
@@ -130,7 +135,7 @@ namespace SKL
         }
 
         //! Get the target data this interface operates on
-        SKL_FORCEINLINE const StreamBase& GetStream() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD const StreamBase& GetStream() const noexcept
         {
             if constexpr( true == bIsBase_StreamObjectOrPtrToStreamObject )
             {
@@ -143,18 +148,24 @@ namespace SKL
         }
 
         //! Does this instance own its buffer
-        SKL_FORCEINLINE bool OwnsBuffer() const noexcept { return TRUE == GetStream().bOwnsBuffer; }
+        SKL_FORCEINLINE SKL_NODISCARD bool OwnsBuffer() const noexcept { return TRUE == GetStream().bOwnsBuffer; }
 
         //! Get buffer 
-        SKL_FORCEINLINE const uint8_t* GetBuffer() const noexcept { return GetStream().Buffer.Buffer; }
+        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetBuffer() const noexcept { return GetStream().Buffer.Buffer; }
+        
+        //! Get units buffer 
+        SKL_FORCEINLINE SKL_NODISCARD const TUnit* GetUnitsBuffer() const noexcept { return reinterpret_cast<const TUnit*>( GetBuffer() ); }
 
         //! Get buffer size
-        SKL_FORCEINLINE uint32_t GetBufferSize() const noexcept { return GetStream().Buffer.Length; }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetBufferSize() const noexcept { return GetStream().Buffer.Length; }
+        
+        //! Get buffer size in units(TUnit)
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetBufferUnitSize() const noexcept { return GetBufferSize() / CUnitSize; }
 
         //! Get the current stream position (offset)
-        SKL_FORCEINLINE uint32_t GetPosition() const noexcept { return GetStream().Position; }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetPosition() const noexcept { return GetStream().Position; }
 
-        //! Push the stream position forward (asserts that GetRemainingSize() >= InAmount)
+        //! Push the stream position forward (asserts that GetRemainingSize() >= InBytesAmount)
         SKL_FORCEINLINE void ForwardToEnd( uint32_t InEndOffset = 0 ) noexcept 
         { 
             SKL_ASSERT( InEndOffset <= GetBufferSize() );
@@ -162,16 +173,22 @@ namespace SKL
             GetStream().Position = Result;
         }
 
-        //! Push the stream position forward (asserts that GetRemainingSize() >= InAmount)
-        SKL_FORCEINLINE void Forward( uint32_t InAmount ) noexcept 
+        //! Push the stream position forward (asserts that GetRemainingSize() >= InBytesAmount)
+        SKL_FORCEINLINE void Forward( uint32_t InBytesAmount ) noexcept 
         { 
-            const auto Result{ GetPosition() + InAmount };
+            const auto Result{ GetPosition() + InBytesAmount };
             SKL_ASSERT( Result <= GetBufferSize() );
             GetStream().Position = Result;
         }
+        
+        //! Push the stream position forward by units(TUnit) count (asserts that GetRemainingUnitsSize() >= InBytesAmount)
+        SKL_FORCEINLINE void ForwardUnits( uint32_t InUnitsCount ) noexcept 
+        { 
+            Forward( CUnitSize * InUnitsCount );
+        }
 
         //! Try to push the stream position forward (fails if GetRemainingSize() < InAmount)
-        SKL_FORCEINLINE bool TryForward( uint32_t InAmount ) noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD bool TryForward( uint32_t InAmount ) noexcept 
         { 
             const auto Result{ GetPosition() + InAmount };
             const auto bFits { Result < GetBufferSize() };
@@ -180,9 +197,12 @@ namespace SKL
 
             return bFits;
         }
+        
+        //! Try to push the stream position forward by units(TUnit) count (fails if GetRemainingSize() < InAmount)
+        SKL_FORCEINLINE SKL_NODISCARD bool TryForwardUnits( uint32_t InUnitsCount ) noexcept { return TryForward( CUnitSize * InUnitsCount ); }
 
         //! Try to push the stream position forward (if GetRemainingSize() < InAmount then in forwards to the end)
-        SKL_FORCEINLINE bool ForwardTruncate( uint32_t InAmount ) noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD bool ForwardTruncate( uint32_t InAmount ) noexcept 
         { 
             const auto Delta          { GetRemainingSize() };
             const auto Result         { GetPosition() + InAmount };
@@ -195,22 +215,25 @@ namespace SKL
         }
 
         //! Get buffer at the current stream position 
-        SKL_FORCEINLINE const uint8_t* GetFront() const noexcept { return &GetStream().Buffer.Buffer[ GetPosition() ]; }
+        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetFront() const noexcept { return &GetStream().Buffer.Buffer[ GetPosition() ]; }
+        
+        //! Get units(TUnit) buffer at the current stream position 
+        SKL_FORCEINLINE SKL_NODISCARD const TUnit* GetFrontUnits() const noexcept { return reinterpret_cast<const TUnit*>( GetFront() ); }
 
         //! Get buffer at the current stream position as a string ptr
-        SKL_FORCEINLINE const char* GetFrontAsString() const noexcept { return reinterpret_cast<const char*>( GetFront() ); }
+        SKL_FORCEINLINE SKL_NODISCARD const char* GetFrontAsString() const noexcept { return reinterpret_cast<const char*>( GetFront() ); }
 
         //! Get buffer at the current stream position as a wide string ptr
-        SKL_FORCEINLINE const wchar_t* GetFrontAsWString() const noexcept { return reinterpret_cast<const wchar_t*>( GetFront() ); }
+        SKL_FORCEINLINE SKL_NODISCARD const wchar_t* GetFrontAsWString() const noexcept { return reinterpret_cast<const wchar_t*>( GetFront() ); }
 
         //! Get strlen( buffer at the current stream position as a string ptr )
-        SKL_FORCEINLINE uint32_t GetFrontAsString_Size() const noexcept { return static_cast<uint32_t>( SKL_STRLEN( GetFrontAsString(), GetRemainingSize() ) ); }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetFrontAsString_Size() const noexcept { return static_cast<uint32_t>( SKL_STRLEN( GetFrontAsString(), GetRemainingSize() ) ); }
 
         //! Get wstrlen( buffer at the current stream position as a wide string ptr )
-        SKL_FORCEINLINE uint32_t GetFrontAsWString_Size() const noexcept { return static_cast<uint32_t>( SKL_WSTRLEN( GetFrontAsWString(), GetRemainingSize() / 2 ) ); }
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetFrontAsWString_Size() const noexcept { return static_cast<uint32_t>( SKL_WSTRLEN( GetFrontAsWString(), GetRemainingSize() / 2 ) ); }
 
         //! Get buffer at the current stream position as a string ptr and advance stream position after the string
-        SKL_FORCEINLINE const char* GetFrontAsStringAndAdvance() noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD const char* GetFrontAsStringAndAdvance() noexcept 
         { 
             const char* Str{ GetFrontAsString() };
             Forward( static_cast<uint32_t>( SKL_STRLEN( Str, GetRemainingSize() ) + 1 ) );
@@ -218,7 +241,7 @@ namespace SKL
         }
 
         //! Get buffer at the current stream position as a string ptr and advance stream position after the string
-        SKL_FORCEINLINE const wchar_t* GetFrontAsWStringAndAdvance() noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD const wchar_t* GetFrontAsWStringAndAdvance() noexcept 
         { 
             const wchar_t* Str{ GetFrontAsWString() };
             Forward( static_cast<uint32_t>( ( SKL_WSTRLEN( Str, GetRemainingSize() ) * 2 ) + 2 ) );
@@ -232,8 +255,11 @@ namespace SKL
             GetStream().Position = InPosition;
         }
         
+        //! Set the current stream position (units(TUnit) offset)
+        SKL_FORCEINLINE void SetPositionUnits( uint32_t InUnitsPosition ) noexcept { SetPosition( CUnitSize * InUnitsPosition ); }
+        
         //! Set the current stream position (offset) and get the old one back
-        SKL_FORCEINLINE uint32_t SwapPosition( uint32_t InPosition ) noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t SwapPosition( uint32_t InPosition ) noexcept 
         { 
             SKL_ASSERT( InPosition < GetBufferSize() );
             const auto CurrentPosition{ GetPosition() };
@@ -241,12 +267,15 @@ namespace SKL
             return CurrentPosition;
         }
 
-        //! Get the remaining size of the buffer that
-        SKL_FORCEINLINE uint32_t GetRemainingSize() const noexcept { return GetBufferSize() - GetPosition(); }
+        //! Get the remaining size of the buffer
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetRemainingSize() const noexcept { return GetBufferSize() - GetPosition(); }
+        
+        //! Get the remaining size of the buffer in units(TUnit)
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetRemainingUnitSize() const noexcept { return GetRemainingSize() / CUnitSize; }
 
         //! Cast &Buffer[ CurrentPosition ] to const T& and return copy of T
         template<typename T>
-        SKL_FORCEINLINE T ReadT( ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD T ReadT() noexcept
         {
             constexpr auto TSize{ static_cast<uint32_t>( sizeof( T ) ) };
             Forward( TSize );
@@ -254,19 +283,19 @@ namespace SKL
         }
 
         //! Has the stream position reached the end of the buffer
-        SKL_FORCEINLINE bool IsEOS() const noexcept { return 0 == GetRemainingSize(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool IsEOS() const noexcept { return 0 == GetRemainingSize(); }
 
         //! Has a valid buffer
-        SKL_FORCEINLINE bool IsValid() const noexcept { return nullptr != GetBuffer(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool IsValid() const noexcept { return nullptr != GetBuffer(); }
 
-        //! Reset the stream position to the begining of the buffer
+        //! Reset the stream position to the beginning of the buffer
         SKL_FORCEINLINE void Reset() noexcept
         {
             SetPosition( 0 );
         }
 
         //! Read InReadSize bytes from the internal buffer, at the current position, into OutBuffer (if bTruncate is true, reads till end if GetRemainingSize() < InReadSize)
-        bool Read( uint8_t* OutBuffer, uint32_t InReadSize, bool bTruncate = false ) noexcept
+        SKL_NODISCARD bool Read( uint8_t* OutBuffer, uint32_t InReadSize, bool bTruncate = false ) noexcept
         {
             SKL_ASSERT( nullptr != OutBuffer );
             SKL_ASSERT( 0 != InReadSize );
@@ -301,7 +330,7 @@ namespace SKL
         }
 
         //! Save the underlying buffer to a file
-        bool SaveToFile( const char* InFileName, bool bAppendInsteadOfTruncate = true, bool bPositionAsSize = true, bool bSaveAsText = false ) const noexcept
+        SKL_NODISCARD bool SaveToFile( const char* InFileName, bool bAppendInsteadOfTruncate = true, bool bPositionAsSize = true, bool bSaveAsText = false ) const noexcept
         {
             const auto WriteSize{ ( GetPosition( ) * bPositionAsSize ) + ( GetBufferSize() * !bPositionAsSize ) };
             if( 0 == WriteSize )
@@ -341,35 +370,44 @@ namespace SKL
             Interface.Buffer.Buffer = const_cast<uint8_t*>( InBuffer );
         }
 
-        SKL_FORCEINLINE static IStreamReader<true>* FromStreamBase( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IStreamReader<TUnit, true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IStreamReader<true>*>( &InStream );
+            return reinterpret_cast<IStreamReader<TUnit, true>*>( &InStream );
         }
         
-        SKL_FORCEINLINE static IStreamReader<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IStreamReader<TUnit, true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IStreamReader<true>&>( InStream );
+            return reinterpret_cast<IStreamReader<TUnit, true>&>( InStream );
         }
     };
 
-    using IStreamObjectReader    = IStreamReader<true>;
-    using IStreamObjectPtrReader = IStreamReader<false>;
+    using IByteStreamObjectReader    = IStreamReader<uint8_t, true>;
+    using IByteStreamObjectPtrReader = IStreamReader<uint8_t, false>;
 
-    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct IStreamWriter: public IStreamReader<bIsBase_StreamObjectOrPtrToStreamObject>
+    template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
+    struct IStreamWriter: public IStreamReader<TUnit, bIsBase_StreamObjectOrPtrToStreamObject>
     {
         //! Can fit InAmount bytes into the stream starting at the current stream position
-        SKL_FORCEINLINE bool CanFit( uint32_t InAmount ) const noexcept { return this->GetRemainingSize() >= InAmount; }
+        SKL_FORCEINLINE SKL_NODISCARD bool CanFit( uint32_t InAmount ) const noexcept { return this->GetRemainingSize() >= InAmount; }
+        
+        //! Can fit InUnitsCount units into the stream starting at the current stream position
+        SKL_FORCEINLINE SKL_NODISCARD bool CanFitUnits( uint32_t InUnitsCount ) const noexcept { return this->GetRemainingUnitSize() >= InUnitsCount; }
 
         //! Get buffer at the current stream position 
-        SKL_FORCEINLINE uint8_t* GetFront() const noexcept { return &this->GetStream().Buffer.Buffer[ this->GetPosition() ]; }
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetFront() const noexcept { return &this->GetStream().Buffer.Buffer[ this->GetPosition() ]; }
+        
+        //! Get units buffer at the current stream position 
+        SKL_FORCEINLINE SKL_NODISCARD TUnit* GetFrontUnits() const noexcept { return reinterpret_cast<TUnit*>( &this->GetStream().Buffer.Buffer[ this->GetPosition() ] ); }
 
         //! Get buffer 
-        SKL_FORCEINLINE uint8_t* GetBuffer() const noexcept { return this->GetStream().Buffer.Buffer; }
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetBuffer() const noexcept { return this->GetStream().Buffer.Buffer; }
+        
+        //! Get units buffer 
+        SKL_FORCEINLINE SKL_NODISCARD TUnit* GetUnitsBuffer() const noexcept { return reinterpret_cast<TUnit*>( this->GetStream().Buffer.Buffer ); }
         
         //! Get the buffer at the current position as a ref to TObject class type
         template<typename TObject>
-        SKL_FORCEINLINE TObject& BuildObjectRef() noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TObject& BuildObjectRef() noexcept
         {
             static_assert( std::is_class_v<TObject> );
             return *reinterpret_cast<TObject*>( GetFront() );
@@ -463,7 +501,7 @@ namespace SKL
         }
 
         //! Fill the buffer with bytes read from file (if bTruncate == true, reads at most GetBufferSize(), otherwise returns false)
-        bool ReadFromFile( const char* InFileName, bool bTruncate = false ) noexcept
+        SKL_NODISCARD bool ReadFromFile( const char* InFileName, bool bTruncate = false ) noexcept
         {
             auto File{ std::ifstream( InFileName, std::ifstream::binary ) };
             if( false == File.is_open( ) )
@@ -510,22 +548,22 @@ namespace SKL
         IStreamWriter( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
             : IStreamReader{ InBuffer, InSize, InPosition } {}
 
-        SKL_FORCEINLINE static IStreamWriter<true>* FromStreamBase( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IStreamWriter<TUnit, true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IStreamWriter<true>*>( &InStream );
+            return reinterpret_cast<IStreamWriter<TUnit, true>*>( &InStream );
         }
         
-        SKL_FORCEINLINE static IStreamWriter<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IStreamWriter<TUnit, true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IStreamWriter<true>&>( InStream );
+            return reinterpret_cast<IStreamWriter<TUnit, true>&>( InStream );
         }
     };
     
-    using IStreamObjectWriter    = IStreamWriter<true>;
-    using IStreamObjectPtrWriter = IStreamWriter<false>;
+    using IByteStreamObjectWriter    = IStreamWriter<uint8_t, true>;
+    using IByteStreamObjectPtrWriter = IStreamWriter<uint8_t, false>;
 
     template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct IBinaryStream: public IStreamWriter<bIsBase_StreamObjectOrPtrToStreamObject>
+    struct IBinaryStream: public IStreamWriter<uint8_t, bIsBase_StreamObjectOrPtrToStreamObject>
     {
         IBinaryStream() noexcept = default;
         IBinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
@@ -701,7 +739,7 @@ namespace SKL
             SKL_ASSERT( ( static_cast<size_t>( InTransactionStream.GetPosition() ) + InTargetStream.GetPosition() ) < std::numeric_limits<uint32_t>::max() );
             InTargetStream.Position += InTransactionStream.GetPosition();
 
-            InTransactionStream.Buffer.Length  = IStreamObjectReader::FromStreamBase( InTransactionStream )->GetRemainingSize();
+            InTransactionStream.Buffer.Length  = IByteStreamObjectReader::FromStreamBase( InTransactionStream )->GetRemainingSize();
             InTransactionStream.Buffer.Buffer += InTransactionStream.GetPosition();
             InTransactionStream.Position       = 0;
         }
