@@ -426,12 +426,279 @@ namespace SKL
     };
     using SIntRect   = TIntRect< int32_t >;
     using SInt64Rect = TIntRect< int64_t >;
+    
+    template< typename TReal >
+    requires( std::is_floating_point_v< TReal > ) struct TPoint
+    {
+        using TType  = TReal;
+        using MyType = TPoint< TType >;
+
+        TType X, Y;
+
+        TPoint() noexcept: X{ SKL_REAL_VALUE( 0.0 ) }, Y{ SKL_REAL_VALUE( 0.0 ) } {}
+        TPoint( TType X, TType Y ) noexcept : X( X ), Y( Y ) {}
+        TPoint( const skReal Vector[ 3 ] ) noexcept :
+            X( static_cast< TType >( Vector[ 0 ] ) ), Y( static_cast< TType >( Vector[ 1 ] ) )
+        {
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD static MyType ZeroValue( ) noexcept
+        {
+            return MyType{ SKL_REAL_VALUE( 0.0 ), SKL_REAL_VALUE( 0.0 ) };
+        }
+        SKL_FORCEINLINE SKL_NODISCARD static MyType NoneValue( ) noexcept
+        {
+            return MyType{ SKL_REAL_VALUE( 0.0 ), SKL_REAL_VALUE( 0.0 ) };
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool operator==( const MyType &Other ) const noexcept
+        {
+            return X == Other.X && Y == Other.Y;
+        }
+        
+        SKL_FORCEINLINE SKL_NODISCARD bool NearlyEquals( const MyType &Other ) const noexcept
+        {
+            return FIsNearlyEqual( X, Other.X ) && FIsNearlyEqual( Y, Other.Y );
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool operator!=( const MyType &Other ) const noexcept
+        {
+            return X != Other.X || Y != Other.Y;
+        }
+
+        SKL_FORCEINLINE MyType &operator*=( TType Scale ) noexcept
+        {
+            X *= Scale;
+            Y *= Scale;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator+=( const MyType &Other ) noexcept
+        {
+            X += Other.X;
+            Y += Other.Y;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator-=( const MyType &Other ) noexcept
+        {
+            X -= Other.X;
+            Y -= Other.Y;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator+=( TType Value ) noexcept
+        {
+            X += Value;
+            Y += Value;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator-=( TType Value ) noexcept
+        {
+            X -= Value;
+            Y -= Value;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType operator*( MyType Scale ) const noexcept
+        {
+            return MyType( *this ) *= Scale;
+        }
+        SKL_FORCEINLINE MyType operator+( const MyType &Other ) const noexcept
+        {
+            return MyType( *this ) += Other;
+        }
+        SKL_FORCEINLINE MyType operator-( const MyType &Other ) const noexcept
+        {
+            return MyType( *this ) -= Other;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD MyType Size( ) const noexcept
+        {
+            return static_cast< MyType >( Sqrt( static_cast< skReal >( ( X * X ) + ( Y * Y ) ) ) );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool HasIntegerValues() const noexcept
+        {
+            return FFloor( X ) == X && FFloor( Y ) == Y;
+        }
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            X = FFloor( X );
+            Y = FFloor( Y );
+        }
+    };
+    using SPoint  = TPoint< skReal >;
+    using SPointf = TPoint< float >;
+    using SPointd = TPoint< double >;
+
+    template< typename TReal >
+    requires( std::is_floating_point_v< TReal > ) struct TRect
+    {
+        using TType    = TReal;
+        using MyType   = TRect< TReal >;
+        using MyTPoint = TPoint< TType >;
+
+        MyTPoint Min{}, Max{};
+
+        TRect() noexcept = default;
+        TRect( TType X0, TType Y0, TType X1, TType Y1 ) noexcept :Min( X0, Y0 ), Max( X1, Y1 ) {}
+        TRect( MyTPoint InMin, MyTPoint InMax ) noexcept :Min( InMin ), Max( InMax ) {}
+
+        SKL_FORCEINLINE bool operator==( const MyType &Other ) const noexcept
+        {
+            return Min == Other.Min && Max == Other.Max;
+        }
+        SKL_FORCEINLINE bool operator!=( const MyType &Other ) const noexcept
+        {
+            return Min != Other.Min || Max != Other.Max;
+        }
+        SKL_FORCEINLINE MyType Right( TType InWidth ) const noexcept
+        {
+            return MyType{ Max( Min.X, Max.X - InWidth ), Min.Y, Max.X, Max.Y };
+        }
+        SKL_FORCEINLINE MyType Bottom( TType InHeight ) const noexcept
+        {
+            return MyType{ Min.X, Max( Min.Y, Max.Y - InHeight ), Max.X, Max.Y };
+        }
+        SKL_FORCEINLINE MyTPoint Size( ) const noexcept
+        {
+            return MyTPoint{ Max.X - Min.X, Max.Y - Min.Y };
+        }
+        SKL_FORCEINLINE SKL_NODISCARD TType Width( ) const noexcept
+        {
+            return Max.X - Min.X;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD TType Height( ) const noexcept
+        {
+            return Max.Y - Min.Y;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD MyType Expand( TType Value ) const noexcept
+        {
+            return {
+                { Min.X - Value, Min.Y - Value },
+                { Max.X + Value, Max.Y + Value }
+            };
+        }
+        SKL_FORCEINLINE MyType &operator*=( TType Scale ) noexcept
+        {
+            Min *= Scale;
+            Max *= Scale;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator+=( const MyTPoint &P ) noexcept
+        {
+            Min += P;
+            Max += P;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType &operator-=( const MyTPoint &P ) noexcept
+        {
+            Min -= P;
+            Max -= P;
+            return *this;
+        }
+        SKL_FORCEINLINE MyType operator*( TType Scale ) const noexcept
+        {
+            return MyType{ Min * Scale, Max * Scale };
+        }
+        SKL_FORCEINLINE MyType operator+( const MyTPoint &P ) const noexcept
+        {
+            return MyType{ Min + P, Max + P };
+        }
+        SKL_FORCEINLINE MyType operator-( const MyTPoint &P ) const noexcept
+        {
+            return MyType{ Min - P, Max - P };
+        }
+        SKL_FORCEINLINE MyType operator+( const MyType &R ) const noexcept
+        {
+            return MyType{ Min + R.Min, Max + R.Max };
+        }
+        SKL_FORCEINLINE MyType operator-( const MyType &R ) const noexcept
+        {
+            return MyType{ Min - R.Min, Max - R.Max };
+        }
+        SKL_FORCEINLINE SKL_NODISCARD MyType Inner( MyTPoint P ) const noexcept
+        {
+            return MyType{ Min + P, Max - P };
+        }
+        SKL_FORCEINLINE SKL_NODISCARD bool Contains( MyTPoint P ) const noexcept
+        {
+            return ( P.X >= Min.X ) &&
+                ( Max.X > P.X ) &&
+                ( P.Y >= Min.Y ) &&
+                ( Max.Y > P.Y );
+        }
+        SKL_FORCEINLINE SKL_NODISCARD TType Area( ) const noexcept
+        {
+            return ( Max.X - Min.X ) * ( Max.Y - Min.Y );
+        }
+        void GetCenterAndExtents( MyTPoint &Center, MyTPoint &Extent ) const noexcept
+        {
+            Extent.X = ( Max.X - Min.X ) / 2;
+            Extent.Y = ( Max.Y - Min.Y ) / 2;
+
+            Center.X = Min.X + Extent.X;
+            Center.Y = Min.Y + Extent.Y;
+        }
+        void Clip( const MyType &R ) noexcept
+        {
+            Min.X = Max( Min.X, R.Min.X );
+            Min.Y = Max( Min.Y, R.Min.Y );
+            Max.X = Min( Max.X, R.Max.X );
+            Max.Y = Min( Max.Y, R.Max.Y );
+
+            // Adjust to zero area if the rects don't overlap.
+            Max.X = Max( Min.X, Max.X );
+            Max.Y = Max( Min.Y, Max.Y );
+        }
+        SKL_FORCEINLINE void SetWidth( TType width ) noexcept
+        {
+            Max.X = Min.X + width;
+        }
+        SKL_FORCEINLINE void SetHeight( TType height ) noexcept
+        {
+            Max.Y = Min.Y + height;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD TType X( ) const noexcept
+        {
+            return Min.X;
+        }
+        SKL_FORCEINLINE SKL_NODISCARD TType Y( ) const noexcept
+        {
+            return Min.Y;
+        }
+        SKL_FORCEINLINE void ExpandFromCenter( TType Value ) noexcept
+        {
+            Max += Value;
+            Min -= Value;
+        }
+
+        SKL_NODISCARD bool Intersect( const MyType &Other ) const noexcept
+        {
+            if( Min.X > Other.Max.X || Other.Min.X > Max.X )
+                return false;
+
+            if( Min.Y > Other.Max.Y || Other.Min.Y > Max.Y )
+                return false;
+
+            return true;
+        }
+
+        SKL_NODISCARD SKL_FORCEINLINE bool HasIntegerValues() const noexcept
+        {
+            return Min.HasIntegerValues() && Max.HasIntegerValues();
+        }
+        
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            Min.Floor();
+            Max.Floor();
+        }
+    };
+    using SRect  = TRect< skReal >;
+    using SRectf = TRect< float >;
+    using SRectd = TRect< double >;
 
     template< typename TReal >
     requires( std::is_floating_point_v< TReal > ) struct TVector2D
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -648,6 +915,18 @@ namespace SKL
             X = ( ( b.X - X ) * t );
             Y = ( ( b.Y - Y ) * t );
         }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool HasIntegerValues() const noexcept
+        {
+            return FFloor( X ) == X
+                && FFloor( Y ) == Y;
+        }
+        
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            X = FFloor( X );
+            Y = FFloor( Y );
+        }
     };
     using SVector2D  = TVector2D< skReal >;
     using SVector2Df = TVector2D< float >;
@@ -657,7 +936,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct TVector
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -677,34 +956,34 @@ namespace SKL
             Z;
 
         // Constructors.
-        TVector( ) noexcept :
+        constexpr TVector( ) noexcept :
             X( ZeroValue ), Y( ZeroValue ), Z( ZeroValue )
         {
         }
 
-        explicit TVector( TReal InF ) noexcept :
+        constexpr explicit TVector( TReal InF ) noexcept :
             X( InF ), Y( InF ), Z( InF )
         {
         }
 
-        TVector( TReal InX, TReal InY, TReal InZ ) noexcept :
+        constexpr TVector( TReal InX, TReal InY, TReal InZ ) noexcept :
             X( InX ), Y( InY ), Z( InZ )
         {
         }
 
-        explicit TVector( const TReal *vec ) noexcept :
+        constexpr explicit TVector( const TReal *vec ) noexcept :
             X( vec[ 0 ] ), Y( vec[ 1 ] ), Z( vec[ 2 ] )
         {
         }
 
         template< typename TOtherTReal >
-        TVector( TOtherTReal InX, TOtherTReal InY, TOtherTReal InZ ) noexcept requires( std::is_floating_point_v< TOtherTReal > && !std::is_same_v< TOtherTReal, TReal > ) :
+        constexpr TVector( TOtherTReal InX, TOtherTReal InY, TOtherTReal InZ ) noexcept requires( std::is_floating_point_v< TOtherTReal > && !std::is_same_v< TOtherTReal, TReal > ) :
             X{ ToMyRealType( InX ) }, Y{ ToMyRealType( InY ) }, Z{ ToMyRealType( InZ ) }
         {
         }
 
         template< typename TOtherTReal >
-        explicit TVector( const TVector< TOtherTReal > &Other ) noexcept requires( std::is_floating_point_v< TOtherTReal > ) :
+        constexpr explicit TVector( const TVector< TOtherTReal > &Other ) noexcept requires( std::is_floating_point_v< TOtherTReal > ) :
             X( static_cast< TReal >( Other.X ) ), Y( static_cast< TReal >( Other.Y ) ), Z( static_cast< TReal >( Other.Z ) )
         {
         }
@@ -1186,6 +1465,20 @@ namespace SKL
         {
             return V.operator*( Scale );
         }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool HasIntegerValues() const noexcept
+        {
+            return FFloor( X ) == X
+                && FFloor( Y ) == Y
+                && FFloor( Z ) == Z;
+        }
+        
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            X = FFloor( X );
+            Y = FFloor( Y );
+            Z = FFloor( Z );
+        }
     };
     using SVector  = TVector< skReal >;
     using SVectorf = TVector< float >;
@@ -1195,7 +1488,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct alignas( 16 ) TVector4
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -1329,6 +1622,21 @@ namespace SKL
                 TVector< TOtherReal >::ToMyRealType( Z )
             };
         }
+        
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            X = FFloor( X );
+            Y = FFloor( Y );
+            Z = FFloor( Z );
+        }
+        
+        SKL_FORCEINLINE void FloorAll() noexcept
+        {
+            X = FFloor( X );
+            Y = FFloor( Y );
+            Z = FFloor( Z );
+            W = FFloor( W );
+        }
     };
     using SVector4  = TVector4< skReal >;
     using SVector4f = TVector4< float >;
@@ -1338,7 +1646,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct alignas( 16 ) TPlane: public TVector< TReal >
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -1475,6 +1783,12 @@ namespace SKL
             W *= RV;
             return *this;
         }
+        
+        SKL_FORCEINLINE void FloorPlane() noexcept
+        {
+            this->Floor();
+            W = FFloor( W );
+        }
     };
     using SPlane  = TPlane< skReal >;
     using SPlanef = TPlane< float >;
@@ -1484,7 +1798,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct TSphere
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -1537,7 +1851,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct TBox
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }
@@ -1717,7 +2031,7 @@ namespace SKL
             return { ( Max - Min ) * ToMyRealType( 0.5 ) };
         }
 
-        SKL_NODISCARD SKL_FORCEINLINE SIntRect GetXYRectangle( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE SIntRect GetXYIntRectangle( ) const noexcept
         {
             return {
                 { static_cast< int32_t >( Min.X ), static_cast< int32_t >( Min.Y ) },
@@ -1725,7 +2039,7 @@ namespace SKL
             };
         }
 
-        SKL_NODISCARD SKL_FORCEINLINE SInt64Rect GetXYRectangle64( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE SInt64Rect GetXYIntRectangle64( ) const noexcept
         {
             return {
                 { static_cast< int64_t >( Min.X ), static_cast< int64_t >( Min.Y ) },
@@ -1734,11 +2048,20 @@ namespace SKL
         }
 
         template< std::TSInteger TInt >
-        SKL_NODISCARD SKL_FORCEINLINE TIntRect< TInt > GetXYRectangle( ) const noexcept
+        SKL_NODISCARD SKL_FORCEINLINE TIntRect< TInt > GetXYIntRectangle( ) const noexcept
         {
             return {
                 { static_cast< TInt >( Min.X ), static_cast< TInt >( Min.Y ) },
                 { static_cast< TInt >( Max.X ), static_cast< TInt >( Max.Y ) }
+            };
+        }
+        
+        template< std::TFloat T = TReal >
+        SKL_NODISCARD SKL_FORCEINLINE TRect< T > GetXYRectangle( ) const noexcept
+        {
+            return {
+                { static_cast< T >( Min.X ), static_cast< T >( Min.Y ) },
+                { static_cast< T >( Max.X ), static_cast< T >( Max.Y ) }
             };
         }
 
@@ -1854,6 +2177,17 @@ namespace SKL
 
             return ClosestPoint;
         }
+        
+        SKL_FORCEINLINE SKL_NODISCARD bool HasIntegerValues() const noexcept
+        {
+            return Min.HasIntegerValues() && Max.HasIntegerValues();
+        }
+        
+        SKL_FORCEINLINE void Floor() noexcept
+        {
+            Min.Floor();
+            Max.Floor();
+        }
     };
     using SBox  = TBox< skReal >;
     using SBoxf = TBox< float >;
@@ -1866,7 +2200,7 @@ namespace SKL
     requires( std::is_floating_point_v< TReal > ) struct TTriangle
     {
         template< typename TOtherReal >
-        static consteval TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
+        static constexpr TReal ToMyRealType( TOtherReal InOtherReal ) noexcept
         {
             return static_cast< TReal >( InOtherReal );
         }

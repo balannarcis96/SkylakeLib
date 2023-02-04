@@ -110,38 +110,12 @@ namespace SKL
         const std::vector<TServicePtr<AODService>>&    GetAllAODServices() const noexcept { return AODServices; }
         const std::vector<TServicePtr<ActiveService>>& GetAllActiveServices() const noexcept { return ActiveServices; }
         const std::vector<TServicePtr<WorkerService>>& GetAllWorkerServices() const noexcept { return WorkerServices; }
-        const std::vector<IService*>&                      GetAllServices() const noexcept { return AllServices; }
-
-        //! Get a service by UID. O(n)
-        template<typename TService = IService>
-        SKL_NODISCARD TService* GetServiceById( uint32_t UID ) const noexcept
-        {
-            static_assert( 
-                   std::is_same_v<IService, TService> 
-                || std::is_base_of_v<SimpleService, TService> 
-                || std::is_base_of_v<AODService, TService> 
-                || std::is_base_of_v<ActiveService, TService> 
-                || std::is_base_of_v<WorkerService, TService> 
-            );
-
-            SKL_ASSERT( 0 != UID );
-            for( auto* Service : AllServices )
-            {
-                if( nullptr == Service ){ continue; }
-                if( UID == Service->GetUID() )
-                {
-                    return static_cast<TService*>( Service );
-                }
-            }
-
-            return nullptr;
-        }
 
         //! Get simple service by UID. O(n)
         template<typename TService = SimpleService>
         SKL_NODISCARD SimpleService* GetSimpleServiceById( uint32_t UID ) const noexcept
         {
-            static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
+            static_assert( std::is_same_v<TService, SimpleService> || std::is_base_of_v<SimpleService, TService> );
 
             SKL_ASSERT( 0 != UID );
             for( auto& Service : SimpleServices )
@@ -160,7 +134,7 @@ namespace SKL
         template<typename TService = AODService>
         SKL_NODISCARD AODService* GetAODServiceById( uint32_t UID ) const noexcept
         {
-            static_assert( std::is_same_v<TService, ActiveService> || std::is_base_of_v<ActiveService, TService> );
+            static_assert( std::is_same_v<TService, AODService> || std::is_base_of_v<AODService, TService> );
 
             SKL_ASSERT( 0 != UID );
             for( auto& Service : AODServices )

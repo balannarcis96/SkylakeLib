@@ -400,6 +400,15 @@ namespace SKL
 
         //! is ready to be destroyed
         SKL_FORCEINLINE SKL_NODISCARD bool IsShutdownAndReadyToDestroy() const noexcept { IdStore.IsShutdownAndReadyToDestroy(); }
+        
+        //! Update the id variant for the entity indexed by EntityIndex
+        void UpdateEntityVariant( IndexType EntityIndex, Variant InNewVariant ) noexcept
+        {
+            RootComponent& Entity{ GetEntityRaw( EntityIndex ) };
+            EntityId NewId = Entity.GetId();
+            NewId.SetVariant( InNewVariant );
+            Entity.Id = NewId.GetId();
+        }
 
         //! allocate new entity
         template<typename... TArgs>

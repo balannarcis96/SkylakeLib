@@ -225,11 +225,19 @@ namespace SKL
         // add async TCP acceptors
         for( const auto& Item: InConfig.TCPAcceptorConfigs )
         {
-            NewGroup->AddNewTCPAcceptor( Item );
+            if( RSuccess != NewGroup->AddNewTCPAcceptor( Item ) )
+            {
+                SKLL_ERR( "ServerInstance::CreateWorkerGroup() Failed to create new async TCP Acceptor!" );
+                return false;
+            }
         }
         
         // build the group
-        NewGroup->Build( bCreateMaster );
+        if ( RSuccess != NewGroup->Build( bCreateMaster ) )
+        {
+            SKLL_ERR( "ServerInstance::CreateWorkerGroup() Failed to Build() WorkersGroup!" );
+            return false;
+        }
 
         // cache master worker if possible
         if( true == bCreateMaster )
@@ -314,12 +322,16 @@ namespace SKL
         for( auto& Service : WorkerServices )
         {
             if( nullptr == Service ){ continue; }
-            Service->OnWorkerStarted( InWorker, InGroup );
+            if ( RSuccess != Service->OnWorkerStarted( InWorker, InGroup ) )
+            {
+                SKLL_ERR_FMT("[WorkerSercice:%u]Worker faled to start!", Service->GetUID() );
+                return false;
+            }
         }
 
         TotalNumberOfRunningWorkers.increment();
 
-        SKLL_INF_FMT("[WorkerGroup:%ws] Worker started! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
+        SKLL_INF_FMT("[Service:%ws] Failed to started! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
     
@@ -359,6 +371,8 @@ namespace SKL
     {
         SKLL_VER_FMT( "[WorkerGroup:%ws] all workers started!", Group.GetTag().Name );
         SKL_ASSERT( Group.GetTotalNumberOfWorkers() == Group.GetNumberOfRunningWorkers() );
+        ( void )Group;
+
         return true;
     }
     
@@ -366,12 +380,15 @@ namespace SKL
     {
         SKLL_VER_FMT( "[WorkerGroup:%ws] all workers stopped!", Group.GetTag().Name );
         SKL_ASSERT( 0 == Group.GetNumberOfRunningWorkers() );
+        ( void )Group;
+
         return true;
     }
 
     bool ServerInstance::OnWorkerGroupStarted( WorkerGroup& Group ) noexcept
     {
         SKLL_VER_FMT("[WorkerGroup:%ws] started!", Group.GetTag().Name );
+        ( void )Group;
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.increment() + 1 };
         if( NewActiveWorkerGroupsCount == TotalWorkerGroups.load_relaxed() )
@@ -385,6 +402,7 @@ namespace SKL
     bool ServerInstance::OnWorkerGroupStopped( WorkerGroup& Group ) noexcept
     {
         SKLL_VER_FMT("[WorkerGroup:%ws] stopped!", Group.GetTag().Name );
+        ( void )Group;
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.decrement() - 1 };
         if( NewActiveWorkerGroupsCount == 0 )
@@ -521,6 +539,7 @@ namespace SKL
             , InService->GetUID()
             , RSuccess == InStatus ? "stopped successfully" : "failed to stop"
             , RSTATUS_TO_NUMERIC( InStatus ) );
+        ( void )InService;
 
         if( RSuccess != InStatus )
         {
@@ -562,9 +581,9 @@ namespace SKL
             return false;
         }
 
-        if( nullptr != GetServiceById( InService->GetUID() ) )
+        if( nullptr != GetSimpleServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) A simple service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -589,9 +608,9 @@ namespace SKL
             return false;
         }
 
-        if( nullptr != GetServiceById( InService->GetUID() ) )
+        if( nullptr != GetAODServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) A AOD service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -616,9 +635,9 @@ namespace SKL
             return false;
         }
 
-        if( nullptr != GetServiceById( InService->GetUID() ) )
+        if( nullptr != GetActiveServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) An active service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -643,9 +662,9 @@ namespace SKL
             return false;
         }
 
-        if( nullptr != GetServiceById( InService->GetUID() ) )
+        if( nullptr != GetWorkerServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) A service with UID:%d was already added!", GetName(), InService->GetUID() );
+            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) A worker service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 

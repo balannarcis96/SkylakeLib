@@ -90,3 +90,17 @@ namespace SKL
 #else
     #define SKL_REAL_VALUE( x ) ( x##f )
 #endif
+
+#define SKL_NO_MOVE_OR_COPY( ClassName )                \
+    ClassName ( const ClassName & ) = delete;           \
+    ClassName & operator=( const ClassName & ) = delete;\
+    ClassName ( ClassName && ) = delete;                \
+    ClassName & operator=( ClassName && ) = delete
+    
+#define SKL_DEFAULT_STATIC_CLASS( ClassName )           \
+    ClassName () noexcept = default;                    \
+    ~ClassName () noexcept = default;                   \
+    ClassName ( const ClassName & ) = delete;           \
+    ClassName & operator=( const ClassName & ) = delete;\
+    ClassName ( ClassName && ) = delete;                \
+    ClassName & operator=( ClassName && ) = delete

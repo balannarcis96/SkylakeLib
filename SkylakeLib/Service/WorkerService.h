@@ -16,7 +16,7 @@ namespace SKL
 
     protected: 
         //! [Callback] Each time a worker started
-        virtual void OnWorkerStarted( Worker& InWorker, WorkerGroup& InWorkerGroup ) noexcept = 0;
+        virtual RStatus OnWorkerStarted( Worker& InWorker, WorkerGroup& InWorkerGroup ) noexcept = 0;
 
         //! [Callback] Each time a worker stopped
         virtual void OnWorkerStopped( Worker& InWorker, WorkerGroup& InWorkerGroup ) noexcept = 0;

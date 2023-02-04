@@ -79,10 +79,10 @@ namespace SKL
         }
 
         //! Initialize and prepare all components of this workers group
-        RStatus Build( bool bIncludeMaster ) noexcept;
+        SKL_NODISCARD RStatus Build( bool bIncludeMaster ) noexcept;
 
         //! Attempt to start the worker group
-        RStatus Start() noexcept;
+        SKL_NODISCARD RStatus Start() noexcept;
 
         //! Stop and join all workers in group except the master
         void Stop() noexcept;
@@ -94,39 +94,44 @@ namespace SKL
         void Join() noexcept;
 
         //! Is the worker group valid
-        bool IsValid() const noexcept { return Tag.IsValid(); }
+        SKL_NODISCARD bool IsValid() const noexcept { return Tag.IsValid(); }
 
         //! Is the worker group running
-        bool IsRunning() const noexcept { return bIsRunning.load_relaxed(); }
+        SKL_NODISCARD bool IsRunning() const noexcept { return bIsRunning.load_relaxed(); }
 
         //! Get the number of running workers
-        uint32_t GetNumberOfRunningWorkers() const noexcept { return RunningWorkers.load_relaxed(); }
+        SKL_NODISCARD uint32_t GetNumberOfRunningWorkers() const noexcept { return RunningWorkers.load_relaxed(); }
 
         //! Get the total number of workers
-        uint32_t GetTotalNumberOfWorkers() const noexcept { return TotalWorkers.load_relaxed(); }
+        SKL_NODISCARD uint32_t GetTotalNumberOfWorkers() const noexcept { return TotalWorkers.load_relaxed(); }
 
         //! Get the tag of the group
-        const WorkerGroupTag& GetTag() const noexcept { return Tag; }
+        SKL_NODISCARD const WorkerGroupTag& GetTag() const noexcept { return Tag; }
 
         //! Get the master worker [if any]
-        Worker* GetTheMasterWorker() noexcept { return MasterWorker; }
+        SKL_NODISCARD Worker* GetTheMasterWorker() noexcept { return MasterWorker; }
 
         //! Is this group the master workers group 
-        bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker; };
+        SKL_NODISCARD bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker; };
 
-        //! Defer functor exectuion to the a worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
+        //! Defer functor execution to any worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
         template<typename TFunctor>
-        RStatus Defer( TFunctor&& InFunctor ) noexcept
+        SKL_NODISCARD RStatus Defer( TFunctor&& InFunctor ) noexcept
         {
             auto* NewTask { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
+            if( nullptr == NewTask ) SKL_UNLIKELY
+            {
+                return RAllocationFailed;
+            }
+
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );
         }
     
         //! Create new tcp async acceptor on this instance
-        RStatus AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept;
+        SKL_NODISCARD RStatus AddNewTCPAcceptor( const TCPAcceptorConfig& Config ) noexcept;
 
         //! Query tcp async acceptor by id
-        TCPAcceptor* GetTCPAcceptorById( uint32_t Id ) noexcept
+        SKL_NODISCARD TCPAcceptor* GetTCPAcceptorById( uint32_t Id ) noexcept
         {
             for( auto& Acceptor : TCPAcceptors )
             {
@@ -142,7 +147,7 @@ namespace SKL
         }
 
         //! Query tcp async acceptor by ip and port
-        TCPAcceptor* GetTCPAcceptor( uint32_t Ip, uint16_t Port ) noexcept
+        SKL_NODISCARD TCPAcceptor* GetTCPAcceptor( uint32_t Ip, uint16_t Port ) noexcept
         {
             for( auto& Acceptor : TCPAcceptors )
             {
@@ -158,7 +163,7 @@ namespace SKL
         }
 
         //! Get tcp async acceptor with the id as index
-        SKL_FORCEINLINE TCPAcceptor* GetTCPAcceptorIdAsIndex( uint32_t Id ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD TCPAcceptor* GetTCPAcceptorIdAsIndex( uint32_t Id ) noexcept
         {
             SKL_ASSERT( TCPAcceptors.size() > Id );
             return TCPAcceptors[ Id ].get();
@@ -171,19 +176,19 @@ namespace SKL
         void ReactiveWorkerRun( Worker& Worker ) noexcept;
         
         //! Get the server instance
-        SKL_FORCEINLINE ServerInstance* GetServerInstance() noexcept { return Manager; }
+        SKL_FORCEINLINE SKL_NODISCARD ServerInstance* GetServerInstance() noexcept { return Manager; }
         
         //! Get the server instance
-        SKL_FORCEINLINE const ServerInstance* GetServerInstance() const noexcept { return Manager; }
+        SKL_FORCEINLINE SKL_NODISCARD const ServerInstance* GetServerInstance() const noexcept { return Manager; }
 
         //! Get workers 
-        SKL_FORCEINLINE std::vector<std::unique_ptr<Worker>>& GetWorkers() noexcept { return Workers; }
+        SKL_FORCEINLINE SKL_NODISCARD std::vector<std::unique_ptr<Worker>>& GetWorkers() noexcept { return Workers; }
 
         //! Get workers 
-        SKL_FORCEINLINE const std::vector<std::unique_ptr<Worker>>& GetWorkers() const noexcept { return Workers; }
+        SKL_FORCEINLINE SKL_NODISCARD const std::vector<std::unique_ptr<Worker>>& GetWorkers() const noexcept { return Workers; }
 
         //! Get the async io instance for this worker group
-        SKL_FORCEINLINE AsyncIO& GetAsyncIOAPI() noexcept{ return AsyncIOAPI; }
+        SKL_FORCEINLINE SKL_NODISCARD AsyncIO& GetAsyncIOAPI() noexcept{ return AsyncIOAPI; }
 
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;

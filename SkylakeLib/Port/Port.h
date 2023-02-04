@@ -83,7 +83,7 @@ namespace SKL
     //! Get the system l1 cache line size
     SKL_NODISCARD size_t GetL1CacheLineSize() noexcept;
 
-    struct PlatformTLS
+    struct PlatformTLS final
     {
         static constexpr TLSSlot INVALID_SLOT_ID = 0xFFFFFFFF;
 
@@ -197,7 +197,7 @@ namespace SKL
 
 namespace SKL
 {
-    struct PreciseSleep_WaitableTimer: public ITLSSingleton<PreciseSleep_WaitableTimer>
+    struct PreciseSleep_WaitableTimer final: public ITLSSingleton<PreciseSleep_WaitableTimer>
     {
         PreciseSleep_WaitableTimer() noexcept = default;
         ~PreciseSleep_WaitableTimer() noexcept = default;

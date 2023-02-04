@@ -327,8 +327,6 @@ namespace SKL::AOD
     {
         while( true )
         {
-            std::this_thread::yield();
-            
             auto* Task{ reinterpret_cast<IAODCustomObjectTask*>( TaskQueue.Pop() ) };
             if( nullptr != Task ) SKL_LIKELY
             {

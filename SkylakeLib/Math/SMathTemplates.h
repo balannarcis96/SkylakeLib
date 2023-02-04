@@ -178,6 +178,13 @@ namespace SKL
     {
         return std::fmod( Value, ModByValue );
     }
+    
+    //! Computes the floating-point remainder of the division operation @Value/@ModByValue
+    template<std::TFloat T>
+    SKL_FORCEINLINE SKL_NODISCARD inline T FHasIntegerValue( T Value ) noexcept
+    {
+        return FFloor( Value ) == Value;
+    }
 
     //! Computes the sine of @Value (measured in radians)
     template<std::TFloat T>

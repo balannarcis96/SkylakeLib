@@ -245,3 +245,11 @@ namespace SKL::AOD
 
     static_assert( sizeof( CustomObject ) == ( sizeof( void* ) * 4 ) );
 }
+
+namespace SKL
+{
+    SKL_FORCEINLINE SKL_NODISCARD inline bool DoAsyncHasFailed( RStatus Result ) noexcept
+    {
+        return Result == RAllocationFailed;
+    }
+}

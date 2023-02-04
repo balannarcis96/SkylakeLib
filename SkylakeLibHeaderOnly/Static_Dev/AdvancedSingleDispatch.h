@@ -1303,6 +1303,16 @@ namespace ASD
             return Pointer == nullptr;                                                                                                                                                              \
         }                                                                                                                                                                                           \
                                                                                                                                                                                                     \
+        ASD_FORCEINLINE const TPointer GetPointer() const NOEXCEPT_VALUE                                                                                                                            \
+        {                                                                                                                                                                                           \
+            return Pointer;                                                                                                                                                                         \
+        }                                                                                                                                                                                           \
+                                                                                                                                                                                                    \
+        ASD_FORCEINLINE void SetPointer( TPointer InPtr ) NOEXCEPT_VALUE                                                                                                                            \
+        {                                                                                                                                                                                           \
+            Pointer = InPtr;                                                                                                                                                                        \
+        }                                                                                                                                                                                           \
+                                                                                                                                                                                                    \
     private:                                                                                                                                                                                        \
         template<typename TFunctor>                                                                                                                                                                 \
         void BuildHandler( TFunctor&& lambda ) NOEXCEPT_VALUE                                                                                                                                       \

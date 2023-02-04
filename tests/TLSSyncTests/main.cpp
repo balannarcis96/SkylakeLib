@@ -35,9 +35,11 @@ namespace TLSSyncTests
                 return SKL::RSuccess;
             }
 
-            void OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
+            SKL::RStatus OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 TLSCustomVal::SetValue( 0 );
+
+                return SKL::RSuccess;
             }
 
             void OnWorkerStopped( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override

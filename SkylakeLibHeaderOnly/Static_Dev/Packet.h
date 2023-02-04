@@ -33,12 +33,14 @@ namespace SKL
     constexpr TPacketSize CCalculate_PacketMaximumUsableBodySize() noexcept
     {
         return CPacketMaximumBodySize 
-            - static_cast<TPacketSize>( sizeof( PacketHeader ) ) // Routed packet wrapping header 
-            - static_cast<TPacketSize>( sizeof( TEntityIdBase ) );
+            - static_cast<TPacketSize>( sizeof( PacketHeader ) )   // Routed packet wrapping header 
+            - static_cast<TPacketSize>( sizeof( TEntityIdBase ) ); // Routing target entity id
     }
 
-    constexpr TPacketSize CPacketMaximumUsableBodySize = CCalculate_PacketMaximumUsableBodySize();
+    constexpr TPacketSize CPacketMaximumUsableBodySize       = CCalculate_PacketMaximumUsableBodySize();
+    constexpr TPacketSize CPacketMaximumUsableUserPacketSize = CPacketMaximumUsableBodySize + CPacketHeaderSize;
     static_assert( CPacketMaximumSize > CPacketHeaderSize );
+    static_assert( CPacketMaximumSize > CPacketMaximumUsableUserPacketSize );
 
     struct PacketArrayHeader
     {

@@ -107,7 +107,7 @@ namespace AODTests
             if( InGroup.GetTag().Id == 1 )
             {
                 SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
-                InGroup.Defer( [ /*this*/ ]( SKL::ITask* /*Self*/ ) noexcept -> void 
+                ( void )InGroup.Defer( [ /*this*/ ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                 {
                     for( uint64_t i = 0; i < IterCount; ++i )
                     {
@@ -154,7 +154,7 @@ namespace AODTests
             for( uint64_t i = 0; i < IterCount; ++i )
             {
                 int32_t ExecCounter = 0;
-                InGroup.Defer( [ this, ExecCounter ]( SKL::ITask* /*Self*/ ) mutable noexcept -> void 
+                ( void )InGroup.Defer( [ this, ExecCounter ]( SKL::ITask* /*Self*/ ) mutable noexcept -> void 
                 {
                     SKL_ASSERT_ALLWAYS( 0 == ExecCounter++ );
 

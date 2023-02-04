@@ -231,9 +231,11 @@ namespace ServicesTests
             }
 
             //! [Callback] Each time a worker started
-            void OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
+            SKL::RStatus OnWorkerStarted( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InWorkerGroup*/ ) noexcept override
             {
                 TLSCounter::SetValue( 0 );
+
+                return SKL::RSuccess;
             }
 
             //! [Callback] Each time a worker stopped

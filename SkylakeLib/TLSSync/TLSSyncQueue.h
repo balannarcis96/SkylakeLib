@@ -22,7 +22,7 @@ namespace SKL
         {
             for( size_t i = 0; i < Size; ++i )    
             {
-                Items[ i ].store_relaxed( nullptr );
+                Items[i].store_relaxed( nullptr );
             }
         }
         ~TLSSyncQueue() noexcept 
@@ -41,7 +41,7 @@ namespace SKL
         {
             for( size_t i = 0; i < Size; ++i )    
             {
-                auto* TaskPtr{ Items[ i ].exchange( nullptr ) };
+                auto* TaskPtr{ Items[i].exchange( nullptr ) };
                 if( nullptr != TaskPtr )
                 {
                     TSharedPtr<TObject>::Static_Reset( TaskPtr );
@@ -52,11 +52,11 @@ namespace SKL
         //! Push new global task
         void Push( TObject* InTask ) noexcept
         {
-            const uint64_t TaskIndex   { Head.increment() };
+            const uint64_t TaskIndex{ Head.increment() };
 #if defined(SKL_BUILD_SHIPPING)
-            ( void )Items[ TaskIndex & Mask ].exchange( InTask );
+            ( void )Items[TaskIndex & Mask].exchange( InTask );
 #else
-            auto*          ShouldBeNull{ Items[ TaskIndex & Mask ].exchange( InTask ) };
+            auto* ShouldBeNull{ Items[TaskIndex & Mask].exchange( InTask ) };
             SKL_ASSERT_MSG( nullptr == ShouldBeNull, "To many tasks at once, increase the TLSSync Tasks queue size!" );
 #endif
         }
@@ -66,9 +66,9 @@ namespace SKL
         {
             const uint64_t TaskIndex{ ThreadIndex::GetValue() };
 #if defined(SKL_BUILD_SHIPPING)
-            ( void )Items[ TaskIndex & Mask ].exchange( nullptr );
+            ( void )Items[TaskIndex & Mask].exchange( nullptr );
 #else
-            auto*          ShouldNotBeNull{ Items[ TaskIndex & Mask ].exchange( nullptr ) };
+            auto* ShouldNotBeNull{ Items[TaskIndex & Mask].exchange( nullptr ) };
             SKL_ASSERT( nullptr != ShouldNotBeNull );
 #endif
         }
@@ -77,14 +77,14 @@ namespace SKL
         SKL_NODISCARD TObject* TLSFront() noexcept
         {
             const uint64_t TaskIndex{ ThreadIndex::GetValue() };
-            return Items[ TaskIndex & Mask ].load_acquire();
+            return Items[TaskIndex & Mask].load_acquire();
         }
 
         //! Pop next element for the calling thread
         SKL_NODISCARD TObject* TLSNext() noexcept
         {
             const uint64_t TaskIndex{ ThreadIndex::GetValue() + 1 };
-            auto*          Result   { Items[ TaskIndex & Mask ].load_acquire() };
+            auto*          Result   { Items[TaskIndex & Mask].load_acquire() };
             ThreadIndex::SetValue( TaskIndex );
             return Result;
         }

@@ -752,7 +752,7 @@ namespace WorkersTests
                     return ;
                 }
 
-                Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* /*Self*/ ) noexcept {
+                ( void )Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* /*Self*/ ) noexcept {
                     SKLL_INF( "From TASK" );
                     Manager.SignalToStop();
                 } );
