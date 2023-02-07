@@ -17,29 +17,32 @@ namespace AODTests
         {
             ASSERT_TRUE( SKL::RSuccess == SKL::Skylake_InitializeLibrary( 0, nullptr, nullptr ) );
 
-            ServerInstanceConfig.AddNewGroup( SKL::WorkerGroupTag{  .Id = 1, .WorkersCount = 1, .bHandlesTasks = true, .Name = L"TEMP" } );        
+            SKL::WorkerGroupTag TempTag1{ .Id = 1, .WorkersCount = 1, .Name = L"TEMP" };
+            TempTag1.bEnableAsyncIO = true;
+
+            ServerInstanceConfig.AddNewGroup( TempTag1 );        
             ASSERT_TRUE( SKL::RSuccess == ServerInstance.Initialize( std::move( ServerInstanceConfig ) ) );
 
-            SKL::WorkerGroupTag TempTag{ 
+            SKL::WorkerGroupTag TempTag2{ 
                 .Id = 1, 
                 .WorkersCount = 1, 
-                .bHandlesTasks = true, 
                 .Name = L"TEMP" 
             };
-            TempTag.Validate();
+            TempTag2.bEnableAsyncIO = true;
+            ( void )TempTag2.Validate();
 
             ASSERT_TRUE( SKL::RSuccess == SKL::ThreadLocalMemoryManager::Create() );
-            ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, TempTag ) );
+            ASSERT_TRUE( SKL::RSuccess == SKL::ServerInstanceTLSContext::Create( &ServerInstance, TempTag2 ) );
 
-            SKL::WorkerGroupTag TempTag2
+            SKL::WorkerGroupTag TempTag3
             { 
                 .Id = 1, 
                 .WorkersCount = 1, 
-                .bHandlesTasks = true, 
                 .Name = L"TEMP" 
             };
-            TempTag2.Validate();
-            ASSERT_TRUE( SKL::RSuccess == SKL::AODTLSContext::Create( &ServerInstance, TempTag2 ) );
+            TempTag3.bEnableAsyncIO = true;
+            ( void )TempTag3.Validate();
+            ASSERT_TRUE( SKL::RSuccess == SKL::AODTLSContext::Create( &ServerInstance, TempTag3 ) );
         }
 
         void TearDown() override
@@ -106,7 +109,7 @@ namespace AODTests
 
             if( InGroup.GetTag().Id == 1 )
             {
-                SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
+                SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bEnableAsyncIO );
                 ( void )InGroup.Defer( [ /*this*/ ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                 {
                     for( uint64_t i = 0; i < IterCount; ++i )
@@ -150,7 +153,7 @@ namespace AODTests
                 return false;
             }
 
-            SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bHandlesTasks );
+            SKL_ASSERT_ALLWAYS( true == InGroup.GetTag().bEnableAsyncIO );
             for( uint64_t i = 0; i < IterCount; ++i )
             {
                 int32_t ExecCounter = 0;
@@ -516,21 +519,22 @@ namespace AODTests
 
         constexpr uint64_t IterCount{ 10000 };
 
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 160, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 16,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
-        }, [ Ptr = obj.get() ]( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
+        };
+        Tag.bIsActive          = true;
+        Tag.bEnableAsyncIO     = true;
+        Tag.bSupportsAOD       = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bCallTickHandler   = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, [ Ptr = obj.get() ]( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
         {
             for( uint64_t i = 0; i < IterCount; ++i )
             {
@@ -590,22 +594,23 @@ namespace AODTests
                 InGroup.GetServerInstance()->SignalToStop( true );
             }
         } ;
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 60, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 4,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
-        }, std::move( OnTick ) ) );
+        };
+        Tag.bIsActive          = true;
+        Tag.bEnableAsyncIO     = false;
+        Tag.bSupportsAOD       = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bCallTickHandler   = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, std::move( OnTick ) ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -655,22 +660,23 @@ namespace AODTests
                 InGroup.GetServerInstance()->SignalToStop( true );
             }
         };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 60, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 4,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
-            .Name                            = L"AODObjectMultipleSymetricWorkers_MultipleDeferedTasks_ACTIVE"
-        }, std::move( OnTick ) ) );
+            .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
+        };
+        Tag.bIsActive          = true;
+        Tag.bEnableAsyncIO     = false;
+        Tag.bSupportsAOD       = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bCallTickHandler   = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, std::move( OnTick ) ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -701,22 +707,23 @@ namespace AODTests
                 } );
             }
         };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
-            .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, std::move( OnTick ) ) );
+            .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
+        };
+        Tag.bIsActive          = true;
+        Tag.bEnableAsyncIO     = false;
+        Tag.bSupportsAOD       = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bCallTickHandler   = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, std::move( OnTick ) ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -758,21 +765,22 @@ namespace AODTests
             }
         };
       
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
             .Name                            = L"AODObjectReactiveAndActiveWorkers_HeavyGlobalDefer_ACTIVE"
-        }, std::move( OnTick ) ) );
+        };
+        Tag.bIsActive          = true;
+        Tag.bEnableAsyncIO     = false;
+        Tag.bSupportsAOD       = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bCallTickHandler   = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, std::move( OnTick ) ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -795,37 +803,34 @@ namespace AODTests
                 InGroup.GetServerInstance()->SignalToStop( true );
             }
         };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 2,
-            .bIsActive                       = false,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = false,
-            .bHandlesTimerTasks              = false,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        };
+        Tag.bEnableAsyncIO = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag2{
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 2,
             .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, std::move( OnTick ) ) );
+        };
+        Tag2.bIsActive = true;
+        Tag2.bSupportsAOD = true;
+        Tag2.bHandlesTimerTasks = true;
+        Tag2.bCallTickHandler = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag2, std::move( OnTick ) ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -840,22 +845,19 @@ namespace AODTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 4,
-            .bIsActive                       = false,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = false,
-            .bHandlesTimerTasks              = false,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+        };
+        Tag.bEnableAsyncIO = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -870,37 +872,34 @@ namespace AODTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 2,
-            .bIsActive                       = false,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = false,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        };
+        Tag.bEnableAsyncIO = true;
+        Tag.bSupportsAOD = true;
+
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag2{
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 2,
             .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+        };
+        Tag2.bIsActive = true;
+        Tag2.bSupportsAOD = true;
+        Tag2.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag2, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
@@ -915,36 +914,32 @@ namespace AODTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
 
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = 2,
-            .bIsActive                       = false,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = false,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_REACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        };
+        Tag.bEnableAsyncIO = true;
+        Tag.bSupportsAOD = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+
+        SKL::WorkerGroupTag Tag2{
             .TickRate                        = 30, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 2,
             .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"AODObjectMultipleWorkers_MultipleDeferedTasks_ACTIVE"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
+        };
+        Tag2.bIsActive = true;
+        Tag2.bSupportsAOD = true;
+        Tag2.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag2, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept -> void {} ) );
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();

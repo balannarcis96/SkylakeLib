@@ -172,22 +172,23 @@ namespace TLSSyncTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
 
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 60, 
             .SyncTLSTickRate                 = 0,
             .Id                              = 1,
             .WorkersCount                    = WorkersCount,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = true,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = true,
-            .bTickWorkerServices             = true,
             .Name                            = L"AODOBJECTSINGLETHREAD_GROUP"
-        }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
+        };
+        Tag.bIsActive = true;
+        Tag.bEnableAsyncIO = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bSupportsTLSSync = true;
+        Tag.bCallTickHandler = true;
+        Tag.bTickWorkerServices = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
 
         ASSERT_TRUE( true == Start( true ) );
 
@@ -203,22 +204,20 @@ namespace TLSSyncTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
+        
+        SKL::WorkerGroupTag Tag{
             .TickRate                        = 0, 
             .SyncTLSTickRate                 = 24,
             .Id                              = 1,
             .WorkersCount                    = WorkersCount,
-            .bIsActive                       = false,
-            .bHandlesTasks                   = true,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = false,
-            .bSupportsTLSSync                = true,
             .bPreallocateAllThreadLocalPools = false,
             .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
             .Name                            = L"TLSSync_Global_GROUP"
-                                               }, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
+        };
+        Tag.bEnableAsyncIO = true;
+        Tag.bSupportsAOD = true;
+        Tag.bSupportsTLSSync = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> void {  } ) );
 
         ASSERT_TRUE( true == Start( true ) );
 

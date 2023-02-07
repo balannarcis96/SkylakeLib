@@ -114,7 +114,7 @@ namespace SKL
         //! Is this group the master workers group 
         SKL_NODISCARD bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker; };
 
-        //! Defer functor execution to any worker in this group through the async IO queue [if the group bHandlesTasks=true only!] [void( ITask* Self ) noexcept]
+        //! Defer functor execution to any worker in this group through the async IO queue [if the group bEnableAsyncIO=true only!] [void( ITask* Self ) noexcept]
         template<typename TFunctor>
         SKL_NODISCARD RStatus Defer( TFunctor&& InFunctor ) noexcept
         {
@@ -251,7 +251,7 @@ namespace SKL
         friend Worker;    
         friend ServerInstance;    
         friend struct AODObject;
-        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSyncVal>
-        friend struct WorkerGroupRunVariant;
+        template<WorkerGroupTagFlags, bool> friend struct ActiveWorkerVariant;
+        template<WorkerGroupTagFlags>       friend struct ReactiveWorkerVariant;
     }; 
 }

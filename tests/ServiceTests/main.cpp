@@ -581,21 +581,17 @@ namespace ServicesTests
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
 
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 30, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"SimpleService_BasicAPI_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 30, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"SimpleService_BasicAPI_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -610,22 +606,18 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 30, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"AODService_BasicAPI_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 30, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"AODService_BasicAPI_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -640,22 +632,18 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 60, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"ActiveService_BasicAPI_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 60, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"ActiveService_BasicAPI_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -670,23 +658,19 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = CTickRate, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = CWorkersCount,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .bTickWorkerServices             = true,
-            .Name                            = L"ActiveService_BasicAPI_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = CTickRate, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = CWorkersCount,
+            .Name            = L"ActiveService_BasicAPI_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        Tag.bTickWorkerServices = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -701,22 +685,18 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 30, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"SimpleService_AsyncShutdown_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 30, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"SimpleService_AsyncShutdown_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -731,22 +711,18 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 30, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"SimpleService_EntityStore_AsyncShutdown_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 30, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"SimpleService_EntityStore_AsyncShutdown_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
@@ -761,22 +737,18 @@ namespace ServicesTests
     {
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
-        ASSERT_TRUE( true == AddNewWorkerGroup( SKL::WorkerGroupTag {
-            .TickRate                        = 30, 
-            .SyncTLSTickRate                 = 0,
-            .Id                              = 1,
-            .WorkersCount                    = 2,
-            .bIsActive                       = true,
-            .bHandlesTasks                   = false,
-            .bSupportsAOD                    = true,
-            .bHandlesTimerTasks              = true,
-            .bSupportsTLSSync                = false,
-            .bPreallocateAllThreadLocalPools = false,
-            .bSupportesTCPAsyncAcceptors     = false,
-            .bCallTickHandler                = false,
-            .Name                            = L"SimpleService_EntityStore_AOD_AsyncShutdown_ACTIVE"
-        }, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
+        
+        SKL::WorkerGroupTag Tag{
+            .TickRate        = 30, 
+            .SyncTLSTickRate = 0,
+            .Id              = 1,
+            .WorkersCount    = 2,
+            .Name            = L"SimpleService_EntityStore_AOD_AsyncShutdown_ACTIVE"
+        };
+        Tag.bIsActive = true;
+        Tag.bSupportsAOD = true;
+        Tag.bHandlesTimerTasks = true;
+        ASSERT_TRUE( true == AddNewWorkerGroup( Tag, []( SKL::Worker& , SKL::WorkerGroup& ) noexcept -> void {} ) );
 
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();

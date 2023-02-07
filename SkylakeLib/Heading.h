@@ -59,24 +59,29 @@ namespace SKL
         uint32_t Flags{ 0 };
     };
 
-    struct WorkerGroupTag final
+    struct WorkerGroupTagFlags
     {
-        uint32_t       TickRate                        { 0 };       //!< Tick rate of worker [ bIsActive == true ]
-        uint32_t       SyncTLSTickRate                 { 0 };       //!< Tick rate of tls sync [ bSupportsTLSSync == true ]
-        uint16_t       Id                              { 0 };       //!< UID of the tag [max 65536 workers] recommended to treat id as index starting from 1 (0 = invalid id)
-        uint16_t       WorkersCount                    { 0 };       //!< Number of workers in the group
-        bool           bIsActive                       { false };   //!< Is this an pro-active worker [ it has an active ticks/second loop ]
-        bool           bHandlesTasks                   { false };   //!< Does this group handle tasks and async IO tasks [ an AsyncIO instance will be created for the group if true ]
-        bool           bSupportsAOD                    { false };   //!< true -> Workers in this group can use AOD (Async Object Dispatcher) delayed tasks directly (handled by the same thread)
-        bool           bHandlesTimerTasks              { false };   //!< true -> This group handles global and AOD(if bSupportsAOD=true) delayed tasks -> requires [bIsActive=true]
-        bool           bSupportsTLSSync                { false };   //!< Supports TLSSync [ TLSSync it is its own feature, please get documented before use ]
-        bool           bPreallocateAllThreadLocalPools { false };   //!< true -> Preallocate all pools in ThreadLocalMemoryManager
-        bool           bSupportesTCPAsyncAcceptors     { false };   //!< Does this group supports and handles TCP async acceptors
-        bool           bCallTickHandler                { false };   //!< true -> the workers in the group will call the thick handler
-        bool           bTickWorkerServices             { false };   //!< true -> each worker in the group will call the thick handler of all all registered worker services -> requires [bIsActive=true]
-        bool           bHasWorkerGroupSpecificTLSSync  { false };   //!< true -> SyncTLS can be used for specific worker group
-        const wchar_t *Name                            { nullptr }; //!< Name of the worker group
-        mutable bool   bIsValid                        { false };   //!< Initialize this member to false if you want your server to run correctly ;)
+        bool bIsActive                     { false };   //!< Is this an pro-active worker [ it has an active ticks/second loop ]
+        bool bEnableAsyncIO                { false };   //!< Does this group handle tasks and async IO tasks [ an AsyncIO instance will be created for the group if true ]
+        bool bSupportsAOD                  { false };   //!< true -> Workers in this group can use AOD (Async Object Dispatcher) delayed tasks directly (handled by the same thread)
+        bool bHandlesTimerTasks            { false };   //!< true -> This group handles global and AOD(if bSupportsAOD=true) delayed tasks -> requires [bIsActive=true]
+        bool bSupportsTLSSync              { false };   //!< Supports TLSSync [ TLSSync it is its own feature, please get documented before use ]
+        bool bCallTickHandler              { false };   //!< true -> the workers in the group will call the thick handler
+        bool bTickWorkerServices           { false };   //!< true -> each worker in the group will call the thick handler of all all registered worker services -> requires [bIsActive=true]
+        bool bHasWorkerGroupSpecificTLSSync{ false };   //!< true -> SyncTLS can be used for specific worker group
+        bool bEnableTaskQueue              { false };   //!< true -> each worker in group will use a SCMP queue for tasks -> requires[bEnableAsyncIO=false]
+    };
+
+    struct WorkerGroupTag final : public WorkerGroupTagFlags
+    {
+        uint32_t       TickRate                       { 0 };       //!< Tick rate of worker [ bIsActive == true ]
+        uint32_t       SyncTLSTickRate                { 0 };       //!< Tick rate of tls sync [ bSupportsTLSSync == true ]
+        uint16_t       Id                             { 0 };       //!< UID of the tag [max 65536 workers] recommended to treat id as index starting from 1 (0 = invalid id)
+        uint16_t       WorkersCount                   { 0 };       //!< Number of workers in the group
+        bool           bPreallocateAllThreadLocalPools{ false };   //!< true -> Preallocate all pools in ThreadLocalMemoryManager
+        bool           bSupportesTCPAsyncAcceptors    { false };   //!< Does this group supports and handles TCP async acceptors
+        const wchar_t *Name                           { nullptr }; //!< Name of the worker group
+        mutable bool   bIsValid                       { false };   //!< Initialize this member to false if you want your server to run correctly ;)
 
         //! [*]
         //!  Case 1.If all worker groups in the server instance are active [bIsActive=true], delayed tasks produced on any thread will be processed by the thread that produced it
@@ -97,30 +102,36 @@ namespace SKL
         //! Note: [bSupportesTCPAsyncAcceptors=true] Accepted sockets will not be associated to any async IO API.
         //!
 
-        SKL_FORCEINLINE bool Validate() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD bool Validate() const noexcept
         {
             SKL_ASSERT_ALLWAYS( nullptr != Name );
 
-            if ( 0 == Id )
+            if ( 0U == Id )
             {
                 SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %hu!", Name, Id );
                 return false;
             }
 
-            if ( false == bIsActive && false == bHandlesTasks )
+            if ( false == bIsActive && false == bEnableAsyncIO )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] All inactive worker groups must marked [bIsActive=false;bHandlesTasks=true]!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] All inactive worker groups must be marked [bIsActive=false;bEnableAsyncIO=true]!", Name );
                 return false;
             }
 
-            if ( true == bIsActive && true == bHandlesTasks && false == bCallTickHandler && false == bHandlesTimerTasks && false == bSupportsAOD )
+            if( false == bIsActive && bEnableTaskQueue )
             {
-                SKLL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bHandlesTasks=true;bCallTickHandler=false] Recommended to use a reactive worker group instead!", Name );
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Reactive worker cannot have a task queue [bIsActive=false;bEnableTaskQueue=true]!", Name );
+                return false;
             }
 
-            if( true == bSupportesTCPAsyncAcceptors && false == bHandlesTasks )
+            if ( true == bIsActive && true == bEnableAsyncIO && false == bCallTickHandler && false == bHandlesTimerTasks && false == bSupportsAOD )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bHandlesTasks = true!", Name );
+                SKLL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bEnableAsyncIO=true;bCallTickHandler=false;bHandlesTimerTasks=false;bSupportsAOD=false] Recommended to use a reactive worker group instead!", Name );
+            }
+
+            if( true == bSupportesTCPAsyncAcceptors && false == bEnableAsyncIO )
+            {
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bEnableAsyncIO = true!", Name );
                 return false;
             }
 
@@ -139,6 +150,7 @@ namespace SKL
             bIsValid = true;
             return true;
         }        
-        SKL_FORCEINLINE bool IsValid() const noexcept { return bIsValid; }
+
+        SKL_FORCEINLINE SKL_NODISCARD bool IsValid() const noexcept { return bIsValid; }
     }; 
 }

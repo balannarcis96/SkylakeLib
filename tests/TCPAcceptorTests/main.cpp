@@ -17,18 +17,20 @@ namespace TCPAcceptorTests
         SKL::ServerInstanceConfig::ServerInstanceConfig AppWorkersConfig{ L"AcceptAsync_Start_Stop_App_WorkersGroups" };
         SKL::ServerInstanceConfig::WorkerGroupConfig    WGConfig        {};
 
-        //Config the workers group
-        WGConfig.SetTag( SKL::WorkerGroupTag
+        SKL::WorkerGroupTag Tag
         {
-            .TickRate          = 5,
-            .SyncTLSTickRate   = 5,
-            .Id                = 1,
-            .WorkersCount      = 1,
-            .bIsActive         = true,
-            .bHandlesTasks     = true,
-            .bSupportsTLSSync  = false,
-            .Name              = L"AcceptAsync_Start_Stop_WorkerGroup"
-        } );
+            .TickRate        = 5,
+            .SyncTLSTickRate = 5,
+            .Id              = 1,
+            .WorkersCount    = 1,
+            .Name            = L"AcceptAsync_Start_Stop_WorkerGroup"
+        };
+
+        Tag.bIsActive = true;
+        Tag.bEnableAsyncIO = true;
+
+        //Config the workers group
+        WGConfig.SetTag( Tag );
         WGConfig.SetWorkerTickHandler( []( SKL::Worker&, SKL::WorkerGroup& ) noexcept -> void { } );
 
         //Config the tcp async acceptor
