@@ -57,26 +57,25 @@ namespace SKL
                 
                 if constexpr( Flags.bEnableTaskQueue )
                 {
-                    //@TODO pull task from task queue
+                    if( CTask_DoThrottleGeneralTaskExecution )
+                    {
+                        WorkerGroup::HandleGeneralTasksWithThrottle( InWorker );
+                    }
+                    else
+                    {
+                        WorkerGroup::HandleGeneralTasks( InWorker );
+                    }
                 }
 
                 if constexpr( Flags.bHandlesTimerTasks )
                 {
                     if constexpr( bAllWorkerGroupsAreActive )
                     {
-                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Local( InWorker ) };
-                        if ( true == bShouldTermiante ) SKL_UNLIKELY
-                        {
-                            break;
-                        }
+                        WorkerGroup::HandleTimerTasks_Local();
                     }
                     else
                     {
-                        const bool bShouldTermiante{ InGroup.HandleTimerTasks_Global( InWorker ) };
-                        if ( true == bShouldTermiante ) SKL_UNLIKELY
-                        {
-                            break;
-                        }
+                        WorkerGroup::HandleTimerTasks_Global( InWorker );
                     }
                 }
 
@@ -84,19 +83,11 @@ namespace SKL
                 {
                     if constexpr( bAllWorkerGroupsAreActive )
                     {
-                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Local( InWorker ) };
-                        if ( bShouldTermiante ) SKL_UNLIKELY
-                        {
-                            break;
-                        }
+                        WorkerGroup::HandleAODDelayedTasks_Local( InWorker );
                     }
                     else
                     {
-                        const bool bShouldTermiante{ InGroup.HandleAODDelayedTasks_Global( InWorker ) };
-                        if ( bShouldTermiante ) SKL_UNLIKELY
-                        {
-                            break;
-                        }
+                        WorkerGroup::HandleAODDelayedTasks_Global( InWorker );
                     }
                 }
 

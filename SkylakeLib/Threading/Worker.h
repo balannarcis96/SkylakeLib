@@ -60,6 +60,12 @@ namespace SKL
         {
             DelayedTasks.Push( InTask );
         }
+        
+        //! Defer general task execution on this worker
+        SKL_FORCEINLINE void DeferGeneral( ITask* InTask ) noexcept
+        {
+            Tasks.Push( InTask );
+        }
 
         //! Defer AOD task execution on this worker
         SKL_FORCEINLINE void Defer( IAODSharedObjectTask* InTask ) noexcept
@@ -86,6 +92,7 @@ namespace SKL
         void RunImpl() noexcept;
         void Clear() noexcept;
                 
+        TaskQueue                                             Tasks                       {};          //!< Single consumer multiple producers queue for general tasks 
         TaskQueue                                             DelayedTasks                {};          //!< Single consumer multiple producers queue for delayed tasks 
         AODTaskQueue                                          AODSharedObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
         AODTaskQueue                                          AODStaticObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 

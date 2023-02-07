@@ -740,9 +740,9 @@ namespace SKL
 
     bool WorkerGroup::HandleTasks_Proactive( uint32_t MillisecondsToSleep ) noexcept
     {
-        AsyncIOOpaqueType* OpaqueType               { nullptr };
-        TCompletionKey     CompletionKey            { nullptr };
-        uint32_t           NumberOfBytesTransferred { 0 };
+        AsyncIOOpaqueType* OpaqueType              { nullptr };
+        TCompletionKey     CompletionKey           { nullptr };
+        uint32_t           NumberOfBytesTransferred{ 0U };
 
         const auto Result { AsyncIOAPI.TryGetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey, MillisecondsToSleep ) };
         if( RTimeout == Result )
@@ -765,17 +765,21 @@ namespace SKL
 
         if( nullptr != OpaqueType )
         {
-            return HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
+            HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
         }    
+        else
+        {
+            HandleTask( CompletionKey );
+        }
     
-        return HandleTask( CompletionKey );
+        return false;
     }
 
     bool WorkerGroup::HandleTasks_Reactive() noexcept
     {
-        AsyncIOOpaqueType* OpaqueType               { nullptr };
-        TCompletionKey     CompletionKey            { nullptr };
-        uint32_t           NumberOfBytesTransferred { 0 };
+        AsyncIOOpaqueType* OpaqueType              { nullptr };
+        TCompletionKey     CompletionKey           { nullptr };
+        uint32_t           NumberOfBytesTransferred{ 0U };
 
         const auto Result { AsyncIOAPI.GetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey ) };
         if( RSuccess != Result ) SKL_UNLIKELY
@@ -783,6 +787,7 @@ namespace SKL
             if( RSystemFailure ==  Result )
             {
                 SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+
                 // signal to terminate the worker group
                 return true;
             }
@@ -792,52 +797,57 @@ namespace SKL
 
         if( nullptr != OpaqueType )
         {
-            return HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
+            HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
         }    
-    
-        return HandleTask( CompletionKey );
+        else
+        {
+           HandleTask( CompletionKey );
+        }
+
+        return false;
     }
 
-    bool WorkerGroup::HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept
+    void WorkerGroup::HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept
     {
         SKL_ASSERT( nullptr != InOpaque );
 
         {
             // cast back to shared object IAsyncIOTask
             auto* Task { reinterpret_cast<IAsyncIOTask*>( InOpaque ) };
-            
+        
             // dispatch the task
             Task->Dispatch( NumberOfBytesTransferred );
 
             // release ref
             TSharedPtr<IAsyncIOTask>::Static_Reset( Task );
         }
-
-        return false;
     }
 
-    bool WorkerGroup::HandleTask( TCompletionKey InCompletionKey ) noexcept
+    void WorkerGroup::HandleGeneralTasks( Worker& Worker ) noexcept
     {
-        SKL_ASSERT( nullptr != InCompletionKey );
-
+        while( auto* NewTask{ Worker.Tasks.Pop() } )
         {
-            // cast back to shared object ITask
-            auto* Task { reinterpret_cast<ITask*>( InCompletionKey ) };
-        
-            // dispatch the task
-            Task->Dispatch();
-
-            // release ref
-            TSharedPtr<ITask>::Static_Reset( Task );
+            NewTask->Dispatch();
+            TSharedPtr<ITask>::Static_Reset( NewTask );
         }
+    }
+    
+    void WorkerGroup::HandleGeneralTasksWithThrottle( Worker& Worker ) noexcept
+    {
+        constexpr size_t CMaxExecuteTasksCountPerFrame{ 32 };
 
-        return false;
+        size_t Count{ 0U };
+        while( auto* NewTask{ Worker.Tasks.Pop() } )
+        {
+            NewTask->Dispatch();
+            TSharedPtr<ITask>::Static_Reset( NewTask );
+
+            if( ++Count >= CMaxExecuteTasksCountPerFrame ) break;
+        }
     }
 
-    bool WorkerGroup::HandleAODDelayedTasks_Local( Worker& /*Worker*/ ) noexcept
+    void WorkerGroup::HandleAODDelayedTasks_Local( Worker& /*Worker*/ ) noexcept
     {
-        //SKLL_TRACE();
-
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
 
@@ -906,11 +916,9 @@ namespace SKL
                 break;
             }
         }
-
-        return  false;
     }
 
-    bool WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
+    void WorkerGroup::HandleAODDelayedTasks_Global( Worker& Worker ) noexcept
     {
         SKL_ASSERT( false == CTaskScheduling_AssumeAllWorkerGroupsHandleAOD );
         //SKLL_TRACE();
@@ -969,10 +977,10 @@ namespace SKL
             }
         }
 
-        return HandleAODDelayedTasks_Local( Worker );
+        HandleAODDelayedTasks_Local( Worker );
     }
 
-    bool WorkerGroup::HandleTimerTasks_Local( Worker& /*Worker*/ ) noexcept
+    void WorkerGroup::HandleTimerTasks_Local() noexcept
     {
         auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
         const auto Now{ GetSystemUpTickCount() };
@@ -1018,11 +1026,9 @@ namespace SKL
                 break;
             }
         }
-
-        return  false;
     }
 
-    bool WorkerGroup::HandleTimerTasks_Global( Worker& Worker ) noexcept
+    void WorkerGroup::HandleTimerTasks_Global( Worker& Worker ) noexcept
     {
         SKL_ASSERT( false == CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks );
 
@@ -1042,7 +1048,37 @@ namespace SKL
             }
         }
 
-        return HandleTimerTasks_Local( Worker );
+        HandleTimerTasks_Local();
+    }
+
+    void WorkerGroup::ScheduleGeneralTask( ITask* InTask ) noexcept
+    {
+        SKL_ASSERT( 1U < Workers.size() );
+        SKL_ASSERT( nullptr == Workers[0].get() );
+
+        ServerInstanceTLSContext* TLSContext                { ServerInstanceTLSContext::GetInstance() }; SKL_ASSERT( nullptr != TLSContext );
+        const size_t              WorkersCountWithoutInvalid{ Workers.size() - 1U };
+
+        //@QUESTION use other index?
+        Worker* TargetW;
+        if constexpr( CTaskScheduling_UseIfInsteadOfModulo )
+        {
+            // Potentially faster than modulo (if correct branch is predicted)
+            size_t TargetWIndex{ static_cast<size_t>( TLSContext->RRLastIndex2++ ) };
+            if( TargetWIndex >= WorkersCountWithoutInvalid )
+            {
+                TargetWIndex = 0U;
+            }
+
+            TargetW = Workers[TargetWIndex].get();
+        }
+        else
+        {
+            // Slowest (beats branch miss-predict though)
+            TargetW = Workers[( static_cast<size_t>( TLSContext->RRLastIndex2++ ) % WorkersCountWithoutInvalid ) + 1U].get();        
+        }
+
+        TargetW->DeferGeneral( InTask );
     }
 
     bool WorkerGroup::OnWorkerStarted( Worker& Worker ) noexcept

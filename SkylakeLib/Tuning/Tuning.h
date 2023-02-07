@@ -31,6 +31,10 @@
 #define SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO false
 #endif
 
+#ifndef SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION
+#define SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION true
+#endif
+
 namespace SKL
 {
     /*------------------------------------------------------------
@@ -42,6 +46,7 @@ namespace SKL
     constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHandleAOD = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLEAOD;
     constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHAVETLSMEMORYMANAGEMENT;
     constexpr bool CTaskScheduling_UseIfInsteadOfModulo = SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO;
+    constexpr bool CTask_DoThrottleGeneralTaskExecution = SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION;
 
     /*------------------------------------------------------------
         MemoryManager

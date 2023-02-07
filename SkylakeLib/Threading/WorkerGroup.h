@@ -118,6 +118,8 @@ namespace SKL
         template<typename TFunctor>
         SKL_NODISCARD RStatus Defer( TFunctor&& InFunctor ) noexcept
         {
+            SKL_ASSERT( GetTag().bEnableAsyncIO );
+
             auto* NewTask { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {
@@ -125,6 +127,21 @@ namespace SKL
             }
 
             return AsyncIOAPI.QueueAsyncWork( reinterpret_cast<TCompletionKey>( NewTask ) );
+        }
+    
+        //! Defer functor execution to any worker in this group through the general task queue [if the group bEnableTaskQueue=true only!] [void( ITask* Self ) noexcept]
+        template<typename TFunctor>
+        SKL_NODISCARD bool DeferGeneral( TFunctor&& InFunctor ) noexcept
+        {
+            SKL_ASSERT( GetTag().bEnableTaskQueue );
+
+            auto* NewTask { MakeTaskRaw( std::forward<TFunctor>( InFunctor ) ) };
+            if( nullptr == NewTask ) SKL_UNLIKELY
+            {
+                return false;
+            }
+
+            ScheduleGeneralTask( NewTask );
         }
     
         //! Create new tcp async acceptor on this instance
@@ -226,13 +243,32 @@ namespace SKL
         RStatus HandleMasterWorker( Worker* MasterWorker ) noexcept;
         bool HandleTasks_Proactive( uint32_t MillisecondsToSleep ) noexcept;
         bool HandleTasks_Reactive() noexcept;
-        bool HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept;
-        bool HandleTask( TCompletionKey InCompletionKey ) noexcept;
-        bool HandleAODDelayedTasks_Local( Worker& Worker ) noexcept;
-        bool HandleTimerTasks_Local( Worker& Worker ) noexcept;
-        bool HandleAODDelayedTasks_Global( Worker& Worker ) noexcept;
-        bool HandleTimerTasks_Global( Worker& Worker ) noexcept;
 
+        static void HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept;
+        SKL_FORCEINLINE static void HandleTask( TCompletionKey InCompletionKey ) noexcept
+        {
+            SKL_ASSERT( nullptr != InCompletionKey );
+
+            {
+                // cast back to shared object ITask
+                auto* Task { reinterpret_cast<ITask*>( InCompletionKey ) };
+        
+                // dispatch the task
+                Task->Dispatch();
+
+                // release ref
+                TSharedPtr<ITask>::Static_Reset( Task );
+            }
+        }
+
+        static void HandleGeneralTasks( Worker& Worker ) noexcept;
+        static void HandleGeneralTasksWithThrottle( Worker& Worker ) noexcept;
+        static void HandleAODDelayedTasks_Local( Worker& Worker ) noexcept;
+        static void HandleAODDelayedTasks_Global( Worker& Worker ) noexcept;
+        static void HandleTimerTasks_Local() noexcept;
+        static void HandleTimerTasks_Global( Worker& Worker ) noexcept;
+
+        void ScheduleGeneralTask( ITask* InTask ) noexcept;
     private:
         std::synced_value<uint32_t>               bIsRunning          { FALSE };   //!< Is the group marked as active
         AsyncIO                                   AsyncIOAPI          {};          //!< Async IO interface
