@@ -74,6 +74,7 @@ namespace SKL
         bool           bSupportesTCPAsyncAcceptors     { false };   //!< Does this group supports and handles TCP async acceptors
         bool           bCallTickHandler                { false };   //!< true -> the workers in the group will call the thick handler
         bool           bTickWorkerServices             { false };   //!< true -> each worker in the group will call the thick handler of all all registered worker services -> requires [bIsActive=true]
+        bool           bHasWorkerGroupSpecificTLSSync  { false };   //!< true -> SyncTLS can be used for specific worker group
         const wchar_t *Name                            { nullptr }; //!< Name of the worker group
         mutable bool   bIsValid                        { false };   //!< Initialize this member to false if you want your server to run correctly ;)
 

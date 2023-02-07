@@ -236,12 +236,58 @@ namespace SKL
                  + CPacketBodySize;
         }
     };
-    
+    struct AsyncNetBuffer_Usage3
+    {
+        static constexpr size_t CBHeaderSize    = CPacketHeaderSize;            //!< [B Header]
+        static constexpr size_t CTypeSize       = 2U;                           //!< [Type]
+        static constexpr size_t CCountSize      = 2U;                           //!< [Count]
+        static constexpr size_t COffsetSize     = 2U;                           //!< [Offset]
+        static constexpr size_t CUnusedSize     = 2U;                           //!< [Unused]
+        static constexpr size_t CHeaderSize     = CPacketHeaderSize;            //!< [Header]
+        static constexpr size_t CPacketBodySize = CPacketMaximumUsableBodySize; //!< [Packet Body]
+        
+        static constexpr size_t CBHeaderOffset      = 0U; 
+        static constexpr size_t CTypeOffset         = CPacketHeaderSize; 
+        static constexpr size_t CCountOffset        = CPacketHeaderSize + CTypeSize; 
+        static constexpr size_t COffsetOffset       = CCountOffset + CCountSize; 
+        static constexpr size_t CPacketHeaderOffset = CBHeaderSize + CTypeSize + CCountSize + COffsetSize + CUnusedSize; 
+        static constexpr size_t CPacketBodyOffset   = CPacketHeaderOffset + CHeaderSize;
+        
+        static constexpr size_t CMaxTargetEntitiesPossibleCount = CPacketBodySize / sizeof( TEntityIdBase );
+
+        static consteval size_t GetTotalPaddingSize() noexcept
+        {
+            return CBHeaderSize 
+                 + CTypeSize
+                 + CCountSize
+                 + COffsetSize
+                 + CUnusedSize;
+        }
+
+        static consteval size_t GetTotalBufferSize() noexcept
+        {
+            return CBHeaderSize  
+                 + CTypeSize
+                 + CCountSize
+                 + COffsetSize
+                 + CUnusedSize
+                 + CHeaderSize
+                 + CPacketBodySize;
+        }
+    };
+
     static_assert( AsyncNetBuffer_Usage1::GetTotalPaddingSize() == AsyncNetBuffer_Usage2::GetTotalPaddingSize() );
     static_assert( AsyncNetBuffer_Usage1::GetTotalBufferSize() == AsyncNetBuffer_Usage2::GetTotalBufferSize() );
     static_assert( AsyncNetBuffer_Usage1::CPacketHeaderOffset == AsyncNetBuffer_Usage2::CPacketHeaderOffset );
     static_assert( AsyncNetBuffer_Usage1::CPacketBodyOffset == AsyncNetBuffer_Usage2::CPacketBodyOffset );
+
+    static_assert( AsyncNetBuffer_Usage1::GetTotalPaddingSize() == AsyncNetBuffer_Usage3::GetTotalPaddingSize() );
+    static_assert( AsyncNetBuffer_Usage1::GetTotalBufferSize() == AsyncNetBuffer_Usage3::GetTotalBufferSize() );
+    static_assert( AsyncNetBuffer_Usage1::CPacketHeaderOffset == AsyncNetBuffer_Usage3::CPacketHeaderOffset );
+    static_assert( AsyncNetBuffer_Usage1::CPacketBodyOffset == AsyncNetBuffer_Usage3::CPacketBodyOffset );
+
     static_assert( CPacketMaximumSize == AsyncNetBuffer_Usage2::GetTotalBufferSize() );
+    static_assert( CPacketMaximumSize == AsyncNetBuffer_Usage3::GetTotalBufferSize() );
 
     static constexpr size_t CAsyncNetBufferTotalBufferSize = AsyncNetBuffer_Usage1::GetTotalBufferSize();
 
@@ -275,6 +321,8 @@ namespace SKL
         // --------------------------------------------------------------------------------------------
         // | Usage 2   |   R Header   |         EntityId          |    Header   |     Packet Body     |
         // --------------------------------------------------------------------------------------------
+        // | Usage 3   |   B Header   |  T   | CNT  | OFF  |   U  |    Header   |     Packet Body     |
+        // --------------------------------------------------------------------------------------------
         // | Size      |   4 bytes    |   4 bytes   |   4 bytes   |   4 bytes   |      65519 bytes    |
         // --------------------------------------------------------------------------------------------
         // | Alignment |      8       |      4      |      8      |      4      |          8          |
@@ -290,6 +338,14 @@ namespace SKL
         //        [EntityId]    - Target entityId (used to identify the packet target)
         //        [Header]      - Packet header
         //        [Packet Body] - Packet body (must be 8 bytes aligned)
+        // Usage 3: Broadcast buffer
+        //        [B Header]    - Broadcast header
+        //        [T]           - Broadcast type
+        //        [CNT]         - Target entities count
+        //        [OFF]         - Target entities array offset
+        //        [U]           - Unused
+        //        [Header]      - Packet header
+        //        [Packet Body] - Packet body (must be 8 bytes aligned)
         
         //! Get the entity id [EntityId]
         SKL_FORCEINLINE SKL_NODISCARD TEntityIdBase GetEntityId() const noexcept
@@ -301,6 +357,12 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetRoutingBuffer() noexcept
         {
             return this->Buffer + AsyncNetBuffer_Usage2::CRHeaderOffset;
+        }
+        
+        //! Get the buffer pointer starting at the packet header 
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetBroadcastBuffer() noexcept
+        {
+            return this->Buffer + AsyncNetBuffer_Usage3::CBHeaderOffset;
         }
         
         //! Get the buffer pointer starting at the packet header 
@@ -318,7 +380,19 @@ namespace SKL
         //! Get the buffer pointer starting at the packet routing body 
         SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetRoutingBodyBuffer() noexcept
         {
-            return this->Buffer + AsyncNetBuffer_Usage2::CEntityIdOffset;
+            return this->Buffer + CPacketHeaderSize;
+        }
+        
+        //! Get the buffer pointer starting at the packet broadcast body 
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetBoradcastBodyBuffer() noexcept
+        {
+            return this->Buffer + CPacketHeaderSize;
+        }
+        
+        //! Get the buffer pointer starting at the packet header 
+        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetPacketBuffer() const noexcept
+        {
+            return this->Buffer + CPacketHeaderOffset;
         }
         
         //! Get the buffer pointer starting at the packet header 
@@ -328,9 +402,9 @@ namespace SKL
         }
         
         //! Get the buffer pointer starting at the packet header 
-        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetPacketBuffer() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetBroadcastBuffer() const noexcept
         {
-            return this->Buffer + CPacketHeaderOffset;
+            return this->Buffer + AsyncNetBuffer_Usage3::CBHeaderOffset;
         }
         
         //! Get the buffer pointer starting at the packet body 
@@ -343,6 +417,12 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetRoutingBodyBuffer() const noexcept
         {
             return this->Buffer + AsyncNetBuffer_Usage2::CEntityIdOffset;
+        }
+        
+        //! Get the buffer pointer starting at the packet broadcast body 
+        SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetBoradcastBodyBuffer() const noexcept
+        {
+            return this->Buffer + CPacketHeaderSize;
         }
         
         //! Get the packet header
@@ -369,6 +449,39 @@ namespace SKL
             return *reinterpret_cast<const PacketHeader*>( this->Buffer + AsyncNetBuffer_Usage2::CRHeaderOffset );
         }
     
+        //! Get the routing header
+        SKL_FORCEINLINE SKL_NODISCARD PacketHeader& GetBroadcastHeader() noexcept
+        {
+            return *reinterpret_cast<PacketHeader*>( this->Buffer + AsyncNetBuffer_Usage3::CBHeaderOffset );
+        }
+    
+        //! Get the routing header
+        SKL_FORCEINLINE SKL_NODISCARD const PacketHeader& GetBroadcastHeader() const noexcept
+        {
+            return *reinterpret_cast<const PacketHeader*>( this->Buffer + AsyncNetBuffer_Usage3::CBHeaderOffset );
+        }
+    
+        //! Get the broadcast targets count
+        SKL_FORCEINLINE SKL_NODISCARD TPacketSize GetBroadcastTargetsCount() const noexcept
+        {
+            return *reinterpret_cast<const TPacketSize*>( this->Buffer + AsyncNetBuffer_Usage3::CCountOffset );
+        }
+        
+        //! Get the broadcast targets offset
+        SKL_FORCEINLINE SKL_NODISCARD TPacketSize GetBroadcastTargetsOffset() const noexcept
+        {
+            return *reinterpret_cast<const TPacketSize*>( this->Buffer + AsyncNetBuffer_Usage3::COffsetOffset );
+        }
+        
+        //! Get the broadcast targets array
+        SKL_FORCEINLINE SKL_NODISCARD std::span<const TEntityIdBase> GetBroadcastTargets() const noexcept
+        {
+            return std::span<const TEntityIdBase>{
+                reinterpret_cast<const TEntityIdBase*>( this->Buffer + GetBroadcastTargetsOffset() )
+              , static_cast<size_t>( GetBroadcastTargetsCount() )
+            };
+        }
+
         //! Get the size of the entire buffer of any instance of this type
         SKL_FORCEINLINE SKL_NODISCARD consteval static uint32_t GetTotalBufferSize() noexcept
         {
@@ -558,11 +671,11 @@ namespace SKL
             PacketHeader& RHeader{ GetRoutingHeader() };
             PacketHeader& PHeader{ GetPacketHeader() };
 
-            SKL_ASSERT( CRoutedPacketOpcode == RHeader.Opcode );
-            SKL_ASSERT( CRoutedPacketOpcode == PHeader.Opcode );
-
             //1. Copy header data
             RHeader.Size = PHeader.Size;
+            
+            SKL_ASSERT( CRoutedPacketOpcode == RHeader.Opcode );
+            SKL_ASSERT( CRoutedPacketOpcode == PHeader.Opcode );
 
             SKL_ASSERT( RHeader.Size >= static_cast<TPacketSize>( AsyncNetBuffer_Usage1::CPacketBodyOffset ) );
 
@@ -571,11 +684,39 @@ namespace SKL
             this->Stream.Buffer.Buffer  = GetRoutingBodyBuffer();
             this->Stream.Buffer.Length  = RHeader.Size - CPacketHeaderSize;
         }
+        
+        //! Prepare this buffer for receiving a broadcast packet
+        SKL_FORCEINLINE void PrepareFoReceivingBroadcastPacketBody()
+        {
+            PacketHeader& BHeader{ GetBroadcastHeader() };
+            PacketHeader& PHeader{ GetPacketHeader() };
+
+            //1. Copy header data
+            BHeader.Size = PHeader.Size;
+            
+            SKL_ASSERT( CBroadcastPacketOpcode == BHeader.Opcode );
+            SKL_ASSERT( CBroadcastPacketOpcode == PHeader.Opcode );
+
+            SKL_ASSERT( BHeader.Size >= static_cast<TPacketSize>( AsyncNetBuffer_Usage1::CPacketBodyOffset ) );
+
+            //2. Prepare for receiving the broadcast packet
+            this->Stream.Position       = CPacketHeaderSize;
+            this->Stream.Buffer.Buffer  = GetBoradcastBodyBuffer();
+            this->Stream.Buffer.Length  = BHeader.Size - CPacketHeaderSize;
+        }
 
         //! Does this buffer contain valid routing data
         SKL_FORCEINLINE SKL_NODISCARD bool HasValidRoutingData() const noexcept
         {
-            return 0U != GetRoutingHeader().Size;
+            const PacketHeader PHeader{ GetRoutingHeader() };
+            return 0U != PHeader.Size && PHeader.Opcode == CRoutedPacketOpcode;
+        }
+        
+        //! Does this buffer contain valid broadcast data
+        SKL_FORCEINLINE SKL_NODISCARD bool HasValidBroadcastData() const noexcept
+        {
+            const PacketHeader PHeader{ GetRoutingHeader() };
+            return 0U != PHeader.Size && PHeader.Opcode == CBroadcastPacketOpcode;
         }
 
         // Reset buffer to initial state for reuse
@@ -603,11 +744,43 @@ namespace SKL
             return static_cast<TPacketSize>( AsyncNetBuffer_Usage2::GetTotalPaddingSize() ) + GetPacketHeader().Size;
 #endif
         }
+        
+        SKL_FORCEINLINE SKL_NODISCARD TPacketSize CalcultateTotalBroadcastPacketSize() const noexcept
+        {
+#if !SKL_BUILD_SHIPPING
+            const size_t Result      { AsyncNetBuffer_Usage3::GetTotalPaddingSize() + static_cast<size_t>( GetPacketHeader().Size ) };
+            const bool   bHasOverflow{ static_cast<size_t>( CPacketMaximumSize ) < Result };
 
+            if( bHasOverflow ) SKL_UNLIKELY
+            {
+                SKLL_WRN_FMT( "AsyncNetBuffer::CalcultateTotalBroadcastPacketSize() Overflow!! Broadcast packet size: %llu", Result );
+            }
+            SKL_ASSERT( false == bHasOverflow );
+
+            return static_cast<TPacketSize>( Result );
+#else
+            return static_cast<TPacketSize>( AsyncNetBuffer_Usage3::GetTotalPaddingSize() ) + GetPacketHeader().Size;
+#endif
+        }
+        
         //! Set the entity id [EntityId]
         SKL_FORCEINLINE void SetEntityId( TEntityIdBase Id ) noexcept
         {
             return *reinterpret_cast<TEntityIdBase*>( this->Buffer + AsyncNetBuffer_Usage2::CEntityIdOffset ) = Id;
+        }
+        
+        //! Set the broadcast targets count
+        SKL_FORCEINLINE void SetBroadcastTargetsCount( TPacketSize Count ) noexcept
+        {
+            return *reinterpret_cast<TPacketSize*>( this->Buffer + AsyncNetBuffer_Usage3::CCountOffset ) = Count;
+        }
+        
+        //! Calculate and set the offset where the broadcast targets array starts
+        SKL_FORCEINLINE void UpdateBroadcastTargetsOffset() noexcept
+        {
+            //@TODO make sure that the offset is divisible by 8 (align it by 8)
+            const TPacketSize Offset{ AsyncNetBuffer_Usage3::GetTotalPaddingSize() + GetPacketHeader().Size };
+            return *reinterpret_cast<TPacketSize*>( this->Buffer + AsyncNetBuffer_Usage3::COffsetOffset ) = Offset;
         }
     };
 }

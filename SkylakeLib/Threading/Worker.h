@@ -101,7 +101,7 @@ namespace SKL
 
         friend WorkerGroup;
         friend class ServerInstance;    
-        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSyncVal>
         friend struct WorkerGroupRunVariant;
     };  
 }

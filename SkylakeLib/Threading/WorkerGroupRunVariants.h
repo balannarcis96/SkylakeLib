@@ -8,28 +8,35 @@
 
 namespace SKL
 {
-    template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
+    template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSync>
     struct WorkerGroupRunVariant;
 
     //! Active (Proactive)
-    template<bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
-    struct WorkerGroupRunVariant<true, bHandlesTasks, bSupportsAOD, bHandlesTimerTasks, bSupportsTLSSync, bHasTickHandler, bAllWorkerGroupsAreActive, bTickWorkerServices>
+    template<bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSync>
+    struct WorkerGroupRunVariant<true, bHandlesTasks, bSupportsAOD, bHandlesTimerTasks, bSupportsTLSSync, bHasTickHandler, bAllWorkerGroupsAreActive, bTickWorkerServices, bSupportsWGTLSSync>
     {
         SKL_NOINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
             SKLL_TRACE();
 
-            const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
-            const auto TickRate            { true == Tag.bSupportsTLSSync ? std::max( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate };
-            const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
-            const auto SecondsToSleep      { 1.0 / static_cast<double>( TickRate ) };
-            auto&      OnWorkerTick        { InGroup.OnWorkerTick };
-            auto*      MyTLSSyncSystem     { InGroup.GetServerInstance()->GetTSLSyncSystemPtr() };
-            auto&      WorkerServices      { InGroup.GetServerInstance()->GetAllWorkerServices() };
+            const auto Tag                 = InGroup.GetTag(); //!< Stack tag copy
+            const auto TickRate            = ( bSupportsTLSSync || bSupportsWGTLSSync ) ? std::max( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate;
+            const auto MillisecondsToSleep = static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) );
+            const auto SecondsToSleep      = 1.0 / static_cast<double>( TickRate );
+            auto&      OnWorkerTick        = InGroup.OnWorkerTick;
+            auto*      ServerTLSSyncSystem = InGroup.GetServerInstance()->GetTSLSyncSystemPtr();
+            auto*      MyTLSSyncSystem     = InGroup.MyTLSSyncSystem.get();
+            auto&      WorkerServices      = InGroup.GetServerInstance()->GetAllWorkerServices();
             
             PreciseSleep_WaitableTimer::Create();
 
             if constexpr( true == bSupportsTLSSync )
+            {
+                SKL_ASSERT( nullptr != ServerTLSSyncSystem );
+                ServerTLSSyncSystem->TLSInitialize( InWorker, InGroup );
+            }
+            
+            if constexpr( true == bSupportsWGTLSSync )
             {
                 SKL_ASSERT( nullptr != MyTLSSyncSystem );
                 MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
@@ -99,6 +106,11 @@ namespace SKL
 
                 if constexpr( true == bSupportsTLSSync )
                 {
+                    ServerTLSSyncSystem->TLSTick( InWorker, InGroup );
+                }
+                
+                if constexpr( true == bSupportsWGTLSSync )
+                {
                     MyTLSSyncSystem->TLSTick( InWorker, InGroup );
                 }
 
@@ -115,6 +127,11 @@ namespace SKL
             
             if constexpr( true == bSupportsTLSSync )
             {
+                ServerTLSSyncSystem->TLSShutdown();
+            }
+            
+            if constexpr( true == bSupportsWGTLSSync )
+            {
                 MyTLSSyncSystem->TLSShutdown();
             }
 
@@ -123,19 +140,26 @@ namespace SKL
     };
 
     //! Reactive
-    template<bool bSupportsTLSSync>
-    struct WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false, false>
+    template<bool bSupportsTLSSync, bool bSupportsWGTLSSync>
+    struct WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false, false, bSupportsWGTLSSync>
     {
         SKL_NOINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
             SKLL_TRACE();
 
-            const auto Tag                 { InGroup.GetTag() }; //!< Stack tag copy
-            const auto TickRate            { Tag.SyncTLSTickRate };
-            const auto MillisecondsToSleep { static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) ) };
-            auto*      MyTLSSyncSystem     { InGroup.GetServerInstance()->GetTSLSyncSystemPtr() };
+            const auto Tag                 = InGroup.GetTag(); //!< Stack tag copy
+            const auto TickRate            = Tag.SyncTLSTickRate;
+            const auto MillisecondsToSleep = static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) );
+            auto*      ServerTLSSyncSystem = InGroup.GetServerInstance()->GetTSLSyncSystemPtr();
+            auto*      MyTLSSyncSystem     = InGroup.MyTLSSyncSystem.get();
             
             if constexpr( true == bSupportsTLSSync )
+            {
+                SKL_ASSERT( nullptr != ServerTLSSyncSystem );
+                ServerTLSSyncSystem->TLSInitialize( InWorker, InGroup );
+            }
+            
+            if constexpr( true == bSupportsWGTLSSync )
             {
                 SKL_ASSERT( nullptr != MyTLSSyncSystem );
                 MyTLSSyncSystem->TLSInitialize( InWorker, InGroup );
@@ -165,11 +189,21 @@ namespace SKL
 
                 if constexpr( true == bSupportsTLSSync )
                 {
+                    ServerTLSSyncSystem->TLSTick( InWorker, InGroup );
+                }
+
+                if constexpr( true == bSupportsWGTLSSync )
+                {
                     MyTLSSyncSystem->TLSTick( InWorker, InGroup );
                 }
             }
             
             if constexpr( true == bSupportsTLSSync )
+            {
+                ServerTLSSyncSystem->TLSShutdown();
+            }
+            
+            if constexpr( true == bSupportsWGTLSSync )
             {
                 MyTLSSyncSystem->TLSShutdown();
             }
@@ -177,33 +211,35 @@ namespace SKL
     };
 
     //! Active (Proactive)
-    template<bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
-    using ActiveWorkerVariant = WorkerGroupRunVariant<true, bHandlesTasks, bSupportsAOD, bHandlesTimerTasks, bSupportsTLSSync, bHasTickHandler, bAllWorkerGroupsAreActive, bTickWorkerServices>;
+    template<bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSyncVal>
+    using ActiveWorkerVariant = WorkerGroupRunVariant<true, bHandlesTasks, bSupportsAOD, bHandlesTimerTasks, bSupportsTLSSync, bHasTickHandler, bAllWorkerGroupsAreActive, bTickWorkerServices, bSupportsWGTLSSyncVal>;
 
     //! Reactive
-    template<bool bSupportsTLSSync>
-    using ReactiveWorkerVariant = WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false, false>;
+    template<bool bSupportsTLSSync, bool bSupportsWGTLSSync>
+    using ReactiveWorkerVariant = WorkerGroupRunVariant<false, true, false, false, bSupportsTLSSync, false, false, false, bSupportsWGTLSSync>;
 
-#define SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, bTickWorkerServicesVal )                         \
+#define SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, bTickWorkerServicesVal, bSupportsWGTLSSyncVal )  \
              else if( bHandlesTasksVal == WorkerGroupTag.bHandlesTasks                                                                                                                          \
              && bSupportsAODVal == WorkerGroupTag.bSupportsAOD                                                                                                                                  \
              && bHandlesTimerTasksVal == WorkerGroupTag.bHandlesTimerTasks                                                                                                                      \
              && bSupportsTLSSyncVal == WorkerGroupTag.bSupportsTLSSync                                                                                                                          \
              && bCallTickHandlerVal == WorkerGroupTag.bCallTickHandler                                                                                                                          \
-             && bTickWorkerServicesVal == WorkerGroupTag.bTickWorkerServices )                                                                                                                  \
+             && bTickWorkerServicesVal == WorkerGroupTag.bTickWorkerServices                                                                                                                    \
+             && bSupportsWGTLSSyncVal == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )                                                                                                        \
             {                                                                                                                                                                                   \
-                ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, true, bTickWorkerServicesVal>::Run( Worker, *this );    \
+                ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, true, bTickWorkerServicesVal, bSupportsWGTLSSyncVal>::Run( Worker, *this ); \
             }   
 
- #define SKL_WORKER_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, bTickWorkerServicesVal )                            \
+ #define SKL_WORKER_ACTIVE_RUN_VARTIAN( bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, bTickWorkerServicesVal, bSupportsWGTLSSyncVal )     \
              else if( bHandlesTasksVal == WorkerGroupTag.bHandlesTasks                                                                                                                          \
              && bSupportsAODVal == WorkerGroupTag.bSupportsAOD                                                                                                                                  \
              && bHandlesTimerTasksVal == WorkerGroupTag.bHandlesTimerTasks                                                                                                                      \
              && bSupportsTLSSyncVal == WorkerGroupTag.bSupportsTLSSync                                                                                                                          \
              && bCallTickHandlerVal == WorkerGroupTag.bCallTickHandler                                                                                                                          \
-             && bTickWorkerServicesVal == WorkerGroupTag.bTickWorkerServices )                                                                                                                  \
+             && bTickWorkerServicesVal == WorkerGroupTag.bTickWorkerServices                                                                                                                    \
+             && bSupportsWGTLSSyncVal == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )                                                                                                        \
             {                                                                                                                                                                                   \
-                ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, false, bTickWorkerServicesVal>::Run( Worker, *this );   \
+                ActiveWorkerVariant<bHandlesTasksVal, bSupportsAODVal, bHandlesTimerTasksVal, bSupportsTLSSyncVal, bCallTickHandlerVal, false, bTickWorkerServicesVal, bSupportsWGTLSSyncVal>::Run( Worker, *this ); \
             }
 }
 

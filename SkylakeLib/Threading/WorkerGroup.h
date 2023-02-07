@@ -114,7 +114,7 @@ namespace SKL
         //! Is this group the master workers group 
         SKL_NODISCARD bool IsMasterWorkerGroup() const noexcept { return nullptr != MasterWorker; };
 
-        //! Defer functor execution to any worker in this group [if the group bHandlesTasks=true only!] [void( void ) noexcept]
+        //! Defer functor execution to any worker in this group through the async IO queue [if the group bHandlesTasks=true only!] [void( ITask* Self ) noexcept]
         template<typename TFunctor>
         SKL_NODISCARD RStatus Defer( TFunctor&& InFunctor ) noexcept
         {
@@ -189,7 +189,28 @@ namespace SKL
 
         //! Get the async io instance for this worker group
         SKL_FORCEINLINE SKL_NODISCARD AsyncIO& GetAsyncIOAPI() noexcept{ return AsyncIOAPI; }
+        
+        //! Does this worker group supports worker group level TLS Sync
+        SKL_FORCEINLINE SKL_NODISCARD bool SupportsTSLSync() const noexcept
+        {
+            return nullptr != MyTLSSyncSystem.get();
+        }
+        
+        //! Issue a new TLS sync task on all this group [WorkerGroup.Tag.bHasWorkerGroupSpecificTLSSync=true]
+        //! \remarks accepted signature void( SKL_CDECL* )( Worker&, WorkerGroup&, bool ) noexcept
+        template<typename TFunctor>
+        void SyncTLS( TFunctor&& InFunctor ) noexcept
+        {
+            SKL_ASSERT( SupportsTSLSync() );
 
+            auto& TLSSyncSystemInstance{ *MyTLSSyncSystem };
+            
+            auto* Task{ MakeTLSSyncTaskRaw( static_cast<uint16_t>( TLSSyncSystemInstance.GetNoOfWorkersThatSupportTLSSync() ), std::forward<TFunctor>( InFunctor ) ) };
+            SKL_ASSERT( nullptr != Task );
+            
+            TLSSyncSystemInstance.PushTask( Task );
+        }
+        
     private:
         RStatus CreateWorkers( bool bIncludeMaster ) noexcept;
 
@@ -218,18 +239,19 @@ namespace SKL
         const WorkerGroupTag                      Tag                 {};          //!< Worker group tag
         WorkerTickTask                            OnWorkerTick        {};          //!< Task to be executed each time a worker ticks
         WorkerTask                                OnWorkerStartTask   {};          //!< Task to be executed each time a worker starts
-        WorkerTask                                OnWorkerStopTask    {};          //!< Task to be executed each time a worker stoppes
-        std::vector<std::unique_ptr<TCPAcceptor>> TCPAcceptors        {};          //!< All tcp async acceptors in the group
+        WorkerTask                                OnWorkerStopTask    {};          //!< Task to be executed each time a worker stops
+        std::vector<std::unique_ptr<TCPAcceptor>> TCPAcceptors        {};          //!< All TCP async acceptors in the group
         std::vector<std::unique_ptr<Worker>>      Workers             {};          //!< All workers registered in the group
         ServerInstance*                           Manager             { nullptr }; //!< Manager of this group
         std::synced_value<uint32_t>               RunningWorkers      { 0 };       //!< Count of active running workers
         std::synced_value<uint32_t>               TotalWorkers        { 0 };       //!< Count of total workers registered in the group
         Worker*                                   MasterWorker        { nullptr }; //!< Cached pointer to the master worker [if any]
+        std::cacheline_unique_ptr<TLSSyncSystem>  MyTLSSyncSystem     { nullptr }; //!< Group level TLS sync system
 
         friend Worker;    
         friend ServerInstance;    
         friend struct AODObject;
-        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices>
+        template<bool bIsActive, bool bHandlesTasks, bool bSupportsAOD, bool bHandlesTimerTasks, bool bSupportsTLSSync, bool bHasTickHandler, bool bAllWorkerGroupsAreActive, bool bTickWorkerServices, bool bSupportsWGTLSSyncVal>
         friend struct WorkerGroupRunVariant;
     }; 
 }

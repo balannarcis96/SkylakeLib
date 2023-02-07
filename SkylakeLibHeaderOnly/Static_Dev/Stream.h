@@ -18,7 +18,7 @@ namespace SKL
 
         IBuffer( uint32_t BufferSize, uint8_t* Buffer ) noexcept
             : Length{ BufferSize }
-            , Padding{ 0 }
+            , Padding{ 0U }
             , Buffer{ Buffer } {}
             
         IBuffer( const IBuffer& Other ) noexcept = default;
@@ -116,6 +116,12 @@ namespace SKL
     template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IStreamReader
     {
+        IStreamReader() noexcept = default;  
+        IStreamReader( const IStreamReader& ) = delete;
+        IStreamReader& operator=( const IStreamReader& ) = delete;
+        IStreamReader( IStreamReader&& ) = delete;
+        IStreamReader& operator=( IStreamReader&& ) = delete;
+
         static constexpr uint32_t CUnitSize = static_cast<uint32_t>( sizeof( TUnit ) );
 
         //! Get the size of this interface's TUnit
@@ -209,7 +215,7 @@ namespace SKL
             const auto bShouldTruncate{ Result >= GetBufferSize() };
 
             GetStream().Position += ( InAmount * static_cast<uint32_t>( !bShouldTruncate ) ) 
-                                     + ( Delta    * static_cast<uint32_t>(  bShouldTruncate ) );
+                                  + ( Delta    * static_cast<uint32_t>(  bShouldTruncate ) );
 
             return bShouldTruncate;
         }
@@ -332,7 +338,7 @@ namespace SKL
         //! Save the underlying buffer to a file
         SKL_NODISCARD bool SaveToFile( const char* InFileName, bool bAppendInsteadOfTruncate = true, bool bPositionAsSize = true, bool bSaveAsText = false ) const noexcept
         {
-            const auto WriteSize{ ( GetPosition( ) * bPositionAsSize ) + ( GetBufferSize() * !bPositionAsSize ) };
+            const auto WriteSize{ ( GetPosition() * bPositionAsSize ) + ( GetBufferSize() * !bPositionAsSize ) };
             if( 0 == WriteSize )
             {
                 return false;
@@ -342,13 +348,13 @@ namespace SKL
                                      , ( std::ofstream::binary * !bSaveAsText ) 
                                      | ( std::ofstream::app    *  bAppendInsteadOfTruncate ) 
                                      | ( std::ofstream::trunc  * !bAppendInsteadOfTruncate ) ) };
-            if( false == File.is_open( ) )
+            if( false == File.is_open() )
             {
                 //SKLL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
                 return false;
             }
 
-            File.write( reinterpret_cast< const char * >( GetBuffer( ) ), WriteSize );
+            File.write( reinterpret_cast< const char * >( GetBuffer() ), WriteSize );
 
             const auto Result{ File.good() };
             if( false == Result )
@@ -359,15 +365,6 @@ namespace SKL
             File.close();
 
             return Result;
-        }
-
-        IStreamReader() noexcept = default;
-        IStreamReader( const uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
-        {
-            auto& Interface{ GetStream() };
-            Interface.Position      = InPosition;
-            Interface.Buffer.Length = InSize;
-            Interface.Buffer.Buffer = const_cast<uint8_t*>( InBuffer );
         }
 
         SKL_FORCEINLINE SKL_NODISCARD static IStreamReader<TUnit, true>* FromStreamBase( StreamBase& InStream ) noexcept
@@ -387,6 +384,12 @@ namespace SKL
     template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IStreamWriter: public IStreamReader<TUnit, bIsBase_StreamObjectOrPtrToStreamObject>
     {
+        IStreamWriter() noexcept = default;
+        IStreamWriter( const IStreamWriter& ) = delete;
+        IStreamWriter& operator=( const IStreamWriter& ) = delete;
+        IStreamWriter( IStreamWriter&& ) = delete;
+        IStreamWriter& operator=( IStreamWriter&& ) = delete;
+
         //! Can fit InAmount bytes into the stream starting at the current stream position
         SKL_FORCEINLINE SKL_NODISCARD bool CanFit( uint32_t InAmount ) const noexcept { return this->GetRemainingSize() >= InAmount; }
         
@@ -422,7 +425,7 @@ namespace SKL
 
             if( this->IsEOS() ) { return true; }
 
-            const auto RemainingSize       { this->GetRemainingSize() };
+            const auto RemainingSize      { this->GetRemainingSize() };
             const auto bHasRequestedAmount{ InWriteSize <= RemainingSize };
 
             if( false == bHasRequestedAmount && false == bTruncate )
@@ -544,10 +547,6 @@ namespace SKL
             return Result;
         }
 
-        IStreamWriter() noexcept = default;
-        IStreamWriter( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
-            : IStreamReader{ InBuffer, InSize, InPosition } {}
-
         SKL_FORCEINLINE SKL_NODISCARD static IStreamWriter<TUnit, true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
             return reinterpret_cast<IStreamWriter<TUnit, true>*>( &InStream );
@@ -566,14 +565,15 @@ namespace SKL
     struct IBinaryStream: public IStreamWriter<uint8_t, bIsBase_StreamObjectOrPtrToStreamObject>
     {
         IBinaryStream() noexcept = default;
-        IBinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition = 0 ) noexcept
-            : IStreamWriter{ InBuffer, InSize, InPosition } {}
+        IBinaryStream( const IBinaryStream& ) = delete;
+        IBinaryStream& operator=( const IBinaryStream& ) = delete;
+        IBinaryStream( IBinaryStream&& ) = delete;
+        IBinaryStream& operator=( IBinaryStream&& ) = delete;
 
         SKL_FORCEINLINE static IBinaryStream<true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
             return reinterpret_cast<IBinaryStream<true>*>( &InStream );
         }
-
         SKL_FORCEINLINE static IBinaryStream<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
         {
             return reinterpret_cast<IBinaryStream<true>&>( InStream );
@@ -589,11 +589,30 @@ namespace SKL
         BinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition, bool bOwnsBuffer ) noexcept
             : Stream{ InPosition, InSize, InBuffer, bOwnsBuffer } {}
 
-        BinaryStream( const BinaryStream& ) noexcept = default;
-        BinaryStream& operator=( const BinaryStream& ) noexcept = default;
+        BinaryStream( const BinaryStream& Other ) noexcept
+            : IBinaryStreamObject()
+            , Stream{ Other.Stream } {}
 
-        SKL_FORCEINLINE StreamBase& GetStreamBase() noexcept { return Stream; }
-        SKL_FORCEINLINE const StreamBase& GetStreamBase() const noexcept { return Stream; }
+        BinaryStream& operator=( const BinaryStream& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+            Stream = Other.Stream;
+            return *this;
+        }
+        
+        BinaryStream( BinaryStream&& Other ) noexcept
+            : IBinaryStreamObject()
+            , Stream{ std::move( Other.Stream ) } {}
+
+        BinaryStream& operator=( BinaryStream&& Other ) noexcept
+        {
+            SKL_ASSERT( this != &Other );
+            Stream = std::move( Other.Stream );
+            return *this;
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD StreamBase& GetStreamBase() noexcept { return Stream; }
+        SKL_FORCEINLINE SKL_NODISCARD const StreamBase& GetStreamBase() const noexcept { return Stream; }
 
     protected:
         StreamBase Stream{};
@@ -606,7 +625,9 @@ namespace SKL
         ~BinaryStreamInterface() noexcept = default;
 
         BinaryStreamInterface( const BinaryStreamInterface& Other ) noexcept
-            : SourceBase{ Other.SourceBase } {}
+            : IBinaryStreamObjectPtr()
+            , SourceBase{ Other.SourceBase } {}
+
         BinaryStreamInterface& operator=( const BinaryStreamInterface& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
@@ -687,26 +708,26 @@ namespace SKL
         }
 
         //! Get the transaction stream 
-        SKL_FORCEINLINE StreamBase& GetStream() noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD StreamBase& GetStream() noexcept 
         { 
             return TransactionStream;
         }
         
         //! Get the transaction stream 
-        SKL_FORCEINLINE const StreamBase& GetStream() const noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD const StreamBase& GetStream() const noexcept 
         { 
             return TransactionStream;
         }
 
         //! Get the transaction target stream 
-        SKL_FORCEINLINE StreamBase& GetTargetStream() noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD StreamBase& GetTargetStream() noexcept 
         { 
             SKL_ASSERT( nullptr != TargetStream );
             return *TargetStream;
         }
         
         //! Get the transaction target stream 
-        SKL_FORCEINLINE const StreamBase& GetTargetStream() const noexcept 
+        SKL_FORCEINLINE SKL_NODISCARD const StreamBase& GetTargetStream() const noexcept 
         { 
             SKL_ASSERT( nullptr != TargetStream );
             return *TargetStream;
@@ -743,9 +764,24 @@ namespace SKL
             InTransactionStream.Buffer.Buffer += InTransactionStream.GetPosition();
             InTransactionStream.Position       = 0;
         }
+        
+        //! Get the reader into the transaction stream
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectReader& GetReader() noexcept { return IByteStreamObjectReader::FromStreamBaseRef( TransactionStream ); }
+        
+        //! Get the reader into the transaction target stream
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectReader& GetTargetReader() noexcept { return IByteStreamObjectReader::FromStreamBaseRef( *TargetStream ); }
+
+        //! Get the writer into the transaction stream
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectWriter& GetWriter() noexcept { return IByteStreamObjectWriter::FromStreamBaseRef( TransactionStream ); }
+        
+        //! Get the writer into the transaction target stream
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectWriter& GetTargetWriter() noexcept { return IByteStreamObjectWriter::FromStreamBaseRef( *TargetStream ); }
 
     private:
         StreamBase  TransactionStream;
         StreamBase* TargetStream;
     };
+
+    template<typename T>
+    using IObjectStream = IStreamWriter<T, true>;
 }

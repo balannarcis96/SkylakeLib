@@ -230,17 +230,35 @@ namespace SKL
 
         //! Custom read method
         virtual RStatus ReadPacket( StreamBase& InStream ) noexcept = 0;
+        
+        //! Is this packet broadcastable
+        SKL_FORCEINLINE SKL_NODISCARD bool IsBroadcastable() const noexcept 
+        { 
+            const TPacketSize PacketBodySize              { CalculateBodySize() };
+            const TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
 
-        SKL_FORCEINLINE static constexpr RStatus BuildFromStream( StreamBase& InStream ) noexcept
+            return SpaceLeftInTheTransferBuffer >= CMinimumMinSlackNeededByBroadcastablePacket;
+        }
+        
+        //! How many target entity ids can be put alongside this packet in the transfer buffer
+        SKL_FORCEINLINE SKL_NODISCARD TPacketSize GetNoOfMaxBroadcastTargetEntities() const noexcept 
+        { 
+            const TPacketSize PacketBodySize              { CalculateBodySize() };
+            const TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
+
+            return SpaceLeftInTheTransferBuffer / static_cast<TPacketSize>( sizeof( TEntityIdBase ) );
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr RStatus BuildFromStream( StreamBase& InStream ) noexcept
         {
             return Base::GetPacketData().ReadPacket( InStream );
         }
 
-        SKL_FORCEINLINE constexpr const InSuper& GetData() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr const InSuper& GetData() const noexcept
         {
             return *static_cast<const InSuper*>( this );
         }
-        SKL_FORCEINLINE static constexpr TPacketSize CalculateNullableStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr TPacketSize CalculateNullableStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
         {
             if( nullptr == InStr )
             {
@@ -250,14 +268,14 @@ namespace SKL
             const auto StrLength = SKL_STRLEN( InStr, MaxCharacters );
             return static_cast<TPacketSize>( StrLength ) + 1;
         }
-        SKL_FORCEINLINE static constexpr TPacketSize CalculateStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr TPacketSize CalculateStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
         {
             SKL_ASSERT( nullptr != InStr );
 
             const auto StrLength = SKL_STRLEN( InStr, MaxCharacters );
             return static_cast<TPacketSize>( StrLength ) + 1;
         }
-        SKL_FORCEINLINE static constexpr TPacketSize CalculateReferencedStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr TPacketSize CalculateReferencedStringNeededSize( const char* InStr, size_t MaxCharacters ) noexcept
         {
             const auto StrLength = SKL_STRLEN( InStr, MaxCharacters );
             return static_cast<TPacketSize>( StrLength + 1 + static_cast<TPacketSize>( sizeof( TPacketStringRef ) ) );
@@ -273,14 +291,14 @@ namespace SKL
             const auto StrLength = SKL_WSTRLEN( InStr, MaxCharacters );
             return ( static_cast<TPacketSize>( StrLength ) * 2 ) + 2;
         }
-        SKL_FORCEINLINE static constexpr TPacketSize CalculateWStringNeededSize( const wchar_t* InStr, size_t MaxCharacters ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr TPacketSize CalculateWStringNeededSize( const wchar_t* InStr, size_t MaxCharacters ) noexcept
         {
             SKL_ASSERT( nullptr != InStr );
 
             const auto StrLength = SKL_WSTRLEN( InStr, MaxCharacters );
             return ( static_cast<TPacketSize>( StrLength ) * 2 ) + 2;
         }
-        SKL_FORCEINLINE static constexpr TPacketSize CalculateReferencedWStringNeededSize( const wchar_t* InStr, size_t MaxCharacters ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static constexpr TPacketSize CalculateReferencedWStringNeededSize( const wchar_t* InStr, size_t MaxCharacters ) noexcept
         {
             const auto StrLength = SKL_WSTRLEN( InStr, MaxCharacters );
             return static_cast<TPacketSize>( ( StrLength * 2 ) + 2 + static_cast<TPacketSize>( sizeof( TPacketStringRef ) ) );
@@ -297,11 +315,29 @@ namespace SKL
                                       , InOpcode
                                       , PacketBuildContext_BuildFlags<EPacketContextFlags::WriteHeader, EPacketContextFlags::FixedLength>()>;
 
-        SKL_FORCEINLINE constexpr const InSuper& GetData() const noexcept
+        //! Is this packet broadcastable
+        SKL_FORCEINLINE SKL_NODISCARD constexpr bool IsBroadcastable() const noexcept 
+        { 
+            constexpr TPacketSize PacketBodySize              { CalculateBodySize() };
+            constexpr TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
+
+            return SpaceLeftInTheTransferBuffer >= CMinimumMinSlackNeededByBroadcastablePacket;
+        }
+        
+        //! How many target entity ids can be put alongside this packet in the transfer buffer
+        SKL_FORCEINLINE SKL_NODISCARD constexpr TPacketSize GetNoOfMaxBroadcastTargetEntities() const noexcept 
+        { 
+            constexpr TPacketSize PacketBodySize              { CalculateBodySize() };
+            constexpr TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
+
+            return SpaceLeftInTheTransferBuffer / static_cast<TPacketSize>( sizeof( TEntityIdBase ) );
+        }
+
+        SKL_FORCEINLINE SKL_NODISCARD constexpr const InSuper& GetData() const noexcept
         {
             return *reinterpret_cast<const InSuper*>( this );
         }
-        SKL_FORCEINLINE constexpr TPacketSize CalculateBodySize() const noexcept
+        SKL_FORCEINLINE SKL_NODISCARD constexpr TPacketSize CalculateBodySize() const noexcept
         {
             return static_cast<TPacketSize>( sizeof( InSuper ) );
         }
@@ -321,6 +357,24 @@ namespace SKL
                                       , PacketBuildContext_BuildFlags<EPacketContextFlags::WriteHeader, EPacketContextFlags::HeaderOnly>()>;
 
         HeaderOnlyPacketBuildContext() = delete;
+        
+        //! Is this packet broadcastable
+        SKL_FORCEINLINE SKL_NODISCARD constexpr bool IsBroadcastable() const noexcept 
+        { 
+            constexpr TPacketSize PacketBodySize              { CalculateBodySize() };
+            constexpr TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
+
+            return SpaceLeftInTheTransferBuffer >= CMinimumMinSlackNeededByBroadcastablePacket;
+        }
+        
+        //! How many target entity ids can be put alongside this packet in the transfer buffer
+        SKL_FORCEINLINE SKL_NODISCARD constexpr TPacketSize GetNoOfMaxBroadcastTargetEntities() const noexcept 
+        { 
+            constexpr TPacketSize PacketBodySize              { CalculateBodySize() };
+            constexpr TPacketSize SpaceLeftInTheTransferBuffer{ CPacketMaximumUsableBodySize - PacketBodySize };
+
+            return SpaceLeftInTheTransferBuffer / static_cast<TPacketSize>( sizeof( TEntityIdBase ) );
+        }
 
         SKL_FORCEINLINE static constexpr RStatus BuildPacket( StreamBase& InStream ) noexcept
         {

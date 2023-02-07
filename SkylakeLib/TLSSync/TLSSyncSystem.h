@@ -13,8 +13,8 @@ namespace SKL
 
     struct TLSSyncSystem
     {
-         TLSSyncSystem() noexcept  = default;
-        ~TLSSyncSystem() noexcept
+        TLSSyncSystem() noexcept  = default;
+       ~TLSSyncSystem() noexcept
         {
             Queue.Clear();
         }
@@ -46,6 +46,13 @@ namespace SKL
         {
             SKL_ASSERT( 0 < NoOfWorkersThatSupportTLSSync );
             return NoOfWorkersThatSupportTLSSync;
+        }
+        
+        //! Set the number of workers that will execute the TLSSync tasks
+        SKL_FORCEINLINE SKL_NODISCARD void SetNoOfWorkersThatSupportTLSSync( uint64_t Count ) noexcept
+        {
+            SKL_ASSERT( 0 < Count );
+            NoOfWorkersThatSupportTLSSync = Count;
         }
         
         //! Called by each worker that supports TLSSync 

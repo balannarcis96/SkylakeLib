@@ -92,8 +92,29 @@ namespace SKL
                 return RFail;
             }
         }
+        
+        if( Tag.bHasWorkerGroupSpecificTLSSync )
+        {
+            MyTLSSyncSystem = std::make_unique_cacheline<TLSSyncSystem>();
+            if( nullptr == MyTLSSyncSystem.get() )
+            {
+                SKLL_ERR_FMT( "WorkerGroup::Build() Failed to allocate TLSSyncSystem! GroupId[%ws]", Tag.Name );
+                return RFail;
+            }
+        }
 
-        return CreateWorkers( bIncludeMaster );
+        const RStatus Result{ CreateWorkers( bIncludeMaster ) };
+        if( RSuccess != Result )
+        {
+            return RFail;
+        }
+        
+        if( Tag.bHasWorkerGroupSpecificTLSSync )
+        {
+            MyTLSSyncSystem->SetNoOfWorkersThatSupportTLSSync( TotalWorkers.load_relaxed() );
+        }
+
+        return RSuccess;
     }
 
     RStatus WorkerGroup::CreateWorkers( bool bIncludeMaster ) noexcept
@@ -185,154 +206,306 @@ namespace SKL
         const auto bAllGroupsAreActive{ GetServerInstance()->GetFlags().bAllGroupsAreActive };
         if( TRUE == bAllGroupsAreActive )
         {
+            if( true == WorkerGroupTag.bHandlesTasks
+             && true == WorkerGroupTag.bSupportsAOD 
+             && true == WorkerGroupTag.bHandlesTimerTasks 
+             && true == WorkerGroupTag.bSupportsTLSSync 
+             && true == WorkerGroupTag.bCallTickHandler
+             && true == WorkerGroupTag.bTickWorkerServices
+             && true == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )
+            {
+                ActiveWorkerVariant<true, true, true, true, true, true, true, true>::Run( Worker, *this );
+            }
+            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,true,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,true,false,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,true,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,false,false,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,true,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,true,false,false,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,true,false,false,false,false )
+            
             if( false == WorkerGroupTag.bHandlesTasks
              && false == WorkerGroupTag.bSupportsAOD 
              && false == WorkerGroupTag.bHandlesTimerTasks 
-             && false == WorkerGroupTag.bSupportsTLSSync 
-             && false == WorkerGroupTag.bCallTickHandler
-             && false == WorkerGroupTag.bTickWorkerServices )
+             && true  == WorkerGroupTag.bSupportsTLSSync 
+             && true  == WorkerGroupTag.bCallTickHandler
+             && true  == WorkerGroupTag.bTickWorkerServices
+             && true  == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )
             {
-                ActiveWorkerVariant<false, false, false, false, false, true, false>::Run( Worker, *this );
+                ActiveWorkerVariant<false, false, false, true, true, true, true, true>::Run( Worker, *this );
             }
-            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   false,   false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   false,   true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    false,   false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    false,   true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   true,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    false,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    false,    true )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    true,    false )
-            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    true,    true )
+            //SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,true,false,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,true,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,true,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,true,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,true,false,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,false,true,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,false,true,false )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,false,false,true )
+            SKL_WORKER_ALL_ACTIVE_RUN_VARTIAN( false,false,false,false,false,false,false )
         }
         else
         {
+            if( true == WorkerGroupTag.bHandlesTasks
+             && true == WorkerGroupTag.bSupportsAOD 
+             && true == WorkerGroupTag.bHandlesTimerTasks 
+             && true == WorkerGroupTag.bSupportsTLSSync 
+             && true == WorkerGroupTag.bCallTickHandler
+             && true == WorkerGroupTag.bTickWorkerServices 
+             && true == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync)
+            {
+                ActiveWorkerVariant<true, true, true, true, true, false, true, true>::Run( Worker, *this );
+            }
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,true,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,true,false,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,true,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,false,false,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,true,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,true,false,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,true,true,true )
             if( false == WorkerGroupTag.bHandlesTasks
              && false == WorkerGroupTag.bSupportsAOD 
-             && false == WorkerGroupTag.bHandlesTimerTasks 
+             && true == WorkerGroupTag.bHandlesTimerTasks 
              && false == WorkerGroupTag.bSupportsTLSSync 
-             && false == WorkerGroupTag.bCallTickHandler
-             && false == WorkerGroupTag.bTickWorkerServices )
+             && true == WorkerGroupTag.bCallTickHandler
+             && true == WorkerGroupTag.bTickWorkerServices 
+             && false == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync)
             {
-                ActiveWorkerVariant<false, false, false, false, false, false, false>::Run( Worker, *this );
+                ActiveWorkerVariant<false, false, true, false, true, false, true, false>::Run( Worker, *this );
             }
-            //SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   false,   true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    false,   true,    true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    false,   true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,    true,    true,    true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   false,   true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     false,   true,    true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   false,   false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   false,   true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    false,   false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    false,   true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    false,   true,    true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    false,   true,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    false,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    false,    true )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    true,    false )
-            SKL_WORKER_ACTIVE_RUN_VARTIAN( true,     true,    true,    true,    true,    true )
+            //SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,true,false,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,true,false,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,true,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,true,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,true,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,true,false,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,false,true,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,false,true,false )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,false,false,true )
+            SKL_WORKER_ACTIVE_RUN_VARTIAN( false,false,false,false,false,false,false )
         }
     }
     
@@ -341,11 +514,25 @@ namespace SKL
         const auto& WorkerGroupTag{ GetTag() };
         if( true == WorkerGroupTag.bSupportsTLSSync )
         {
-            ReactiveWorkerVariant<true>::Run( Worker, *this );
+            if( true == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )
+            {
+                ReactiveWorkerVariant<true, true>::Run( Worker, *this );
+            }
+            else
+            {
+                ReactiveWorkerVariant<true, false>::Run( Worker, *this );
+            }
         }
         else
         {
-            ReactiveWorkerVariant<false>::Run( Worker, *this );
+            if( true == WorkerGroupTag.bHasWorkerGroupSpecificTLSSync )
+            {
+                ReactiveWorkerVariant<false, true>::Run( Worker, *this );
+            }
+            else
+            {
+                ReactiveWorkerVariant<false, false>::Run( Worker, *this );
+            }
         }
     }
 
