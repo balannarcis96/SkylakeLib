@@ -15,7 +15,7 @@ public:
     template<typename TFunctor>
     bool AddNewWorkerGroup( const SKL::WorkerGroupTag& InTag, TFunctor&& InOnTickFunctor ) noexcept
     {
-        InTag.Validate();
+        ( void )InTag.Validate();
 
         if( false == InTag.IsValid() )
         {

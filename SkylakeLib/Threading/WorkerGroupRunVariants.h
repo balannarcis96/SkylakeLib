@@ -21,13 +21,15 @@ namespace SKL
             const auto Tag                 = InGroup.GetTag(); //!< Stack tag copy
             const auto TickRate            = ( Flags.bSupportsTLSSync || Flags.bHasWorkerGroupSpecificTLSSync ) ? std::max( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate;
             const auto MillisecondsToSleep = static_cast<uint32_t>( 1000.0 / static_cast<double>( TickRate ) );
-            const auto SecondsToSleep      = 1.0 / static_cast<double>( TickRate );
             auto&      OnWorkerTick        = InGroup.OnWorkerTick;
             auto*      ServerTLSSyncSystem = InGroup.GetServerInstance()->GetTSLSyncSystemPtr();
             auto*      MyTLSSyncSystem     = InGroup.MyTLSSyncSystem.get();
             auto&      WorkerServices      = InGroup.GetServerInstance()->GetAllWorkerServices();
             
+#if defined(SKL_USE_PRECISE_SLEEP)
+            const auto SecondsToSleep = 1.0 / static_cast<double>( TickRate );
             PreciseSleep_WaitableTimer::Create();
+#endif
 
             if constexpr( Flags.bSupportsTLSSync )
             {
@@ -116,7 +118,11 @@ namespace SKL
 
                 if constexpr( false == Flags.bEnableAsyncIO )
                 {
+#if defined(SKL_USE_PRECISE_SLEEP)
                     PreciseSleep( SecondsToSleep );
+#else
+                    TCLOCK_SLEEP_FOR_MILLIS( MillisecondsToSleep );
+#endif
                 }
             }
             
@@ -130,7 +136,9 @@ namespace SKL
                 MyTLSSyncSystem->TLSShutdown();
             }
 
+#if defined(SKL_USE_PRECISE_SLEEP)
             PreciseSleep_WaitableTimer::Destroy();
+#endif
         }
     };
 
