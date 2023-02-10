@@ -397,10 +397,10 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD bool CanFitUnits( uint32_t InUnitsCount ) const noexcept { return this->GetRemainingUnitSize() >= InUnitsCount; }
 
         //! Get buffer at the current stream position 
-        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetFront() const noexcept { return &this->GetStream().Buffer.Buffer[ this->GetPosition() ]; }
+        SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetFront() const noexcept { return &this->GetStream().Buffer.Buffer[this->GetPosition()]; }
         
         //! Get units buffer at the current stream position 
-        SKL_FORCEINLINE SKL_NODISCARD TUnit* GetFrontUnits() const noexcept { return reinterpret_cast<TUnit*>( &this->GetStream().Buffer.Buffer[ this->GetPosition() ] ); }
+        SKL_FORCEINLINE SKL_NODISCARD TUnit* GetFrontUnits() const noexcept { return reinterpret_cast<TUnit*>( &this->GetStream().Buffer.Buffer[this->GetPosition()] ); }
 
         //! Get buffer 
         SKL_FORCEINLINE SKL_NODISCARD uint8_t* GetBuffer() const noexcept { return this->GetStream().Buffer.Buffer; }
@@ -687,6 +687,15 @@ namespace SKL
 
         //! "Commits" changes to the underlying Stream
         SKL_FORCEINLINE void Commit() noexcept
+        {
+            if( nullptr != TargetStream )
+            {
+                CommitUnsafe();
+            }
+        }
+        
+        //! "Commits" changes to the underlying Stream
+        SKL_FORCEINLINE void CommitUnsafe() noexcept
         {
             // Commit to base 
             TargetStream->Position += GetPosition();

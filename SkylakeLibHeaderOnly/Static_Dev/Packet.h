@@ -22,7 +22,7 @@ namespace SKL
     using TPacketSize             = uint16_t;
     using TPacketOffset           = TPacketSize;
     using TPacketStringRef        = TPacketOffset;
-    using TBroadcastType          = uint16_t;
+    using TBroadcastType          = uint8_t;
     using TBroadcastTargetsCount  = uint16_t;
     using TBroadcastTargetsOffset = uint16_t;
 
