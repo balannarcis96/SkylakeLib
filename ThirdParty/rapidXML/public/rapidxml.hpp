@@ -312,7 +312,7 @@ namespace rapidxml
             const Ch *tmp = p;
             while (*tmp) 
                 ++tmp;
-            return tmp - p;
+            return static_cast<std::size_t>( tmp - p );
         }
 
         // Compare strings for equality
@@ -2044,7 +2044,7 @@ namespace rapidxml
             skip<node_name_pred, Flags>(text);
             if (text == name)
                 RAPIDXML_PARSE_ERROR("expected element name", text);
-            element->name(name, text - name);
+            element->name(name, static_cast<std::size_t>(text - name));
             
             // Skip whitespace between element name and attributes or >
             skip<whitespace_pred, Flags>(text);
@@ -2248,7 +2248,7 @@ namespace rapidxml
 
                 // Create new attribute
                 xml_attribute<Ch> *attribute = this->allocate_attribute();
-                attribute->name(name, text - name);
+                attribute->name(name, static_cast<std::size_t>(text - name));
                 node->append_attribute(attribute);
 
                 // Skip whitespace after attribute name
@@ -2281,7 +2281,7 @@ namespace rapidxml
                     end = skip_and_expand_character_refs<attribute_value_pred<Ch('"')>, attribute_value_pure_pred<Ch('"')>, AttFlags>(text);
                 
                 // Set attribute value
-                attribute->value(value, end - value);
+                attribute->value(value, static_cast<std::size_t>(end - value));
                 
                 // Make sure that end quote is present
                 if (*text != quote)

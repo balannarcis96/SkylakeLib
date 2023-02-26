@@ -222,6 +222,8 @@ namespace SKL
             , InOpcode
             , PacketBuildContext_BuildFlags<EPacketContextFlags::WriteHeader, EPacketContextFlags::HasCustomWriteMethod, static_cast<EPacketContextFlags>( InAdditionalFlags )>()>;
 
+        virtual ~DynamicLengthPacketBuildContext() = default;
+
         //! Calculate the body size for this packet
         virtual TPacketSize CalculateBodySize() const noexcept = 0;
 
@@ -396,7 +398,7 @@ namespace SKL
     static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
 
 #define DEFINE_NAMED_DYNAMIC_PACKET( Name, PacketOpcode, Body ) \
-    struct Name##_Packet : SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
+    struct Name##_Packet final: SKL::DynamicLengthPacketBuildContext<Name##_Packet, static_cast<SKL::TPacketOpcode>( PacketOpcode )> \
     Body
     
 #define DEFINE_HEADER_ONLY_PACKET( PacketOpcode ) \

@@ -15,13 +15,7 @@ namespace SKL
     template<typename T>
     using skl_unique_nd_ptr = std::unique_ptr<T, typename SKL::MemoryStrategy::UniqueMemoryStrategy<T>::Deallocator>;
 
-    //! 
     //! Allocate new unique object (raw ptr) through the MemoryManager
-    //! 
-    //! \tparam bConstruct if true the item will be constructed not otherwise
-    //! 
-    //! \remark if bConstruct is false don't pass any construction arguments
-    //! 
     template<typename TObject, typename ...TArgs>
     SKL_NODISCARD skl_unique_ptr<TObject> MakeUnique( TArgs... Args ) noexcept 
     {
@@ -45,17 +39,14 @@ namespace SKL
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeArrayUnique()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        static_assert( bConstruct || 0U == sizeof...( TArgs ), "Do not pass any arguments for construction if construction is not required!" );
         using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TObject>::Allocator;
         return skl_unique_nd_ptr<TObject>{ Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... ) };
     }
     
-    //! 
     //! Allocate new unique array through the MemoryManager
-    //! 
-    //! \tparam bConstructAllItems if true and TItemType is class type all items in the array will be default constructed
-    //! 
     template<typename TItemType>
-    SKL_FORCEINLINE SKL_NODISCARD skl_unique_ptr<TItemType[]> MakeUniqueArray( uint32_t ItemCount ) noexcept
+    SKL_NODISCARD skl_unique_ptr<TItemType[]> MakeUniqueArray( uint32_t ItemCount ) noexcept
     {
         static_assert( false == std::is_array_v<TItemType>, "Can't allocate array of arrays!" );
         using Allocator = typename SKL::MemoryStrategy::UniqueMemoryStrategy<TItemType[]>::Allocator;
@@ -110,10 +101,11 @@ namespace SKL
     //! \remark if bConstruct is false don't pass any construction arguments
     //! 
     template<typename TObject, bool bConstruct = true, typename ...TArgs>
-    SKL_FORCEINLINE SKL_NODISCARD TObject* MakeSharedRaw( TArgs... Args ) noexcept 
+    SKL_NODISCARD TObject* MakeSharedRaw( TArgs... Args ) noexcept 
     {
         static_assert( false == std::is_array_v<TObject>, "Please use MakeSharedArrayRaw()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        static_assert( bConstruct || 0U == sizeof...( TArgs ), "Do not pass any arguments for construction if construction is not required!" );
         using Allocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject>::Allocator;
         return Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... );
     }
@@ -154,6 +146,7 @@ namespace SKL
     {
         static_assert( false == std::is_array_v<TObject>, "Shared array with virtual deleter is not yet supported!" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        static_assert( bConstruct || 0U == sizeof...( TArgs ), "Do not pass any arguments for construction if construction is not required!" );
         using Allocator = typename SKL::MemoryStrategy::SharedMemoryStrategy<TObject, true>::Allocator;
         return Allocator::template AllocateObject<bConstruct, false>( std::move( VirtualDeleter ), std::forward<TArgs>( Args )... );
     }
@@ -194,6 +187,7 @@ namespace SKL
     {
         static_assert( false == std::is_array_v<TObject>, "Please use TLSMakeSharedArrayRaw()" ); 
         static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || sizeof( TObject ) < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
+        static_assert( bConstruct || 0U == sizeof...( TArgs ), "Do not pass any arguments for construction if construction is not required!" );
         using Allocator = typename SKL::TLSMemoryStrategy::SharedMemoryStrategy<TObject>::Allocator;
         return Allocator::template AllocateObject<bConstruct, false>( std::forward<TArgs>( Args )... );
     }

@@ -6,7 +6,7 @@
 namespace WorkersTests
 {
     struct MyType { 
-        void operator()( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept {};
+        void operator()( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) noexcept {}
         
         int a;
     };

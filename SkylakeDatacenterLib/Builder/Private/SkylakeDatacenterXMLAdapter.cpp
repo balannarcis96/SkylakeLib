@@ -11,7 +11,7 @@
 
 namespace SKL::DC
 {
-    bool IsElementEligibleForLanguage( const DatacenterXMLAdapter* InAdaptor, ::rapidxml::xml_node<char>* InNode ) noexcept
+    static bool IsElementEligibleForLanguage( const DatacenterXMLAdapter* InAdaptor, ::rapidxml::xml_node<char>* InNode ) noexcept
     {
         SKL_ASSERT( nullptr != InNode );
 
@@ -53,7 +53,7 @@ namespace SKL::DC
         return true;
     }
 
-    std::unique_ptr<RawElement> ParseXmlFileNode( std::string_view FileName, DatacenterXMLAdapter* InAdaptor, RawElement* InParent, ::rapidxml::xml_node<char>* InNode ) noexcept
+    static std::unique_ptr<RawElement> ParseXmlFileNode( std::string_view FileName, DatacenterXMLAdapter* InAdaptor, RawElement* InParent, ::rapidxml::xml_node<char>* InNode ) noexcept
     {
         if( InNode->type() != rapidxml::node_element )
         {
@@ -228,7 +228,7 @@ namespace SKL::DC
                 return nullptr;
             }
 
-            File.read( reinterpret_cast<char*>( Buffer.get() ), FileSize );
+            File.read( reinterpret_cast<char*>( Buffer.get() ), static_cast<std::streamsize>( FileSize ) );
 
             if( true == File.bad() )
             {

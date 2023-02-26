@@ -3,7 +3,7 @@
 #include <SkylakeLib.h>
 #include <ApplicationSetup.h>
 
-FILE* TestLogFile;
+FILE* TestLogFile = nullptr;
 
 namespace AODTests
 {
@@ -200,7 +200,7 @@ namespace AODTests
             SKLL_TRACE();
         }      
 
-        ~AODTestsFixture4() noexcept
+        ~AODTestsFixture4() noexcept override
         {
             SKLL_TRACE();
         }

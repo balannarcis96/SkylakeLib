@@ -108,7 +108,7 @@ namespace SKL::AOD
             {
                 Task->Dispatch();
 
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+                SKL_ASSERT( nullptr != Task );
 
                 TSharedPtr<IAODStaticObjectTask>::Static_Reset( Task );
 
@@ -222,7 +222,7 @@ namespace SKL::AOD
             {
                 Task->Dispatch();
 
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( nullptr != Task ) );
+                SKL_ASSERT( nullptr != Task );
 
                 TSharedPtr<IAODSharedObjectTask>::Static_Reset( Task );
 

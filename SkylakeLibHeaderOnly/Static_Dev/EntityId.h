@@ -60,7 +60,7 @@ namespace SKL
 
                 if constexpr( true == bExtendedIndex )
                 {
-                    SKL_ASSERT_ALLWAYS( Index <= CExtendedIdMaxValue );
+                    SKL_ASSERT( Index <= CExtendedIdMaxValue );
                     reinterpret_cast<uint32_t&>( Desc.Id ) = (
                         static_cast<uint32_t>( Type ) | ( ( Index << 8 ) & CExtendedIdMask )
                     );
@@ -80,7 +80,7 @@ namespace SKL
 
                 if constexpr( true == bExtendedIndex )
                 {
-                    SKL_ASSERT_ALLWAYS( Index <= CExtendedIdMaxValue );
+                    SKL_ASSERT( Index <= CExtendedIdMaxValue );
                     reinterpret_cast<uint32_t&>( Desc.Id ) = (
                         static_cast<uint32_t>( Type ) | ( ( Index << 8 ) & CExtendedIdMask )
                     );
@@ -209,12 +209,12 @@ namespace SKL
         SKL_FORCEINLINE constexpr Description ReadAsDescription() const noexcept { return Description{ Id }; }
         SKL_FORCEINLINE constexpr const Description& GetDescription() const noexcept 
         { 
-            SKL_ASSERT_ALLWAYS( false == bAtomic );
+            SKL_ASSERT( false == bAtomic );
             return *reinterpret_cast<const Description*>( &Id );
         }
         SKL_FORCEINLINE constexpr Description& GetDescription() noexcept 
         { 
-            SKL_ASSERT_ALLWAYS( false == bAtomic );
+            SKL_ASSERT( false == bAtomic );
             return *reinterpret_cast<Description*>( &Id );
         }
         SKL_FORCEINLINE constexpr void SetIdFromDescription( Description InDescription ) noexcept 

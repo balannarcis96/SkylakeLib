@@ -15,6 +15,9 @@
 //! Std
 #include "Std/Std.h"
 
+//! Flags
+#include "Flags.h"
+
 //! Tuning
 #include "Tuning/Tuning.h"
 

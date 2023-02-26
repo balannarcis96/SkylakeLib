@@ -7,47 +7,8 @@
 //! 
 #pragma once
 
-#ifndef SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO
-#define SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO false
-#endif
-
-#ifndef SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO
-#define SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO false
-#endif
-
-#ifndef SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS
-#define SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS false
-#endif
-
-#ifndef SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLEAOD
-#define SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLEAOD false
-#endif
-
-#ifndef SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHAVETLSMEMORYMANAGEMENT
-#define SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHAVETLSMEMORYMANAGEMENT false
-#endif
-
-#ifndef SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO
-#define SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO false
-#endif
-
-#ifndef SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION
-#define SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION true
-#endif
-
 namespace SKL
 {
-    /*------------------------------------------------------------
-        Feature flags
-      ------------------------------------------------------------*/
-    constexpr bool CTaskScheduling_AssumeThatTaskHandlingWorkerGroupCountIsPowerOfTwo = SKLL_CTASKSCHEDULING_ASSUMETHATTASKHANDLINGWORKERGROUPCOUNTISPOWEROFTWO;
-    constexpr bool CTaskScheduling_AssumeThatWorkersCountIsPowerOfTwo = SKLL_CTASKSCHEDULING_ASSUMETHATWORKERSCOUNTISPOWEROFTWO;
-    constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLETIMERTASKS;
-    constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHandleAOD = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHANDLEAOD;
-    constexpr bool CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement = SKLL_CTASKSCHEDULING_ASSUMEALLWORKERGROUPSHAVETLSMEMORYMANAGEMENT;
-    constexpr bool CTaskScheduling_UseIfInsteadOfModulo = SKLL_CTASKSCHEDULING_USEIFINSTEADOFMODULO;
-    constexpr bool CTask_DoThrottleGeneralTaskExecution = SKLL_CTASK_DOTHROTTLEGENERALTASKEXECUTION;
-
     /*------------------------------------------------------------
         MemoryManager
       ------------------------------------------------------------*/
@@ -68,7 +29,7 @@ namespace SKL
     SKL_IF_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment    = SKL_CACHE_LINE_SIZE );       //!< Align all the MemoryManager memory blocks to the cache line
     SKL_IFNOT_CACHE_LINE_MEM_MANAGER( constexpr size_t CMemoryManager_Alignment = sizeof( void * ) );          //!< Align all the MemoryManager memory blocks to 8 bytes
 
-    // Sizes guard, dont change!
+    // Sizes guard, don't change!
     static_assert( CMemoryManager_Pool1_BlockSize < std::numeric_limits<uint32_t>::max()
                 && CMemoryManager_Pool2_BlockSize < std::numeric_limits<uint32_t>::max() 
                 && CMemoryManager_Pool3_BlockSize < std::numeric_limits<uint32_t>::max() 
@@ -82,6 +43,7 @@ namespace SKL
       ------------------------------------------------------------*/
     struct ThreadLocalMemoryManagerConfig
     {
+        //@TODO expose these values as compiletime configurable
         static constexpr size_t  Pool1_BlockSize  = 64U;                 
         static constexpr size_t  Pool1_BlockCount = 32768U;              
         static constexpr size_t  Pool2_BlockSize  = 128U;                
@@ -115,4 +77,9 @@ namespace SKL
         String Utils
       ------------------------------------------------------------*/
     constexpr uint32_t CStringUtilsWorkBenchBufferSize = 8192U;
+    
+    /*------------------------------------------------------------
+        Worker
+      ------------------------------------------------------------*/
+    constexpr uint32_t CMaxAsyncRequestsToDequeuePerTick = 32U;
 }

@@ -59,6 +59,39 @@ namespace SKL
         //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
         //! \returns RSystemFailure when a system failure occurs
         RStatus TryGetCompletedAsyncRequest( AsyncIOOpaqueType** OutCompletedRequestOpaqueTypeInstancePtr, uint32_t* OutNumberOfBytesTransferred, TCompletionKey* OutCompletionKey, uint32_t InTimeout ) noexcept;
+        
+        //! \brief Attempt to retrieve completed async IO request from the OS 
+        //! \remarks Will block
+        //! \param OutCompletedRequestOpaqueTypeInstancePtr ptr to ptr that will contain the instance of the opaque type passed to the OS when making the async IO request
+        //! \param OutNumberOfBytesTransferred number of bytes transferred for the async IO request (eg. when recv/send/red/write async request is completed)
+        //! \param OutCompletionKey key used to identify the completed async IO request
+        //! \returns RSuccess when a valid async IO request or custom work item is retrieved
+        //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
+        //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
+        //! \returns RSystemFailure when a system failure occurs
+
+        //! \brief Attempt to retrieve at most OutputBufferCount completed async IO requests from the OS 
+        //! \param OutputBuffer buffer of async IO requests receiver entries
+        //! \param OutputBufferCount no of items in OutputBuffer
+        //! \param OutCount the no of entries populated in OutputBuffer
+        //! \returns RSuccess when a valid async IO request or custom work item is retrieved
+        //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
+        //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
+        //! \returns RSystemFailure when a system failure occurs
+        //! \remarks [WIN32] This function has 100ns time resolution
+        RStatus GetMultipleCompletedAsyncRequest( AsyncIOOpaqueEntryType* OutputBuffer, uint32_t OutputBufferCount, uint32_t& OutCount ) noexcept;
+        
+        //! \brief Attempt to retrieve at most OutputBufferCount completed async IO requests from the OS 
+        //! \param OutputBuffer buffer of async IO requests receiver entries
+        //! \param OutputBufferCount no of items in OutputBuffer
+        //! \param OutCount the no of entries populated in OutputBuffer
+        //! \param InTimeout Time in milliseconds to wait for any async IO request to be completed
+        //! \returns RSuccess when a valid async IO request or custom work item is retrieved
+        //! \returns RSuccessAsyncIORequestCancelled when a async IO request was canceled due to the socket being closed
+        //! \returns RSystemTerminated when a valid, terminate sentinel is retrieved, signaling the termination of the this async IO system instance
+        //! \returns RSystemFailure when a system failure occurs
+        //! \remarks [WIN32] This function has 100ns time resolution
+        RStatus TryGetMultipleCompletedAsyncRequest( AsyncIOOpaqueEntryType* OutputBuffer, uint32_t OutputBufferCount, uint32_t& OutCount, uint32_t InTimeout ) noexcept;
 
         //! \brief Attempt to enqueue custom async work
         //! \param InCompletionKey completion key representing the work (eg pointer to object)

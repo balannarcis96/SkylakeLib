@@ -59,7 +59,7 @@ namespace SKL
                 
                 if constexpr( Flags.bEnableTaskQueue )
                 {
-                    if( CTask_DoThrottleGeneralTaskExecution )
+                    if constexpr( CTask_DoThrottleGeneralTaskExecution )
                     {
                         WorkerGroup::HandleGeneralTasksWithThrottle( InWorker );
                     }

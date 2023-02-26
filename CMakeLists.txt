@@ -1,28 +1,33 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.8)    
 project ("SkylakeLib_repo" VERSION 1.0.0)
 
 set(SKL_CACHE_LINE_MEM_MANAGER_DESC "Allign all memory blocks inside the MemoryManager to the cache line, removing any possiblity of false sharing between memory blocks in the MemoryManager at the cost of more memory consumtion" )
 set(SKL_USE_PRECISE_SLEEP_DESC "Use very precise sleep function for the active, non-task-handling workers")
 set(SKL_DEBUG_MEMORY_ALLOCATORS_DESC "Enable checks for correct allocation/deallocation")
+set(SKL_ENABLE_LIKELY_FLAGS_DESC "SkylakeLib is laced out with SKL_LIKELY, enable SKL_LIKELY?")
+set(SKL_ENABLE_UNLIKELY_FLAGS_DESC "SkylakeLib is laced out with SKL_UNLIKELY, enable SKL_UNLIKELY?")
 
-option(SKL_BUILD_TESTS              "Build tests"                               ON)  
-option(SKL_DISABLE_EXCEPTIONS       "Disable exceptions[Recommended]!"         OFF)   
-option(SKL_BUILD_SHIPPING           "Build for shipping"                       OFF) 
-option(SKL_MEMORY_STATISTICS        "Enable memory statistics"                  ON) 
-option(SKL_NO_ASSERTS               "Disabled all runtime asserts"             OFF) 
-option(SKL_GUARD_ALLOC_SIZE         "Cap allocation sizes to a max value"       ON)
-option(SKL_USE_PRECISE_SLEEP        "${SKL_USE_PRECISE_SLEEP_DESC}"             ON)
-option(SKL_CACHE_LINE_MEM_MANAGER   "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"        ON)
-option(SKL_DEBUG_MEMORY_ALLOCATORS  "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"       ON)
-option(SKL_BUILD_DB                 "Build the DB library"                      ON)
-option(SKL_BUILD_DATACENTER         "Build the Datacenter library"              ON)
-option(SKL_ADD_TEST_LIBS            "Add gmock and gtest libs"                  ON)
-option(SKL_NO_NAMESPACE             "Collapse the SKL namespace"               OFF)
-option(SKL_MATH                     "Enable SkylakeLib Math abstractions"       ON)
-option(SKL_MYSQL_COMPRESS_NET       "Enable MYSQL network traffic compression"  ON)
-option(SKL_LINK_TIME_OPTIMIZATION   "Enable Link-time optimization"             ON)
-option(SKL_USE_MIMALLOC   			"Use MiMalloc instead of malloc"           OFF)
-option(SKL_ENABLE_ASAN              "Enable asan"                              OFF)
+option(SKL_BUILD_TESTS                   "Build tests"                               ON)
+option(SKL_DISABLE_EXCEPTIONS            "Disable exceptions[Recommended]!"         OFF)
+option(SKL_BUILD_SHIPPING                "Build for shipping"                       OFF)
+option(SKL_MEMORY_STATISTICS             "Enable memory statistics"                  ON)
+option(SKL_NO_ASSERTS                    "Disabled all runtime asserts"             OFF)
+option(SKL_GUARD_ALLOC_SIZE              "Cap allocation sizes to a max value"       ON)
+option(SKL_USE_PRECISE_SLEEP             "${SKL_USE_PRECISE_SLEEP_DESC}"             ON)
+option(SKL_CACHE_LINE_MEM_MANAGER        "${SKL_CACHE_LINE_MEM_MANAGER_DESC}"        ON)
+option(SKL_DEBUG_MEMORY_ALLOCATORS       "${SKL_DEBUG_MEMORY_ALLOCATORS_DESC}"       ON)
+option(SKL_BUILD_DB                      "Build the DB library"                      ON)
+option(SKL_BUILD_DATACENTER              "Build the Datacenter library"              ON)
+option(SKL_ADD_TEST_LIBS                 "Add gmock and gtest libs"                  ON)
+option(SKL_NO_NAMESPACE                  "Collapse the SKL namespace"               OFF)
+option(SKL_MATH                          "Enable SkylakeLib Math abstractions"       ON)
+option(SKL_MYSQL_COMPRESS_NET            "Enable MYSQL network traffic compression"  ON)
+option(SKL_LINK_TIME_OPTIMIZATION        "Enable Link-time optimization"             ON)
+option(SKL_USE_MIMALLOC   			     "Use MiMalloc instead of malloc"           OFF)
+option(SKL_ENABLE_ASAN                   "Enable asan"                              OFF)
+option(SKL_DO_NOT_MODIFY_COMIPLER_FLAGS  "Set this ON for easier integration"       OFF)
+option(SKL_ENABLE_LIKELY_FLAGS           "${SKL_ENABLE_LIKELY_FLAGS_DESC}"          OFF)
+option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"        OFF)
 
 # Override this to create as many skylake lib targets as you need
 set(SKL_LIB_TARGETS "SkylakeLib" CACHE STRING "Skyalke lib targets to create")
@@ -52,30 +57,51 @@ set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
 set(SKL_LIB_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process")
 set_property(CACHE SKL_LIB_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
-if (WIN32)
-    set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100")
-    set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /fp:fast /Ob2 /W4 /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100")
-    
-    if(SKL_LINK_TIME_OPTIMIZATION)
-        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /GL")
-        add_link_options("/LTCG")
-    endif()
-    
-    if(SKL_USE_EIS STREQUAL SSE2)
-        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:SSE2")
-    elseif(SKL_USE_EIS STREQUAL AVX2)
-        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:AVX2")
-    endif()
+message("Compiler: ${CMAKE_CXX_COMPILER_ID} | FrontEnd: ${CMAKE_CXX_COMPILER_FRONTEND_VARIANT} | Version: ${CMAKE_CXX_COMPILER_VERSION} | Generator: ${CMAKE_GENERATOR}")
+message("Expected L1 cache size is ${SKL_L1_CACHE_LINE_SIZE}!")
 
-    if(SKL_ENABLE_ASAN)
-        set(MSVC_COMPILE_DEBUG_OPTIONS "${MSVC_COMPILE_DEBUG_OPTIONS} /fsanitize=address")
-        set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /fsanitize=address")
-    endif()
+if(SKL_DO_NOT_MODIFY_COMIPLER_FLAGS STREQUAL OFF)
+    if (WIN32)
+        set(SKL_DIABLED_COMPILER_WARNINGS "-Wno-c++98-compat-pedantic -Wno-extra-semi-stmt -Wno-global-constructors -Wno-nonportable-system-include-path -Wno-shadow-uncaptured-local -Wno-float-equal -Wno-old-style-cast")
+        set(SKL_DIABLED_COMPILER_WARNINGS " ${SKL_DIABLED_COMPILER_WARNINGS} -Wno-shadow-field-in-constructor -Wno-format-non-iso -Wno-documentation-unknown-command -Wno-zero-as-null-pointer-constant -Wno-documentation")
+        set(SKL_DIABLED_COMPILER_WARNINGS " ${SKL_DIABLED_COMPILER_WARNINGS} -Wno-missing-variable-declarations -Wno-suggest-override -Wno-deprecated-dynamic-exception-spec -Wno-sign-conversion -Wno-ctad-maybe-unsupported")
+        set(SKL_DIABLED_COMPILER_WARNINGS " ${SKL_DIABLED_COMPILER_WARNINGS} -Wno-reserved-identifier -Wno-exit-time-destructors")
+    
+        set(MSVC_COMPILE_DEBUG_OPTIONS "${CMAKE_CXX_FLAGS_DEBUG} /MP /MTd /Od /GR- /std:c17 /Gd /fp:fast /Ob2 /Wall /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100 ${SKL_DIABLED_COMPILER_WARNINGS}")
+        set(MSVC_COMPILE_RELEASE_OPTIONS "${CMAKE_CXX_FLAGS_RELEASE} /MP /MT /O2 /Ot /Gd /std:c17 /GR- /GS- /fp:fast /Ob2 /Wall /Zc:wchar_t /WX /external:anglebrackets /wd4577 /wd4201 /wd4100 ${SKL_DIABLED_COMPILER_WARNINGS}")
+    
+        if(SKL_LINK_TIME_OPTIMIZATION)
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
+                set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /GL")
+                add_link_options("-LTCG")
+            elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+                set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /GL")
+                add_link_options("/LTCG")
+            else()
+                message(FATAL_ERROR "@TODO compiler flags!")
+            endif()
+        endif()
+    
+        if(SKL_ENABLE_ASAN)
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+                set(MSVC_COMPILE_DEBUG_OPTIONS "${MSVC_COMPILE_DEBUG_OPTIONS} /fsanitize=address")
+                set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /fsanitize=address")
+            else()
+                message(FATAL_ERROR "@TODO compiler flags!")
+            endif()
+        endif()
 
-    set(CMAKE_CXX_FLAGS_DEBUG "${MSVC_COMPILE_DEBUG_OPTIONS}")
-    set(CMAKE_CXX_FLAGS_RELEASE "${MSVC_COMPILE_RELEASE_OPTIONS}")
-else()
-    message(FATAL_ERROR "@TODO compiler flags")
+        if(SKL_USE_EIS STREQUAL SSE2)
+            set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:SSE2")
+        elseif(SKL_USE_EIS STREQUAL AVX2)
+            set(MSVC_COMPILE_RELEASE_OPTIONS "${MSVC_COMPILE_RELEASE_OPTIONS} /arch:AVX2")
+        endif()
+
+        set(CMAKE_CXX_FLAGS_DEBUG "${MSVC_COMPILE_DEBUG_OPTIONS}")
+        set(CMAKE_CXX_FLAGS_RELEASE "${MSVC_COMPILE_RELEASE_OPTIONS}")
+    else()
+        message(FATAL_ERROR "@TODO compiler flags")
+    endif()
 endif()
 
 if(SKL_USE_MIMALLOC)
@@ -178,7 +204,14 @@ else()
     message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
 endif()
 
-message("Expected L1 cache size is ${SKL_L1_CACHE_LINE_SIZE}!")
+if(SKL_ENABLE_LIKELY_FLAGS)
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_ENABLE_LIKELY_FLAGS)
+endif()
+
+if(SKL_ENABLE_UNLIKELY_FLAGS)
+    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_ENABLE_UNLIKELY_FLAGS)
+endif()
+
 if(SKL_L1_CACHE_LINE_SIZE STREQUAL "64bytes")
     target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_L1_CACHE_LINE_64)
     target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_L1_CACHE_LINE_64)
@@ -255,13 +288,14 @@ if(SKL_DISABLE_EXCEPTIONS)
     # Disable std exceptions
     target_compile_definitions(SkylakeLibStandalone PUBLIC _HAS_EXCEPTIONS=0)
     if (WIN32)
-        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS})   # Disable RTTI
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-") #Disable RTTI
+
         string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     
-        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})   # Disable RTTI
-        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})# Disable Exceptions
         string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     endif()

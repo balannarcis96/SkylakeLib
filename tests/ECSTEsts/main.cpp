@@ -238,7 +238,6 @@ namespace ECSTests44
         struct RootComponentData
         {
              RootComponentData() noexcept = default;
-             ~RootComponentData() noexcept = default;
 
              uint32_t A { 55U };
              uint32_t B { 0U };
@@ -256,7 +255,6 @@ namespace ECSTests44
         struct OtherComponent
         {
              OtherComponent() noexcept = default;
-             ~OtherComponent() noexcept = default;
 
              int32_t A{ 123 };
         };
@@ -387,7 +385,6 @@ namespace ECSTests44
         struct RootComponentData
         {
              RootComponentData() noexcept = default;
-             ~RootComponentData() noexcept = default;
 
              uint32_t A { 55 };
              uint32_t B { 55 };
@@ -405,7 +402,6 @@ namespace ECSTests44
         struct OtherComponent
         {
              OtherComponent() noexcept = default;
-             ~OtherComponent() noexcept = default;
 
              int32_t A{ 123 };
         };
@@ -533,7 +529,6 @@ namespace ECSTests44
         struct RootComponentData
         {
              RootComponentData() noexcept = default;
-             ~RootComponentData() noexcept = default;
 
              uint32_t A { 55 };
              uint32_t B { 55 };
@@ -551,7 +546,6 @@ namespace ECSTests44
         struct OtherComponent
         {
              OtherComponent() noexcept = default;
-             ~OtherComponent() noexcept = default;
 
              int32_t A{ 123 };
         };

@@ -11,7 +11,7 @@ namespace SKL
 {
     struct AsyncIOOpaqueType
     {
-        AsyncIOOpaqueType() 
+        AsyncIOOpaqueType() noexcept
         {
             Reset();    
         }
@@ -21,8 +21,22 @@ namespace SKL
         //! \brief Reset this instance for reuse 
         SKL_FORCEINLINE void Reset() noexcept
         {
-            memset( Body, 0, sizeof( uint8_t ) * std::size( Body ) );
+            ( void )::memset( Body, 0, sizeof( uint8_t ) * std::size( Body ) );
         }
+    };
+
+    struct AsyncIOOpaqueEntryType
+    {
+        //! Get the no of transferred bytes for the async IO operation represented by this opaque type
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetNoOfBytesTransferred() const noexcept;
+
+        //! Get the the completion key for the async IO operation represented by this opaque type
+        SKL_FORCEINLINE SKL_NODISCARD TCompletionKey GetCompletionKey() noexcept;
+        
+        //! Get the the opaque type ptr for the async IO operation represented by this opaque type
+        SKL_FORCEINLINE SKL_NODISCARD AsyncIOOpaqueType* GetOpaquePtr() noexcept;
+
+        uint8_t Body[32]; // sizeof(OVERLAPPED_ENTRY);
     };
 
     struct Timer

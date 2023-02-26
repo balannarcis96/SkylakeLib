@@ -10,15 +10,28 @@
 #define SKL_FORCEINLINE     ASD_FORCEINLINE
 #define SKL_NOINLINE        ASD_NOINLINE
 #define SKL_NODISCARD       ASD_NODISCARD
-#define SKL_UNLIKELY        ASD_UNLIKELY
-#define SKL_LIKELY          ASD_LIKELY
-#define SKL_FALLTHROUGH     ASD_FALLTHROUGH
 #define SKL_COMPILER_NAME   ASD_COMPILER_NAME
 #define SKL_CDECL           ASD_CDECL     
 #define SKL_STDCALL         ASD_STDCALL   
 #define SKL_THISCALL        ASD_THISCALL  
 #define SKL_FASTCALL        ASD_FASTCALL  
 #define SKL_VECTORCALL      ASD_VECTORCALL
+#define SKL_FALLTHROUGH     ASD_FALLTHROUGH
+
+#define SKL_ALLWAYS_LIKELY [[likely]]
+#define SKL_ALLWAYS_UNLIKELY [[unlikely]]
+
+#if defined(SKL_ENABLE_LIKELY_FLAGS)
+    #define SKL_LIKELY [[likely]]
+#else
+    #define SKL_LIKELY
+#endif
+
+#if defined(SKL_ENABLE_UNLIKELY_FLAGS)
+    #define SKL_UNLIKELY [[unlikely]]
+#else
+    #define SKL_UNLIKELY
+#endif
 
 #if ( defined(_MSC_VER) || defined(__INTEL_COMPILER) ) && !defined(SKL_BUILD_SHIPPING)
     #define SKL_ALLOCATOR_FUNCTION __declspec(allocator)
@@ -28,7 +41,9 @@
     #define SKL_NOVTABLE
 #endif
 
-#define SKL_ALIGNMENT       sizeof( void* ) 
+#define SKL_NORETURN [[noreturn]]
+
+#define SKL_ALIGNMENT sizeof( void* )
 
 #undef CONCAT_
 #define CONCAT_( x, y ) x##y
@@ -70,14 +85,7 @@
     #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy_s( InDest, InDestSize, InSrc, InSrcSize )
     #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove_s( InDest, InDestSize,InSrc, InSrcSize )
 #else
-    #define SKL_STRCPY( InDest, InSrc, InSizeInBytes ) ::strcpy( InDest, InSrc )
-    #define SKL_WSTRCPY( InDest, InSrc, InSizeInWords ) ::wcscpy( InDest, InSrc )
-
-    #define SKL_STRLEN( InStr, InSizeInBytes ) ::strlen( InStr )
-    #define SKL_WSTRLEN( InStr, InSizeInWords ) ::wcslen( InStr )
-    
-    #define SKL_MEMCPY( InDest, InDestSize, InSrc, InSrcSize ) ::memcpy( InDest, InSrc, InDestSize )
-    #define SKL_MEMMOVE( InDest, InDestSize, InSrc, InSrcSize ) ::memmove( InDest, InSrc, InDestSize )
+    #error @TODO
 #endif
 
 namespace SKL
@@ -104,3 +112,13 @@ namespace SKL
     ClassName & operator=( const ClassName & ) = delete;\
     ClassName ( ClassName && ) = delete;                \
     ClassName & operator=( ClassName && ) = delete
+    
+// These classes are meant to be used for ptr/ref types as an ATP/ATR idiom( API through pointer/ref idiom )
+#define SKL_TYPE_PURE_INTERFACE_CLASS( ClassName )      \
+    ClassName () noexcept = delete;                     \
+    ~ClassName () noexcept = delete;                    \
+    ClassName ( const ClassName & ) = delete;           \
+    ClassName & operator=( const ClassName & ) = delete;\
+    ClassName ( ClassName && ) = delete;                \
+    ClassName & operator=( ClassName && ) = delete
+

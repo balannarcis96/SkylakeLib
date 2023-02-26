@@ -11,7 +11,11 @@ namespace SKL
 {
     RStatus ServerInstance::Initialize( ServerInstanceConfig&& InConfig ) noexcept
     {
-        SKL_ASSERT_ALLWAYS( Skylake_IsTheLibraryInitialize() );
+        if( false == Skylake_IsTheLibraryInitialize() )
+        {
+            SKLL_ERR( "ServerInstance::Initialize() Skylake_IsTheLibraryInitialize() Failed!" );
+            return RFail;
+        }
 
         if( false == InConfig.IsValid() )
         {
@@ -243,7 +247,7 @@ namespace SKL
         if( true == bCreateMaster )
         {
             MasterWorker = NewGroup->GetTheMasterWorker();
-            SKL_ASSERT_ALLWAYS( nullptr != MasterWorker );
+            SKL_ASSERT( nullptr != MasterWorker );
         }
         
         if( true == NewGroup->GetTag().bHandlesTimerTasks )
@@ -324,14 +328,14 @@ namespace SKL
             if( nullptr == Service ){ continue; }
             if ( RSuccess != Service->OnWorkerStarted( InWorker, InGroup ) )
             {
-                SKLL_ERR_FMT("[WorkerSercice:%u]Worker faled to start!", Service->GetUID() );
+                SKLL_ERR_FMT("[WorkerService:%u]OnWorkerStarted() failed!", Service->GetUID() );
                 return false;
             }
         }
 
-        TotalNumberOfRunningWorkers.increment();
+        ( void )TotalNumberOfRunningWorkers.increment();
 
-        SKLL_INF_FMT("[Service:%ws] Failed to started! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
+        SKLL_INF_FMT("[WorkerGroup:%ws] Started! Running workers count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
     

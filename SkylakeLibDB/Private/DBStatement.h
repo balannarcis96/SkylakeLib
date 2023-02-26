@@ -425,6 +425,7 @@ namespace SKL::DB
             else
             {
                 SKL_ASSERT_ALLWAYS_MSG( false, "Unsupported Bind Type!" );
+                unreachable();
             }
         }
 

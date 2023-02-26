@@ -47,16 +47,38 @@ namespace SKL::DB
         DBString( DBString && ) = delete;
         DBString &operator=( DBString && ) = delete;
 
-        SKL_FORCEINLINE static DBString<MaxSize> FromUtf8( const char* InUtf8 ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static DBString<MaxSize> FromUtf8( const char* InUtf8 ) noexcept
         {
             return DBString<MaxSize>{ InUtf8 };
         }
-        SKL_FORCEINLINE static DBString<MaxSize> FromUtf16( const wchar_t* InUtf16 ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static DBString<MaxSize> FromUtf16( const wchar_t* InUtf16 ) noexcept
         {
             return DBString<MaxSize>{ InUtf16 };
         }
 
-        SKL_NODISCARD char *GetUtf8( ) noexcept
+        SKL_NODISCARD static DBString<MaxSize> FromUnsafeUtf8( const char* InUtf8 ) noexcept
+        {
+            const size_t ActualSize{ ::strnlen_s( InUtf16, MaxSize ) };
+            if( ActualSize == MaxSize ) SKL_ALLWAYS_UNLIKELY
+            {
+                return DBString<MaxSize>{ L"" };
+            }
+
+            SKL_ALLWAYS_LIKELY return DBString<MaxSize>{ InUtf8 };
+        }
+
+        SKL_NODISCARD static DBString<MaxSize> FromUnsafeUtf16( const wchar_t* InUtf16 ) noexcept
+        {
+            const size_t ActualSize{ ::wcsnlen_s( InUtf16, MaxSize ) };
+            if( ActualSize == MaxSize ) SKL_ALLWAYS_UNLIKELY
+            {
+                return DBString<MaxSize>{ L"" };
+            }
+
+            SKL_ALLWAYS_LIKELY return DBString<MaxSize>{ InUtf16 };
+        }
+
+        SKL_NODISCARD char *GetUtf8() noexcept
         {
             if( true == bHasSource && false == bHasUTF8 )
             {
@@ -85,7 +107,7 @@ namespace SKL::DB
             return Utf16;
         }
 
-        SKL_NODISCARD size_t GetUtf8SizeNoConvert( ) const noexcept
+        SKL_NODISCARD size_t GetUtf8SizeNoConvert() const noexcept
         {
             if( false == bHasSource )
             {
@@ -94,7 +116,7 @@ namespace SKL::DB
 
             return SKL_STRLEN( Utf8, CUTF8Size );
         }
-        SKL_NODISCARD size_t GetUtf16SizeNoConvert( ) const noexcept
+        SKL_NODISCARD size_t GetUtf16SizeNoConvert() const noexcept
         {
             if( false == bHasSource )
             {
@@ -103,7 +125,7 @@ namespace SKL::DB
 
             return SKL_WSTRLEN( Utf16, CUTF16Size );
         }
-        SKL_NODISCARD size_t GetUtf8Size( ) noexcept
+        SKL_NODISCARD size_t GetUtf8Size() noexcept
         {
             if( false == bHasSource )
             {
@@ -112,12 +134,12 @@ namespace SKL::DB
 
             if( false == bHasUTF8 )
             {
-                return SKL_STRLEN( GetUtf8( ), CUTF8Size );
+                return SKL_STRLEN( GetUtf8(), CUTF8Size );
             }
 
             return SKL_STRLEN( Utf8, CUTF8Size );
         }
-        SKL_NODISCARD size_t GetUtf16Size( ) noexcept
+        SKL_NODISCARD size_t GetUtf16Size() noexcept
         {
             if( false == bHasSource )
             {
@@ -126,7 +148,7 @@ namespace SKL::DB
 
             if( false == bHasUTF16 )
             {
-                return SKL_WSTRLEN( GetUtf16( ), CUTF16Size );
+                return SKL_WSTRLEN( GetUtf16(), CUTF16Size );
             }
 
             return SKL_WSTRLEN( Utf16, CUTF16Size );
@@ -141,7 +163,7 @@ namespace SKL::DB
 
             if( false == bHasUTF8 )
             {
-                return SKL_STRCMP( GetUtf8( ), Utf8Str, CUTF8Size ) == 0;
+                return SKL_STRCMP( GetUtf8(), Utf8Str, CUTF8Size ) == 0;
             }
 
             return SKL_STRCMP( Utf8, Utf8Str, CUTF8Size ) == 0;
@@ -171,7 +193,7 @@ namespace SKL::DB
 
         SKL_FORCEINLINE void CopyUtf16Into( wchar_t *TargetBuffer, const size_t TargetBufferSizeInWords ) noexcept
         {
-            SKL_WSTRCPY( TargetBuffer, GetUtf16( ), TargetBufferSizeInWords );
+            SKL_WSTRCPY( TargetBuffer, GetUtf16(), TargetBufferSizeInWords );
         }
         SKL_FORCEINLINE void CopyUtf8Into( char *TargetBuffer, const size_t TargetBufferSize ) noexcept
         {
@@ -217,7 +239,7 @@ namespace SKL::DB
             , bHasUTF8{ true }
         {
             SKL_STRCPY( this->Utf8, Utf8, CUTF8Size );
-            Utf16[ 0 ] = L'\0';
+            Utf16[0] = L'\0';
         }
 
         explicit DBString( const wchar_t *Utf16 ) noexcept 
@@ -225,7 +247,7 @@ namespace SKL::DB
             , bHasUTF16{ true }
         {
             SKL_WSTRCPY( this->Utf16, Utf16, CUTF16Size );
-            Utf8[ 0 ] = '\0';
+            Utf8[0] = '\0';
         }
 
         bool    bHasSource          { false };

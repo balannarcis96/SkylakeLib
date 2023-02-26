@@ -11,10 +11,10 @@ namespace SKL
 {
     using SkylakeLibInitPerThread = TLSValue<bool, 55114>;
 
-    std::relaxed_value<FILE*> GLogOutput { stdout }; //!< Defaulted to stdout
-    std::relaxed_value<BOOL>  GIsInit    { FALSE };  //!< Is the SkylakeLib init
+    std::relaxed_value<FILE*> GLogOutput = stdout; //!< Defaulted to stdout
+    std::relaxed_value<BOOL>  GIsInit    = FALSE;  //!< Is the SkylakeLib init
 
-    void ValidatePlatformRuntime() noexcept
+    static void ValidatePlatformRuntime() noexcept
     {
         const auto L1CacheLineSize { GetL1CacheLineSize() };
         if ( SKL_CACHE_LINE_SIZE != L1CacheLineSize )

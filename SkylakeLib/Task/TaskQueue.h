@@ -59,7 +59,7 @@ namespace SKL
             {
                 Tail = LocalNext;
 
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
+                SKL_ASSERT( false == IsStub( LocalTail ) );
                 return LocalTail;
             }
 
@@ -79,7 +79,7 @@ namespace SKL
             {
                 Tail = LocalNext;
 
-                SKL_IFNOTSHIPPING( SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) ) );
+                SKL_ASSERT_ALLWAYS( false == IsStub( LocalTail ) );
                 return LocalTail;
             }
 

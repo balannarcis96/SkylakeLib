@@ -54,7 +54,7 @@ namespace SKL
             if constexpr( true == bOverflowIsPossible ) 
             {
                 constexpr uint32_t MaxPossible{ static_cast<uint32_t>( -1 ) / TSize };
-                SKL_ASSERT_ALLWAYS_MSG( static_cast<uint32_t>( InCount ) <= MaxPossible, "STLAllocator<T>::allocate() multiply overflow" );
+                SKL_ASSERT_MSG( static_cast<uint32_t>( InCount ) <= MaxPossible, "STLAllocator<T>::allocate() multiply overflow" );
             }
 #endif
             const uint32_t AllocateSize{ TSize * static_cast<uint32_t>( InCount ) };
@@ -114,7 +114,7 @@ namespace SKL
             if constexpr( true == bOverflowIsPossible ) 
             {
                 constexpr uint32_t MaxPossible{ static_cast<uint32_t>( -1 ) / TSize };
-                SKL_ASSERT_ALLWAYS_MSG( static_cast<uint32_t>( InCount ) <= MaxPossible, "STLTLSAllocator<T>::allocate() multiply overflow" );
+                SKL_ASSERT_MSG( static_cast<uint32_t>( InCount ) <= MaxPossible, "STLTLSAllocator<T>::allocate() multiply overflow" );
             }
 #endif
             const uint32_t AllocateSize{ TSize * static_cast<uint32_t>( InCount ) };

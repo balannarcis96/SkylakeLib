@@ -112,7 +112,7 @@ DBConnection_Execute_Start:
         else
         {
             NoOfRowsAffected = ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) );
-            if( NoOfRowsAffected == 0 ) SKL_LIKELY 
+            if( NoOfRowsAffected == 0 ) SKL_ALLWAYS_LIKELY 
             {
                 const auto Temp{ ::mysql_affected_rows( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
                 SKL_ASSERT( Temp <= INT64_MAX );
@@ -170,7 +170,7 @@ DBConnection_Execute_Start:
         else
         {
             NoOfRowsAffected = ::mysql_field_count( reinterpret_cast<::MYSQL*>( &Mysql ) );
-            if( NoOfRowsAffected == 0 ) SKL_LIKELY 
+            if( NoOfRowsAffected == 0 ) SKL_ALLWAYS_LIKELY 
             {
                 const auto Temp{ ::mysql_affected_rows( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
                 SKL_ASSERT( Temp <= INT64_MAX );

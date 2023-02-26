@@ -104,7 +104,7 @@ namespace SKL
 
         SKL_FORCEINLINE SKL_NODISCARD bool Validate() const noexcept
         {
-            SKL_ASSERT_ALLWAYS( nullptr != Name );
+            SKL_ASSERT( nullptr != Name );
 
             if ( 0U == Id )
             {

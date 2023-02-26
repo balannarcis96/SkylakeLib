@@ -561,8 +561,8 @@ namespace SKL
     using IByteStreamObjectWriter    = IStreamWriter<uint8_t, true>;
     using IByteStreamObjectPtrWriter = IStreamWriter<uint8_t, false>;
 
-    template<bool bIsBase_StreamObjectOrPtrToStreamObject>
-    struct IBinaryStream: public IStreamWriter<uint8_t, bIsBase_StreamObjectOrPtrToStreamObject>
+    template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
+    struct IBinaryStream: public IStreamWriter<TUnit, bIsBase_StreamObjectOrPtrToStreamObject>
     {
         IBinaryStream() noexcept = default;
         IBinaryStream( const IBinaryStream& ) = delete;
@@ -570,41 +570,42 @@ namespace SKL
         IBinaryStream( IBinaryStream&& ) = delete;
         IBinaryStream& operator=( IBinaryStream&& ) = delete;
 
-        SKL_FORCEINLINE static IBinaryStream<true>* FromStreamBase( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IBinaryStream<TUnit, true>* FromStreamBase( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IBinaryStream<true>*>( &InStream );
+            return reinterpret_cast<IBinaryStream<TUnit, true>*>( &InStream );
         }
-        SKL_FORCEINLINE static IBinaryStream<true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static IBinaryStream<TUnit, true>& FromStreamBaseRef( StreamBase& InStream ) noexcept
         {
-            return reinterpret_cast<IBinaryStream<true>&>( InStream );
+            return reinterpret_cast<IBinaryStream<TUnit, true>&>( InStream );
         }
     };
     
-    using IBinaryStreamObject    = IBinaryStream<true>;
-    using IBinaryStreamObjectPtr = IBinaryStream<false>;
-
-    struct alignas( SKL_ALIGNMENT ) BinaryStream: public IBinaryStreamObject
+    using IBinaryStreamObject    = IBinaryStream<uint8_t, true>;
+    using IBinaryStreamObjectPtr = IBinaryStream<uint8_t, false>;
+    
+    template<typename TUnit>
+    struct alignas( SKL_ALIGNMENT ) BinaryObjectStream: public IBinaryStream<TUnit, true>
     {
-        BinaryStream() noexcept = default;
-        BinaryStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition, bool bOwnsBuffer ) noexcept
+        BinaryObjectStream() noexcept = default;
+        BinaryObjectStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition, bool bOwnsBuffer ) noexcept
             : Stream{ InPosition, InSize, InBuffer, bOwnsBuffer } {}
 
-        BinaryStream( const BinaryStream& Other ) noexcept
+        BinaryObjectStream( const BinaryObjectStream& Other ) noexcept
             : IBinaryStreamObject()
             , Stream{ Other.Stream } {}
 
-        BinaryStream& operator=( const BinaryStream& Other ) noexcept
+        BinaryObjectStream& operator=( const BinaryObjectStream& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             Stream = Other.Stream;
             return *this;
         }
         
-        BinaryStream( BinaryStream&& Other ) noexcept
+        BinaryObjectStream( BinaryObjectStream&& Other ) noexcept
             : IBinaryStreamObject()
             , Stream{ std::move( Other.Stream ) } {}
 
-        BinaryStream& operator=( BinaryStream&& Other ) noexcept
+        BinaryObjectStream& operator=( BinaryObjectStream&& Other ) noexcept
         {
             SKL_ASSERT( this != &Other );
             Stream = std::move( Other.Stream );
@@ -617,6 +618,8 @@ namespace SKL
     protected:
         StreamBase Stream{};
     };
+
+    using BinaryStream = BinaryObjectStream<uint8_t>;
 
     struct alignas( SKL_ALIGNMENT ) BinaryStreamInterface : public IBinaryStreamObjectPtr
     {

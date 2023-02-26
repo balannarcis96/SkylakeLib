@@ -59,7 +59,7 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD StreamBase const& GetStreamBase() const noexcept { return Stream; }
 
         //! Construct a new binary stream interface for this async IO buffer
-        SKL_FORCEINLINE SKL_NODISCARD IBinaryStream<true>* GetStream() noexcept { return IBinaryStream<true>::FromStreamBase( Stream ); }
+        SKL_FORCEINLINE SKL_NODISCARD IBinaryStream<uint8_t, true>* GetStream() noexcept { return IBinaryStream<uint8_t, true>::FromStreamBase( Stream ); }
         
         //! Construct a new object stream interface for this async IO buffer
         template<typename T>
@@ -75,7 +75,7 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD uint32_t GetPosition() const noexcept { return Stream.Position; }
         
         //! Copy everything from buffer base to the current position into the TargetStream
-        SKL_FORCEINLINE SKL_NODISCARD bool CopyTo( IBinaryStream<true>* TargetStream ) noexcept { return TargetStream->Write( Stream.GetBuffer(), Stream.Position ); }
+        SKL_FORCEINLINE SKL_NODISCARD bool CopyTo( IBinaryStream<uint8_t, true>* TargetStream ) noexcept { return TargetStream->Write( Stream.GetBuffer(), Stream.Position ); }
 
         //! Set current stream position
         SKL_FORCEINLINE void SetPosition( uint32_t InPosition ) noexcept
@@ -175,6 +175,10 @@ namespace SKL
 
         static constexpr size_t CPacketHeaderOffset = 12U;
         static constexpr size_t CPacketBodyOffset   = CPacketHeaderOffset + CPacketHeaderSize;
+        
+        static constexpr uint32_t CPacketReceiveHeaderState = 0;
+        static constexpr uint32_t CPacketReceiveBodyState   = 1;
+        static constexpr uint32_t CPacketSendState          = 2;
 
         AsyncNetBuffer() noexcept;
         ~AsyncNetBuffer() noexcept = default;
@@ -313,13 +317,16 @@ namespace SKL
         template<typename TPacketBody>
         SKL_FORCEINLINE SKL_NODISCARD TPacketBody& CastToPacketType() noexcept { return *reinterpret_cast<TPacketBody*>( GetPacketBodyBuffer() ); }
     
-        //! get the number of bytes currently received in this buffer
+        //! Get the number of bytes currently received in this buffer
         SKL_FORCEINLINE SKL_NODISCARD uint32_t GetCurrentlyReceivedByteCount() const noexcept { return GetStream().GetPosition(); }
 
-        static_assert( CPacketMaximumSize == GetTotalBufferSize() );
-
+        //! Get the AsyncIOBuffer that this interface is operating on
         SKL_FORCEINLINE SKL_NODISCARD Super&       GetSuper()       noexcept { return *reinterpret_cast<Super*>( this ); }
+
+        //! Get the AsyncIOBuffer that this interface is operating on
         SKL_FORCEINLINE SKL_NODISCARD Super const& GetSuper() const noexcept { return *reinterpret_cast<const Super*>( this ); }
+        
+        static_assert( CPacketMaximumSize == GetTotalBufferSize() );
     };
 
     template<size_t CompletionTaskSize>
@@ -327,10 +334,6 @@ namespace SKL
     {
         using Base  = IAsyncNetBufferBase<CompletionTaskSize>;
         using Super = AsyncNetBuffer<CompletionTaskSize>;
-
-        static constexpr uint32_t CPacketReceiveHeaderState = 0;
-        static constexpr uint32_t CPacketReceiveBodyState   = 1;
-        static constexpr uint32_t CPacketSendState          = 2;
 
         // This type cannot be used to create an object, its meant to be used for pointer/ref type
         IAsyncNetBuffer() noexcept = delete;
@@ -489,13 +492,56 @@ namespace SKL
             Stream.Buffer.Length = this->GetPacketHeader().Size;
         }
 
+        //! Setup the stream object for packet writing
+        SKL_FORCEINLINE void PrepareForPacketWriting() noexcept
+        {
+            StreamBase& Stream{ this->GetStream() };
+
+            Stream.Buffer.Buffer = this->GetPacketBuffer();
+            Stream.Buffer.Length = Base::GetPacketBufferSize();
+            Stream.Position      = 0U;
+        }
+
+        //! Write into the underlying buffer through the current stream 
+        //! \param InSourceBuffer Source buffer ptr
+        //! \param WriteAmount No of bytes to copy
+        //! \return ROperationOverflows if there is no space to copy WriteAmount of bytes in the underlying stream
+        //! \return RFail if the memcpy operation failed
+        //! \return RSuccess if the memcpy operation succeeded and the underlying stream position was advanced by WriteAmount
+        SKL_NODISCARD RStatus Write( const uint8_t* InSourceBuffer, TPacketSize WriteAmount ) noexcept
+        {
+            StreamBase& Stream{ this->GetStream() };
+
+            if( WriteAmount > Stream.GetRemainingSize() ) SKL_UNLIKELY
+            {
+                return ROperationOverflows;
+            }
+
+            if( errno_t( 0 ) != ::memcpy_s( Stream.GetFront(), Stream.GetRemainingSize(), InSourceBuffer, WriteAmount ) ) SKL_UNLIKELY
+            {
+                return RFail;
+            }
+
+            Stream.Position += WriteAmount;
+
+            return RSuccess;
+        }
+
         //! Build a new ref into the InBuffer interfaces as IAsyncNetBuffer
         SKL_FORCEINLINE SKL_NODISCARD static IAsyncNetBuffer& FromBuffer( Super& InBuffer ) noexcept { return reinterpret_cast<IAsyncNetBuffer&>( InBuffer ); }
         SKL_FORCEINLINE SKL_NODISCARD static const IAsyncNetBuffer& FromBuffer( const Super& InBuffer ) noexcept { return reinterpret_cast<const IAsyncNetBuffer&>( InBuffer ); }
         
         //! Build a new ptr into the InBuffer interfaces as IAsyncNetBuffer
-        SKL_FORCEINLINE SKL_NODISCARD static IAsyncNetBuffer* FromBuffer( Super* InBuffer ) noexcept { return reinterpret_cast<IAsyncNetBuffer*>( InBuffer ); }
-        SKL_FORCEINLINE SKL_NODISCARD static const IAsyncNetBuffer* FromBuffer( const Super* InBuffer ) noexcept { return reinterpret_cast<const IAsyncNetBuffer*>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static IAsyncNetBuffer* FromBufferPtr( Super* InBuffer ) noexcept { return reinterpret_cast<IAsyncNetBuffer*>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static const IAsyncNetBuffer* FromBufferPtr( const Super* InBuffer ) noexcept { return reinterpret_cast<const IAsyncNetBuffer*>( InBuffer ); }
+
+        //! Build a new ptr into the InBuffer interfaces as IAsyncNetBuffer and prepare the target stream for packet writing
+        SKL_FORCEINLINE SKL_NODISCARD static IAsyncNetBuffer* FromBufferPtrForPacketWriting( Super* InBuffer ) noexcept 
+        { 
+            auto* Result = reinterpret_cast<IAsyncNetBuffer*>( InBuffer ); 
+            Result->PrepareForPacketWriting();
+            return Result;
+        }
     };
 
     template<size_t CompletionTaskSize>
@@ -597,6 +643,14 @@ namespace SKL
         }
         
         SKL_FORCEINLINE void SetEntityId( TEntityIdBase Id ) noexcept { *reinterpret_cast<TEntityIdBase*>( this->GetBuffer() + CEntityIdOffset ) = Id; }
+        
+        //! Build a new ref into the InBuffer interfaces as IAsyncNetBuffer
+        SKL_FORCEINLINE SKL_NODISCARD static IRoutedAsyncNetBuffer& FromBuffer( Super& InBuffer ) noexcept { return reinterpret_cast<IRoutedAsyncNetBuffer&>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static const IRoutedAsyncNetBuffer& FromBuffer( const Super& InBuffer ) noexcept { return reinterpret_cast<const IRoutedAsyncNetBuffer&>( InBuffer ); }
+        
+        //! Build a new ptr into the InBuffer interfaces as IAsyncNetBuffer
+        SKL_FORCEINLINE SKL_NODISCARD static IRoutedAsyncNetBuffer* FromBufferPtr( Super* InBuffer ) noexcept { return reinterpret_cast<IRoutedAsyncNetBuffer*>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static const IRoutedAsyncNetBuffer* FromBufferPtr( const Super* InBuffer ) noexcept { return reinterpret_cast<const IRoutedAsyncNetBuffer*>( InBuffer ); }
     };
     
     template<typename TEntityIdType, size_t CompletionTaskSize>
@@ -615,7 +669,7 @@ namespace SKL
         static constexpr size_t   CCountSize       = 2U;                //!< [Count]
         static constexpr size_t   COffsetSize      = 2U;                //!< [Offset]
         static constexpr uint32_t CPayloadMask     = 0xffffff00;
-        static constexpr uint32_t CPayloadMaxValue = CPayloadMask;
+        static constexpr uint32_t CPayloadMaxValue = CPayloadMask >> 8;
         static constexpr uint32_t CTypeMask        = 0x000000ff;
 
         static constexpr size_t CBHeaderOffset = 0U; 
@@ -696,6 +750,12 @@ namespace SKL
         //! Get the broadcast targets offset
         SKL_FORCEINLINE SKL_NODISCARD TPacketSize GetBroadcastTargetsOffset() const noexcept { return *reinterpret_cast<const TPacketSize*>( this->GetBuffer() + COffsetOffset ); }
         
+        //! Calculate the broadcast targets offset
+        SKL_FORCEINLINE SKL_NODISCARD TPacketSize CalculateBroadcastTargetsBufferOffset() const noexcept 
+        {
+            return CalcultateTotalBroadcastPacketSize( 0 );
+        }
+        
         //! Get the broadcast targets array
         SKL_FORCEINLINE SKL_NODISCARD std::span<const TEntityIdType> GetBroadcastTargets() const noexcept
         {
@@ -703,6 +763,28 @@ namespace SKL
                 reinterpret_cast<const TEntityIdType*>( this->GetBuffer() + GetBroadcastTargetsOffset() )
               , static_cast<size_t>( GetBroadcastTargetsCount() )
             };
+        }
+        
+        //! Build new BinaryObjectStream<TEntityIdType> into the buffer where the target can are wrote
+        SKL_FORCEINLINE SKL_NODISCARD BinaryObjectStream<TEntityIdType> BuildTargetsStream() noexcept
+        {
+            const TPacketSize OffsetToTargets{ CalculateBroadcastTargetsBufferOffset() };
+            return BinaryObjectStream<TEntityIdType>( 
+                  this->GetBuffer() + CalculateBroadcastTargetsBufferOffset()
+                , CPacketMaximumSize - OffsetToTargets
+                , 0U
+                , false
+            );
+        }
+
+        //! Prepare this buffer for sending as broadcast packet
+        SKL_FORCEINLINE void PrepareBroadcastBuffer( TBroadcastType Type, uint32_t Payload ) noexcept
+        {
+            GetBroadcastHeader().Size   = Base::CSizeOfBufferPaddingBeforePacket + Super::CPacketHeaderOffset;
+            GetBroadcastHeader().Opcode = CBroadcastPacketOpcode;
+
+            SetBroadcastType( Type );
+            SetBroadcastPayload( Payload );
         }
 
         //! Prepare this buffer for receiving a broadcast packet
@@ -728,17 +810,21 @@ namespace SKL
         //! Prepare this buffer for sending as broadcast packet
         void PrepareForSendingBroadcastPacket( TPacketSize TargetsCount ) noexcept
         {
+            const TPacketSize TotalSize{ CalcultateTotalBroadcastPacketSize( TargetsCount ) };
+
             PacketHeader BHeader{ GetBroadcastHeader() };
             SKL_ASSERT( CBroadcastPacketOpcode == BHeader.Opcode );
+            BHeader.Size = TotalSize;
 
             StreamBase& Stream{ this->GetStream() }; 
             Stream.Buffer.Buffer = GetBroadcastBuffer();
-            Stream.Buffer.Length = CalcultateTotalBroadcastPacketSize( TargetsCount );
+            Stream.Buffer.Length = TotalSize;
 
             SetBroadcastTargetsCount( TargetsCount );
             UpdateBroadcastTargetsOffset();
         }
         
+        //! Calculate the total size of the broadcasted packet
         SKL_FORCEINLINE SKL_NODISCARD TPacketSize CalcultateTotalBroadcastPacketSize( TPacketSize TargetsCount ) const noexcept
         {
 #if !defined(SKL_BUILD_SHIPPING)
@@ -760,6 +846,23 @@ namespace SKL
 #endif
         }
         
+        //! Copy the broadcasted data into Other
+        SKL_FORCEINLINE SKL_NODISCARD void CopyBroadcastedDataTo( Super& Other ) const noexcept
+        {
+            const TPacketSize ToCopy{ CalculateBroadcastTargetsBufferOffset() };
+            SKL_ASSERT( ( Base::CSizeOfBufferPaddingBeforePacket + CPacketHeaderSize ) <= ToCopy );
+            ( void )SKL_MEMCPY( Other.Buffer, CPacketMaximumSize, this->GetBuffer(), ToCopy );
+        }
+
+        //! Build a new ref into the InBuffer interfaces as IAsyncNetBuffer
+        SKL_FORCEINLINE SKL_NODISCARD static IBroadcastAsyncNetBuffer& FromBuffer( Super& InBuffer ) noexcept { return reinterpret_cast<IBroadcastAsyncNetBuffer&>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static const IBroadcastAsyncNetBuffer& FromBuffer( const Super& InBuffer ) noexcept { return reinterpret_cast<const IBroadcastAsyncNetBuffer&>( InBuffer ); }
+        
+        //! Build a new ptr into the InBuffer interfaces as IAsyncNetBuffer
+        SKL_FORCEINLINE SKL_NODISCARD static IBroadcastAsyncNetBuffer* FromBufferPtr( Super* InBuffer ) noexcept { return reinterpret_cast<IBroadcastAsyncNetBuffer*>( InBuffer ); }
+        SKL_FORCEINLINE SKL_NODISCARD static const IBroadcastAsyncNetBuffer* FromBufferPtr( const Super* InBuffer ) noexcept { return reinterpret_cast<const IBroadcastAsyncNetBuffer*>( InBuffer ); }
+
+    protected:
         SKL_FORCEINLINE void SetBroadcastTargetsCount( TPacketSize Count ) noexcept { *reinterpret_cast<TPacketSize*>( this->GetBuffer() + CCountOffset ) = Count; }
         
         SKL_FORCEINLINE void UpdateBroadcastTargetsOffset() noexcept

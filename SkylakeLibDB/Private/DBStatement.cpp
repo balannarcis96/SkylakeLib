@@ -64,7 +64,7 @@ namespace SKL::DB
         int32_t Result{ ::mysql_stmt_fetch_column( 
                   reinterpret_cast<::MYSQL_STMT*>( Statement->Statement )
                 , reinterpret_cast<::MYSQL_BIND*>( &GetBind )
-                , InIndex - 1
+                , static_cast<uint32_t>( InIndex - 1 )
                 , 0 ) };
         if( 0 != Result ) SKL_UNLIKELY
         {

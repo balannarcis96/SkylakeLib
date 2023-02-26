@@ -119,7 +119,7 @@ namespace SKL
 
     RStatus WorkerGroup::CreateWorkers( bool bIncludeMaster ) noexcept
     {
-        SKL_ASSERT_ALLWAYS( Tag.WorkersCount > 0 );
+        SKL_ASSERT( Tag.WorkersCount > 0 );
 
         std::vector<std::unique_ptr<Worker>> Temp{};
         Temp.reserve( static_cast<size_t>( Tag.WorkersCount ) + 1 );
@@ -169,12 +169,12 @@ namespace SKL
 
     RStatus WorkerGroup::HandleSlaveWorker( Worker& Worker ) noexcept
     {
-        SKL_ASSERT_ALLWAYS( false == Tag.bIsActive || Tag.TickRate > 0 );
+        SKL_ASSERT( false == Tag.bIsActive || Tag.TickRate > 0 );
 
         Worker.SetOnRunHandler([]( SKL::Worker& Worker, WorkerGroup& Group ) noexcept -> void
         {
-            const auto& Tag { Group.GetTag() };
-            if( true == Tag.bIsActive )
+            const auto& WgTag { Group.GetTag() };
+            if( true == WgTag.bIsActive )
             {
                 Group.ProactiveWorkerRun( Worker );
             }
@@ -740,71 +740,152 @@ namespace SKL
 
     bool WorkerGroup::HandleTasks_Proactive( uint32_t MillisecondsToSleep ) noexcept
     {
-        AsyncIOOpaqueType* OpaqueType              { nullptr };
-        TCompletionKey     CompletionKey           { nullptr };
-        uint32_t           NumberOfBytesTransferred{ 0U };
+        if constexpr( false == CAsyncWorker_DequeueMultipleAsyncWorkPerSystemCall )
+        {
+            AsyncIOOpaqueType* OpaqueType              { nullptr };
+            TCompletionKey     CompletionKey           { nullptr };
+            uint32_t           NumberOfBytesTransferred{ 0U };
 
-        const auto Result { AsyncIOAPI.TryGetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey, MillisecondsToSleep ) };
-        if( RTimeout == Result )
-        {
-            return false;
-        }
-        
-        if( RSuccess != Result ) SKL_UNLIKELY
-        {
-            if( RSystemFailure ==  Result )
+            const auto Result = AsyncIOAPI.TryGetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey, MillisecondsToSleep );
+            if( RTimeout == Result )
             {
-                SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+                return false;
+            }
         
-                // signal to terminate the worker group
-                return true;
+            if( RSuccess != Result ) SKL_ALLWAYS_UNLIKELY
+            {
+                if( RSystemFailure == Result )
+                {
+                    SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+        
+                    // signal to terminate the worker group
+                    return true;
+                }
+            }
+        
+            SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );
+
+            if( nullptr != OpaqueType )
+            {
+                HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
+            }    
+            else
+            {
+                HandleTask( CompletionKey );
             }
         }
-        
-        SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );
-
-        if( nullptr != OpaqueType )
-        {
-            HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
-        }    
         else
         {
-            HandleTask( CompletionKey );
-        }
-    
+            uint32_t               DequeuedCount{ 0U };
+            AsyncIOOpaqueEntryType OpaqueBuffer[CMaxAsyncRequestsToDequeuePerTick];
+            
+            ( void )::memset( OpaqueBuffer, 0, sizeof( AsyncIOOpaqueEntryType ) * CMaxAsyncRequestsToDequeuePerTick );
+
+            const auto Result = AsyncIOAPI.TryGetMultipleCompletedAsyncRequest( OpaqueBuffer, CMaxAsyncRequestsToDequeuePerTick, DequeuedCount, MillisecondsToSleep );
+            if( RTimeout == Result )
+            {
+                return false;
+            }
+            
+            if( RSuccess != Result ) SKL_ALLWAYS_UNLIKELY
+            {
+                if( RSystemFailure == Result )
+                {
+                    SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+        
+                    // signal to terminate the worker group
+                    return true;
+                }
+            }
+            
+            for( uint32_t i = 0; i < DequeuedCount; ++i )
+            {
+                AsyncIOOpaqueEntryType& Item{ OpaqueBuffer[i] };
+
+                SKL_ASSERT( nullptr != Item.GetCompletionKey() || nullptr != Item.GetOpaquePtr() );
+
+                if( nullptr != Item.GetOpaquePtr() )
+                {
+                    HandleAsyncIOTask( Item.GetOpaquePtr(), Item.GetNoOfBytesTransferred() );
+                }    
+                else
+                {
+                    HandleTask( Item.GetCompletionKey() );
+                }
+            }
+        }   
+
         return false;
     }
 
     bool WorkerGroup::HandleTasks_Reactive() noexcept
     {
-        AsyncIOOpaqueType* OpaqueType              { nullptr };
-        TCompletionKey     CompletionKey           { nullptr };
-        uint32_t           NumberOfBytesTransferred{ 0U };
-
-        const auto Result { AsyncIOAPI.GetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey ) };
-        if( RSuccess != Result ) SKL_UNLIKELY
+        if constexpr( false == CAsyncWorker_DequeueMultipleAsyncWorkPerSystemCall )
         {
-            if( RSystemFailure ==  Result )
-            {
-                SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+            AsyncIOOpaqueType* OpaqueType              { nullptr };
+            TCompletionKey     CompletionKey           { nullptr };
+            uint32_t           NumberOfBytesTransferred{ 0U };
 
-                // signal to terminate the worker group
-                return true;
+            const auto Result = AsyncIOAPI.GetCompletedAsyncRequest( &OpaqueType, &NumberOfBytesTransferred, &CompletionKey );
+            if( RSuccess != Result ) SKL_UNLIKELY
+            {
+                if( RSystemFailure == Result )
+                {
+                    SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+
+                    // signal to terminate the worker group
+                    return true;
+                }
+            }
+        
+            SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );
+
+            if( nullptr != OpaqueType )
+            {
+                HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
+            }    
+            else
+            {
+               HandleTask( CompletionKey );
             }
         }
-        
-        SKL_ASSERT( nullptr != OpaqueType || nullptr != CompletionKey );
-
-        if( nullptr != OpaqueType )
-        {
-            HandleAsyncIOTask( OpaqueType, NumberOfBytesTransferred );
-        }    
         else
         {
-           HandleTask( CompletionKey );
+            uint32_t               DequeuedCount{ 0U };
+            AsyncIOOpaqueEntryType OpaqueBuffer[CMaxAsyncRequestsToDequeuePerTick];
+                        
+            ( void )::memset( OpaqueBuffer, 0, sizeof( AsyncIOOpaqueEntryType ) * CMaxAsyncRequestsToDequeuePerTick );
+
+            const auto Result = AsyncIOAPI.GetMultipleCompletedAsyncRequest( OpaqueBuffer, CMaxAsyncRequestsToDequeuePerTick, DequeuedCount );
+            if( RSuccess != Result ) SKL_ALLWAYS_UNLIKELY
+            {
+                if( RSystemFailure == Result )
+                {
+                    SKLL_WRN_FMT( "WorkerGroup::HandleTasks_Reactive() [Group:%ws] Failed with status: SystemFailure", Tag.Name );
+        
+                    // signal to terminate the worker group
+                    return true;
+                }
+            }
+            
+            for( uint32_t i = 0; i < DequeuedCount; ++i )
+            {
+                AsyncIOOpaqueEntryType& Item{ OpaqueBuffer[i] };
+
+                SKL_ASSERT( nullptr != Item.GetCompletionKey() || nullptr != Item.GetOpaquePtr() );
+
+                if( nullptr != Item.GetOpaquePtr() )
+                {
+                    HandleAsyncIOTask( Item.GetOpaquePtr(), Item.GetNoOfBytesTransferred() );
+                }    
+                else
+                {
+                    HandleTask( Item.GetCompletionKey() );
+                }
+            }
         }
 
-        return false;
+        SKL_ALLWAYS_LIKELY return false;
     }
 
     void WorkerGroup::HandleAsyncIOTask( AsyncIOOpaqueType* InOpaque, uint32_t NumberOfBytesTransferred ) noexcept

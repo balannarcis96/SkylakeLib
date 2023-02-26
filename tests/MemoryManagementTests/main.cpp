@@ -196,7 +196,7 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
-            auto UniqueItem = SKL::MakeUniqueNoDeconstruct<MyType>( &b );
+            auto UniqueItem = SKL::MakeUniqueNoDeconstruct<MyType>();
             ASSERT_TRUE( nullptr != UniqueItem.get() );
             //ASSERT_TRUE( 5 == *UniqueItem->a );
         }
@@ -318,7 +318,7 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
         {
-            auto SharedItem = SKL::MakeSharedNoDestruct<MyType>( &b );
+            auto SharedItem = SKL::MakeSharedNoDestruct<MyType>();
             ASSERT_TRUE( nullptr != SharedItem.get() );
             ASSERT_TRUE( true == static_cast<bool>( SharedItem ) );
             ASSERT_TRUE( 1 == SharedItem.use_count() );

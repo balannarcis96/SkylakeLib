@@ -38,6 +38,7 @@ namespace SKL
 {
     static_assert( std::is_same_v<TSocket, SOCKET>, "Invalid Socket type!" );
     static_assert( sizeof( AsyncIOOpaqueType ) == sizeof( OVERLAPPED ), "AsyncIOOpaqueType must be updated!" );
+    static_assert( sizeof( AsyncIOOpaqueEntryType ) == sizeof( OVERLAPPED_ENTRY ), "AsyncIOOpaqueEntryType must be updated!" );
     static_assert( sizeof( int64_t ) == sizeof( LARGE_INTEGER ), "Timer must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TEpochTimePoint>, "TEpochTimePoint must be updated!" );
     static_assert( std::is_same_v<std::invoke_result_t<decltype(::GetTickCount64)>, TSystemTimePoint>, "TSystemTimePoint must be updated!" );
@@ -137,13 +138,28 @@ namespace SKL
 
         return true;
     }
+
+    uint32_t AsyncIOOpaqueEntryType::GetNoOfBytesTransferred() const noexcept
+    {
+        return reinterpret_cast<const OVERLAPPED_ENTRY*>( this )->dwNumberOfBytesTransferred;
+    }
+
+    TCompletionKey AsyncIOOpaqueEntryType::GetCompletionKey() noexcept
+    {
+        return reinterpret_cast<TCompletionKey>( reinterpret_cast<OVERLAPPED_ENTRY*>( this )->lpCompletionKey );
+    }
+    
+    AsyncIOOpaqueType* AsyncIOOpaqueEntryType::GetOpaquePtr() noexcept
+    {
+        return reinterpret_cast<AsyncIOOpaqueType*>( reinterpret_cast<OVERLAPPED_ENTRY*>( this )->lpOverlapped );
+    }
 }
 
 namespace SKL
 {
     GUID GGuidAcceptEx = WSAID_ACCEPTEX;
 
-    LPFN_ACCEPTEX Win32_AcquireAcceptEx( TSocket InSocket ) noexcept
+    static LPFN_ACCEPTEX Win32_AcquireAcceptEx( TSocket InSocket ) noexcept
     {
         LPFN_ACCEPTEX Output        { nullptr };
         DWORD         BytesReturned { 0 };
@@ -397,7 +413,7 @@ namespace SKL
 
 namespace SKL
 {
-    WSADATA       GWSAData;                 //!< WSADATA global instance
+    WSADATA GWSAData{}; //!< WSADATA global instance
 
     RStatus AsyncIO::InitializeSystem() noexcept 
     {
@@ -426,7 +442,7 @@ namespace SKL
         ThreadsCount = InThreadsCount;
         
         // create the queue
-        const auto Result = ::CreateIoCompletionPort( INVALID_HANDLE_VALUE, nullptr, NULL, InThreadsCount );
+        const auto Result = ::CreateIoCompletionPort( INVALID_HANDLE_VALUE, nullptr, NULL, static_cast<DWORD>( InThreadsCount ) );
         if( nullptr == Result ) SKL_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError();
@@ -469,7 +485,6 @@ namespace SKL
               , reinterpret_cast<OVERLAPPED**>( OutCompletedRequestOpaqueTypeInstancePtr )
               , INFINITE
         );
-
         if( FALSE == GetResult ) SKL_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError( );
@@ -504,7 +519,7 @@ namespace SKL
             return RSystemFailure;
         }
 
-        return RSuccess;
+        SKL_ALLWAYS_LIKELY return RSuccess;
     }
     
     RStatus AsyncIO::TryGetCompletedAsyncRequest( AsyncIOOpaqueType** OutCompletedRequestOpaqueTypeInstancePtr, uint32_t* OutNumberOfBytesTransferred, TCompletionKey* OutCompletionKey, uint32_t InTimeout ) noexcept
@@ -517,17 +532,63 @@ namespace SKL
               , reinterpret_cast<OVERLAPPED**>( OutCompletedRequestOpaqueTypeInstancePtr )
               , static_cast<DWORD>( InTimeout )
         );
-
-        if( FALSE == GetResult ) SKL_LIKELY
+        if( FALSE == GetResult )
         {
-            const auto LastWSAError = ::WSAGetLastError( );
-            
-            if( WAIT_TIMEOUT == LastWSAError ) SKL_LIKELY
+            const auto LastWSAError = ::WSAGetLastError();
+            if( WAIT_TIMEOUT == LastWSAError )
             {
                 return RTimeout;
             }
 
-            if( WSA_OPERATION_ABORTED == LastWSAError )
+            if( WSA_OPERATION_ABORTED == LastWSAError ) SKL_ALLWAYS_UNLIKELY
+            {
+                /*
+                 * Overlapped operation aborted.
+                 * This Windows error indicates that an overlapped I/O operation was canceled because of the closure of a socket.
+                 * In addition, this error can occur when executing the SIO_FLUSH ioctl command.
+                 */
+
+                 SKL_ALLWAYS_UNLIKELY return RSuccessAsyncIORequestCancelled;
+            }
+
+            if( ERROR_NETNAME_DELETED == LastWSAError ) SKL_ALLWAYS_UNLIKELY
+            {
+                /*
+                 * NTSTATUS -> WINAPI Error mappings in this case
+                 * 
+                 * STATUS_NETWORK_NAME_DELETED      ->  ERROR_NETNAME_DELETED
+                 * STATUS_LOCAL_DISCONNECT          ->  ERROR_NETNAME_DELETED
+                 * STATUS_REMOTE_DISCONNECT         ->  ERROR_NETNAME_DELETED
+                 * STATUS_ADDRESS_CLOSED            ->  ERROR_NETNAME_DELETED
+                 * STATUS_CONNECTION_DISCONNECTED   ->  ERROR_NETNAME_DELETED
+                 * STATUS_CONNECTION_RESET          ->  ERROR_NETNAME_DELETED
+                 */
+
+                SKL_ALLWAYS_UNLIKELY return RSuccessAsyncIORequestCancelled;
+            }
+
+            SKL_ALLWAYS_UNLIKELY return RSystemFailure;
+        }
+
+        SKL_ALLWAYS_LIKELY return RSuccess;
+    }
+    
+    RStatus AsyncIO::GetMultipleCompletedAsyncRequest( AsyncIOOpaqueEntryType* OutputBuffer, uint32_t OutputBufferCount, uint32_t& OutCount ) noexcept
+    {
+        // sys call to get completed async IO requests or custom queued work
+        const auto GetResult = ::GetQueuedCompletionStatusEx( 
+                reinterpret_cast<HANDLE>( QueueHandle.load() ) 
+              , reinterpret_cast<LPOVERLAPPED_ENTRY>( OutputBuffer )
+              , static_cast<ULONG>( OutputBufferCount )
+              , reinterpret_cast<PULONG>( &OutCount )
+              , INFINITE
+              , FALSE
+        );
+        if( FALSE == GetResult ) SKL_UNLIKELY
+        {
+            const auto LastWSAError = ::WSAGetLastError();
+            
+            if( WSA_OPERATION_ABORTED == LastWSAError ) SKL_LIKELY
             {
                 /*
                  * Overlapped operation aborted.
@@ -557,7 +618,59 @@ namespace SKL
             return RSystemFailure;
         }
 
-        return RSuccess;
+        SKL_ALLWAYS_LIKELY return RSuccess;
+    }
+    
+    RStatus AsyncIO::TryGetMultipleCompletedAsyncRequest( AsyncIOOpaqueEntryType* OutputBuffer, uint32_t OutputBufferCount, uint32_t& OutCount, uint32_t InTimeout ) noexcept
+    {
+        // sys call to get completed async IO requests or custom queued work
+        const auto GetResult = ::GetQueuedCompletionStatusEx( 
+                reinterpret_cast<HANDLE>( QueueHandle.load() ) 
+              , reinterpret_cast<LPOVERLAPPED_ENTRY>( OutputBuffer )
+              , static_cast<ULONG>( OutputBufferCount )
+              , reinterpret_cast<PULONG>( &OutCount )
+              , static_cast<DWORD>( InTimeout )
+              , FALSE
+        );
+        if( FALSE == GetResult )
+        {
+            const auto LastWSAError = ::WSAGetLastError();
+            if( WAIT_TIMEOUT == LastWSAError )
+            {
+                return RTimeout;
+            }
+
+            if( WSA_OPERATION_ABORTED == LastWSAError ) SKL_ALLWAYS_UNLIKELY
+            {
+                /*
+                 * Overlapped operation aborted.
+                 * This Windows error indicates that an overlapped I/O operation was canceled because of the closure of a socket.
+                 * In addition, this error can occur when executing the SIO_FLUSH ioctl command.
+                 */
+
+                 SKL_ALLWAYS_UNLIKELY return RSuccessAsyncIORequestCancelled;
+            }
+
+            if( ERROR_NETNAME_DELETED == LastWSAError ) SKL_ALLWAYS_UNLIKELY
+            {
+                /*
+                 * NTSTATUS -> WINAPI Error mappings in this case
+                 * 
+                 * STATUS_NETWORK_NAME_DELETED      ->  ERROR_NETNAME_DELETED
+                 * STATUS_LOCAL_DISCONNECT          ->  ERROR_NETNAME_DELETED
+                 * STATUS_REMOTE_DISCONNECT         ->  ERROR_NETNAME_DELETED
+                 * STATUS_ADDRESS_CLOSED            ->  ERROR_NETNAME_DELETED
+                 * STATUS_CONNECTION_DISCONNECTED   ->  ERROR_NETNAME_DELETED
+                 * STATUS_CONNECTION_RESET          ->  ERROR_NETNAME_DELETED
+                 */
+
+                SKL_ALLWAYS_UNLIKELY return RSuccessAsyncIORequestCancelled;
+            }
+
+            SKL_ALLWAYS_UNLIKELY return RSystemFailure;
+        }
+
+        SKL_ALLWAYS_LIKELY return RSuccess;
     }
     
     RStatus AsyncIO::QueueAsyncWork( TCompletionKey InCompletionKey ) noexcept
@@ -569,9 +682,9 @@ namespace SKL
           , reinterpret_cast<ULONG_PTR>( InCompletionKey )
           , nullptr
         );
-        if( FALSE == Result ) SKL_UNLIKELY
+        if( FALSE == Result ) SKL_ALLWAYS_UNLIKELY
         {
-            const auto LastWSAError = ::WSAGetLastError( );
+            const auto LastWSAError = ::WSAGetLastError();
             SKLL_ERR_FMT( "AsyncIO::QueueAsyncWork() failed with WSAERROR[%d]", LastWSAError );
             return RFail;
         }
@@ -594,7 +707,7 @@ namespace SKL
           , reinterpret_cast<OVERLAPPED*>( InOpaqueObject.get() )
           , nullptr
         );
-        if ( SOCKET_ERROR == Result ) SKL_LIKELY
+        if ( SOCKET_ERROR == Result ) SKL_ALLWAYS_UNLIKELY
         {    
             const int32_t LastWSAError{ WSAGetLastError() };
             if( WSA_IO_PENDING != LastWSAError ) SKL_UNLIKELY
@@ -625,7 +738,7 @@ namespace SKL
           , reinterpret_cast<OVERLAPPED*>( InOpaqueObject.get() )
           , nullptr
         );
-        if ( SOCKET_ERROR == Result ) SKL_LIKELY
+        if ( SOCKET_ERROR == Result ) SKL_ALLWAYS_UNLIKELY
         {    
             const int32_t LastWSAError{ WSAGetLastError() };
             if( WSA_IO_PENDING != LastWSAError ) SKL_UNLIKELY
@@ -660,7 +773,7 @@ namespace SKL
                                                     , reinterpret_cast<HANDLE>( QueueHandle.load_relaxed() )
                                                     , 0
                                                     , 0 );
-        if( nullptr == Result ) SKL_UNLIKELY
+        if( nullptr == Result ) SKL_ALLWAYS_UNLIKELY
         {
             const auto LastWSAError = ::WSAGetLastError();
             SKLL_ERR_FMT( "Win32AsyncIO::AssociateToTheAPI() Failed to associate socket to the IOCP Handle WSAERROR[%d]", LastWSAError );
@@ -699,7 +812,7 @@ namespace SKL
 
     TEpochTimePoint GetSystemUpTickCount() noexcept
     {
-        return ::GetTickCount64( );
+        return ::GetTickCount64();
     }
 
     RStatus SetOsTimeResolution( uint32_t InMilliseconds ) noexcept
@@ -746,15 +859,15 @@ namespace SKL
             ++Timer->Count;
             double Error = Observed - ToWait;
             double Delta = Error - Timer->Mean;
-            Timer->Mean += Delta / Timer->Count;
+            Timer->Mean += Delta / static_cast<double>( Timer->Count );
             Timer->M2   += Delta * ( Error - Timer->Mean );
-            double Stddev = sqrt( Timer->M2 / (Timer->Count - 1) );
+            double Stddev = sqrt( Timer->M2 / static_cast<double>( Timer->Count - 1 ) );
             Timer->Estimate = Timer->Mean + Stddev;
         }
 
         // Spin lock
         const auto Start{ high_resolution_clock::now() };
-        while ( ( high_resolution_clock::now() - Start ).count() / 1e9 < InSeconds );
+        while ( static_cast<double>( ( high_resolution_clock::now() - Start ).count() ) / 1e9 < InSeconds );
     }
 
     uint32_t PlatformTLS::GetCurrentThreadId() noexcept
@@ -782,14 +895,14 @@ namespace SKL
         ::TlsFree( static_cast<DWORD>( InSlot ) );
     }
 
-    int32_t GGetLastError( ) noexcept
+    int32_t GGetLastError() noexcept
     {
-        return ( int32_t )GetLastError( );
+        return ( int32_t )GetLastError();
     }
     
-    int32_t GGetNetworkLastError( ) noexcept
+    int32_t GGetNetworkLastError() noexcept
     {
-        return ( int32_t )WSAGetLastError( );
+        return ( int32_t )WSAGetLastError();
     }
 
     bool IsValidSocket( TSocket InSocket ) noexcept

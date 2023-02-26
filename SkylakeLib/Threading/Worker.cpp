@@ -38,7 +38,7 @@ namespace SKL
         if ( true == Group->OnWorkerStarted( *this ) )
         {
             // dispatch main task
-            SKL_ASSERT_ALLWAYS( false == OnRun.IsNull() );
+            SKL_ASSERT( false == OnRun.IsNull() );
 
             if( nullptr != SInstance->SyncWorkerStartup )
             {

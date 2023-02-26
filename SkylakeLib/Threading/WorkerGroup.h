@@ -34,7 +34,7 @@ namespace SKL
                 SKL_BREAK();
             }
 
-            SKL_ASSERT_ALLWAYS( 0 == GetNumberOfRunningWorkers() );
+            SKL_ASSERT( 0 == GetNumberOfRunningWorkers() );
 
             MasterWorker = nullptr;
         }
