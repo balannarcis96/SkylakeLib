@@ -281,7 +281,7 @@ namespace SKL
             TSharedPtr<AsyncAcceptTask>::Static_IncrementReference( AcceptTask );
 
             // guard
-            SKL_ASSERT( 2 == TSharedPtr<AsyncAcceptTask>::Static_GetReferenceCount( AcceptTask ) );
+            SKL_ASSERT_EQUAL( 2U, TSharedPtr<AsyncAcceptTask>::Static_GetReferenceCount( AcceptTask ) );
         }
 
         // Allocate new tcp socket

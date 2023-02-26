@@ -53,7 +53,7 @@ namespace SKL
         using IndexType                                   = typename EntityId::TIndexType;
         using RootComponentData                           = TRootComponentData;
         using Components                                  = std::tuple<TComponents...>;
-        static constexpr size_t           MaxEntities     = TMaxEntities + 1;
+        static constexpr size_t           MaxEntities     = TMaxEntities;
         static constexpr size_t           ComponentsCount = 1 + sizeof...( TComponents );
         static constexpr IndexType        IdentityValue   = 0;
         static constexpr TEntityType      EntityType      = MyEntityType;
@@ -338,8 +338,8 @@ namespace SKL
         using TEntityConstRef            = const TEntityType&;
         using TEntitySharedPtr           = TSharedPtr<TEntityType, MyMemoryStrategy, Flags.bDestructEntity>;
         using MyStore                    = SymmetricStoreWithConditionalPadding<IndexType, MaxEntities, ComponentPaddingCondition, SharedRootComponent, TComponents...>;
-        using MyBasicIdStore             = UIDStore<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities )>;
-        using MyCachedAllocationsIdStore = UIDAllocationCache<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities ), CustomUIDAllocationCacheToIndexConvert>;
+        using MyBasicIdStore             = UIDStore<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities - 1 )>;
+        using MyCachedAllocationsIdStore = UIDAllocationCache<IndexType, IdentityValue, static_cast<IndexType>( MaxEntities - 1 ), CustomUIDAllocationCacheToIndexConvert>;
         using MyIdStore                  = std::conditional_t<Flags.bUseCachedAllocationUIDStore, MyCachedAllocationsIdStore, MyBasicIdStore>;
         using Variant                    = typename TEntityId::Variant;
 

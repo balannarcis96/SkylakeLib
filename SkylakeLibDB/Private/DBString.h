@@ -58,10 +58,10 @@ namespace SKL::DB
 
         SKL_NODISCARD static DBString<MaxSize> FromUnsafeUtf8( const char* InUtf8 ) noexcept
         {
-            const size_t ActualSize{ ::strnlen_s( InUtf16, MaxSize ) };
+            const size_t ActualSize{ ::strnlen_s( InUtf8, MaxSize ) };
             if( ActualSize == MaxSize ) SKL_ALLWAYS_UNLIKELY
             {
-                return DBString<MaxSize>{ L"" };
+                return DBString<MaxSize>{ "" };
             }
 
             SKL_ALLWAYS_LIKELY return DBString<MaxSize>{ InUtf8 };
