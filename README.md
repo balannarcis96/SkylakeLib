@@ -23,3 +23,5 @@
    - With the filtering capabilities, separate binary files can be built from the same source data (eg. xml, json)
    - Extensible: Custom adaptors can be written to load different source data, Custom node, attributes filtering rules
    - Great for distributing client/server specific data
+
+![image](https://user-images.githubusercontent.com/8436410/221479386-df65dade-8878-48d8-9c62-5c03013fe21a.png)
