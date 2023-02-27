@@ -321,11 +321,17 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD uint32_t GetCurrentlyReceivedByteCount() const noexcept { return GetStream().GetPosition(); }
 
         //! Get the AsyncIOBuffer that this interface is operating on
-        SKL_FORCEINLINE SKL_NODISCARD Super&       GetSuper()       noexcept { return *reinterpret_cast<Super*>( this ); }
+        SKL_FORCEINLINE SKL_NODISCARD Super& GetSuper() noexcept { return *reinterpret_cast<Super*>( this ); }
 
         //! Get the AsyncIOBuffer that this interface is operating on
         SKL_FORCEINLINE SKL_NODISCARD Super const& GetSuper() const noexcept { return *reinterpret_cast<const Super*>( this ); }
         
+        //! Get the stream writer
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectWriter& GetWriter() noexcept { return IByteStreamObjectWriter::FromStreamBaseRef( GetStream() ) };
+        
+        //! Get the stream reader
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectReader& GetReader() noexcept { return IByteStreamObjectReader::FromStreamBaseRef( GetStream() ) };
+
         static_assert( CPacketMaximumSize == GetTotalBufferSize() );
     };
 

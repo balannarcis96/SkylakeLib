@@ -32,7 +32,7 @@ namespace SKL
 
         RStatus Initialize() noexcept;
 
-        SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSContext]"; }
+        SKL_FORCEINLINE const char *GetName() const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED AODTLSContext]"; }
 
         void Reset() noexcept;
         void Clear() noexcept;

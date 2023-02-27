@@ -21,8 +21,19 @@ namespace SKL
     template<typename T>
     SKL_NOINLINE SKL_NORETURN inline void SklAssertEqualityFailHandler( T Value1, T Value2, const char* InExpressionAsString, const char* InFileName, size_t LineNumber ) noexcept
     {
-        const std::string Value1Str = std::to_string( Value1 );
-        const std::string Value2Str = std::to_string( Value2 );
+        std::string Value1Str;
+        std::string Value2Str;
+
+        if constexpr ( std::is_enum_v<T> )
+        {
+            Value1Str = std::to_string( std::underlying_type_t<T>( Value1 ) );
+            Value2Str = std::to_string( std::underlying_type_t<T>( Value2 ) );
+        }
+        else
+        {
+            Value1Str = std::to_string( Value1 );
+            Value2Str = std::to_string( Value2 );
+        }
 
         ( void )snprintf( GSklAssertWorkBuffer.data()
                         , GSklAssertWorkBuffer.size()

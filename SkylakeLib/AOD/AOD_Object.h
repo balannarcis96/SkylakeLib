@@ -233,11 +233,15 @@ namespace SKL::AOD
 
             return RSuccess;
         }
+        
+        //! [Internal] Dispatch the given task on this object thread-safe
+        SKL_NODISCARD bool Dispatch( IAODCustomObjectTask* InTask ) noexcept;
+
+        //! [Internal] Delay the dispatch of the given task on this object thread-safe
+        void DelayTask( IAODCustomObjectTask* InTask ) noexcept;
 
     private:
         void Flush() noexcept;
-        bool Dispatch( IAODCustomObjectTask* InTask ) noexcept;
-        void DelayTask( IAODCustomObjectTask* InTask ) noexcept;
 
         friend IAODCustomObjectTask;
         friend class WorkerGroup;
