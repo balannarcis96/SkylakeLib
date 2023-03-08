@@ -142,6 +142,7 @@ namespace SKL
             }
 
             ScheduleGeneralTask( NewTask );
+            return true;
         }
     
         //! Create new tcp async acceptor on this instance

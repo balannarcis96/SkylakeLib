@@ -12,7 +12,7 @@ namespace SKL
 
     SKL_NOINLINE SKL_NORETURN inline void SklAssertFailHandler( const char* InExpressionAsString, const char* InFileName, size_t LineNumber ) noexcept
     {
-        ( void )snprintf( GSklAssertWorkBuffer.data(), GSklAssertWorkBuffer.size(), "\u001b[31mAssert \"%s\" failed!\nAt:%s:%llu \n\u001b[37m", InExpressionAsString, InFileName, LineNumber );
+        ( void )snprintf( GSklAssertWorkBuffer.data(), GSklAssertWorkBuffer.size(), "\u001b[31mAssert \"%s\" failed!\nAt:%s:%llu \n\u001b[37m", InExpressionAsString, InFileName, static_cast<uint64_t>( LineNumber ) );
         ( void )printf( GSklAssertWorkBuffer.data() );
         SKL_BREAK();
         abort();
@@ -42,7 +42,7 @@ namespace SKL
                         , Value1Str.c_str()
                         , Value2Str.c_str()
                         , InFileName
-                        , LineNumber );
+                        , static_cast<uint64_t>( LineNumber ) );
         ( void )printf( GSklAssertWorkBuffer.data() );
         SKL_BREAK();
         abort();
@@ -50,7 +50,7 @@ namespace SKL
     
     SKL_NOINLINE SKL_NORETURN inline void SklAssertFailHandler( const char* InExpressionAsString, const char* InFileName, size_t LineNumber, const char* InMessage ) noexcept
     {
-        ( void )snprintf( GSklAssertWorkBuffer.data(), GSklAssertWorkBuffer.size(), "\u001b[31mAssert \"%s\" failed!\nAt:%s:%llu \nMessage:%s\n\u001b[37m", InExpressionAsString, InFileName, LineNumber, InMessage );
+        ( void )snprintf( GSklAssertWorkBuffer.data(), GSklAssertWorkBuffer.size(), "\u001b[31mAssert \"%s\" failed!\nAt:%s:%llu \nMessage:%s\n\u001b[37m", InExpressionAsString, InFileName, static_cast<uint64_t>( LineNumber ), InMessage );
         ( void )printf( GSklAssertWorkBuffer.data() );
         SKL_BREAK();
         abort();

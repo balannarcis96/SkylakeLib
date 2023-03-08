@@ -28,6 +28,7 @@ option(SKL_ENABLE_ASAN                   "Enable asan"                          
 option(SKL_DO_NOT_MODIFY_COMIPLER_FLAGS  "Set this ON for easier integration"       OFF)
 option(SKL_ENABLE_LIKELY_FLAGS           "${SKL_ENABLE_LIKELY_FLAGS_DESC}"          OFF)
 option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"        OFF)
+option(SKL_ADD_MAGIC_ENUM		         "Include the magic_enum lib"         		 ON)
 
 # Override this to create as many skylake lib targets as you need
 set(SKL_LIB_TARGETS "SkylakeLib" CACHE STRING "Skyalke lib targets to create")

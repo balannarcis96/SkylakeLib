@@ -41,7 +41,18 @@ namespace SKL
 
         while( false == DelayedTasks.empty() )
         {
-            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks 
+                       && CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement )
+            {
+                // allocated from the thread local memory manager
+                TLSSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            }
+            else
+            {
+                // allocated from the global memory manager
+                TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            }
+
             DelayedTasks.pop();
         }
     }
@@ -53,7 +64,18 @@ namespace SKL
 
         while( false == DelayedTasks.empty() )
         {
-            TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            if constexpr( CTaskScheduling_AssumeAllWorkerGroupsHandleTimerTasks 
+                       && CTaskScheduling_AssumeAllWorkerGroupsHaveTLSMemoryManagement )
+            {
+                // allocated from the thread local memory manager
+                TLSSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            }
+            else
+            {
+                // allocated from the global memory manager
+                TSharedPtr<ITask>::Static_Reset( DelayedTasks.top() );
+            }
+
             DelayedTasks.pop();
         }
 

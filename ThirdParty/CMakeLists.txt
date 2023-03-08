@@ -7,3 +7,7 @@ endif()
 if(SKL_BUILD_DB)
     add_subdirectory("mysqlclient")
 endif()
+
+if(SKL_ADD_MAGIC_ENUM)
+	add_subdirectory(magic_enum)
+endif()

@@ -743,7 +743,7 @@ namespace SKL
             const int32_t LastWSAError{ WSAGetLastError() };
             if( WSA_IO_PENDING != LastWSAError ) SKL_UNLIKELY
             {
-                SKLL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
+                //SKLL_ERR_FMT( "AsyncIO::SendAsync() failed with WSAERROR[%d]", LastWSAError );
                 return RFail;
             }
         }

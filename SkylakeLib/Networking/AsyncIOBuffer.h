@@ -776,7 +776,7 @@ namespace SKL
         {
             const TPacketSize OffsetToTargets{ CalculateBroadcastTargetsBufferOffset() };
             return BinaryObjectStream<TEntityIdType>( 
-                  this->GetBuffer() + CalculateBroadcastTargetsBufferOffset()
+                  this->GetBuffer() + OffsetToTargets
                 , CPacketMaximumSize - OffsetToTargets
                 , 0U
                 , false
@@ -818,7 +818,7 @@ namespace SKL
         {
             const TPacketSize TotalSize{ CalcultateTotalBroadcastPacketSize( TargetsCount ) };
 
-            PacketHeader BHeader{ GetBroadcastHeader() };
+            PacketHeader& BHeader{ GetBroadcastHeader() };
             SKL_ASSERT( CBroadcastPacketOpcode == BHeader.Opcode );
             BHeader.Size = TotalSize;
 
