@@ -385,7 +385,7 @@ namespace SKL
         
         //! Confirm exact n bytes as received into the packet buffer
         //! \returns <bool hasReceivedWholePacket, bool bProcessedSuccessfully>
-        SKL_FORCEINLINE SKL_NODISCARD std::pair<bool, bool> ConfirmReceivedExactAmmount( uint32_t NoOfBytesTransferred ) noexcept
+        /*SKL_FORCEINLINE*/ SKL_NODISCARD std::pair<bool, bool> ConfirmReceivedExactAmmount( uint32_t NoOfBytesTransferred ) noexcept
         {
             SKL_ASSERT( NoOfBytesTransferred <= CPacketMaximumSize );
 
@@ -762,6 +762,16 @@ namespace SKL
             return CalcultateTotalBroadcastPacketSize( 0 );
         }
         
+        //! Calculate the total no. of target entities that can be written in this buffer
+        SKL_FORCEINLINE SKL_NODISCARD size_t CalculateTotalNoOfTargetsCount() const noexcept
+        {
+            const TPacketSize OffsetToTargets  { CalculateBroadcastTargetsBufferOffset() }; SKL_ASSERT( OffsetToTargets > 0U );
+            const size_t      BytesCount       { this->GetTotalBufferSize() - OffsetToTargets }; SKL_ASSERT( BytesCount >= CEntityIdSize );
+            const size_t      TotalTargetsCount{ BytesCount / CEntityIdSize };
+
+            return TotalTargetsCount;
+        }
+
         //! Get the broadcast targets array
         SKL_FORCEINLINE SKL_NODISCARD std::span<const TEntityIdType> GetBroadcastTargets() const noexcept
         {
@@ -782,7 +792,7 @@ namespace SKL
                 , false
             );
         }
-
+        
         //! Prepare this buffer for sending as broadcast packet
         SKL_FORCEINLINE void PrepareBroadcastBuffer( TBroadcastType Type, uint32_t Payload ) noexcept
         {

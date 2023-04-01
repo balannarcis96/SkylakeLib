@@ -18,6 +18,12 @@
 #define SKL_VECTORCALL      ASD_VECTORCALL
 #define SKL_FALLTHROUGH     ASD_FALLTHROUGH
 
+#ifdef _DEBUG
+    #define SKL_FORCEINLINE_RELEASE 
+#else
+    #define SKL_FORCEINLINE_RELEASE     ASD_FORCEINLINE
+#endif
+
 #define SKL_ALLWAYS_LIKELY [[likely]]
 #define SKL_ALLWAYS_UNLIKELY [[unlikely]]
 

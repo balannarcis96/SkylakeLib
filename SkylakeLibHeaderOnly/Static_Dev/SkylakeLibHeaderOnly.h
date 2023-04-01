@@ -67,6 +67,59 @@ namespace SKL
     }
 }
 
+//! magic_enum_ex library
+#if defined(SKL_MAGIC_ENUM)
+#include "magic_enum_ex.h"
+namespace SKL
+{
+    template<auto EnumValue>
+    consteval const char* EnumToString() noexcept
+    {
+        return magic_enum_ex::enum_name( EnumValue ).data();
+    }
+    
+    template<auto EnumValue>
+    consteval const wchar_t* EnumToStringW() noexcept
+    {
+        return magic_enum_ex::enum_name_w( EnumValue ).data();
+    }
+    
+    constexpr const char* EnumToString( auto EnumValue ) noexcept
+    {
+        return magic_enum_ex::enum_name( EnumValue ).data();
+    }
+    
+    constexpr const wchar_t* EnumToStringW( auto EnumValue ) noexcept
+    {
+        return magic_enum_ex::enum_name_w( EnumValue ).data();
+    }
+
+    template<typename TEnum, TEnum Max = TEnum::Max>
+    constexpr std::optional<TEnum> EnumFromStringSafe( const char* InString ) noexcept
+    {
+        return magic_enum_ex::enum_cast<TEnum>( InString );
+    }
+
+    template<typename TEnum, TEnum Max = TEnum::Max>
+    constexpr TEnum EnumFromString( const char* InString ) noexcept
+    {
+        return magic_enum_ex::enum_cast<TEnum>( InString ).value_or( Max );
+    }
+    
+    template<typename TEnum, TEnum Max = TEnum::Max>
+    constexpr std::pair<TEnum, bool> EnumFromStringWSafe( const wchar_t* InString ) noexcept
+    {
+        return magic_enum_ex::enum_cast<TEnum>( InString );
+    }
+
+    template<typename TEnum, TEnum Max = TEnum::Max>
+    constexpr TEnum EnumFromStringW( const wchar_t* InString ) noexcept
+    {
+        return magic_enum_ex::enum_cast<TEnum>( InString ).value_or( Max );
+    }
+}
+#endif
+
 #if defined(SKL_NO_NAMESPACE)
 #ifndef SKL_NO_NAMESPACE_STATEMENT
 #define SKL_NO_NAMESPACE_STATEMENT

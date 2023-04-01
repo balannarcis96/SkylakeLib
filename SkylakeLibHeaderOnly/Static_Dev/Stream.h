@@ -116,7 +116,6 @@ namespace SKL
     template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IStreamReader
     {
-        IStreamReader() noexcept = default;  
         IStreamReader( const IStreamReader& ) = delete;
         IStreamReader& operator=( const IStreamReader& ) = delete;
         IStreamReader( IStreamReader&& ) = delete;
@@ -170,6 +169,9 @@ namespace SKL
 
         //! Get the current stream position (offset)
         SKL_FORCEINLINE SKL_NODISCARD uint32_t GetPosition() const noexcept { return GetStream().Position; }
+        
+        //! Get the current stream position (offset) in units
+        SKL_FORCEINLINE SKL_NODISCARD uint32_t GetPositionUnits() const noexcept { SKL_ASSERT( GetStream().Position % CUnitSize == 0U ); return ( GetStream().Position / CUnitSize ); }
 
         //! Push the stream position forward (asserts that GetRemainingSize() >= InBytesAmount)
         SKL_FORCEINLINE void ForwardToEnd( uint32_t InEndOffset = 0 ) noexcept 
@@ -224,7 +226,7 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD const uint8_t* GetFront() const noexcept { return &GetStream().Buffer.Buffer[ GetPosition() ]; }
         
         //! Get units(TUnit) buffer at the current stream position 
-        SKL_FORCEINLINE SKL_NODISCARD const TUnit* GetFrontUnits() const noexcept { return reinterpret_cast<const TUnit*>( GetFront() ); }
+        SKL_FORCEINLINE SKL_NODISCARD const TUnit* GetFrontUnits() const noexcept { return SKL_ASSERT( GetStream().Position % CUnitSize == 0U ); reinterpret_cast<const TUnit*>( GetFront() ); }
 
         //! Get buffer at the current stream position as a string ptr
         SKL_FORCEINLINE SKL_NODISCARD const char* GetFrontAsString() const noexcept { return reinterpret_cast<const char*>( GetFront() ); }
@@ -376,6 +378,9 @@ namespace SKL
         {
             return reinterpret_cast<IStreamReader<TUnit, true>&>( InStream );
         }
+
+    protected:
+        IStreamReader() noexcept = default;  
     };
 
     using IByteStreamObjectReader    = IStreamReader<uint8_t, true>;
@@ -384,7 +389,6 @@ namespace SKL
     template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IStreamWriter: public IStreamReader<TUnit, bIsBase_StreamObjectOrPtrToStreamObject>
     {
-        IStreamWriter() noexcept = default;
         IStreamWriter( const IStreamWriter& ) = delete;
         IStreamWriter& operator=( const IStreamWriter& ) = delete;
         IStreamWriter( IStreamWriter&& ) = delete;
@@ -556,6 +560,9 @@ namespace SKL
         {
             return reinterpret_cast<IStreamWriter<TUnit, true>&>( InStream );
         }
+
+    protected:
+        IStreamWriter() noexcept = default;
     };
     
     using IByteStreamObjectWriter    = IStreamWriter<uint8_t, true>;
@@ -564,7 +571,6 @@ namespace SKL
     template<typename TUnit, bool bIsBase_StreamObjectOrPtrToStreamObject>
     struct IBinaryStream: public IStreamWriter<TUnit, bIsBase_StreamObjectOrPtrToStreamObject>
     {
-        IBinaryStream() noexcept = default;
         IBinaryStream( const IBinaryStream& ) = delete;
         IBinaryStream& operator=( const IBinaryStream& ) = delete;
         IBinaryStream( IBinaryStream&& ) = delete;
@@ -578,6 +584,9 @@ namespace SKL
         {
             return reinterpret_cast<IBinaryStream<TUnit, true>&>( InStream );
         }
+
+    protected:
+        IBinaryStream() noexcept = default;
     };
     
     using IBinaryStreamObject    = IBinaryStream<uint8_t, true>;
@@ -624,7 +633,7 @@ namespace SKL
     struct alignas( SKL_ALIGNMENT ) BinaryStreamInterface : public IBinaryStreamObjectPtr
     {
         BinaryStreamInterface( StreamBase* SourceStream ) noexcept
-            : IBinaryStream{}, SourceBase{ SourceStream } {}
+            : SourceBase{ SourceStream } {}
         ~BinaryStreamInterface() noexcept = default;
 
         BinaryStreamInterface( const BinaryStreamInterface& Other ) noexcept

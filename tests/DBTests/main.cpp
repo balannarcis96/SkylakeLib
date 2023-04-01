@@ -168,7 +168,7 @@ namespace SkylakeDBTests
             NewStatement->BindOutputString( 1, Variable );
             NewStatement->BindOutputString( 2, Value );
             NewStatement->BindOutputDate( 3, &SetTime );
-            NewStatement->BindOutputString( 4, Value );
+            NewStatement->BindOutputString( 4, SetBy );
 
             auto Result{ NewStatement->Execute() };
             ASSERT_TRUE( true == Result.IsValid() );

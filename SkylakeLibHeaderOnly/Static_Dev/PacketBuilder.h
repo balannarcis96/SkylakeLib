@@ -435,4 +435,6 @@ namespace SKL
         ReadStub \
     }; \
     static_assert( alignof( Name##_Packet ) <= SKL::CPacketAlignment, "Packet [" #Name "_Packet] Must be (max) aligned to CPacketAlignment bytes" ); 
+
+#define GET_FIXEDLENGTH_PACKET_SIZE( PacketType ) sizeof( PacketType )
 }

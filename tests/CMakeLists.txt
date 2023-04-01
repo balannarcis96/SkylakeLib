@@ -21,7 +21,7 @@ add_subdirectory(ECSTEsts)
 add_subdirectory(UtilsTests)
 add_subdirectory(ProtocolTests)
 
-if(SKL_BUILD_DB AND !SKL_ENABLE_ASAN)
+if(SKL_BUILD_DB AND NOT SKL_ENABLE_ASAN)
     add_subdirectory(DBTests)
 endif()
 
