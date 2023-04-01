@@ -389,7 +389,7 @@ namespace SKL
         //! 
         //! \brief Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         //! 
-        static void LogStatistics( ) noexcept
+        static void LogStatistics() noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
             SKLL_INF( "SkylakeGlobalMemoryManager ###############################################################" );

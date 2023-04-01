@@ -28,3 +28,7 @@ endif()
 if(WIN32)
     target_precompile_headers(SkylakeLibDB PUBLIC "${SKYLAKE_SRC_ROOT}/Public/SkylakeLibDB.h")
 endif()
+    
+if(SKL_MYSQL_COMPRESS_NET)
+    target_compile_definitions(SkylakeLibDB PRIVATE SKL_MYSQL_COMPRESS_NET)
+endif()

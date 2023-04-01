@@ -10,7 +10,7 @@ set(SKL_ENABLE_UNLIKELY_FLAGS_DESC "SkylakeLib is laced out with SKL_UNLIKELY, e
 option(SKL_BUILD_TESTS                   "Build tests"                               ON)
 option(SKL_DISABLE_EXCEPTIONS            "Disable exceptions[Recommended]!"         OFF)
 option(SKL_BUILD_SHIPPING                "Build for shipping"                       OFF)
-option(SKL_MEMORY_STATISTICS             "Enable memory statistics"                  ON)
+option(SKL_MEMORY_STATISTICS             "[DevOnly] Enable memory statistics"       OFF)
 option(SKL_NO_ASSERTS                    "Disabled all runtime asserts"             OFF)
 option(SKL_GUARD_ALLOC_SIZE              "Cap allocation sizes to a max value"       ON)
 option(SKL_USE_PRECISE_SLEEP             "${SKL_USE_PRECISE_SLEEP_DESC}"             ON)
@@ -29,6 +29,16 @@ option(SKL_DO_NOT_MODIFY_COMIPLER_FLAGS  "Set this ON for easier integration"   
 option(SKL_ENABLE_LIKELY_FLAGS           "${SKL_ENABLE_LIKELY_FLAGS_DESC}"          OFF)
 option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"        OFF)
 option(SKL_ADD_MAGIC_ENUM		         "Include the magic_enum lib"         		 ON)
+
+# KPIs
+option(SKL_KPI_MEM_ALLOC_TIME		     "KPI - Memory Allocation Duration"	 ON)
+option(SKL_KPI_QUEUE_SIZES		         "KPI - Sample Queue Sizes API"	     ON)
+option(SKL_KPI_WORKER_TICK		         "KPI - Per Worker Tick Duration"	 ON)
+
+#Counter - Memory Allocations
+set(SKL_KPI_MEM_ALLOC_CNT_OPTIONS None OSOnly OSAndTLSOnly All)
+set(SKL_KPI_MEM_ALLOC_CNT All CACHE STRING "Memory Allocations Counter")
+set_property(CACHE SKL_KPI_MEM_ALLOC_CNT PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_CNT_OPTIONS})
 
 # Override this to create as many skylake lib targets as you need
 set(SKL_LIB_TARGETS "SkylakeLib" CACHE STRING "Skyalke lib targets to create")
@@ -135,14 +145,13 @@ endif()
 
 add_subdirectory("ThirdParty")
     
-add_subdirectory("SkylakeLibHeaderOnly")
-
 if(SKL_USE_MIMALLOC)
 	add_subdirectory("SkylakeLib/MiMalloc")
 endif()
 
+# SkylakeLib Stack
+add_subdirectory("SkylakeLibHeaderOnly")
 add_subdirectory("SkylakeLibStandalone")
-
 add_subdirectory("SkylakeLib")
 
 if(SKL_BUILD_DATACENTER)
@@ -151,12 +160,46 @@ endif()
 
 if(SKL_BUILD_DB)
     add_subdirectory("SkylakeLibDB")
-    
-    if(SKL_MYSQL_COMPRESS_NET)
-        target_compile_definitions(SkylakeLibDB PUBLIC SKL_MYSQL_COMPRESS_NET)
-    endif()
 endif() 
 
+################################################################
+
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DSKL_DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSKL_DEBUG")
+
+if(SKL_BUILD_OS STREQUAL "Win64")
+    message("Building for Windows 64bit!")
+elseif(SKL_BUILD_OS STREQUAL "FreeBSD")
+    message(FATAL_ERROR "FreeBSD not supported yet!")
+elseif(SKL_BUILD_OS STREQUAL "Ubuntu")
+    message(FATAL_ERROR "Ubuntu not supported yet!")
+endif()
+
+if(SKL_BUILD_SHIPPING)
+    message("Building SHIPPING!")
+endif()
+
+if(SKL_DISABLE_EXCEPTIONS)
+    if (WIN32)
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-") #Disable RTTI
+
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+    
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})# Disable Exceptions
+        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
+    endif()
+endif()
+
+##### Create all SkyalekLib Targets #####
+foreach(target_name ${SKL_LIB_TARGETS})
+    Create_SkylakeLibTarget(${target_name})
+endforeach()
+
+##### Tests #####
 if(SKL_BUILD_TESTS)
     enable_testing()
 
@@ -172,160 +215,4 @@ if(SKL_BUILD_TESTS)
     
     # SKL tests 
     add_subdirectory ("tests")
-endif()
-
-################################################################
-
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DSKL_DEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSKL_DEBUG")
-
-if(SKL_USE_MIMALLOC)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_USE_MIMALLOC)
-    endforeach()
-endif()
-
-if(SKL_BUILD_TESTS)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_TEST_ENABLED=1)
-else()
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_TEST_ENABLED=0)
-endif()
-
-if(SKL_NO_NAMESPACE)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_NO_NAMESPACE)
-    endforeach()
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_STANDALONE_NO_NAMESPACE)
-endif()
-
-if(SKL_REAL_TYPE STREQUAL "Single")
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_REAL_TYPE_SINGLE)
-elseif(SKL_REAL_TYPE STREQUAL "Double")
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_REAL_TYPE_DOUBLE)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_USE_LARGE_WORLD_COORDS)
-    
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_REAL_TYPE_DOUBLE)
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_USE_LARGE_WORLD_COORDS)
-else()
-    message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
-endif()
-
-if(SKL_ENABLE_LIKELY_FLAGS)
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_ENABLE_LIKELY_FLAGS)
-endif()
-
-if(SKL_ENABLE_UNLIKELY_FLAGS)
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_ENABLE_UNLIKELY_FLAGS)
-endif()
-
-if(SKL_L1_CACHE_LINE_SIZE STREQUAL "64bytes")
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_L1_CACHE_LINE_64)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_L1_CACHE_LINE_64)
-elseif(SKL_L1_CACHE_LINE_SIZE STREQUAL "128bytes")
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_L1_CACHE_LINE_128)
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_L1_CACHE_LINE_128)
-elseif(SKL_L1_CACHE_LINE_SIZE STREQUAL "512bytes")
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_L1_CACHE_LINE_512)
-    target_compile_definitions(SkylakeLibHeaderOnly PUBLIC SKL_L1_CACHE_LINE_512)
-endif()
-
-if(SKL_BUILD_OS STREQUAL "Win64")
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_BUILD_WINDOWS)
-    endforeach()
-    message("Building for Windows 64bit!")
-elseif(SKL_BUILD_OS STREQUAL "FreeBSD")
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_BUILD_FREEBSD)
-    endforeach()
-    message(FATAL_ERROR "FreeBSD not supported yet!")
-elseif(SKL_BUILD_OS STREQUAL "Ubuntu")
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_BUILD_UBUNTU)
-    endforeach()
-    message(FATAL_ERROR "Ubuntu not supported yet!")
-endif()
-
-if(SKL_BUILD_SHIPPING)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_BUILD_SHIPPING)
-endif()
-
-if(SKL_MEMORY_STATISTICS)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_MEMORY_STATISTICS)
-    endforeach()
-endif()
-
-if(SKL_NO_ASSERTS)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_NO_ASSERTS)
-endif()
-
-if(SKL_GUARD_ALLOC_SIZE)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_GUARD_ALLOC_SIZE)
-    endforeach()
-endif()
-
-if(SKL_USE_PRECISE_SLEEP)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_USE_PRECISE_SLEEP)
-    endforeach()
-endif()
-
-if(SKL_CACHE_LINE_MEM_MANAGER)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_CACHE_LINE_MEM_MANAGER)
-    endforeach()
-endif()
-
-if(SKL_DEBUG_MEMORY_ALLOCATORS)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_DEBUG_MEMORY_ALLOCATORS)
-    endforeach()
-endif()
-
-if(SKL_MATH)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_MATH)
-    endforeach()
-endif()
-
-if(SKL_DISABLE_EXCEPTIONS)
-    # Disable std exceptions
-    target_compile_definitions(SkylakeLibStandalone PUBLIC _HAS_EXCEPTIONS=0)
-    if (WIN32)
-        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-") #Disable RTTI
-
-        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-    
-        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})# Disable Exceptions
-        string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-        string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
-    endif()
-endif()
-
-# LOG LEVEL
-if(SKL_LIB_LOG_LEVEL STREQUAL VERBOSE)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=0)
-elseif(SKL_LIB_LOG_LEVEL STREQUAL DEBUG)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=1)
-elseif(SKL_LIB_LOG_LEVEL STREQUAL ERR)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=2)
-elseif(SKL_LIB_LOG_LEVEL STREQUAL WRN)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=3)
-elseif(SKL_LIB_LOG_LEVEL STREQUAL INF)
-    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=4)
-endif()
-
-if(SKL_USE_EIS STREQUAL AVX2)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_USE_AVX2)
-    endforeach()
-elseif(SKL_USE_EIS STREQUAL AVX_512)
-    foreach(skl_target ${SKL_LIB_TARGETS})
-        target_compile_definitions(${skl_target} PUBLIC SKL_USE_AVX_512)
-    endforeach()
 endif()

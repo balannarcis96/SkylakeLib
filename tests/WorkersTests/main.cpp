@@ -794,8 +794,10 @@ namespace WorkersTests
 
     TEST_F( Test_Fixture_____1, FullFlow_OneReactiveWorker )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
 
         SKL::WorkerGroupTag Tag{
             .TickRate        = 24, 
@@ -813,16 +815,20 @@ namespace WorkersTests
 
         Stop();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+#endif
     }
     
     TEST_F( Test_Fixture_____2, FullFlow_MultipleReactiveWorkers )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 24, 
@@ -840,16 +846,20 @@ namespace WorkersTests
 
         Stop();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+#endif
     }
     
     TEST_F( Test_Fixture_____3, FullFlow_MultipleReactiveAndActiveWorkers )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore  { SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag1{
             .TickRate        = 24, 
@@ -878,10 +888,12 @@ namespace WorkersTests
 
         Stop();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+#endif
     }
 }
 

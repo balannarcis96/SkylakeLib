@@ -39,17 +39,6 @@
     #define SKL_IFNOT_CACHE_LINE_MEM_MANAGER( expr ) expr
 #endif
 
-#if defined(SKL_L1_CACHE_LINE_64)
-    #define SKL_CACHE_LINE_SIZE 64
-    #define SKL_CACHE_ALIGNED alignas( 64 ) 
-#elif defined(SKL_L1_CACHE_LINE_128)
-    #define SKL_CACHE_LINE_SIZE 128
-    #define SKL_CACHE_ALIGNED alignas( 128 ) 
-#elif defined(SKL_L1_CACHE_LINE_512)
-    #define SKL_CACHE_LINE_SIZE 512
-    #define SKL_CACHE_ALIGNED alignas( 512 ) 
-#else
-    #error Uknown cache line size!
+#if !defined(SKL_L1_CACHE_LINE_64)
+    #error Unsupported cache line size!
 #endif
-
-

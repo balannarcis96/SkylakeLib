@@ -448,9 +448,10 @@ namespace AODTests
 
         ASSERT_TRUE( nullptr != obj.get() );
         ASSERT_TRUE( 0 == obj->a );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-        
+#endif        
         ( void )obj->DoAsync( []( SKL::AOD::SharedObject& Obj ) noexcept -> void
         {
             auto& Self = reinterpret_cast<MyObject&>( Obj );
@@ -462,10 +463,12 @@ namespace AODTests
 
         SKL::AODTLSContext::Destroy();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_EQ( TotalAllocationsBefore + 1 , TotalAllocationsAfter );
         ASSERT_EQ( TotalDeallocationsBefore + 1, TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODStandaloneFixture, AODObjectSingleThread_MultipleCalls )
@@ -481,8 +484,10 @@ namespace AODTests
 
         ASSERT_TRUE( nullptr != obj.get() );
         ASSERT_TRUE( 0 == obj->a );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         
         for( int i = 0; i < 50; ++i )
         {
@@ -497,10 +502,12 @@ namespace AODTests
 
         SKL::AODTLSContext::Destroy();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 50 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 50 == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers )
@@ -514,8 +521,10 @@ namespace AODTests
         auto obj = SKL::MakeShared<MyObject>();
         ASSERT_TRUE( nullptr != obj.get() );
         ASSERT_TRUE( 0 == obj->a );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
 
         constexpr uint64_t IterCount{ 10000 };
 
@@ -552,12 +561,14 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         ASSERT_TRUE( 16 * IterCount == obj->a );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         //const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
         //const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 16 * IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 16 * IterCount == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers_OneDeferedTask )
@@ -571,8 +582,10 @@ namespace AODTests
         auto obj = SKL::MakeShared<MyObject>();
         ASSERT_TRUE( nullptr != obj.get() );
         ASSERT_TRUE( FALSE == obj->bShouldStop.load_acquire() );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         std::relaxed_value<int32_t> bHasCreatedTask{ FALSE };
 
         auto OnTick = [ Ptr = obj.get(), &bHasCreatedTask ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
@@ -615,10 +628,12 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         ASSERT_TRUE( FALSE == obj->bShouldStop.load_acquire() );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture, AODObjectMultipleSymetricWorkers_MultipleDeferedTasks )
@@ -632,8 +647,10 @@ namespace AODTests
         auto obj = SKL::MakeShared<MyObject>();
         ASSERT_TRUE( nullptr != obj.get() );
         ASSERT_TRUE( 2000 == obj->Counter );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         bool bHasCreatedTask{ false };
 
         auto OnTick = [ Ptr = obj.get(), &bHasCreatedTask ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
@@ -682,16 +699,20 @@ namespace AODTests
 
         JoinAllGroups();
         ASSERT_TRUE( 0 == obj->Counter );
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 2000 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 2000 == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture, AODObjectReactiveAndActiveWorkers_ShutdownNotice )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         bool bHasCreatedTask{ false };
 
         auto OnTick = [ &bHasCreatedTask ]( SKL::Worker& InWorker, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
@@ -728,16 +749,20 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture, AODObjectReactiveAndActiveWorkers_HeavyGlobalDefer )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         bool bHasCreatedTask{ false };
 
         constexpr uint64_t IterCount{ 10000 };
@@ -785,16 +810,20 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount == TotalDeallocationsAfter );
+#endif        
     }
     
     TEST_F( AODTestsFixture2, AODObjectReactiveAndActiveWorkers_HeaveyGlobalDeferFromReactive )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
 
         auto OnTick = []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& InGroup ) mutable noexcept -> void
         {
@@ -835,16 +864,20 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount + 1 == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture3, AODObjectReactiveAndActiveWorkers_HeaveyGlobalDeferFromReactiveOnly )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         
         SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
@@ -862,16 +895,20 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount == TotalDeallocationsAfter );
+#endif        
     }
 
     TEST_F( AODTestsFixture4, AODObjectReactiveAndActiveWorkers_AODDeferredFromReactive )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
         
         SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
@@ -903,16 +940,20 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount + 1 == TotalDeallocationsAfter );
+#endif        
     }
     
     TEST_F( AODTestsFixture_CustomObject, AODObjectReactiveAndActiveWorkers_AODDeferredFromReactive_CustomObject )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif        
 
         SKL::WorkerGroupTag Tag{
             .TickRate                        = 24, 
@@ -943,10 +984,12 @@ namespace AODTests
         ASSERT_TRUE( true == Start( true ) );
 
         JoinAllGroups();
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount + 1 == TotalDeallocationsAfter );
+#endif        
     }
 }
 

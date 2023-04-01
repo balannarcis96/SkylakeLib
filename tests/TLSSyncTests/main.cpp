@@ -169,8 +169,10 @@ namespace TLSSyncTests
 
     TEST_F( TLSSyncTestsFixture, TLSSync_WorkerGroup_Active )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
 
         SKL::WorkerGroupTag Tag{
             .TickRate                        = 60, 
@@ -192,18 +194,22 @@ namespace TLSSyncTests
 
         ASSERT_TRUE( true == Start( true ) );
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
        /* const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
         const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };*/
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( TLSSyncTestsFixture2, TLSSync_WorkerGroup_Reactive )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate                        = 0, 
@@ -221,12 +227,14 @@ namespace TLSSyncTests
 
         ASSERT_TRUE( true == Start( true ) );
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         //const auto CustomSizeAllocations{ SKL::GlobalMemoryManager::CustomSizeAllocations.load() };
         //const auto CustomSizeDeallocations{ SKL::GlobalMemoryManager::CustomSizeDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + IterCount == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + IterCount == TotalDeallocationsAfter );
+#endif
     }
 }
 

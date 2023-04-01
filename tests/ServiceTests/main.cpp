@@ -578,9 +578,10 @@ namespace ServicesTests
 
     TEST_F( SimpleService_TestsFixture, SimpleService_BasicAPI )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
-
+#endif
         SKL::WorkerGroupTag Tag{
             .TickRate        = 30, 
             .SyncTLSTickRate = 0,
@@ -596,16 +597,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( AODService_TestsFixture, AODService_BasicAPI )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 30, 
@@ -622,16 +627,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 2 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 2 == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( ActiveService_TestsFixture, ActiveService_BasicAPI )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 60, 
@@ -648,16 +657,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 1 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 1 == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( WorkerService_TestsFixture, WorkerService_BasicAPI )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = CTickRate, 
@@ -675,16 +688,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( SimpleService_AsyncShutdown_TestsFixture, SimpleService_AsyncShutdown )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 30, 
@@ -701,16 +718,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 2 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 2 == TotalDeallocationsAfter );
+#endif
     }
     
     TEST_F( SimpleService_AsyncShutdown_EntityStore_TestsFixture, SimpleService_EntityStore_AsyncShutdown )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 30, 
@@ -727,16 +748,20 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 2 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 2 == TotalDeallocationsAfter );
+#endif
     }
 
     TEST_F( SimpleService_AsyncShutdown_EntityStore_AOD_TestsFixture, SimpleService_EntityStore_AOD_AsyncShutdown )
     {
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsBefore{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsBefore{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
+#endif
         
         SKL::WorkerGroupTag Tag{
             .TickRate        = 30, 
@@ -753,10 +778,12 @@ namespace ServicesTests
         ASSERT_TRUE( true == Start( true ) );
         JoinAllGroups();
 
+#if defined(SKL_MEMORY_STATISTICS)
         const auto TotalAllocationsAfter{ SKL::GlobalMemoryManager::TotalAllocations.load() };
         const auto TotalDeallocationsAfter{ SKL::GlobalMemoryManager::TotalDeallocations.load() };
         ASSERT_TRUE( TotalAllocationsBefore + 3 == TotalAllocationsAfter );
         ASSERT_TRUE( TotalDeallocationsBefore + 3 == TotalDeallocationsAfter );
+#endif
     }
 }
 

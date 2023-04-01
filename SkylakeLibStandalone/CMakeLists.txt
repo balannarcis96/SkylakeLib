@@ -26,9 +26,54 @@ source_group("Tuning"                 FILES ${_Tuning_files}     )
 source_group("Utils"                  FILES ${_Utils_files}      )
 source_group("/"                      FILES ${_Root_files}       )
 
+# Link Header Only part
+target_link_libraries(SkylakeLibStandalone PUBLIC SkylakeLibHeaderOnly)
+
 # Set C++20
 set_property(TARGET SkylakeLibStandalone PROPERTY CXX_STANDARD 20)
 
 target_include_directories(SkylakeLibStandalone PUBLIC "${SKYLAKE_SRC_ROOT}/")
 
 target_precompile_headers(SkylakeLibStandalone PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLibStandalone.h")
+
+if(SKL_BUILD_TESTS)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_TEST_ENABLED=1)
+else()
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_TEST_ENABLED=0)
+endif()
+
+if(SKL_NO_NAMESPACE)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_STANDALONE_NO_NAMESPACE)
+endif()
+
+if(SKL_REAL_TYPE STREQUAL "Single")
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_REAL_TYPE_SINGLE)
+elseif(SKL_REAL_TYPE STREQUAL "Double")
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_REAL_TYPE_DOUBLE)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_USE_LARGE_WORLD_COORDS)
+else()
+    message(FATAL_ERROR "Invalid SKL_REAL_TYPE=${SKL_REAL_TYPE}")
+endif()
+
+# Build Shipping library
+if(SKL_BUILD_SHIPPING)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_BUILD_SHIPPING)
+endif()
+
+# Disable all soft asserts
+if(SKL_NO_ASSERTS)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKL_NO_ASSERTS)
+endif()
+
+# Log Level
+if(SKL_LIB_LOG_LEVEL STREQUAL VERBOSE)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=0)
+elseif(SKL_LIB_LOG_LEVEL STREQUAL DEBUG)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=1)
+elseif(SKL_LIB_LOG_LEVEL STREQUAL ERR)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=2)
+elseif(SKL_LIB_LOG_LEVEL STREQUAL WRN)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=3)
+elseif(SKL_LIB_LOG_LEVEL STREQUAL INF)
+    target_compile_definitions(SkylakeLibStandalone PUBLIC SKLL_LOG_LEVEL=4)
+endif()
