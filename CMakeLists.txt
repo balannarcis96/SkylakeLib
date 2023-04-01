@@ -29,15 +29,21 @@ option(SKL_DO_NOT_MODIFY_COMIPLER_FLAGS  "Set this ON for easier integration"   
 option(SKL_ENABLE_LIKELY_FLAGS           "${SKL_ENABLE_LIKELY_FLAGS_DESC}"          OFF)
 option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"        OFF)
 option(SKL_ADD_MAGIC_ENUM		         "Include the magic_enum lib"         		 ON)
+option(SKL_KPI_TLS_MEM_ALLOC_TIME		 "TLS Memory Allocations Time"               ON)
+option(SKL_KPI_TLS_MEM_ALLOC_CNT		 "TLS Memory Allocations Counters"           ON)
 
 # KPIs
-option(SKL_KPI_MEM_ALLOC_TIME		     "KPI - Memory Allocation Duration"	 ON)
 option(SKL_KPI_QUEUE_SIZES		         "KPI - Sample Queue Sizes API"	     ON)
 option(SKL_KPI_WORKER_TICK		         "KPI - Per Worker Tick Duration"	 ON)
 
-#Counter - Memory Allocations
-set(SKL_KPI_MEM_ALLOC_CNT_OPTIONS None OSOnly OSAndTLSOnly All)
-set(SKL_KPI_MEM_ALLOC_CNT All CACHE STRING "Memory Allocations Counter")
+#Timing - Global Memory Allocations
+set(SKL_KPI_MEM_ALLOC_TIME_OPTIONS None OSOnly All)
+set(SKL_KPI_MEM_ALLOC_TIME All CACHE STRING "Global Memory Allocations Timings")
+set_property(CACHE SKL_KPI_MEM_ALLOC_TIME PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_TIME_OPTIONS})
+
+#Counter - Global Memory Allocations
+set(SKL_KPI_MEM_ALLOC_CNT_OPTIONS None OSOnly All)
+set(SKL_KPI_MEM_ALLOC_CNT All CACHE STRING "Global Memory Allocations Counter")
 set_property(CACHE SKL_KPI_MEM_ALLOC_CNT PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_CNT_OPTIONS})
 
 # Override this to create as many skylake lib targets as you need

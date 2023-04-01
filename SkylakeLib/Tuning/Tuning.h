@@ -37,6 +37,23 @@ namespace SKL
                 && CMemoryManager_Pool5_BlockSize < std::numeric_limits<uint32_t>::max() 
                 && CMemoryManager_Pool6_BlockSize < std::numeric_limits<uint32_t>::max() 
     );
+    
+    enum class ELocalMemoryManagerProfilingFlags: uint16_t
+    {
+          None                   = 0
+        , Time_PoolAllocations    = 1 << 0
+        , Time_OsAllocations     = 1 << 2
+        , Time_AllDeallocations  = 1 << 3
+        , Time_OsDeallocations   = 1 << 4
+        , Count_PoolAllocations   = 1 << 5
+        , Count_OsAllocations    = 1 << 6
+        , Count_AllDeallocations = 1 << 7
+        , Count_OsDeallocations  = 1 << 8
+
+        , Time_All  = Time_PoolAllocations  | Time_OsAllocations  | Time_AllDeallocations  | Time_OsDeallocations
+        , Count_All = Count_PoolAllocations | Count_OsAllocations | Count_AllDeallocations | Count_OsDeallocations
+        , All       = Time_All | Count_All
+    };
 
     /*------------------------------------------------------------
         Thread local MemoryManager
@@ -66,6 +83,16 @@ namespace SKL
 #else
         static constexpr size_t  MaxAllocationSize                   =  0U;
 #endif
+
+#if !defined(SKL_KPI_TLS_MEM_ALLOC_TIME) && !defined(SKL_KPI_TLS_MEM_ALLOC_CNT)
+        static constexpr ELocalMemoryManagerProfilingFlags ProfilingFlags = ELocalMemoryManagerProfilingFlags::None;
+#elif defined(SKL_KPI_TLS_MEM_ALLOC_TIME) && !defined(SKL_KPI_TLS_MEM_ALLOC_CNT)
+        static constexpr ELocalMemoryManagerProfilingFlags ProfilingFlags = ELocalMemoryManagerProfilingFlags::Time_All;
+#elif !defined(SKL_KPI_TLS_MEM_ALLOC_TIME) && defined(SKL_KPI_TLS_MEM_ALLOC_CNT)
+        static constexpr ELocalMemoryManagerProfilingFlags ProfilingFlags = ELocalMemoryManagerProfilingFlags::Count_All;
+#else
+        static constexpr ELocalMemoryManagerProfilingFlags ProfilingFlags = ELocalMemoryManagerProfilingFlags::All;
+#endif
     };
 
     /*------------------------------------------------------------
@@ -82,4 +109,49 @@ namespace SKL
         Worker
       ------------------------------------------------------------*/
     constexpr uint32_t CMaxAsyncRequestsToDequeuePerTick = 32U;
+
+    /*------------------------------------------------------------
+        Measurements
+      ------------------------------------------------------------*/
+    constexpr auto CKPIPointsToAverageFrom = 8; // power of two
+    
+
+    /*------------------------------------------------------------
+        Computed Flags
+      ------------------------------------------------------------*/
+#if defined(SKL_KPI_QUEUE_SIZES)
+    constexpr bool CKPIQueueSizes = true;
+#else
+    constexpr bool CKPIQueueSizes = false;
+#endif
+
+#if defined(SKL_KPI_WORKER_TICK)
+    constexpr bool CKPIWorkerTickTimings = true;
+#else
+    constexpr bool CKPIWorkerTickTimings = false;
+#endif
+
+#if defined(SKL_MEM_TIME_OS)
+    constexpr bool CKPI_OS_MemAllocTimings = true;
+#else
+    constexpr bool CKPI_OS_MemAllocTimings = false;
+#endif
+
+#if defined(SKL_MEM_TIME_GLOBAL)
+    constexpr bool CKPI_Global_MemAllocTimings = true;
+#else
+    constexpr bool CKPI_Global_MemAllocTimings = false;
+#endif
+
+#if defined(SKL_MEM_COUNTER_OS)
+    constexpr bool CKPI_OS_MemAllocCount = true;
+#else
+    constexpr bool CKPI_OS_MemAllocCount = false;
+#endif
+
+#if defined(SKL_MEM_COUNTER_GLOBAL)
+    constexpr bool CKPI_Global_MemAllocCount = true;
+#else
+    constexpr bool CKPI_Global_MemAllocCount = false;
+#endif
 }

@@ -18,7 +18,7 @@ namespace std
         using TType     = T;
         using MyType    = interlocked_value<T, bDefaultTo_Relaxed_AcquireRelease>;
 
-        static_assert( is_pointer_v<TOutType> || is_integral_v<TOutType> || is_enum_v<TOutType>, "T can not be used!" );
+        static_assert( is_pointer_v<TOutType> || is_integral_v<TOutType> || is_floating_point_v<TOutType> || is_enum_v<TOutType>, "T can not be used!" );
         static_assert( std::atomic<TType>::is_always_lock_free, "T can not be used, not lock free!" );
 
     public:
@@ -107,6 +107,21 @@ namespace std
             static_assert( std::is_pointer_v< TType >, "TType must of ptr type" );
 
             return load( );
+        }
+        
+        // Pre-increment
+        SKL_FORCEINLINE TOutType operator++() noexcept
+        {
+            static_assert( std::is_integral_v< TType >, "TType must an integral type" );
+            return TOutType( 1 ) + increment();
+        }
+        
+        // Post-increment
+        SKL_FORCEINLINE TOutType operator++( int ) noexcept
+        {
+            static_assert( std::is_integral_v< TType >, "TType must an integral type" );
+
+            return increment();
         }
 
         // Copy

@@ -24,6 +24,32 @@ file( GLOB_RECURSE _SKL_LIB_Types_files                  LIST_DIRECTORIES false 
 file( GLOB_RECURSE _SKL_LIB_Threading_files              LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Threading/*.cpp"              "${SKYLAKE_SRC_ROOT}/Threading/*.h" )
 file( GLOB_RECURSE _SKL_LIB_TLSSync_files                LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/TLSSync/*.cpp"                "${SKYLAKE_SRC_ROOT}/TLSSync/*.h" )
 file( GLOB_RECURSE _SKL_LIB_Utils_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Utils/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Utils/*.h" )
+file( GLOB_RECURSE _SKL_LIB_Measurements_files           LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Measurements/*.cpp"           "${SKYLAKE_SRC_ROOT}/Measurements/*.h" )
+
+##### Group SkylakeLib Files #####
+set_property(GLOBAL PROPERTY USE_FOLDERS YES)
+source_group("AdvancedSingleDispatch" FILES ${_SKL_LIB_AdvancedSingleDispatch_files})
+source_group("Application"            FILES ${_SKL_LIB_Application_files}           )
+source_group("AOD"                    FILES ${_SKL_LIB_AOD_files}                   )
+source_group("Diagnostics"            FILES ${_SKL_LIB_Diagnostics_files}           )
+source_group("ECS"                    FILES ${_SKL_LIB_ECS_files}                   )
+source_group("Enums"                  FILES ${_SKL_LIB_Enums_files}                 )
+source_group("Math"                   FILES ${_SKL_LIB_Macros_files}                )
+source_group("Macros"                 FILES ${_SKL_LIB_Macros_files}                )
+source_group("Memory"                 FILES ${_SKL_LIB_Memory_files}                )
+source_group("Math"                   FILES ${_SKL_LIB_Math_files}                  )
+source_group("Networking"             FILES ${_SKL_LIB_Networking_files}            )
+source_group("Port"                   FILES ${_SKL_LIB_Port_files}                  )
+source_group("/"                      FILES ${_SKL_LIB_Root_files}                  )
+source_group("Service"                FILES ${_SKL_LIB_Service_files}               )
+source_group("Std"                    FILES ${_SKL_LIB_Std_files}                   )
+source_group("Task"                   FILES ${_SKL_LIB_Task_files}                  )
+source_group("Tuning"                 FILES ${_SKL_LIB_Tuning_files}                )
+source_group("Types"                  FILES ${_SKL_LIB_Types_files}                 )
+source_group("Threading"              FILES ${_SKL_LIB_Threading_files}             )
+source_group("TLSSync"                FILES ${_SKL_LIB_TLSSync_files}               )
+source_group("Utils"                  FILES ${_SKL_LIB_Utils_files}                 ) 
+source_group("Measurements"           FILES ${_SKL_LIB_Measurements_files}          ) 
 
 set( SKL_LIB_AdvancedSingleDispatch_files "${_SKL_LIB_AdvancedSingleDispatch_files}" CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_Application_files            "${_SKL_LIB_Application_files}"            CACHE STRING "SkylakeLib Files" )
@@ -46,28 +72,7 @@ set( SKL_LIB_Types_files                  "${_SKL_LIB_Types_files}"             
 set( SKL_LIB_Threading_files              "${_SKL_LIB_Threading_files}"              CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_TLSSync_files                "${_SKL_LIB_TLSSync_files}"                CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_Utils_files                  "${_SKL_LIB_Utils_files}"                  CACHE STRING "SkylakeLib Files" )
-
-source_group("AdvancedSingleDispatch" FILES ${_SKL_LIB_AdvancedSingleDispatch_files})
-source_group("Application"            FILES ${_SKL_LIB_Application_files}           )
-source_group("AOD"                    FILES ${_SKL_LIB_AOD_files}                   )
-source_group("Diagnostics"            FILES ${_SKL_LIB_Diagnostics_files}           )
-source_group("ECS"                    FILES ${_SKL_LIB_ECS_files}                   )
-source_group("Enums"                  FILES ${_SKL_LIB_Enums_files}                 )
-source_group("Math"                   FILES ${_SKL_LIB_Macros_files}                )
-source_group("Macros"                 FILES ${_SKL_LIB_Macros_files}                )
-source_group("Memory"                 FILES ${_SKL_LIB_Memory_files}                )
-source_group("Math"                   FILES ${_SKL_LIB_Math_files}                  )
-source_group("Networking"             FILES ${_SKL_LIB_Networking_files}            )
-source_group("Port"                   FILES ${_SKL_LIB_Port_files}                  )
-source_group("/"                      FILES ${_SKL_LIB_Root_files}                  )
-source_group("Service"                FILES ${_SKL_LIB_Service_files}               )
-source_group("Std"                    FILES ${_SKL_LIB_Std_files}                   )
-source_group("Task"                   FILES ${_SKL_LIB_Task_files}                  )
-source_group("Tuning"                 FILES ${_SKL_LIB_Tuning_files}                )
-source_group("Types"                  FILES ${_SKL_LIB_Types_files}                 )
-source_group("Threading"              FILES ${_SKL_LIB_Threading_files}             )
-source_group("TLSSync"                FILES ${_SKL_LIB_TLSSync_files}               )
-source_group("Utils"                  FILES ${_SKL_LIB_Utils_files}                 )
+set( SKL_LIB_Measurements_files           "${_SKL_LIB_Measurements_files}"           CACHE STRING "SkylakeLib Files" )
 
 function(Create_SkylakeLibTarget target_name)
     add_library (${target_name} STATIC  
@@ -91,7 +96,8 @@ function(Create_SkylakeLibTarget target_name)
         ${SKL_LIB_Types_files}                 
         ${SKL_LIB_Threading_files}             
         ${SKL_LIB_TLSSync_files}     
-        ${SKL_LIB_Utils_files}
+        ${SKL_LIB_Utils_files} 
+        ${SKL_LIB_Measurements_files}
     )
 
     # Set C++20
@@ -163,21 +169,35 @@ function(Create_SkylakeLibTarget target_name)
     endif()
 
 	# Set KPI flags
-	if(SKL_KPI_MEM_ALLOC_TIME)
-		target_compile_definitions(${target_name} PUBLIC SKL_KPI_MEM_ALLOC_TIME)
-	endif()
 	if(SKL_KPI_QUEUE_SIZES)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_QUEUE_SIZES)
 	endif()
 	if(SKL_KPI_WORKER_TICK)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_WORKER_TICK)
 	endif()
+	
+	# Allocations counters
 	if(SKL_KPI_MEM_ALLOC_CNT STREQUAL "OsOnly")
-		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS_ONLY)
-	elseif(SKL_KPI_MEM_ALLOC_CNT STREQUAL "OSAndTLSOnly")
-		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS_TLS_ONLY)
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS)
 	elseif(SKL_KPI_MEM_ALLOC_CNT STREQUAL "All")
-		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_ALL)
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS)
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_GLOBAL)
+	endif()
+
+	if(SKL_KPI_TLS_MEM_ALLOC_CNT)
+		target_compile_definitions(${target_name} PUBLIC SKL_KPI_TLS_MEM_ALLOC_CNT)
+	endif()
+
+	# Allocations timings
+	if(SKL_KPI_MEM_ALLOC_TIME STREQUAL "OsOnly")
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_OS)
+	elseif(SKL_KPI_MEM_ALLOC_TIME STREQUAL "All")
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_OS)
+		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_GLOBAL)
+	endif()
+
+	if(SKL_KPI_TLS_MEM_ALLOC_TIME)
+		target_compile_definitions(${target_name} PUBLIC SKL_KPI_TLS_MEM_ALLOC_TIME)
 	endif()
 
     # Magic Enum

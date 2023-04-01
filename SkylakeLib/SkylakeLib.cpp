@@ -106,6 +106,24 @@ namespace SKL
             }
         }
 
+        if( nullptr == KPIContext::GetInstance() )
+        {
+            if( RSuccess != KPIContext::Create() )
+            {
+                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create KPIContext" );
+                return RFail;
+            }
+        }
+        
+        if( nullptr == CountersContext::GetInstance() )
+        {
+            if( RSuccess != CountersContext::Create() )
+            {
+                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create CountersContext" );
+                return RFail;
+            }
+        }
+
         SkylakeLibInitPerThread::SetValue( true );
 
         return RSuccess;
@@ -128,6 +146,10 @@ namespace SKL
         StringUtils::Destroy();
     
         TRand::ShutdownThread();
+
+        KPIContext::Destroy();
+        
+        CountersContext::Destroy();
 
         SkylakeLibInitPerThread::SetValue( false );
 

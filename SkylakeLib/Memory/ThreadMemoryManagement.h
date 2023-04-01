@@ -89,8 +89,8 @@ namespace SKL
             Instance->Manager.Deallocate( InAllocResult );
         }
 
-        MemoryManager& GetManager() noexcept{ return Manager; }
-        const MemoryManager& GetManager() const noexcept{ return Manager; }
+        SKL_FORCEINLINE SKL_NODISCARD MemoryManager& GetManager() noexcept{ return Manager; }
+        SKL_FORCEINLINE SKL_NODISCARD const MemoryManager& GetManager() const noexcept{ return Manager; }
 
         ThreadLocalMemoryManager() noexcept = default;
         ~ThreadLocalMemoryManager() noexcept = default;

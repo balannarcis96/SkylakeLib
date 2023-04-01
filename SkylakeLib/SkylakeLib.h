@@ -33,6 +33,9 @@
 //! Os specific port
 #include "Port/Port.h"
 
+//! Measurements Abstractions and Utils
+#include "Measurements/Measurements.h"
+
 //! Skylake Random
 #include "Utils/SRand.h"
 
@@ -106,10 +109,10 @@ namespace SKL
     //! Terminate the SkylakeLibrary per thread
     RStatus Skylake_TerminateLibrary_Thread() noexcept;
 
-    //! Is the skylake library init and ready to use
+    //! Is the Skylake library init and ready to use
     bool Skylake_IsTheLibraryInitialize() noexcept;
 
-    //! Is the skylake library init and ready to use for the calling thread
+    //! Is the Skylake library init and ready to use for the calling thread
     bool Skylake_IsTheLibraryInitialize_Thread() noexcept;
 }
 

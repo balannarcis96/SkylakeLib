@@ -15,7 +15,7 @@ namespace SKL
             WorkBenchBuffer{ CStringUtilsWorkBenchBufferSize } {}
 
         //! Initialize
-        RStatus Initialize( ) noexcept override 
+        RStatus Initialize() noexcept override 
         { 
             return RSuccess; 
         }

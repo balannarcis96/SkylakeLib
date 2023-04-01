@@ -9,6 +9,67 @@
 
 namespace SKL
 {
+    struct LocalMemoryManagerProfilingDummy{};
+
+    enum class ELocalMemoryManagerSourceType
+    {
+          Pool1
+        , Pool2
+        , Pool3
+        , Pool4
+        , Pool5
+        , Pool6
+
+        , OS
+    };
+
+    struct LocalMemoryManagerProfiling
+    {
+        using TimingValue = KPIValueAveragePoint<false>;
+        static constexpr size_t PoolsCount = 6;
+
+        LocalMemoryManagerProfiling() noexcept
+        {
+            ( void )memset( PoolAllocTime, 0, sizeof( TimingValue ) * PoolsCount );
+            ( void )memset( PoolAllocCounters, 0, sizeof( uint64_t ) * PoolsCount );
+        }
+
+        SKL_FORCEINLINE void BeginTiming() noexcept 
+        {
+            TimingUtil.Begin();
+        }
+
+        template<ELocalMemoryManagerSourceType PoolIndex>
+        SKL_FORCEINLINE void CalculateAndSaveTiming() noexcept
+        {
+            PoolAllocTime[static_cast<int32_t>( PoolIndex )].SetValue( TimingUtil.GetElapsedSeconds() );
+        }
+        
+        template<ELocalMemoryManagerSourceType PoolIndex>
+        SKL_FORCEINLINE SKL_NODISCARD double GetAllocTiming() const noexcept
+        {
+            return PoolAllocTime[static_cast<int32_t>( PoolIndex )].GetValue();
+        }
+
+        template<ELocalMemoryManagerSourceType PoolIndex>
+        SKL_FORCEINLINE SKL_NODISCARD uint64_t GetAllocationForPool() const noexcept
+        {
+            return PoolAllocCounters[static_cast<int32_t>( PoolIndex )];
+        }
+
+        template<ELocalMemoryManagerSourceType PoolIndex>
+        SKL_FORCEINLINE void IncrementAllocationForPool() noexcept
+        {
+            ( void )++PoolAllocCounters[static_cast<int32_t>( PoolIndex )];
+        }
+
+    private:
+        KPITimeValue TimingUtil{};
+
+        TimingValue PoolAllocTime[PoolsCount];     // Average alloc time for each pool
+        uint64_t    PoolAllocCounters[PoolsCount]; // Total allocations count for each pool
+    };
+
     template<typename TStaticConfig>
     class LocalMemoryManager
     {
@@ -18,6 +79,7 @@ namespace SKL
 
         static constexpr size_t InternalAlignment    = StaticConfig::bIsThreadSafe ? SKL_CACHE_LINE_SIZE : SKL_ALIGNMENT;
         static constexpr size_t MemoryBlockAlignment = StaticConfig::bAlignAllMemoryBlocksToTheCacheLine ? SKL_CACHE_LINE_SIZE : SKL_ALIGNMENT;
+        static constexpr bool   EnableProfiling      = static_cast<uint16_t>( StaticConfig::ProfilingFlags ) != 0;
 
         template<size_t TBlockSize
                , size_t TBlockCount
@@ -43,6 +105,11 @@ namespace SKL
             SKL_FORCEINLINE void Zero() noexcept { memset( MemoryBlock, 0, MemoryBlockSize ); }
         };
     
+        static consteval bool CHasProfilingFlag( ELocalMemoryManagerProfilingFlags Flag ) noexcept
+        {
+            return ( static_cast<uint16_t>( Flag ) & static_cast<uint16_t>( StaticConfig::ProfilingFlags ) ) == static_cast<uint16_t>( Flag );
+        }
+
         // Memory Pools
         using TPool1 = MemoryPool<TStaticConfig::Pool1_BlockSize, TStaticConfig::Pool1_BlockCount>;
         using TPool2 = MemoryPool<TStaticConfig::Pool2_BlockSize, TStaticConfig::Pool2_BlockCount>;
@@ -50,7 +117,8 @@ namespace SKL
         using TPool4 = MemoryPool<TStaticConfig::Pool4_BlockSize, TStaticConfig::Pool4_BlockCount>;
         using TPool5 = MemoryPool<TStaticConfig::Pool5_BlockSize, TStaticConfig::Pool5_BlockCount>;
         using TPool6 = MemoryPool<TStaticConfig::Pool6_BlockSize, TStaticConfig::Pool6_BlockCount>;
-        
+        using TProfilingData = std::conditional_t<EnableProfiling, LocalMemoryManagerProfiling, LocalMemoryManagerProfilingDummy>;
+
         //! Preallocate all pools
         RStatus Preallocate() noexcept
         {
@@ -118,41 +186,101 @@ namespace SKL
             static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < StaticConfig::MaxAllocationSize, "LocalMemoryManager Cannot alloc this much memory at once!" );
 
             AllocResult Result{};
-         
+            
+            if constexpr( EnableProfiling )
+            {
+                ProfilingData.BeginTiming();
+            }
+            
+            #if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+
+            Result.MemoryBlockSize = AllocateSize;
+            Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
+            
+            if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::OS>();
+                
+            if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::OS>();
+                
+            #else
+
             if constexpr( AllocateSize <= TStaticConfig::Pool1_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool1_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool1.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool1>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool1>();
             }
             else if constexpr( AllocateSize <= TStaticConfig::Pool2_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool2_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool2.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool2>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool2>();
             }
             else if constexpr( AllocateSize <= TStaticConfig::Pool3_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool3_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool3.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool3>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool3>();
             }
             else if constexpr( AllocateSize <= TStaticConfig::Pool4_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool4_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool4.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool4>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool4>();
             }
             else if constexpr( AllocateSize <= TStaticConfig::Pool5_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool5_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool5.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool5>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool5>();
             }
             else if constexpr( AllocateSize <= TStaticConfig::Pool6_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool6_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool6.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool6>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool6>();
             }
             else
             {
                 Result.MemoryBlockSize = AllocateSize;
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::OS>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::OS>();
             }
 
             SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % MemoryBlockAlignment );
@@ -186,6 +314,7 @@ namespace SKL
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
 
+            #endif
             return Result;
         }
 
@@ -200,43 +329,104 @@ namespace SKL
                 return Result;
             }
          
+            if constexpr( EnableProfiling )
+            {
+                ProfilingData.BeginTiming();
+            }
+            
+            #if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+
+            Result.MemoryBlockSize = AllocateSize;
+            Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
+            
+            if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::OS>();
+                
+            if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::OS>();
+                
+            #else
+
             if ( AllocateSize <= TStaticConfig::Pool1_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool1_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool1.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool1>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool1>();
             }
             else if ( AllocateSize <= TStaticConfig::Pool2_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool2_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool2.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool2>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool2>();
             }
             else if ( AllocateSize <= TStaticConfig::Pool3_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool3_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool3.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool3>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool3>();
             }
             else if ( AllocateSize <= TStaticConfig::Pool4_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool4_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool4.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool4>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool4>();
             }
             else if ( AllocateSize <= TStaticConfig::Pool5_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool5_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool5.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool5>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool5>();
             }
             else if ( AllocateSize <= TStaticConfig::Pool6_BlockSize )
             {
                 Result.MemoryBlockSize = TStaticConfig::Pool6_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool6.Pool.Allocate() );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::Pool6>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::Pool6>();
             }
             else
             {
                 Result.MemoryBlockSize = AllocateSize;
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, MemoryBlockAlignment );
+
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Time_PoolAllocations ) )
+                    ProfilingData.template CalculateAndSaveTiming<ELocalMemoryManagerSourceType::OS>();
+                    
+                if constexpr( CHasProfilingFlag( ELocalMemoryManagerProfilingFlags::Count_PoolAllocations ) )
+                    ProfilingData.template IncrementAllocationForPool<ELocalMemoryManagerSourceType::OS>();
             }
 
             SKL_ASSERT( 0 == ( ( uintptr_t )Result.MemoryBlock ) % MemoryBlockAlignment );
+
 #if defined(SKL_DEBUG_MEMORY_ALLOCATORS)
             {
                 if constexpr( true == StaticConfig::bIsThreadSafe )
@@ -266,6 +456,8 @@ namespace SKL
 #endif
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
+
+            #endif
 
             return Result;
         }
@@ -498,6 +690,7 @@ namespace SKL
 #endif
         }
         
+        TProfilingData ProfilingData;
         TPool1         Pool1{};
         TPool2         Pool2{};
         TPool3         Pool3{};

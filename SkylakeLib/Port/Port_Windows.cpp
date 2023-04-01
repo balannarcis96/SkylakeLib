@@ -16,6 +16,7 @@
 #include <Winsock2.h>
 #include <timeapi.h>
 #include <mswsock.h>
+#include <intrin.h>
 
 #pragma comment( lib, "ws2_32.lib" )
 #pragma comment( lib, "winmm.lib" )
@@ -1148,6 +1149,35 @@ namespace SKL
     void SetConsoleWindowTitleText( const char* InText ) noexcept
     {
         ( void )SetWindowTextA( GetConsoleWindow(), InText );
+    }
+
+    uint64_t GetTimeStampCounter() noexcept
+    {
+        return __rdtsc();
+    }
+    
+    int64_t GetPerformanceCounter() noexcept
+    {
+        LARGE_INTEGER LI;
+        ( void )QueryPerformanceCounter( &LI );
+        return LI.QuadPart;
+    }
+
+    int64_t GetPerformanceFrequency() noexcept
+    {
+        LARGE_INTEGER PF;
+        ( void )QueryPerformanceFrequency( &PF );
+        return PF.QuadPart;
+    }
+    
+    void LoadPerformanceCounter( int64_t& Out ) noexcept
+    {
+        ( void )QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
+    }
+
+    void LoadPerformanceFrequency( int64_t& Out ) noexcept
+    {
+        ( void )QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
     }
 }
 

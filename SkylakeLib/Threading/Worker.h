@@ -87,6 +87,14 @@ namespace SKL
 
         //! Get the group owning this worker
         SKL_FORCEINLINE SKL_NODISCARD WorkerGroup* GetGroup() const noexcept { return Group; }
+        
+    #if defined(SKL_KPI_WORKER_TICK)
+        //! Get the average tick time in seconds of this worker
+        //! \remarks Valid value only if this is an active worker
+        SKL_NODISCARD double GetAverateTickTimeUsafe() const noexcept { return TickAverageTime.GetValue(); }
+    protected:
+        SKL_NODISCARD void SetAverateTickTimeUsafe( double Value ) noexcept { TickAverageTime.SetValue( Value ); }
+    #endif
 
     private:
         void RunImpl() noexcept;
@@ -105,6 +113,10 @@ namespace SKL
         std::jthread                                          Thread                      {};          //!< Thread of this worker
         std::relaxed_value<struct AODTLSContext*>             AODTLSContext               {};          //!< Cached AODTLSContext instance for this worker
         std::relaxed_value<struct ServerInstanceTLSContext*>  ServerInstanceTLSContext    {};          //!< Cached ServerInstanceTLSContext instance for this worker
+
+        #if defined(SKL_KPI_WORKER_TICK)
+        KPIValueAveragePoint<false> TickAverageTime{}; // Average tick time KPI
+        #endif
 
         friend WorkerGroup;
         friend class ServerInstance;    

@@ -190,6 +190,17 @@ namespace SKL
 
     //! Scan directory recursively and collect file names
     SKL_NODISCARD std::vector<std::wstring> ScanForFilesInDirectoryW( const wchar_t* RootDirectory, size_t& OutMaxFileSize, const std::vector<std::wstring>& extensions ) noexcept;
+
+    //! Issue __rdtsc() intrinsic
+    SKL_NODISCARD uint64_t GetTimeStampCounter() noexcept;
+    
+    SKL_NODISCARD int64_t GetPerformanceCounter() noexcept;
+
+    SKL_NODISCARD int64_t GetPerformanceFrequency() noexcept;
+    
+    SKL_NODISCARD void LoadPerformanceCounter( int64_t& Out ) noexcept;
+
+    SKL_NODISCARD void LoadPerformanceFrequency( int64_t& Out ) noexcept;
 }
 
 #include "TLSValue.h"

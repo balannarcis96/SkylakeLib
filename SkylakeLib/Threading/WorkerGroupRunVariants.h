@@ -45,9 +45,17 @@ namespace SKL
             
             InWorker.AODTLSContext.exchange( SKL::AODTLSContext::GetInstance() );
             InWorker.ServerInstanceTLSContext.exchange( SKL::ServerInstanceTLSContext::GetInstance() );
-
+            
+            #if defined(SKL_KPI_WORKER_TICK)
+            KPITimeValue TickTiming;
+            #endif
             while( InGroup.IsRunning() ) SKL_LIKELY
             {
+                #if defined(SKL_KPI_WORKER_TICK)
+                //@TODO should update frequency once n ms or loops
+                TickTiming.Begin();
+                #endif
+
                 if constexpr( Flags.bEnableAsyncIO )
                 {
                     const bool bShouldTermiante{ InGroup.HandleTasks_Proactive( MillisecondsToSleep ) };
@@ -124,6 +132,10 @@ namespace SKL
                     TCLOCK_SLEEP_FOR_MILLIS( MillisecondsToSleep );
 #endif
                 }
+                
+                #if defined(SKL_KPI_WORKER_TICK)
+                InWorker.SetAverateTickTimeUsafe( TickTiming.GetElapsedSeconds() );
+                #endif
             }
             
             if constexpr( Flags.bSupportsTLSSync )

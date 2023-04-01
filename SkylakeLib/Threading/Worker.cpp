@@ -26,7 +26,12 @@ namespace SKL
         SKL_ASSERT( true == Group->IsRunning() );
 
         // init the SkylakeLib for this thread
-        Skylake_InitializeLibrary_Thread();
+        const RStatus InitResult{ Skylake_InitializeLibrary_Thread() };
+        if( InitResult != RSuccess )
+        {
+            SKLL_ERR_FMT( "Worker Terminated! Skylake_InitializeLibrary_Thread() Failed! WG:%ws", Group->GetTag().Name );
+            return;
+        }
         
         // mark as running
         bIsRunning.exchange( TRUE );

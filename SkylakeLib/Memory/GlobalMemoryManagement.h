@@ -48,9 +48,7 @@ namespace SKL
             Pool6::TObjectPool::FreePool();
         }
 
-        //! 
-        //! \brief Preallocate all pools
-        //! 
+        //! Preallocate all pools
         static RStatus Preallocate() noexcept
         {
             if( RSuccess != Pool1::TObjectPool::Preallocate() )
@@ -89,9 +87,7 @@ namespace SKL
             return RSuccess;
         }
 
-        //! 
-        //! \brief Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
-        //! 
+        //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         static void ZeroAllMemory( ) noexcept
         {
             Pool1::TObjectPool::ZeroAllMemory( );
@@ -106,13 +102,28 @@ namespace SKL
         template<size_t AllocateSize>
         static AllocResult Allocate() noexcept
         {
-#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            #if defined(SKL_MEM_TIME_GLOBAL) || defined(SKL_MEM_TIME_OS)
+            KPITimeValue TimeMesurement{};
+            #endif
+
+            #if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+
             SKL_IFMEMORYSTATS( ++TotalAllocations );
-            return AllocResult{ 
+            auto AllocResult Result{ 
                 .MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment ),
                 .MemoryBlockSize = AllocateSize
             };
-#endif
+            
+            #if defined(SKL_MEM_TIME_OS)
+            KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_OSAllocation>( TimeMesurement.GetElapsedSeconds() );
+            #endif
+            
+            #if defined(SKL_MEM_COUNTER_OS)
+            KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_OSAllocation>();
+            #endif
+
+            return Result;
+            #else
 
             static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < CMemoryManager_MaxAllocSize, "Cannot alloc this much memory at once!" );
 
@@ -122,36 +133,92 @@ namespace SKL
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool1_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool1::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool1>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool1>();
+                #endif
             }
             else if constexpr( AllocateSize <= CMemoryManager_Pool2_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool2_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool2::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool2>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool2>();
+                #endif
             }
             else if constexpr( AllocateSize <= CMemoryManager_Pool3_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool3_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool3::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool3>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool3>();
+                #endif
             }
             else if constexpr( AllocateSize <= CMemoryManager_Pool4_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool4_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool4::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool4>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool4>();
+                #endif
             }
             else if constexpr( AllocateSize <= CMemoryManager_Pool5_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool5_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool5::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool5>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool5>();
+                #endif
             }
             else if constexpr( AllocateSize <= CMemoryManager_Pool6_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool6_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool6::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_GLOBAL)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool6>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_GLOBAL)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool6>();
+                #endif
             }
             else
             {
                 Result.MemoryBlockSize = AllocateSize;
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_OSAllocation>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+                
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_OSAllocation>();
+                #endif
             }
 
             SKL_IFMEMORYSTATS( ++TotalAllocations );
@@ -172,18 +239,35 @@ namespace SKL
 #endif
 
             return Result;
+
+            #endif
         }
 
         //! Allocate new memory block with the size known at run time
         static AllocResult Allocate( size_t AllocateSize ) noexcept
         {
-#if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+            #if defined(SKL_MEM_TIME_GLOBAL) || defined(SKL_MEM_TIME_OS)
+            KPITimeValue TimeMesurement{};
+            #endif
+
+            #if defined(SKL_MEM_MANAGER_DECAY_TO_GLOBAL)
+
             SKL_IFMEMORYSTATS( ++TotalAllocations );
+
             return AllocResult{ 
                 .MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment ),
                 .MemoryBlockSize = AllocateSize
             };
-#endif
+            
+            #if defined(SKL_MEM_TIME_OS)
+            KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_OSAllocation>( TimeMesurement.GetElapsedSeconds() );
+            #endif
+            
+            #if defined(SKL_MEM_COUNTER_OS)
+            KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_OSAllocation>();
+            #endif
+
+            #else
 
             AllocResult Result { };
 
@@ -197,36 +281,92 @@ namespace SKL
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool1_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool1::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool1>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool1>();
+                #endif
             }
             else if( AllocateSize <= CMemoryManager_Pool2_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool2_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool2::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool2>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool2>();
+                #endif
             }
             else if( AllocateSize <= CMemoryManager_Pool3_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool3_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool3::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool3>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool3>();
+                #endif
             }
             else if( AllocateSize <= CMemoryManager_Pool4_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool4_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool4::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool4>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool4>();
+                #endif
             }
             else if( AllocateSize <= CMemoryManager_Pool5_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool5_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool5::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool5>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool5>();
+                #endif
             }
             else if( AllocateSize <= CMemoryManager_Pool6_BlockSize )
             {
                 Result.MemoryBlockSize = CMemoryManager_Pool6_BlockSize;
                 Result.MemoryBlock     = reinterpret_cast<void*>( Pool6::TObjectPool::Allocate() );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_Pool6>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_Pool6>();
+                #endif
             }
             else
             {
                 Result.MemoryBlockSize = AllocateSize;
                 Result.MemoryBlock     = SKL_MALLOC_ALIGNED( AllocateSize, CMemoryManager_Alignment );
+                
+                #if defined(SKL_MEM_TIME_OS)
+                KPIContext::Static_SetAverageKPIValue<EKPIValuePoints::Allocator_OSAllocation>( TimeMesurement.GetElapsedSeconds() );
+                #endif
+            
+                #if defined(SKL_MEM_COUNTER_OS)
+                KPIContext::IncrementAllocCount<EKPIValuePoints::Allocator_OSAllocation>();
+                #endif
 
                 SKL_IFMEMORYSTATS( ++CustomSizeAllocations );
             }
@@ -249,6 +389,8 @@ namespace SKL
 #endif
 
             return Result;
+
+            #endif
         }
        
         //! Deallocate memory block with the size known at compile time
@@ -386,9 +528,7 @@ namespace SKL
             InAllocResult->MemoryBlock = nullptr;
         }
 
-        //! 
-        //! \brief Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
-        //! 
+        //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         static void LogStatistics() noexcept
         {
 #if defined(SKL_MEMORY_STATISTICS)
