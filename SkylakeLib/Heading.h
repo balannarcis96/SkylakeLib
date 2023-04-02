@@ -17,8 +17,8 @@
     #define SKL_FREE_ALIGNED( InPtr, InAlignment ) mi_free_aligned( InPtr, InAlignment )
     #define SKL_FREE_SIZE_ALIGNED( InPtr, InSize, InAlignment ) mi_free_size_aligned( InPtr, InSize, InAlignment )
 #else
-    extern void* GAllocAligned( size_t Size, size_t Alignment ) noexcept;
-    extern void  GFreeAligned( void* Ptr ) noexcept;
+    void* GAllocAligned( size_t Size, size_t Alignment ) noexcept;
+    void  GFreeAligned( void* Ptr ) noexcept;
 
     #define SKL_MALLOC( InSize ) malloc( InSize )
     #define SKL_MALLOC_ALIGNED( InSize, InAlignment ) GAllocAligned( InSize, InAlignment )

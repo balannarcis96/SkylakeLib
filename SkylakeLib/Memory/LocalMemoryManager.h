@@ -181,7 +181,7 @@ namespace SKL
         
         //! Allocate new memory block with the size known at compile time
         template<size_t AllocateSize>
-        AllocResult Allocate() noexcept
+        SKL_NODISCARD AllocResult Allocate() noexcept
         {
             static_assert( 0 == SKL_GUARD_ALLOC_SIZE_ON || AllocateSize < StaticConfig::MaxAllocationSize, "LocalMemoryManager Cannot alloc this much memory at once!" );
 
@@ -319,7 +319,7 @@ namespace SKL
         }
 
         //! Allocate new memory block with the size known at run time
-        AllocResult Allocate( size_t AllocateSize ) noexcept
+        SKL_NODISCARD AllocResult Allocate( size_t AllocateSize ) noexcept
         {
             AllocResult Result { };
 
@@ -690,13 +690,13 @@ namespace SKL
 #endif
         }
         
-        TProfilingData ProfilingData;
         TPool1         Pool1{};
         TPool2         Pool2{};
         TPool3         Pool3{};
         TPool4         Pool4{};
         TPool5         Pool5{};
         TPool6         Pool6{};
+        TProfilingData ProfilingData;
         const wchar_t* Name { TStaticConfig::PoolName };
         
         // Stats variables

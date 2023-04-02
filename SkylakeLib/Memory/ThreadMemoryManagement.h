@@ -27,21 +27,21 @@ namespace SKL
         //! Preallocate all pools
         SKL_FORCEINLINE static RStatus Preallocate() noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             return Instance->Manager.Preallocate();
         }        
 
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         SKL_FORCEINLINE static void ZeroAllMemory() noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             Instance->Manager.ZeroAllMemory();
         }
         
         //! Zero memory all pools, this will force the OS to have the all pages ready in memory (hot)
         SKL_FORCEINLINE static void FreeAllPools() noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             Instance->Manager.FreeAllPools();
         }
         
@@ -49,14 +49,14 @@ namespace SKL
         template<size_t AllocSize>
         SKL_FORCEINLINE static AllocResult Allocate() noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             return Instance->Manager.Allocate<AllocSize>();
         }
         
         //! Allocate new memory block with the size known at run time
         SKL_FORCEINLINE static AllocResult Allocate( size_t AllocSize ) noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             return Instance->Manager.Allocate( AllocSize );
         }
         
@@ -64,29 +64,36 @@ namespace SKL
         template<size_t AllocSize>
         SKL_FORCEINLINE static void Deallocate( void* InPtr ) noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             Instance->Manager.Deallocate<AllocSize>( InPtr );
         }
         
         //! Deallocate memory block with the size known at run time
         SKL_FORCEINLINE static void Deallocate( void* InPtr, size_t AllocSize ) noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             return Instance->Manager.Deallocate( InPtr, AllocSize );
         }
 
         //! Deallocate memory block with the size known at run time
         SKL_FORCEINLINE static void Deallocate( AllocResult& InAllocResult ) noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             Instance->Manager.Deallocate( InAllocResult );
         }
 
         //! Deallocate memory block with the size known at run time
         SKL_FORCEINLINE static void Deallocate( AllocResult* InAllocResult ) noexcept
         {
-            auto* Instance{ ThreadLocalMemoryManager::GetInstance() };
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
             Instance->Manager.Deallocate( InAllocResult );
+        }
+
+        //! Get profiling data
+        SKL_NODISCARD static auto GetProfilingData() noexcept -> MemoryManager::TProfilingData
+        {
+            auto* Instance{ ThreadLocalMemoryManager::GetInstance() }; SKL_ASSERT( nullptr != Instance );
+            return Instance->Manager.ProfilingData;
         }
 
         SKL_FORCEINLINE SKL_NODISCARD MemoryManager& GetManager() noexcept{ return Manager; }

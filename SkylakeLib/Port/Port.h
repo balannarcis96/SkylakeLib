@@ -70,7 +70,7 @@ namespace SKL
 
 namespace SKL
 {
-    //! \brief Enable ANSI color support in the main console window
+    //! Enable ANSI color support in the main console window
     //! \return RSuccess on success 
     SKL_NODISCARD RStatus EnableConsoleANSIColorSupport() noexcept;
 
@@ -88,7 +88,7 @@ namespace SKL
         static constexpr TLSSlot INVALID_SLOT_ID = 0xFFFFFFFF;
 
         /**
-         * \brief Return false if InSlotIndex is an invalid TLS slot
+         * Return false if InSlotIndex is an invalid TLS slot
          * \param InSlotIndex the TLS index to check
          * \return true if InSlotIndex looks like a valid slot
          */
@@ -126,10 +126,10 @@ namespace SKL
     bool ShutdownSocket( TSocket InSocket ) noexcept;
     
     //! Get last OS error code
-    SKL_NODISCARD int32_t GGetLastError( ) noexcept;
+    SKL_NODISCARD int32_t GGetLastError() noexcept;
     
     //! Get last OS network operation related error code
-    SKL_NODISCARD int32_t GGetNetworkLastError( ) noexcept;
+    SKL_NODISCARD int32_t GGetNetworkLastError() noexcept;
 
     //! Convert ip v4 address string to binary
     SKL_NODISCARD uint32_t IPv4FromStringA( const char* InIpString )noexcept;
@@ -151,28 +151,28 @@ namespace SKL
 
     //! UTF16 -> UTF8
     template<size_t N>
-    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char* OutBuffer, int32_t OutBufferSize ) noexcept
+    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer )[N], char* OutBuffer, int32_t OutBufferSize ) noexcept
     {
         return GWideCharToMultiByte( InBuffer, N, OutBuffer, OutBufferSize );
     }
 
     //! UTF8 -> UTF16
     template<size_t N>
-    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept
+    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer )[N], wchar_t* OutBuffer, int32_t OutBufferSize ) noexcept
     {
         return GMultiByteToWideChar( InBuffer, N, OutBuffer, OutBufferSize );
     }
 
     //! UTF16 -> UTF8
     template<size_t N, size_t M>
-    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer ) [ N ], char( &OutBuffer ) [ M ] ) noexcept
+    SKL_NODISCARD inline bool GWideCharToMultiByte( const wchar_t( &InBuffer )[N], char( &OutBuffer )[M] ) noexcept
     {
         return GWideCharToMultiByte( InBuffer, N, OutBuffer, M );
     }
 
     //! UTF8 -> UTF16
     template<size_t N, size_t M>
-    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer ) [ N ], wchar_t( &OutBuffer ) [ M ] ) noexcept
+    SKL_NODISCARD inline bool GMultiByteToWideChar( const char( &InBuffer )[N], wchar_t( &OutBuffer )[M] ) noexcept
     {
         return GMultiByteToWideChar( InBuffer, N, OutBuffer, M );
     }
@@ -194,12 +194,16 @@ namespace SKL
     //! Issue __rdtsc() intrinsic
     SKL_NODISCARD uint64_t GetTimeStampCounter() noexcept;
     
+    //! Get performance counter
     SKL_NODISCARD int64_t GetPerformanceCounter() noexcept;
 
+    //! Get CPU frequency
     SKL_NODISCARD int64_t GetPerformanceFrequency() noexcept;
     
+    //! Get performance counter
     SKL_NODISCARD void LoadPerformanceCounter( int64_t& Out ) noexcept;
 
+    //! Get CPU frequency
     SKL_NODISCARD void LoadPerformanceFrequency( int64_t& Out ) noexcept;
 }
 
@@ -212,15 +216,15 @@ namespace SKL
     {
         PreciseSleep_WaitableTimer() noexcept = default;
         ~PreciseSleep_WaitableTimer() noexcept = default;
+        
+        RStatus Initialize() noexcept override;
+        SKL_NODISCARD const char *GetName() const noexcept override { return "[PreciseSleep_WaitableTimer]"; }
 
         void*   Timer   { nullptr };
         double  Estimate{ 5e-3 };
         double  Mean    { 5e-3 };
         double  M2      { 0.0 };
         int64_t Count   { 1 };
-        
-        RStatus Initialize() noexcept override;
-        SKL_NODISCARD const char *GetName( ) const noexcept override { return "[PreciseSleep_WaitableTimer]"; }
     };
 }
 
