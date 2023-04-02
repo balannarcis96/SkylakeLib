@@ -98,6 +98,8 @@ namespace Task_Tests_Suite
 
     TEST( Task_Tests_Suite, AsyncIoTask_API_Test )
     {
+        if( nullptr == SKL::KPIContext::GetInstance() ) ( void )SKL::KPIContext::Create();
+
         using BufferType = SKL::AsyncIOBuffer<128, 32>;
         uint32_t nbt { 400 };
 
@@ -122,10 +124,14 @@ namespace Task_Tests_Suite
         ASSERT_TRUE( SPtr.use_count() == 2 );
         NewTask->Clear();
         ASSERT_TRUE( SPtr.use_count() == 1 );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( Task_Tests_Suite, AsyncIoTask_Stream_API )
     {
+        if( nullptr == SKL::KPIContext::GetInstance() ) ( void )SKL::KPIContext::Create();
+
         using BufferType = SKL::AsyncIOBuffer<1024, 32>;
         auto NewTask { SKL::MakeShared<BufferType>() };
         ASSERT_TRUE( nullptr != NewTask.get() );
@@ -168,10 +174,14 @@ namespace Task_Tests_Suite
         ASSERT_TRUE( 5 == Stream->ReadT<uint32_t>() );
         ASSERT_TRUE( sizeof( uint32_t ) == Stream->GetPosition() );
         ASSERT_TRUE( sizeof( uint32_t ) == NewTask->GetPosition() );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( Task_Tests_Suite, AsyncIoTask_Transaction_API )
     {
+        if( nullptr == SKL::KPIContext::GetInstance() ) ( void )SKL::KPIContext::Create();
+
         using BufferType = SKL::AsyncIOBuffer<128, 32>;
         auto NewTask { SKL::MakeShared<BufferType>() };
         ASSERT_TRUE( nullptr != NewTask.get() );
@@ -199,6 +209,8 @@ namespace Task_Tests_Suite
             auto Stream{ NewTask->GetStream() };
             ASSERT_TRUE( sizeof( uint32_t ) == Stream->GetPosition() );
         }
+
+        SKL::KPIContext::Destroy();
     }
 }
 

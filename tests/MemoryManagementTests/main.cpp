@@ -149,6 +149,8 @@ namespace MManagementTestsSuite
 
     TEST( MManagementTestsSuite, Init_Test_Case___ )
     {
+        SKL::KPIContext::Create();
+
         //SKL::SkylakeGlobalMemoryManager::Preallocate();
         //SKL::SkylakeGlobalMemoryManager::LogStatistics();
         
@@ -165,10 +167,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeUnique_Test_Case )
     {
+        SKL::KPIContext::Create();
         int b = 5;
     
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
@@ -186,10 +191,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
         ASSERT_TRUE( 23 == b );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeUniqueNoDeconstructAndConstruct )
     {
+        SKL::KPIContext::Create();
         int b = 5;
     
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
@@ -207,10 +215,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
         ASSERT_TRUE( 5 == b );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeUniqueArray_Test_Case )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -228,10 +239,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeUniqueArrayWithNoDestructAndConstruct )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -249,10 +263,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeUniqueArrayWithNoDestructButConstruct )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -270,10 +287,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeShared_Test_Case )
     {
+        SKL::KPIContext::Create();
         int b = 5;
      
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
@@ -308,10 +328,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
         ASSERT_TRUE( 23 == b );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedNoDestructAndConstruct )
     {
+        SKL::KPIContext::Create();
         int b = 5;
      
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
@@ -346,10 +369,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
         ASSERT_TRUE( 5 == b );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedNoDestructButWithConstruct )
     {
+        SKL::KPIContext::Create();
         int b = 5;
      
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
@@ -384,10 +410,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
 
         ASSERT_TRUE( 5 == b ); // the destructor was not called
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedArray_Test_Case )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -405,10 +434,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedArrayNoDestructAndConstruct )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -427,10 +459,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedArrayNoDestructButWithConstruct )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -449,10 +484,13 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 
     TEST( MManagementTestsSuite, MakeSharedVirtualDeleted_API )
     {
+        SKL::KPIContext::Create();
         SKL_IFMEMORYSTATS( const uint64_t AllocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalAllocations );
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsBefore = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
 
@@ -474,6 +512,8 @@ namespace MManagementTestsSuite
         SKL_IFMEMORYSTATS( const uint64_t DeallocationsAfter = SKL::SkylakeGlobalMemoryManager::TotalDeallocations );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( AllocationsAfter - AllocationsBefore == 1 ) );
         SKL_IFMEMORYSTATS( ASSERT_TRUE( DeallocationsAfter - DeallocationsBefore == 1 ) );
+
+        SKL::KPIContext::Destroy();
     }
 }
 
