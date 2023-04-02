@@ -119,7 +119,10 @@ namespace SKL
         }
 
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::GetWorkerSummableCounter( GetIndex() ).Reset();
+        if( nullptr != KPIContext::GetInstance() )
+        {
+            KPIContext::GetWorkerSummableCounter( GetIndex() ).Reset();
+        }
         #endif
     }
 }
