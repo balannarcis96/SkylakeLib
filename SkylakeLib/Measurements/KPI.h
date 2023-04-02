@@ -83,6 +83,15 @@ namespace SKL
 
     struct KPI_WorkerSummableCounters
     {
+        void Reset() noexcept
+        {
+            TasksQueueSize                       = 0U;
+            DelayedTasksQueueSize                = 0U;
+            AODSharedObjectDelayedTasksQueueSize = 0U;
+            AODStaticObjectDelayedTasksQueueSize = 0U;
+            AODCustomObjectDelayedTasksQueueSize = 0U;
+        }
+
         uint64_t TasksQueueSize{ 0U };
         uint64_t DelayedTasksQueueSize{ 0U };
         uint64_t AODSharedObjectDelayedTasksQueueSize{ 0U };
@@ -146,9 +155,9 @@ namespace SKL
         }
    
         // Summable counters
-        SKL_FORCEINLINE SKL_NODISCARD KPI_WorkerSummableCounters& GetWorkerSummableCounter( int32_t TargetWorkerIndex ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerSummableCounters& GetWorkerSummableCounter( int32_t TargetWorkerIndex ) noexcept
         {
-            return WorkerSummableCounters[TargetWorkerIndex];
+            return GetInstance()->WorkerSummableCounters[TargetWorkerIndex];
         }
 
         #if defined(SKL_KPI_QUEUE_SIZES)

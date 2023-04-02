@@ -88,6 +88,12 @@ namespace SKL
 
     void Worker::Clear() noexcept
     {
+        // Clear global tasks
+        while( auto* Task{ Tasks.Pop() })
+        {
+            TSharedPtr<ITask>::Static_Reset( Task );
+        }
+
         // Clear global delayed tasks
         while( auto* Task{ DelayedTasks.Pop() })
         {
@@ -111,5 +117,9 @@ namespace SKL
         {
             TSharedPtr<IAODStaticObjectTask>::Static_Reset( reinterpret_cast<IAODStaticObjectTask*>( Task ) );
         }
+
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::GetWorkerSummableCounter( GetIndex() ).Reset();
+        #endif
     }
 }
