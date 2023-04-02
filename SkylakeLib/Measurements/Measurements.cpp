@@ -19,11 +19,3 @@ namespace SKL
 		return RSuccess; 
 	}
 }
-
-namespace SKL
-{
-    RStatus CountersContext::Initialize() noexcept 
-	{ 
-		return RSuccess; 
-	}
-}

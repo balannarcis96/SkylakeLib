@@ -14,7 +14,7 @@ namespace SKL
     public:
         using RunTask = ASD::UniqueFunctorWrapper<32, void( ASD_CDECL *)( Worker&, WorkerGroup& ) noexcept>;
 
-        Worker() noexcept = default;
+        Worker() noexcept;
         Worker( WorkerGroup* Group ) noexcept : Group{ Group } {}
         ~Worker() noexcept
         {
@@ -30,13 +30,13 @@ namespace SKL
         }
 
         //! Is this worker running
-        bool GetIsRunning() const noexcept { return TRUE == bIsRunning.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool GetIsRunning() const noexcept { return TRUE == bIsRunning.load_relaxed(); }
 
         //! Is this a master worker
-        bool IsMaster() const noexcept { return TRUE == bIsMasterThread.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD bool IsMaster() const noexcept { return TRUE == bIsMasterThread.load_relaxed(); }
 
         //! Start the worker
-        RStatus Start() noexcept;   
+        SKL_NODISCARD RStatus Start() noexcept;   
 
         //! Join worker thread
         void Join() noexcept
@@ -50,44 +50,67 @@ namespace SKL
         }
 
         //! Get the time point at which the worker started 
-        TEpochTimePoint GetStartedAt() const noexcept { return StartedAt.load_relaxed(); }
+        SKL_FORCEINLINE SKL_NODISCARD TEpochTimePoint GetStartedAt() const noexcept { return StartedAt.load_relaxed(); }
         
         //! Get the time duration this worker was active for
-        TEpochTimeDuration GetAliveTime() const noexcept { return GetSystemUpTickCount() - GetStartedAt(); }
+        SKL_FORCEINLINE SKL_NODISCARD TEpochTimeDuration GetAliveTime() const noexcept { return GetSystemUpTickCount() - GetStartedAt(); }
 
         //! Defer task execution on this worker
         SKL_FORCEINLINE void Defer( ITask* InTask ) noexcept
         {
             DelayedTasks.Push( InTask );
+
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            KPIContext::Increment_DelayedTasksQueueSize( GetIndex() );
+            #endif
         }
         
         //! Defer general task execution on this worker
         SKL_FORCEINLINE void DeferGeneral( ITask* InTask ) noexcept
         {
             Tasks.Push( InTask );
+            
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            KPIContext::Increment_TasksQueueSize( GetIndex() );
+            #endif
         }
 
         //! Defer AOD task execution on this worker
         SKL_FORCEINLINE void Defer( IAODSharedObjectTask* InTask ) noexcept
         {
             AODSharedObjectDelayedTasks.Push( InTask );
+            
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            KPIContext::Increment_AODSharedObjectDelayedTasksQueueSize( GetIndex() );
+            #endif
         }
 
         //! Defer AOD task execution on this worker
         SKL_FORCEINLINE void Defer( IAODStaticObjectTask* InTask ) noexcept
         {
             AODStaticObjectDelayedTasks.Push( InTask );
+            
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            KPIContext::Increment_AODStaticObjectDelayedTasksQueueSize( GetIndex() );
+            #endif
         }
         
         //! Defer AOD task execution on this worker
         SKL_FORCEINLINE void Defer( IAODCustomObjectTask* InTask ) noexcept
         {
             AODCustomObjectDelayedTasks.Push( InTask );
+            
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            KPIContext::Increment_AODCustomObjectDelayedTasksQueueSize( GetIndex() );
+            #endif
         }
 
         //! Get the group owning this worker
         SKL_FORCEINLINE SKL_NODISCARD WorkerGroup* GetGroup() const noexcept { return Group; }
-        
+    
+        //! Get the global unique index of this worker
+        SKL_FORCEINLINE SKL_NODISCARD int32_t GetIndex() const noexcept { return WorkerIndex; }
+
     #if defined(SKL_KPI_WORKER_TICK)
         //! Get the average tick time in seconds of this worker
         //! \remarks Valid value only if this is an active worker
@@ -100,22 +123,23 @@ namespace SKL
         void RunImpl() noexcept;
         void Clear() noexcept;
                 
-        TaskQueue                                             Tasks                       {};          //!< Single consumer multiple producers queue for general tasks 
-        TaskQueue                                             DelayedTasks                {};          //!< Single consumer multiple producers queue for delayed tasks 
-        AODTaskQueue                                          AODSharedObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                                          AODStaticObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
-        AODTaskQueue                                          AODCustomObjectDelayedTasks {};          //!< Single consumer multiple producers queue for AOD delayed tasks 
-        std::synced_value<uint32_t>                           bIsRunning                  { FALSE };   //!< Is this worker signaled to run
-        std::synced_value<uint32_t>                           bIsMasterThread             { FALSE };   //!< Is this a master worker
-        std::relaxed_value<TEpochTimePoint>                   StartedAt                   { 0 };       //!< Time point when the worker started
-        RunTask                                               OnRun                       {};          //!< Task to run as main of the thread
-        WorkerGroup*                                          Group                       { nullptr }; //!< Owning group of this worker
-        std::jthread                                          Thread                      {};          //!< Thread of this worker
-        std::relaxed_value<struct AODTLSContext*>             AODTLSContext               {};          //!< Cached AODTLSContext instance for this worker
-        std::relaxed_value<struct ServerInstanceTLSContext*>  ServerInstanceTLSContext    {};          //!< Cached ServerInstanceTLSContext instance for this worker
+        const int32_t                                         WorkerIndex                {};          //!< Globally unique worker index
+        SKL_CACHE_ALIGNED TaskQueue                           Tasks                      {};          //!< Single consumer multiple producers queue for general tasks 
+        SKL_CACHE_ALIGNED TaskQueue                           DelayedTasks               {};          //!< Single consumer multiple producers queue for delayed tasks 
+        SKL_CACHE_ALIGNED AODTaskQueue                        AODSharedObjectDelayedTasks{};          //!< Single consumer multiple producers queue for AOD delayed tasks 
+        SKL_CACHE_ALIGNED AODTaskQueue                        AODStaticObjectDelayedTasks{};          //!< Single consumer multiple producers queue for AOD delayed tasks 
+        SKL_CACHE_ALIGNED AODTaskQueue                        AODCustomObjectDelayedTasks{};          //!< Single consumer multiple producers queue for AOD delayed tasks 
+        SKL_CACHE_ALIGNED std::synced_value<uint32_t>         bIsRunning                 { FALSE };   //!< Is this worker signaled to run
+        std::synced_value<uint32_t>                           bIsMasterThread            { FALSE };   //!< Is this a master worker
+        std::relaxed_value<TEpochTimePoint>                   StartedAt                  { 0U };      //!< Time point when the worker started
+        RunTask                                               OnRun                      {};          //!< Task to run as main of the thread
+        WorkerGroup*                                          Group                      { nullptr }; //!< Owning group of this worker
+        std::jthread                                          Thread                     {};          //!< Thread of this worker
+        std::relaxed_value<struct AODTLSContext*>             AODTLSContext              {};          //!< Cached AODTLSContext instance for this worker
+        std::relaxed_value<struct ServerInstanceTLSContext*>  ServerInstanceTLSContext   {};          //!< Cached ServerInstanceTLSContext instance for this worker
 
         #if defined(SKL_KPI_WORKER_TICK)
-        KPIValueAveragePoint<false> TickAverageTime{}; // Average tick time KPI
+        SKL_CACHE_ALIGNED KPIValueAveragePoint<false> TickAverageTime{}; // Average tick time KPI
         #endif
 
         friend WorkerGroup;

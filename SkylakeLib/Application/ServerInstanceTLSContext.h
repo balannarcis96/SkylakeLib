@@ -18,15 +18,17 @@ namespace SKL
 
         RStatus Initialize() noexcept;
 
-        SKL_FORCEINLINE const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED ServerInstanceTLSData]"; }
+        SKL_FORCEINLINE SKL_NODISCARD const char *GetName( ) const noexcept { return SourceServerInstance ? NameBuffer : "[UNINITIALIZED ServerInstanceTLSData]"; }
 
         void Reset() noexcept;
         void Clear() noexcept;
 
-        SKL_FORCEINLINE ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
-        SKL_FORCEINLINE ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
-        SKL_FORCEINLINE WorkerGroupTag GetCurrentWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
-        SKL_FORCEINLINE const std::vector<WorkerGroup*>& GetDeferredTasksHandlingGroups() const noexcept { return DeferredTasksHandlingGroups; }
+        SKL_FORCEINLINE SKL_NODISCARD ServerInstance* GetServerInstance() const noexcept { return SourceServerInstance; }
+        SKL_FORCEINLINE SKL_NODISCARD ServerInstanceFlags GetServerInstanceFlags() const noexcept { return ServerFlags; }
+        SKL_FORCEINLINE SKL_NODISCARD WorkerGroupTag GetCurrentWorkerGroupTag() const noexcept { return ParentWorkerGroup; }
+        SKL_FORCEINLINE SKL_NODISCARD const std::vector<WorkerGroup*>& GetDeferredTasksHandlingGroups() const noexcept { return DeferredTasksHandlingGroups; }
+        SKL_FORCEINLINE SKL_NODISCARD const size_t GetPendingDelayedTasksCount() const noexcept { return PendingDelayedTasks.size(); }
+        SKL_FORCEINLINE SKL_NODISCARD const size_t GetDelayedTasksCount() const noexcept { return DelayedTasks.size(); }
 
     private:
         TLSManagedQueue<ITask*>   PendingDelayedTasks        {};

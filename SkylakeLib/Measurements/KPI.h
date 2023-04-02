@@ -81,6 +81,15 @@ namespace SKL
         TValue ValuePoints[CKPIPointsToAverageFrom]{};
     };
 
+    struct KPI_WorkerSummableCounters
+    {
+        uint64_t TasksQueueSize{ 0U };
+        uint64_t DelayedTasksQueueSize{ 0U };
+        uint64_t AODSharedObjectDelayedTasksQueueSize{ 0U };
+        uint64_t AODStaticObjectDelayedTasksQueueSize{ 0U };
+        uint64_t AODCustomObjectDelayedTasksQueueSize{ 0U };
+    };
+
     class KPIContext: public ITLSSingleton<KPIContext>
     {
     public:
@@ -136,11 +145,62 @@ namespace SKL
             AverageValuePoints[static_cast<int32_t>( KPIValuePoint )].SetValue( Value );
         }
    
-        // Averageable values
+        // Summable counters
+        SKL_FORCEINLINE SKL_NODISCARD KPI_WorkerSummableCounters& GetWorkerSummableCounter( int32_t TargetWorkerIndex ) noexcept
+        {
+            return WorkerSummableCounters[TargetWorkerIndex];
+        }
 
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        SKL_FORCEINLINE static void Increment_DelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
+        {
+            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].DelayedTasksQueueSize;
+        }
+        SKL_FORCEINLINE static void Increment_TasksQueueSize( int32_t WorkerIndex ) noexcept
+        {
+            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].TasksQueueSize;
+        }
+        SKL_FORCEINLINE static void Increment_AODSharedObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
+        {
+            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODSharedObjectDelayedTasksQueueSize;
+        }
+        SKL_FORCEINLINE static void Increment_AODStaticObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
+        {
+            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODStaticObjectDelayedTasksQueueSize;
+        }
+        SKL_FORCEINLINE static void Increment_AODCustomObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
+        {
+            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODCustomObjectDelayedTasksQueueSize;
+        }
+
+        SKL_FORCEINLINE static void Decrement_DelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        {
+            GetInstance()->WorkerSummableCounters[WorkerIndex].DelayedTasksQueueSize -= Count;
+        }
+        SKL_FORCEINLINE static void Decrement_TasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        {
+            GetInstance()->WorkerSummableCounters[WorkerIndex].TasksQueueSize -= Count;
+        }
+        SKL_FORCEINLINE static void Decrement_AODSharedObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        {
+            GetInstance()->WorkerSummableCounters[WorkerIndex].AODSharedObjectDelayedTasksQueueSize -= Count;
+        }
+        SKL_FORCEINLINE static void Decrement_AODStaticObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        {
+            GetInstance()->WorkerSummableCounters[WorkerIndex].AODStaticObjectDelayedTasksQueueSize -= Count;
+        }
+        SKL_FORCEINLINE static void Decrement_AODCustomObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        {
+            GetInstance()->WorkerSummableCounters[WorkerIndex].AODCustomObjectDelayedTasksQueueSize -= Count;
+        }
+        #endif
     private:
-        KPITimeValue          TimeValue[32]{};
-        TKPIValueAveragePoint AverageValuePoints[static_cast<int32_t>( EKPIValuePoints::Max )]{};
-        uint64_t              MemoryAllocationsCounters[static_cast<int32_t>( EKPIValuePoints::Max )];
+        KPITimeValue               TimeValue[32]{};
+        TKPIValueAveragePoint      AverageValuePoints[static_cast<int32_t>( EKPIValuePoints::Max )]{};
+        uint64_t                   MemoryAllocationsCounters[static_cast<int32_t>( EKPIValuePoints::Max )];
+
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPI_WorkerSummableCounters WorkerSummableCounters[256];
+        #endif
     };
 }

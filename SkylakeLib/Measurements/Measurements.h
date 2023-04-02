@@ -27,4 +27,3 @@ namespace SKL
 }
 
 #include "KPI.h"
-#include "Counters.h"

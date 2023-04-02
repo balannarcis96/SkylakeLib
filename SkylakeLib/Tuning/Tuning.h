@@ -41,11 +41,11 @@ namespace SKL
     enum class ELocalMemoryManagerProfilingFlags: uint16_t
     {
           None                   = 0
-        , Time_PoolAllocations    = 1 << 0
+        , Time_PoolAllocations   = 1 << 0
         , Time_OsAllocations     = 1 << 2
         , Time_AllDeallocations  = 1 << 3
         , Time_OsDeallocations   = 1 << 4
-        , Count_PoolAllocations   = 1 << 5
+        , Count_PoolAllocations  = 1 << 5
         , Count_OsAllocations    = 1 << 6
         , Count_AllDeallocations = 1 << 7
         , Count_OsDeallocations  = 1 << 8
@@ -114,7 +114,6 @@ namespace SKL
         Measurements
       ------------------------------------------------------------*/
     constexpr auto CKPIPointsToAverageFrom = 8; // power of two
-    
 
     /*------------------------------------------------------------
         Computed Flags

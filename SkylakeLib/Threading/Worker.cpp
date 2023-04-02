@@ -9,6 +9,12 @@
 
 namespace SKL
 {
+    static std::relaxed_value<int32_t> GWorkerIndexPool{ 0 };
+
+    Worker::Worker() noexcept
+        : WorkerIndex{ GWorkerIndexPool++ }
+    { }
+
     //! Start the worker
     RStatus Worker::Start() noexcept   
     {

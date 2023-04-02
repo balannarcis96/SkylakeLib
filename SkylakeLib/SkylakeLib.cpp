@@ -114,15 +114,6 @@ namespace SKL
                 return RFail;
             }
         }
-        
-        if( nullptr == CountersContext::GetInstance() )
-        {
-            if( RSuccess != CountersContext::Create() )
-            {
-                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create CountersContext" );
-                return RFail;
-            }
-        }
 
         SkylakeLibInitPerThread::SetValue( true );
 
@@ -149,8 +140,6 @@ namespace SKL
 
         KPIContext::Destroy();
         
-        CountersContext::Destroy();
-
         SkylakeLibInitPerThread::SetValue( false );
 
         return RSuccess;

@@ -906,17 +906,29 @@ namespace SKL
 
     void WorkerGroup::HandleGeneralTasks( Worker& Worker ) noexcept
     {
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        uint64_t RemovedTasks{ 0U };
+        #endif
+
         while( auto* NewTask{ Worker.Tasks.Pop() } )
         {
             NewTask->Dispatch();
             TSharedPtr<ITask>::Static_Reset( NewTask );
+
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            ( void )++RemovedTasks;
+            #endif
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_TasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        #endif
     }
     
     void WorkerGroup::HandleGeneralTasksWithThrottle( Worker& Worker ) noexcept
     {
         constexpr size_t CMaxExecuteTasksCountPerFrame{ 32 };
-
+        
         size_t Count{ 0U };
         while( auto* NewTask{ Worker.Tasks.Pop() } )
         {
@@ -925,13 +937,17 @@ namespace SKL
 
             if( ++Count >= CMaxExecuteTasksCountPerFrame ) break;
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_TasksQueueSize( Worker.GetIndex(), Count );
+        #endif
     }
 
     void WorkerGroup::HandleAODDelayedTasks_Local( Worker& /*Worker*/ ) noexcept
     {
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
-
+        
         //Shared Object tasks
         while( false == TLSContext.DelayedSharedObjectTasks.empty() )
         {
@@ -1003,6 +1019,10 @@ namespace SKL
     {
         SKL_ASSERT( false == CTaskScheduling_AssumeAllWorkerGroupsHandleAOD );
         //SKLL_TRACE();
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        uint64_t RemovedTasks{ 0U };
+        #endif
 
         auto& TLSContext{ *AODTLSContext::GetInstance() };
         auto  Now{ GetSystemUpTickCount() };
@@ -1020,7 +1040,16 @@ namespace SKL
             {
                 TLSContext.DelayedCustomObjectTasks.push( NewTask );
             }
+
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            ( void )++RemovedTasks;
+            #endif
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_AODCustomObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        RemovedTasks = 0U;
+        #endif
 
         //Update now
         Now = GetSystemUpTickCount();
@@ -1038,7 +1067,16 @@ namespace SKL
             {
                 TLSContext.DelayedSharedObjectTasks.push( NewTask );
             }
+
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            ( void )++RemovedTasks;
+            #endif
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_AODSharedObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        RemovedTasks = 0U;
+        #endif
 
         //Update now
         Now = GetSystemUpTickCount();
@@ -1056,7 +1094,15 @@ namespace SKL
             {
                 TLSContext.DelayedStaticObjectTasks.push( NewTask );
             }
+            
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            ( void )++RemovedTasks;
+            #endif
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_AODStaticObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        #endif
 
         HandleAODDelayedTasks_Local( Worker );
     }
@@ -1115,6 +1161,10 @@ namespace SKL
 
         auto&      TLSContext{ *ServerInstanceTLSContext::GetInstance() };
         const auto Now{ GetSystemUpTickCount() };
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        uint64_t RemovedTasks{ 0U };
+        #endif
 
         while( auto* NewTask{ Worker.DelayedTasks.Pop() } )
         {
@@ -1127,7 +1177,15 @@ namespace SKL
             {
                 TLSContext.DelayedTasks.push( NewTask );
             }
+
+            #if defined(SKL_KPI_QUEUE_SIZES)
+            ( void )++RemovedTasks;
+            #endif
         }
+        
+        #if defined(SKL_KPI_QUEUE_SIZES)
+        KPIContext::Decrement_DelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        #endif
 
         HandleTimerTasks_Local();
     }
