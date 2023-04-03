@@ -81,22 +81,40 @@ namespace SKL
         TValue ValuePoints[CKPIPointsToAverageFrom]{};
     };
 
-    struct KPI_WorkerSummableCounters
+    struct KPI_WorkerEnqueueCounters
     {
         void Reset() noexcept
         {
-            TasksQueueSize                       = 0U;
-            DelayedTasksQueueSize                = 0U;
-            AODSharedObjectDelayedTasksQueueSize = 0U;
-            AODStaticObjectDelayedTasksQueueSize = 0U;
-            AODCustomObjectDelayedTasksQueueSize = 0U;
+            TasksQueue_EnqueuedCount                       = 0U;
+            DelayedTasksQueue_EnqueuedCount                = 0U;
+            AODSharedObjectDelayedTasksQueue_EnqueuedCount = 0U;
+            AODStaticObjectDelayedTasksQueue_EnqueuedCount = 0U;
+            AODCustomObjectDelayedTasksQueue_EnqueuedCount = 0U;
         }
 
-        uint64_t TasksQueueSize{ 0U };
-        uint64_t DelayedTasksQueueSize{ 0U };
-        uint64_t AODSharedObjectDelayedTasksQueueSize{ 0U };
-        uint64_t AODStaticObjectDelayedTasksQueueSize{ 0U };
-        uint64_t AODCustomObjectDelayedTasksQueueSize{ 0U };
+        uint64_t TasksQueue_EnqueuedCount{ 0U };
+        uint64_t DelayedTasksQueue_EnqueuedCount{ 0U };
+        uint64_t AODSharedObjectDelayedTasksQueue_EnqueuedCount{ 0U };
+        uint64_t AODStaticObjectDelayedTasksQueue_EnqueuedCount{ 0U };
+        uint64_t AODCustomObjectDelayedTasksQueue_EnqueuedCount{ 0U };
+    };
+
+    struct KPI_WorkerDequeueCounters
+    {
+        void Reset() noexcept
+        {
+            TasksQueue_DequeuedCount                       = 0U;
+            DelayedTasksQueue_DequeuedCount                = 0U;
+            AODSharedObjectDelayedTasksQueue_DequeuedCount = 0U;
+            AODStaticObjectDelayedTasksQueue_DequeuedCount = 0U;
+            AODCustomObjectDelayedTasksQueue_DequeuedCount = 0U;
+        }
+
+        uint64_t TasksQueue_DequeuedCount{ 0U };
+        uint64_t DelayedTasksQueue_DequeuedCount{ 0U };
+        uint64_t AODSharedObjectDelayedTasksQueue_DequeuedCount{ 0U };
+        uint64_t AODStaticObjectDelayedTasksQueue_DequeuedCount{ 0U };
+        uint64_t AODCustomObjectDelayedTasksQueue_DequeuedCount{ 0U };
     };
 
     class KPIContext: public ITLSSingleton<KPIContext>
@@ -154,53 +172,67 @@ namespace SKL
             AverageValuePoints[static_cast<int32_t>( KPIValuePoint )].SetValue( Value );
         }
    
-        // Summable counters
-        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerSummableCounters& GetWorkerSummableCounter( int32_t TargetWorkerIndex ) noexcept
+        // Enqueue counters
+        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerEnqueueCounters& GetWorkerEnqueueCounter( int32_t TargetWorkerIndex ) noexcept
         {
-            return GetInstance()->WorkerSummableCounters[TargetWorkerIndex];
+            return GetInstance()->WorkerEnqueueCounters[TargetWorkerIndex];
         }
 
         #if defined(SKL_KPI_QUEUE_SIZES)
+        static constexpr auto CMaxEnqueueCouneters = 256;
+
         SKL_FORCEINLINE static void Increment_DelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
         {
-            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].DelayedTasksQueueSize;
+            ( void )++GetInstance()->WorkerEnqueueCounters[WorkerIndex].DelayedTasksQueue_EnqueuedCount;
         }
         SKL_FORCEINLINE static void Increment_TasksQueueSize( int32_t WorkerIndex ) noexcept
         {
-            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].TasksQueueSize;
+            ( void )++GetInstance()->WorkerEnqueueCounters[WorkerIndex].TasksQueue_EnqueuedCount;
         }
         SKL_FORCEINLINE static void Increment_AODSharedObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
         {
-            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODSharedObjectDelayedTasksQueueSize;
+            ( void )++GetInstance()->WorkerEnqueueCounters[WorkerIndex].AODSharedObjectDelayedTasksQueue_EnqueuedCount;
         }
         SKL_FORCEINLINE static void Increment_AODStaticObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
         {
-            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODStaticObjectDelayedTasksQueueSize;
+            ( void )++GetInstance()->WorkerEnqueueCounters[WorkerIndex].AODStaticObjectDelayedTasksQueue_EnqueuedCount;
         }
         SKL_FORCEINLINE static void Increment_AODCustomObjectDelayedTasksQueueSize( int32_t WorkerIndex ) noexcept
         {
-            ( void )++GetInstance()->WorkerSummableCounters[WorkerIndex].AODCustomObjectDelayedTasksQueueSize;
+            ( void )++GetInstance()->WorkerEnqueueCounters[WorkerIndex].AODCustomObjectDelayedTasksQueue_EnqueuedCount;
         }
 
-        SKL_FORCEINLINE static void Decrement_DelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        SKL_FORCEINLINE static void Decrement_DelayedTasksQueueSize( uint64_t Count = 1 ) noexcept
         {
-            GetInstance()->WorkerSummableCounters[WorkerIndex].DelayedTasksQueueSize -= Count;
+            GetInstance()->WorkerDequeueCounters.DelayedTasksQueue_DequeuedCount += Count;
         }
-        SKL_FORCEINLINE static void Decrement_TasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        SKL_FORCEINLINE static void Decrement_TasksQueueSize( uint64_t Count = 1 ) noexcept
         {
-            GetInstance()->WorkerSummableCounters[WorkerIndex].TasksQueueSize -= Count;
+            GetInstance()->WorkerDequeueCounters.TasksQueue_DequeuedCount += Count;
         }
-        SKL_FORCEINLINE static void Decrement_AODSharedObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        SKL_FORCEINLINE static void Decrement_AODSharedObjectDelayedTasksQueueSize( uint64_t Count = 1 ) noexcept
         {
-            GetInstance()->WorkerSummableCounters[WorkerIndex].AODSharedObjectDelayedTasksQueueSize -= Count;
+            GetInstance()->WorkerDequeueCounters.AODSharedObjectDelayedTasksQueue_DequeuedCount += Count;
         }
-        SKL_FORCEINLINE static void Decrement_AODStaticObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        SKL_FORCEINLINE static void Decrement_AODStaticObjectDelayedTasksQueueSize( uint64_t Count = 1 ) noexcept
         {
-            GetInstance()->WorkerSummableCounters[WorkerIndex].AODStaticObjectDelayedTasksQueueSize -= Count;
+            GetInstance()->WorkerDequeueCounters.AODStaticObjectDelayedTasksQueue_DequeuedCount += Count;
         }
-        SKL_FORCEINLINE static void Decrement_AODCustomObjectDelayedTasksQueueSize( int32_t WorkerIndex, uint64_t Count = 1 ) noexcept
+        SKL_FORCEINLINE static void Decrement_AODCustomObjectDelayedTasksQueueSize( uint64_t Count = 1 ) noexcept
         {
-            GetInstance()->WorkerSummableCounters[WorkerIndex].AODCustomObjectDelayedTasksQueueSize -= Count;
+            GetInstance()->WorkerDequeueCounters.AODCustomObjectDelayedTasksQueue_DequeuedCount += Count;
+        }
+
+        static void ClearEnqueueAndDequeueCounters() noexcept
+        {
+            auto* Instance = GetInstance();
+
+            for( auto i = 0; i < CMaxEnqueueCouneters; ++i )
+            {
+                Instance->WorkerEnqueueCounters[i].Reset();
+            }
+
+            Instance->WorkerDequeueCounters.Reset();
         }
         #endif
     private:
@@ -209,7 +241,8 @@ namespace SKL
         uint64_t                   MemoryAllocationsCounters[static_cast<int32_t>( EKPIValuePoints::Max )];
 
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPI_WorkerSummableCounters WorkerSummableCounters[256];
+        KPI_WorkerEnqueueCounters WorkerEnqueueCounters[CMaxEnqueueCouneters]{};
+        KPI_WorkerDequeueCounters WorkerDequeueCounters{};
         #endif
     };
 }

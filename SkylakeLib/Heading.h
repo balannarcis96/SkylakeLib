@@ -106,6 +106,12 @@ namespace SKL
         {
             SKL_ASSERT( nullptr != Name );
 
+            if( wcslen( Name ) + 1 > static_cast<size_t>( CWorkerGroupNameMaxChars ) )
+            {
+                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Name to long! Max:%u %ws!", CWorkerGroupNameMaxChars - 1, Name );
+                return false;            
+            }
+
             if ( 0U == Id )
             {
                 SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %hu!", Name, Id );

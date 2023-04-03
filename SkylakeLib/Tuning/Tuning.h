@@ -109,6 +109,7 @@ namespace SKL
         Worker
       ------------------------------------------------------------*/
     constexpr uint32_t CMaxAsyncRequestsToDequeuePerTick = 32U;
+    constexpr uint32_t CWorkerGroupNameMaxChars          = 64U;
 
     /*------------------------------------------------------------
         Measurements

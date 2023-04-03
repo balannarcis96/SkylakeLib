@@ -921,7 +921,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_TasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        KPIContext::Decrement_TasksQueueSize( RemovedTasks );
         #endif
     }
     
@@ -939,7 +939,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_TasksQueueSize( Worker.GetIndex(), Count );
+        KPIContext::Decrement_TasksQueueSize( Count );
         #endif
     }
 
@@ -1047,7 +1047,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_AODCustomObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        KPIContext::Decrement_AODCustomObjectDelayedTasksQueueSize( RemovedTasks );
         RemovedTasks = 0U;
         #endif
 
@@ -1074,7 +1074,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_AODSharedObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        KPIContext::Decrement_AODSharedObjectDelayedTasksQueueSize( RemovedTasks );
         RemovedTasks = 0U;
         #endif
 
@@ -1101,7 +1101,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_AODStaticObjectDelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        KPIContext::Decrement_AODStaticObjectDelayedTasksQueueSize( RemovedTasks );
         #endif
 
         HandleAODDelayedTasks_Local( Worker );
@@ -1184,7 +1184,7 @@ namespace SKL
         }
         
         #if defined(SKL_KPI_QUEUE_SIZES)
-        KPIContext::Decrement_DelayedTasksQueueSize( Worker.GetIndex(), RemovedTasks );
+        KPIContext::Decrement_DelayedTasksQueueSize( RemovedTasks );
         #endif
 
         HandleTimerTasks_Local();
