@@ -195,16 +195,16 @@ namespace SKL
     SKL_NODISCARD uint64_t GetTimeStampCounter() noexcept;
     
     //! Get performance counter
-    SKL_NODISCARD int64_t GetPerformanceCounter() noexcept;
+    SKL_NODISCARD uint64_t GetPerformanceCounter() noexcept;
 
     //! Get CPU frequency
-    SKL_NODISCARD int64_t GetPerformanceFrequency() noexcept;
+    SKL_NODISCARD uint64_t GetPerformanceFrequency() noexcept;
     
     //! Get performance counter
-    SKL_NODISCARD void LoadPerformanceCounter( int64_t& Out ) noexcept;
+    SKL_NODISCARD void LoadPerformanceCounter( uint64_t& Out ) noexcept;
 
     //! Get CPU frequency
-    SKL_NODISCARD void LoadPerformanceFrequency( int64_t& Out ) noexcept;
+    SKL_NODISCARD void LoadPerformanceFrequency( uint64_t& Out ) noexcept;
 }
 
 #include "TLSValue.h"

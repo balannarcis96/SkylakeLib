@@ -15,6 +15,11 @@ namespace SKL
         : WorkerIndex{ GWorkerIndexPool++ }
     { }
 
+    Worker::Worker( WorkerGroup* Group ) noexcept 
+        : WorkerIndex{ GWorkerIndexPool++ }
+        , Group{ Group } 
+    { }
+
     //! Start the worker
     RStatus Worker::Start() noexcept   
     {

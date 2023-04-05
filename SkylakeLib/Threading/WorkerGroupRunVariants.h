@@ -134,7 +134,8 @@ namespace SKL
                 }
                 
                 #if defined(SKL_KPI_WORKER_TICK)
-                InWorker.SetAverateTickTimeUsafe( TickTiming.GetElapsedSeconds() );
+                const auto TickElapsedTime = TickTiming.GetElapsedSeconds();
+                InWorker.SetAverateTickTimeUsafe( TickElapsedTime );
                 #endif
             }
             

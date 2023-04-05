@@ -327,10 +327,10 @@ namespace SKL
         SKL_FORCEINLINE SKL_NODISCARD Super const& GetSuper() const noexcept { return *reinterpret_cast<const Super*>( this ); }
         
         //! Get the stream writer
-        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectWriter& GetWriter() noexcept { return IByteStreamObjectWriter::FromStreamBaseRef( GetStream() ) };
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectWriter& GetWriter() noexcept { return IByteStreamObjectWriter::FromStreamBaseRef( GetStream() ); }
         
         //! Get the stream reader
-        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectReader& GetReader() noexcept { return IByteStreamObjectReader::FromStreamBaseRef( GetStream() ) };
+        SKL_FORCEINLINE SKL_NODISCARD IByteStreamObjectReader& GetReader() noexcept { return IByteStreamObjectReader::FromStreamBaseRef( GetStream() ); }
 
         static_assert( CPacketMaximumSize == GetTotalBufferSize() );
     };

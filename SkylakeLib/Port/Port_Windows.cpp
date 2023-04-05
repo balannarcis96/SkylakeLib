@@ -1156,26 +1156,26 @@ namespace SKL
         return __rdtsc();
     }
     
-    int64_t GetPerformanceCounter() noexcept
+    uint64_t GetPerformanceCounter() noexcept
     {
-        LARGE_INTEGER LI;
-        ( void )QueryPerformanceCounter( &LI );
-        return LI.QuadPart;
+        uint64_t Out;
+        ( void )QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
+        return Out;
     }
 
-    int64_t GetPerformanceFrequency() noexcept
+    uint64_t GetPerformanceFrequency() noexcept
     {
-        LARGE_INTEGER PF;
-        ( void )QueryPerformanceFrequency( &PF );
-        return PF.QuadPart;
+        uint64_t Out;
+        ( void )QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
+        return Out;
     }
     
-    void LoadPerformanceCounter( int64_t& Out ) noexcept
+    void LoadPerformanceCounter( uint64_t& Out ) noexcept
     {
         ( void )QueryPerformanceCounter( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
     }
 
-    void LoadPerformanceFrequency( int64_t& Out ) noexcept
+    void LoadPerformanceFrequency( uint64_t& Out ) noexcept
     {
         ( void )QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &Out ) );
     }

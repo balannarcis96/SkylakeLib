@@ -19,37 +19,32 @@ namespace SKL
 
         SKL_FORCEINLINE void Update() noexcept
         {
-            int64_t FQ;
+            uint64_t FQ;
             LoadPerformanceFrequency( FQ );
-            Frequency = static_cast<double>( FQ );
+            Frequency = 1.0 / static_cast<double>( FQ );
         }
 
         SKL_FORCEINLINE void Begin() noexcept
         {
-            int64_t PC;
-            LoadPerformanceCounter( PC );
-            Start = static_cast<double>( PC );
+            LoadPerformanceCounter( Start );
         }
         
         SKL_FORCEINLINE void BeginUpdated() noexcept
         {
             Update();
-
-            int64_t PC;
-            LoadPerformanceCounter( PC );
-            Start = static_cast<double>( PC );
+            LoadPerformanceCounter( Start );
         }
 
         SKL_FORCEINLINE SKL_NODISCARD double GetElapsedSeconds() const noexcept
         {
-            int64_t Now;
+            uint64_t Now;
             LoadPerformanceCounter( Now );
-            return static_cast<double>( ( static_cast<double>( Now ) - Start ) / Frequency );
+            return static_cast<double>( Now - Start ) * Frequency;
         }
 
     private:
         double Frequency;
-        double Start;
+        uint64_t Start;
     };
 
     template<bool bAtomic>
@@ -90,6 +85,15 @@ namespace SKL
             AODSharedObjectDelayedTasksQueue_EnqueuedCount = 0U;
             AODStaticObjectDelayedTasksQueue_EnqueuedCount = 0U;
             AODCustomObjectDelayedTasksQueue_EnqueuedCount = 0U;
+        }
+
+        void operator+=( const KPI_WorkerEnqueueCounters& Other ) noexcept
+        {
+            TasksQueue_EnqueuedCount                       += Other.TasksQueue_EnqueuedCount;
+            DelayedTasksQueue_EnqueuedCount                += Other.DelayedTasksQueue_EnqueuedCount;
+            AODSharedObjectDelayedTasksQueue_EnqueuedCount += Other.AODSharedObjectDelayedTasksQueue_EnqueuedCount;
+            AODStaticObjectDelayedTasksQueue_EnqueuedCount += Other.AODStaticObjectDelayedTasksQueue_EnqueuedCount;
+            AODCustomObjectDelayedTasksQueue_EnqueuedCount += Other.AODCustomObjectDelayedTasksQueue_EnqueuedCount;
         }
 
         uint64_t TasksQueue_EnqueuedCount{ 0U };
@@ -173,9 +177,15 @@ namespace SKL
         }
    
         // Enqueue counters
-        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerEnqueueCounters& GetWorkerEnqueueCounter( int32_t TargetWorkerIndex ) noexcept
+        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerEnqueueCounters& Static_GetWorkerEnqueueCounter( int32_t TargetWorkerIndex ) noexcept
         {
             return GetInstance()->WorkerEnqueueCounters[TargetWorkerIndex];
+        }
+        
+        // Dequeue counters
+        SKL_FORCEINLINE SKL_NODISCARD static KPI_WorkerDequeueCounters& Static_GetWorkerDequeueCounter() noexcept
+        {
+            return GetInstance()->WorkerDequeueCounters;
         }
 
         #if defined(SKL_KPI_QUEUE_SIZES)

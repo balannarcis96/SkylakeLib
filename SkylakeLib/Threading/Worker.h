@@ -15,7 +15,7 @@ namespace SKL
         using RunTask = ASD::UniqueFunctorWrapper<32, void( ASD_CDECL *)( Worker&, WorkerGroup& ) noexcept>;
 
         Worker() noexcept;
-        Worker( WorkerGroup* Group ) noexcept : Group{ Group } {}
+        Worker( WorkerGroup* Group ) noexcept;
         ~Worker() noexcept
         {
             SKL_ASSERT( false == GetIsRunning() );
@@ -110,13 +110,13 @@ namespace SKL
     
         //! Get the global unique index of this worker
         SKL_FORCEINLINE SKL_NODISCARD int32_t GetIndex() const noexcept { return WorkerIndex; }
-
+        
     #if defined(SKL_KPI_WORKER_TICK)
         //! Get the average tick time in seconds of this worker
         //! \remarks Valid value only if this is an active worker
-        SKL_NODISCARD double GetAverateTickTimeUsafe() const noexcept { return TickAverageTime.GetValue(); }
+        SKL_NODISCARD double GetAverateTickTimeUsafe() const noexcept { return TickAverageTime; }
     protected:
-        SKL_NODISCARD void SetAverateTickTimeUsafe( double Value ) noexcept { TickAverageTime.SetValue( Value ); }
+        SKL_NODISCARD void SetAverateTickTimeUsafe( double Value ) noexcept { TickAverageTime = Value; }
     #endif
 
     private:
@@ -139,7 +139,7 @@ namespace SKL
         std::relaxed_value<struct ServerInstanceTLSContext*>  ServerInstanceTLSContext   {};          //!< Cached ServerInstanceTLSContext instance for this worker
 
         #if defined(SKL_KPI_WORKER_TICK)
-        SKL_CACHE_ALIGNED KPIValueAveragePoint<false> TickAverageTime{}; // Average tick time KPI
+        SKL_CACHE_ALIGNED double TickAverageTime{ 0.0 }; // Average tick time KPI
         #endif
 
         friend WorkerGroup;
