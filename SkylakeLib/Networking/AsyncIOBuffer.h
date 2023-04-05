@@ -507,7 +507,17 @@ namespace SKL
             Stream.Buffer.Length = Base::GetPacketBufferSize();
             Stream.Position      = 0U;
         }
+        
+        //! Setup the stream object for packet writing
+        SKL_FORCEINLINE void EndPacketWritingAndPrepareForSending() noexcept
+        {
+            StreamBase& Stream{ this->GetStream() };
 
+            this->GetPacketHeader().Size = static_cast<TPacketSize>( Stream.Position );
+            Stream.Buffer.Buffer         = this->GetPacketBuffer();
+            Stream.Buffer.Length         = Stream.Position;
+        }
+        
         //! Write into the underlying buffer through the current stream 
         //! \param InSourceBuffer Source buffer ptr
         //! \param WriteAmount No of bytes to copy
