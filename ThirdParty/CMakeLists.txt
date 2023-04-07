@@ -7,3 +7,5 @@ endif()
 if(SKL_BUILD_DB)
     add_subdirectory("mysqlclient")
 endif()
+
+add_subdirectory("fmt")

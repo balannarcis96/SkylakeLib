@@ -12,6 +12,9 @@
 
 //#define SKL_MEM_MANAGER_DECAY_TO_GLOBAL
 
+//! Logger
+#include "Utils/Logger.h"
+
 //! Std
 #include "Std/Std.h"
 

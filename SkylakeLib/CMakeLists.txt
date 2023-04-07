@@ -205,4 +205,7 @@ function(Create_SkylakeLibTarget target_name)
 		target_compile_definitions(${target_name} PUBLIC SKL_MAGIC_ENUM)
     endif()
 
+    # fmt
+	target_link_libraries(${target_name} PUBLIC fmt::fmt)
+
 endfunction(Create_SkylakeLibTarget)
