@@ -54,6 +54,15 @@ namespace SKL
         , Count_All = Count_PoolAllocations | Count_OsAllocations | Count_AllDeallocations | Count_OsDeallocations
         , All       = Time_All | Count_All
     };
+    
+    /*------------------------------------------------------------
+        Logging
+      ------------------------------------------------------------*/
+#if defined(SKL_USE_SERIALIZED_LOGGER)
+    constexpr bool CSkylakeUserSerializedLogger = true;
+#else
+    constexpr bool CSkylakeUserSerializedLogger = false;
+#endif
 
     /*------------------------------------------------------------
         Thread local MemoryManager

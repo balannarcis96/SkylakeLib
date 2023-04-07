@@ -11,8 +11,9 @@ namespace SKL
 {
     using SkylakeLibInitPerThread = TLSValue<bool, 55114>;
 
-    std::relaxed_value<FILE*> GLogOutput = stdout; //!< Defaulted to stdout
-    std::relaxed_value<BOOL>  GIsInit    = FALSE;  //!< Is the SkylakeLib init
+    std::relaxed_value<FILE*>                   GLogOutput = stdout; //!< Defaulted to stdout
+    std::relaxed_value<BOOL>                    GIsInit    = FALSE;  //!< Is the SkylakeLib init
+    SkylakeLogger<CSkylakeUserSerializedLogger> GLogger;             //!< Logger user by the SkylakeLib
 
     static void ValidatePlatformRuntime() noexcept
     {
@@ -38,8 +39,21 @@ namespace SKL
         if( nullptr != InLogOutput )
         {
             // set the log output file handle
-            GLogOutput.exchange( InLogOutput );
+            ( void )GLogOutput.exchange( InLogOutput );
         }
+
+#if defined(SKL_USE_SERIALIZED_LOGGER)
+        if( false == GLogger.HasHandler() )
+        {
+            // Setup default serialized handler
+            GLogger.SetLogHandler( []( BufferStream& /*InStream*/ ) noexcept -> void
+            {
+                ( void )::printf( "NO HANDLER WAS SET FOR THE LOGGER!\nSee [%s]:[%s:%d]!\n", __FILE__, SKL_LOGGER_FUNCTION, __LINE__ );
+            } );
+        }
+#else
+        GLogger.SetOutput( GLogOutput.load() );
+#endif
 
         auto Result = AsyncIO::InitializeSystem();
         if( RSuccess != Result ) SKL_UNLIKELY
@@ -54,6 +68,8 @@ namespace SKL
             SKLL_ERR( "Failed to initialize the SkylakeLibrary for the main thread!" );
             return Result;
         }
+        
+        GTRACE_FATAL( "We haved std out logger baby! %d %ws", 151515, L"GAGAGAW!" );
 
         GIsInit.exchange( true );
         return RSuccess;

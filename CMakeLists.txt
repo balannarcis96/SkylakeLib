@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.8)    
-project ("SkylakeLib_repo" VERSION 1.0.0)
+project ("SkylakeLib_repo" VERSION 1.0.1)
 
 set(SKL_CACHE_LINE_MEM_MANAGER_DESC "Allign all memory blocks inside the MemoryManager to the cache line, removing any possiblity of false sharing between memory blocks in the MemoryManager at the cost of more memory consumtion" )
 set(SKL_USE_PRECISE_SLEEP_DESC "Use very precise sleep function for the active, non-task-handling workers")
@@ -31,6 +31,7 @@ option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"    
 option(SKL_ADD_MAGIC_ENUM		         "Include the magic_enum lib"         		 ON)
 option(SKL_KPI_TLS_MEM_ALLOC_TIME		 "TLS Memory Allocations Time"               ON)
 option(SKL_KPI_TLS_MEM_ALLOC_CNT		 "TLS Memory Allocations Counters"           ON)
+option(SKL_USE_SERIALIZED_LOGGER		 "TLS Memory Allocations Counters"          OFF)
 
 # KPIs
 option(SKL_KPI_QUEUE_SIZES		         "KPI - Sample Queue Sizes API"	     ON)

@@ -12,9 +12,6 @@
 
 //#define SKL_MEM_MANAGER_DECAY_TO_GLOBAL
 
-//! Logger
-#include "Utils/Logger.h"
-
 //! Std
 #include "Std/Std.h"
 
@@ -50,6 +47,9 @@
 
 //! String Stream
 #include "Utils/StringUtils.h"
+
+//! Logger
+#include "Utils/Logger.h"
 
 //! Memory abstractions
 #include "Memory/Memory.h"

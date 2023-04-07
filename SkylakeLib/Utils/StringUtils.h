@@ -41,6 +41,8 @@ namespace SKL
         //! Convert get the working buffer
         SKL_FORCEINLINE SKL_NODISCARD static BufferStream& GetBuffer() noexcept { return GetInstance()->WorkBenchBuffer; }
 
+        //! Has the current thread initialized the StringUtils (StringUtils::Create())
+        SKL_FORCEINLINE SKL_NODISCARD static bool IsValidForCurrentThread() noexcept { return nullptr != GetInstance(); }
     private:
         BufferStream WorkBenchBuffer;
 

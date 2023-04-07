@@ -207,5 +207,12 @@ function(Create_SkylakeLibTarget target_name)
 
     # fmt
 	target_link_libraries(${target_name} PUBLIC fmt::fmt)
+	
+	# Logger
+	if(SKL_USE_SERIALIZED_LOGGER)
+		target_compile_definitions(${target_name} PUBLIC SKL_USE_SERIALIZED_LOGGER)
+	else()
+		# N/A
+	endif()
 
 endfunction(Create_SkylakeLibTarget)
