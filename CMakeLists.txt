@@ -48,7 +48,7 @@ set(SKL_KPI_MEM_ALLOC_CNT All CACHE STRING "Global Memory Allocations Counter")
 set_property(CACHE SKL_KPI_MEM_ALLOC_CNT PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_CNT_OPTIONS})
 
 # Override this to create as many skylake lib targets as you need
-set(SKL_LIB_TARGETS "SkylakeLib" CACHE STRING "Skyalke lib targets to create")
+set(SKL_LIB_TARGETS "Dev;Testing" CACHE STRING "Skyalke lib targets to create")
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -71,7 +71,7 @@ set(SKL_USE_EIS AVX2 CACHE STRING "What EIS(Enhanced Instruction Set) to use")
 set_property(CACHE SKL_USE_EIS PROPERTY STRINGS ${SKL_USE_EIS_OPTIONS})
 
 #SKL_LOG_LEVEL
-set(SKL_LOG_LEVEL_OPTIONS DEBUG INF WRN ERR VERBOSE)
+set(SKL_LOG_LEVEL_OPTIONS DEBUG INFO WARNING ERROR FATAL MUTE)
 set(SKL_LIB_LOG_LEVEL DEBUG CACHE STRING "SkyaleLib minimum log level to process")
 set_property(CACHE SKL_LIB_LOG_LEVEL PROPERTY STRINGS ${SKL_LOG_LEVEL_OPTIONS})
 
@@ -201,9 +201,17 @@ if(SKL_DISABLE_EXCEPTIONS)
     endif()
 endif()
 
+function(Create_SkylakeLibTargets target_postfix)
+    set(STANDALONE_LIB_NAME "SkylakeLibStandalone_${target_postfix}")
+    set(LIB_NAME "SkylakeLib_${target_postfix}")
+
+    Create_SkylakeStandaloneLibTarget("${STANDALONE_LIB_NAME}")
+    Create_SkylakeLibTarget("${LIB_NAME}" "${STANDALONE_LIB_NAME}")
+endfunction(Create_SkylakeLibTargets)
+
 ##### Create all SkyalekLib Targets #####
 foreach(target_name ${SKL_LIB_TARGETS})
-    Create_SkylakeLibTarget(${target_name})
+    Create_SkylakeLibTargets(${target_name})
 endforeach()
 
 ##### Tests #####

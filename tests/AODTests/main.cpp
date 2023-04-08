@@ -184,11 +184,11 @@ namespace AODTests
 
             MyObject() noexcept : SKL::AOD::SharedObject{ this } 
             {
-                SKLL_TRACE();
+                GTRACE();
             }
             ~MyObject() noexcept
             {
-                SKLL_TRACE();
+                GTRACE();
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
             }
         };
@@ -197,12 +197,12 @@ namespace AODTests
             : ::testing::Test(),
               TestApplication( L"AOD_TESTS_APP" ) 
         {
-            SKLL_TRACE();
+            GTRACE();
         }      
 
         ~AODTestsFixture4() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
         }
 
         void SetUp() override
@@ -217,7 +217,7 @@ namespace AODTests
 
         bool OnAllWorkersStarted( SKL::WorkerGroup& InGroup ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
 
             if ( false == TestApplication::OnAllWorkersStarted( InGroup ) )
             {
@@ -235,7 +235,7 @@ namespace AODTests
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObj );
 
-                        SKLL_TRACE_MSG_FMT( "Before Counter:%d", Self.Counter );
+                        GTRACE_DEBUG( "Before Counter:%d", Self.Counter );
 
                         auto incResult{ a.increment() };
 
@@ -244,7 +244,7 @@ namespace AODTests
                             const auto ThreadId { std::this_thread::get_id() };
                             static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
                             const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
-                            SKLL_ERR_FMT( "ThreadId: %u", tId );
+                            printf( "ThreadId: %u\n", tId );
                         }
 
                         SKL_ASSERT( 0 == incResult );
@@ -265,7 +265,7 @@ namespace AODTests
                             InGroup.GetServerInstance()->SignalToStop( true );
                         }
 
-                        SKLL_TRACE_MSG_FMT( "After Counter:%d", Self.Counter );
+                        GTRACE_DEBUG( "After Counter:%d", Self.Counter );
 
                         auto decResult{ a.decrement() };
                         
@@ -274,7 +274,7 @@ namespace AODTests
                             const auto ThreadId { std::this_thread::get_id() };
                             static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
                             const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
-                            SKLL_ERR_FMT( "Dec-ThreadId: %u", tId );
+                            printf( "Dec-ThreadId: %u\n", tId );
                         }
 
                         SKL_ASSERT( 1 == decResult );
@@ -292,7 +292,7 @@ namespace AODTests
 
         bool OnServerStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
 
             if ( false == TestApplication::OnServerStarted() )
             {
@@ -310,7 +310,7 @@ namespace AODTests
                     {
                         auto& Self = reinterpret_cast<MyObject&>( InObj );
 
-                        SKLL_TRACE_MSG_FMT( "Before Counter:%d", Self.Counter );
+                        GLOG_INFO( "Before Counter:%d", Self.Counter );
 
                         auto incResult{ a.increment() };
 
@@ -319,7 +319,7 @@ namespace AODTests
                             const auto ThreadId { std::this_thread::get_id() };
                             static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
                             const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
-                            SKLL_ERR_FMT( "ThreadId: %u", tId );
+                            printf( "ThreadId: %u\n", tId );
                         }
 
                         SKL_ASSERT( 0 == incResult );
@@ -340,7 +340,7 @@ namespace AODTests
                             SignalToStop( true );
                         }
 
-                        SKLL_TRACE_MSG_FMT( "After Counter:%d", Self.Counter );
+                        GLOG_DEBUG( "After Counter:%d", Self.Counter );
 
                         auto decResult{ a.decrement() };
                         
@@ -349,7 +349,7 @@ namespace AODTests
                             const auto ThreadId { std::this_thread::get_id() };
                             static_assert( sizeof( ThreadId ) >= sizeof( uint32_t ) );
                             const auto tId{ *reinterpret_cast<const uint32_t*>( &ThreadId ) };
-                            SKLL_ERR_FMT( "Dec-ThreadId: %u", tId );
+                            printf( "Dec-ThreadId: %u\n", tId );
                         }
 
                         SKL_ASSERT( 1 == decResult );
@@ -382,12 +382,12 @@ namespace AODTests
 
             MyObject() noexcept : SKL::AOD::CustomObject{} 
             {
-                SKLL_TRACE();
+                GTRACE();
             }
             ~MyObject() noexcept
             {
-                SKLL_TRACE();
-                SKLL_INF_FMT( "AODTestsFixture4::MyObject::~MyObject() Counter:%d", Counter );
+                GTRACE();
+                GLOG_INFO( "AODTestsFixture4::MyObject::~MyObject() Counter:%d", Counter );
                 SKL_ASSERT_ALLWAYS( 0 == Counter );
             }
         };
@@ -597,7 +597,7 @@ namespace AODTests
                 ASSERT_TRUE( SKL::RSuccess == Ptr->DoAsyncAfter( 1000, []( SKL::AOD::SharedObject& InObject ) noexcept -> void 
                 {
                     auto& Self = reinterpret_cast<MyObject&>( InObject );
-                    SKLL_INF( "################# stop #################" );
+                    puts( "################# stop #################" );
                     Self.bShouldStop.exchange( TRUE );
                 } ) );
             }
@@ -666,7 +666,7 @@ namespace AODTests
                         auto& Self = reinterpret_cast<MyObject&>( InObject );
                         if( 1 == Self.Counter.decrement() )
                         {
-                            SKLL_INF( "############# LAST DECREMENT #############" );
+                            puts( "############# LAST DECREMENT #############" );
                         }
                     } ) );
                 }
@@ -723,7 +723,7 @@ namespace AODTests
 
                 SKL::DeferTask( [ &InGroup ]( SKL::ITask* /*Self*/ ) noexcept -> void 
                 {
-                    SKLL_INF( "FROM TASK" );
+                    puts( "FROM TASK" );
                     InGroup.GetServerInstance()->SignalToStop( true );
                 } );
             }

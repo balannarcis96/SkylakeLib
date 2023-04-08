@@ -68,10 +68,10 @@ namespace SKL::DB
                 , 0 ) };
         if( 0 != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement->Statement ) ) };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
             } );
         }
 
@@ -87,10 +87,10 @@ namespace SKL::DB
     {
         if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Output ) ) ) SKL_UNLIKELY
         {
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
             } );
 
             return false;
@@ -106,10 +106,10 @@ namespace SKL::DB
         ::MYSQL_STMT* NewStatement{ ::mysql_stmt_init( reinterpret_cast<::MYSQL*>( &InConnection->GetMysqlObject() ) ) };
         if( nullptr == NewStatement ) SKL_UNLIKELY
         {
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
             } );
   
             return false;
@@ -130,10 +130,10 @@ namespace SKL::DB
         const int32_t Result{ ::mysql_stmt_prepare( reinterpret_cast<::MYSQL_STMT*>( Statement ), Query.get(), static_cast<unsigned long>( QueryStringLength ) ) };
         if( 0 != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!\n\tQuery: %s", MysqlErrorString, Query.get() );
+                GLOG_DEBUG( "MysqlError: %s!\n\tQuery: %s", MysqlErrorString, Query.get() );
             } );
 
             return false;
@@ -188,10 +188,10 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_param( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) ) SKL_UNLIKELY
             {
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
 
                 bSuccess = false;
@@ -202,10 +202,10 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Output ) ) )  SKL_UNLIKELY
             {
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
 
                 bSuccess = false;
@@ -233,30 +233,30 @@ DBStatement_Execute_Start:
                             }
                             else
                             {
-                                SKLL_ERR_BLOCK(
+                                SKLL_DEBUG_BLOCK(
                                 {
-                                    SKLL_TRACE_ERR_FMT( "MysqlError: CONNECTION LOST! RE-ACQUIRE HANDLER FAILED!" );
+                                    GLOG_DEBUG( "MysqlError: CONNECTION LOST! RE-ACQUIRE HANDLER FAILED!" );
                                 } );          
                             }
                         }
                         else
                         {
-                            SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                            GLOG_DEBUG( "Failed to reaquire mysql connection" );
                         }
                     }
                     else
                     {
-                        SKLL_ERR_BLOCK(
+                        SKLL_DEBUG_BLOCK(
                         {
-                            SKLL_TRACE_ERR_FMT( "MysqlError: CONNECTION LOST! NO RE-ACQUIRE HANDLER PRESENT!" );
+                            GLOG_DEBUG( "MysqlError: CONNECTION LOST! NO RE-ACQUIRE HANDLER PRESENT!" );
                         } );      
                     }
                 }
 
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
             }
             else
@@ -264,10 +264,10 @@ DBStatement_Execute_Start:
                 Result = ::mysql_stmt_store_result( reinterpret_cast<::MYSQL_STMT*>( Statement ) ); 
                 if( 0 != Result ) SKL_UNLIKELY
                 {
-                    SKLL_ERR_BLOCK(
+                    SKLL_DEBUG_BLOCK(
                     {
                         const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                        GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                     } );
                 }
                 else
@@ -311,10 +311,10 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_param( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) ) SKL_UNLIKELY
             {
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
 
                 bSuccess = false;
@@ -325,10 +325,10 @@ DBStatement_Execute_Start:
         {
             if( true == ::mysql_stmt_bind_result( reinterpret_cast<::MYSQL_STMT*>( Statement ), reinterpret_cast<::MYSQL_BIND*>( Input ) ) )  SKL_UNLIKELY
             {
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
 
                 bSuccess = false;
@@ -352,14 +352,14 @@ DBStatement_ExecuteUpdate_Start:
                     }
                     else
                     {
-                        SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                        GLOG_DEBUG( "Failed to reaquire mysql connection" );
                     }
                 }
 
-                SKLL_ERR_BLOCK(
+                SKLL_DEBUG_BLOCK(
                 {
                     const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<MYSQL_STMT*>( Statement ) ) };
-                    SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                    GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                 } );
             }
             else
@@ -384,10 +384,10 @@ DBStatement_ExecuteUpdate_Start:
             {
                 if( true == ::mysql_stmt_reset( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) ) SKL_UNLIKELY
                 {
-                    SKLL_ERR_BLOCK(
+                    SKLL_DEBUG_BLOCK(
                     {
                         const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                        GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                     } );
 
                     return false;
@@ -397,10 +397,10 @@ DBStatement_ExecuteUpdate_Start:
             {
                if( true == ::mysql_stmt_free_result( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) ) SKL_UNLIKELY
                {
-                    SKLL_ERR_BLOCK(
+                    SKLL_DEBUG_BLOCK(
                     {
                         const char* MysqlErrorString{ ::mysql_stmt_error( reinterpret_cast<::MYSQL_STMT*>( Statement ) ) };
-                        SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                        GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
                     } );
 
                     return false;
@@ -415,19 +415,19 @@ DBStatement_ExecuteUpdate_Start:
     {
         if( 0 == GetQueryLength() )
         {
-            SKLL_TRACE_MSG( "No query string was sent! Set the query string before calling this method!" );
+            GLOG_DEBUG( "No query string was sent! Set the query string before calling this method!" );
             return false;
         }
 
         if( false == Initialize( InConnection ) )
         {
-            SKLL_TRACE_ERR_FMT( "Failed to Initialize()!" );
+            GLOG_DEBUG( "Failed to Initialize()!" );
             return false;
         }
         
         if( false == Prepare() )
         {
-            SKLL_TRACE_ERR_FMT( "Failed to Initialize()!" );
+            GLOG_DEBUG( "Failed to Initialize()!" );
             return false;
         }
 

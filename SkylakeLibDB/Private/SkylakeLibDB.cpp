@@ -31,14 +31,14 @@ namespace SKL::DB
 
     DBLibGuard::DBLibGuard() noexcept
     {
-        //SKLL_VER( "[DBLibGuard] MYSQL library initializing!" );
+        //GLOG_DEBUG( "[DBLibGuard] MYSQL library initializing!" );
         bIsValid = 0 == ::mysql_library_init( 0, nullptr, nullptr );
     }
     DBLibGuard::~DBLibGuard() noexcept
     {
         if( true == bIsValid )
         {
-            //SKLL_VER( "[DBLibGuard] MYSQL library terminating!" );
+            //GLOG_DEBUG( "[DBLibGuard] MYSQL library terminating!" );
             ::mysql_library_end();
             bIsValid = false;
         }
@@ -86,14 +86,14 @@ DBConnection_Execute_Start:
                 }
                 else
                 {
-                    SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                    GLOG_DEBUG( "Failed to reaquire mysql connection" );
                 }
             }
 
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ GetLastMysqlError() };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                GLOG_ERROR( "MysqlError: %s!", MysqlErrorString );
             } );
   
             return -1;
@@ -103,7 +103,7 @@ DBConnection_Execute_Start:
         ::MYSQL_RES* Result{ ::mysql_store_result( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
         if ( nullptr != Result ) SKL_UNLIKELY
         {
-            SKLL_TRACE_MSG( "Do not use this function for SELECT data queries!" );
+            GTRACE_DEBUG( "Do not use this function for SELECT data queries!" );
             const auto Temp{ ::mysql_num_rows( Result ) };
             SKL_ASSERT( Temp <= INT64_MAX );
             NoOfRowsAffected = static_cast<int64_t>( Temp );
@@ -120,7 +120,7 @@ DBConnection_Execute_Start:
             }
             else
             {
-                SKLL_TRACE_MSG_FMT( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
+                GTRACE_DEBUG( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
                 return -1;
             }
         }
@@ -144,14 +144,14 @@ DBConnection_Execute_Start:
                 }
                 else
                 {
-                    SKLL_TRACE_MSG( "Failed to reaquire mysql connection" );
+                    GLOG_DEBUG( "Failed to reaquire mysql connection" );
                 }
             }
 
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ GetLastMysqlError() };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString );
+                GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString );
             } );
   
             return -1;
@@ -161,7 +161,7 @@ DBConnection_Execute_Start:
         ::MYSQL_RES* Result{ ::mysql_store_result( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
         if ( nullptr != Result ) SKL_UNLIKELY
         {
-            SKLL_TRACE_MSG( "Do not use this function for SELECT data queries!" );
+            GLOG_DEBUG( "Do not use this function for SELECT data queries!" );
             const auto Temp{ ::mysql_num_rows( Result ) };
             SKL_ASSERT( Temp <= INT64_MAX );
             NoOfRowsAffected = static_cast<int64_t>( Temp );
@@ -178,7 +178,7 @@ DBConnection_Execute_Start:
             }
             else
             {
-                SKLL_TRACE_MSG_FMT( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
+                GLOG_DEBUG( "mysql_store_result() should have returned data! MysqlErr:%s", GetLastMysqlError() );
                 return -1;
             }
         }
@@ -190,10 +190,10 @@ DBConnection_Execute_Start:
         const auto PingResult{ ::mysql_ping( reinterpret_cast<::MYSQL*>( &Mysql ) ) };
         if( 0 != PingResult ) SKL_LIKELY
         {
-            SKLL_ERR_BLOCK(
+            SKLL_DEBUG_BLOCK(
             {
                 const char* MysqlErrorString{ GetLastMysqlError() };
-                SKLL_TRACE_ERR_FMT( "MysqlError: %s!", MysqlErrorString ); 
+                GLOG_DEBUG( "MysqlError: %s!", MysqlErrorString ); 
             } );
         }
 
@@ -228,13 +228,13 @@ DBConnection_Execute_Start:
     {
         if( true == bIsOpen )
         {
-            SKLL_VER( "[DBConnection]::OpenConnection() Already openned!" );
+            GLOG_DEBUG( "[DBConnection]::OpenConnection() Already openned!" );
             return true;
         }
 
         if( nullptr == ::mysql_init( reinterpret_cast<MYSQL*>( &Mysql ) ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::OpenConnection() Failed to init the mysql object erro[%s]!", GetLastMysqlError() );
+            GLOG_ERROR( "[DBConnection]::OpenConnection() Failed to init the mysql object erro[%s]!", GetLastMysqlError() );
             return false;
         }
 
@@ -250,7 +250,7 @@ DBConnection_Execute_Start:
             , Flags
         ) }; nullptr == Result)
         {
-            SKLL_ERR_FMT( "[DBConnection]::OpenConnection() Failed with error [%s]!", mysql_error( reinterpret_cast<MYSQL*>( &Mysql ) ) );
+            GLOG_ERROR( "[DBConnection]::OpenConnection() Failed with error [%s]!", mysql_error( reinterpret_cast<MYSQL*>( &Mysql ) ) );
             return false;
         }
 
@@ -263,7 +263,7 @@ DBConnection_Execute_Start:
 
         bIsOpen = true;
 
-        SKLL_VER_FMT( "[DBConnection]::OpenConnection() Successfully openned connection to DB[%s]!", Settings.Database.c_str() );
+        GLOG_INFO( "[DBConnection]::OpenConnection() Successfully openned connection to DB[%s]!", Settings.Database.c_str() );
 
         return true;
     }
@@ -271,7 +271,7 @@ DBConnection_Execute_Start:
     {
         if( bIsOpen )
         {
-            SKLL_VER_FMT( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
+            GLOG_INFO( "[DBConnection]::CloseConnection() Closed connection to DB[%s]!", Settings.Database.c_str() );
         }
 
         ::mysql_close( reinterpret_cast<MYSQL*>( &Mysql ) );
@@ -284,7 +284,7 @@ DBConnection_Execute_Start:
         const int32_t ProtoType{ MYSQL_PROTOCOL_TCP };
         if( 0 != ::mysql_options( reinterpret_cast<MYSQL*>( &Mysql ), MYSQL_OPT_PROTOCOL, &ProtoType ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set protocol! DB[%s]", Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to set protocol! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 
@@ -292,7 +292,7 @@ DBConnection_Execute_Start:
         BOOL Reconnect{ TRUE };
         if( 0 != ::mysql_options( reinterpret_cast<MYSQL*>( &Mysql ), MYSQL_OPT_RECONNECT, &Reconnect ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set reconnect! DB[%s]", Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to set reconnect! DB[%s]", Settings.Database.c_str() );
             return false;
         }
         
@@ -310,25 +310,25 @@ DBConnection_Execute_Start:
 
         if( TRUE == ::mysql_autocommit( reinterpret_cast<MYSQL*>( &Mysql ), Settings.bAutocommit ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set autocomit to %s! DB[%s]", Settings.bAutocommit ? "true" : "false" , Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to set autocomit to %s! DB[%s]", Settings.bAutocommit ? "true" : "false" , Settings.Database.c_str() );
             return false;
         }
 
         if( 0 != ::mysql_set_character_set( reinterpret_cast<MYSQL*>( &Mysql ), "utf8" ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to set mysql client charset to utf8! DB[%s]", Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to set mysql client charset to utf8! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 
         // client sends data in UTF8, so MySQL must expect UTF8 too
         if( -1 == Execute( "SET NAMES `utf8`" ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET NAMES `utf8]! DB[%s]", Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to [SET NAMES `utf8]! DB[%s]", Settings.Database.c_str() );
             return false;
         }
         if( -1 == Execute( "SET CHARACTER SET `utf8`" ) )
         {
-            SKLL_WRN_FMT( "[DBConnection]::SetOptions() Failed to [SET CHARACTER SET `utf8`]! DB[%s]", Settings.Database.c_str() );
+            GLOG_ERROR( "[DBConnection]::SetOptions() Failed to [SET CHARACTER SET `utf8`]! DB[%s]", Settings.Database.c_str() );
             return false;
         }
 

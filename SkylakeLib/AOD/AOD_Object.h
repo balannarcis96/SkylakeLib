@@ -46,7 +46,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "SharedObject::DoAsync() Failed to allocate task!" );
+                GLOG_DEBUG( "SharedObject::DoAsync() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -72,7 +72,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "SharedObject::DoAsyncAfter() Failed to allocate task!" );
+                GLOG_DEBUG( "SharedObject::DoAsyncAfter() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -124,7 +124,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "StaticObject::DoAsync() Failed to allocate task!" );
+                GLOG_DEBUG( "StaticObject::DoAsync() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -149,7 +149,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "StaticObject::DoAsyncAfter() Failed to allocate task!" );
+                GLOG_DEBUG( "StaticObject::DoAsyncAfter() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -194,7 +194,7 @@ namespace SKL::AOD
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "CustomObject::DoAsync() Failed to allocate task!" );
+                GLOG_DEBUG( "CustomObject::DoAsync() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 
@@ -215,13 +215,13 @@ namespace SKL::AOD
         template<typename TFunctor>
         SKL_FORCEINLINE SKL_NODISCARD RStatus DoAsyncAfter( TDuration AfterMilliseconds, TFunctor&& InFunctor ) noexcept
         {
-            SKLL_TRACE();
+            GTRACE();
             using TaskType = AODCustomObjectTask<sizeof(TFunctor)>;
             
             TaskType* NewTask{ MakeSharedRaw<TaskType>() };
             if( nullptr == NewTask ) SKL_UNLIKELY
             {   
-                SKLL_ERR( "CustomObject::DoAsyncAfter() Failed to allocate task!" );
+                GLOG_DEBUG( "CustomObject::DoAsyncAfter() Failed to allocate task!" );
                 return RAllocationFailed;
             }
 

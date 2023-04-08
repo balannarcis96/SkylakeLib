@@ -56,7 +56,7 @@ namespace SKL
             const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
             if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
             {
-                SKLL_ERR_FMT( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                GLOG_DEBUG( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
                 return skl_unique_ptr<TItemType[]>();
             }
         }
@@ -82,7 +82,7 @@ namespace SKL
             const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
             if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
             {
-                SKLL_ERR_FMT( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                GLOG_DEBUG( "MakeUniqueArray<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
                 return skl_unique_nd_ptr<TItemType[]>();
             }
         }
@@ -232,7 +232,7 @@ namespace SKL
             const size_t AllocSize{ Allocator::template CalculateNeededSizeForArray<TItemType>( ItemCount ) };
             if( AllocSize > CMemoryManager_MaxAllocSize ) SKL_UNLIKELY
             {
-                SKLL_ERR_FMT( "MakeSharedArrayRaw<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
+                GLOG_DEBUG( "MakeSharedArrayRaw<T>() Cannot alloc more than %llu. Attempted %llu!", CMemoryManager_MaxAllocSize, AllocSize );
                 return nullptr;
             }
         }

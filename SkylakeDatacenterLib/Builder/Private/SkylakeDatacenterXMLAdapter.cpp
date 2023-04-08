@@ -32,7 +32,7 @@ namespace SKL::DC
 
                 if( InAdaptor->IsVerbose() )
                 {
-                    SKLL_LOG_FMT( "Found element with language attribute!\n\tElement:%s\n\tAttribute:%s=\"%s\"\n\tFilterLanguage:%s"
+                    GLOG_INFO( "Found element with language attribute!\n\tElement:%s\n\tAttribute:%s=\"%s\"\n\tFilterLanguage:%s"
                                 , InNode->name()
                                 , Attribute->name()
                                 , Attribute->value() 
@@ -64,7 +64,7 @@ namespace SKL::DC
         {
             if( InAdaptor->IsVerbose() )
             {
-                SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
+                GLOG_INFO( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
                             , FileName.data()
                             , InNode->name() );
             }
@@ -76,7 +76,7 @@ namespace SKL::DC
         {
             if( InAdaptor->IsVerbose() )
             {
-                SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
+                GLOG_INFO( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
                             , FileName.data()
                             , InNode->name()
                             , InAdaptor->GetLanguageString( static_cast<TLanguage>( InAdaptor->GetCurrentLanguageFilter() ) ) );
@@ -90,11 +90,11 @@ namespace SKL::DC
             if( nullptr != InParent )
             {
                 SKL_ASSERT( nullptr != InParent->GetName() );
-				SKLL_TRACE_MSG_FMT( "Found element with no name as child of <%ws ...> </%ws>", InParent->GetName(), InParent->GetName() );
+				GLOG_WARNING( "Found element with no name as child of <%ws ...> </%ws>", InParent->GetName(), InParent->GetName() );
             }
             else
             {
-				SKLL_TRACE_MSG( "Found element with no name!!" );
+				GLOG_WARNING( "Found element with no name!!" );
             }
 
             return nullptr;
@@ -114,7 +114,7 @@ namespace SKL::DC
             const auto* ValueString{ InAdaptor->ConvertUtf8ToUtf16( const_cast<const char*>( InNode->value() ), InNode->value_size() ) };
             if( nullptr == ValueString )
             {
-				SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s>%s</>] element value to utf16", InNode->name(), InNode->value() );
+				GLOG_WARNING( "Failed to convert utf8[<%s>%s</>] element value to utf16", InNode->name(), InNode->value() );
 				return nullptr;
             }
 
@@ -126,7 +126,7 @@ namespace SKL::DC
         {
             if( true == std::string_view{ Attribute->name() }.empty() )
             {
-				SKLL_TRACE_MSG_FMT( "Found attibute with no name!! <%s ...></%s>", InNode->name(), InNode->name() );
+				GLOG_WARNING( "Found attibute with no name!! <%s ...></%s>", InNode->name(), InNode->name() );
 				return nullptr;
             }
 
@@ -137,7 +137,7 @@ namespace SKL::DC
                 const auto* Name{ InAdaptor->CleanAndConvertToUtf16AttributeName( Attribute->name() ) };
                 if( nullptr == Name )
                 {
-            	    SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute name to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
+            	    GLOG_WARNING( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute name to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
 				    return nullptr;
                 }
                 NewAttribute.SetName( Name );
@@ -147,7 +147,7 @@ namespace SKL::DC
                     const auto* Value{ InAdaptor->ConvertUtf8ToUtf16( Attribute->value(), Attribute->value_size() ) };
                     if( nullptr == Value )
                     {
-            	        SKLL_TRACE_MSG_FMT( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
+            	        GLOG_WARNING( "Failed to convert utf8[<%s %s=\"%s\"></>] attribute value to utf16", InNode->name( ), Attribute->name(), Attribute->value() );
 				        return nullptr;
                     }
                     NewAttribute.SetValue( Value );
@@ -183,7 +183,7 @@ namespace SKL::DC
     {
         if( IsVerbose() )
         {
-            SKLL_LOG_FMT( "Building the raw structure:\n\tLanguageFilter:%s\n\tFilterIndex:%d"
+            GLOG_INFO( "Building the raw structure:\n\tLanguageFilter:%s\n\tFilterIndex:%d"
                        , GetLanguageString( GetCurrentLanguageFilter() )
                        , GetFilterIndex() );
         }
@@ -192,7 +192,7 @@ namespace SKL::DC
         auto   FilesInDirectory{ ScanForFilesInDirectory( GetTargetDirectory(), MaxFileSize, AcceptedFileExtensions ) };
         if( true == FilesInDirectory.empty() )
         {
-            SKLL_TRACE_MSG_FMT( "Could not find any files in the given directory and with the given extensions! Dir[%s]!", GetTargetDirectory() );
+            GTRACE_ERROR( "Could not find any files in the given directory and with the given extensions! Dir[%s]!", GetTargetDirectory() );
             return nullptr;
         }
 
@@ -205,7 +205,7 @@ namespace SKL::DC
             std::ifstream File{ FileName.c_str(), std::ios::binary };
             if( false == File.is_open() )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to open file[%s]!", FileName.c_str() );
+                GLOG_ERROR( "Failed to open file[%s]!", FileName.c_str() );
                 return nullptr;
             }
 
@@ -216,7 +216,7 @@ namespace SKL::DC
             if( 0 == FileSize )
             {
                 File.close();
-                SKLL_TRACE_MSG_FMT( "Skipping empty file[%s]!", FileName.c_str() );
+                GLOG_INFO( "Skipping empty file[%s]!", FileName.c_str() );
                 continue;
             }
 
@@ -224,7 +224,7 @@ namespace SKL::DC
             if( nullptr == Buffer )
             {
                 File.close();
-                SKLL_TRACE_MSG_FMT( "Failed to allocate buffer! size:%llu file[%s]!", FileSize, FileName.c_str() );
+                GLOG_ERROR( "Failed to allocate buffer! size:%llu file[%s]!", FileSize, FileName.c_str() );
                 return nullptr;
             }
 
@@ -233,7 +233,7 @@ namespace SKL::DC
             if( true == File.bad() )
             {
                 File.close();
-                SKLL_TRACE_MSG_FMT( "Failed to read file[%s]!", FileName.c_str() );
+                GLOG_ERROR( "Failed to read file[%s]!", FileName.c_str() );
                 return nullptr;
             }
 
@@ -244,7 +244,7 @@ namespace SKL::DC
             auto XmlDoc{ std::make_unique<::rapidxml::xml_document<char>>() };
             if( nullptr == XmlDoc )
             {
-                SKLL_TRACE_MSG( "Failed to allocate xmlDoc object !" );
+                GLOG_ERROR( "Failed to allocate xmlDoc object !" );
                 return nullptr;
             }
 
@@ -252,7 +252,7 @@ namespace SKL::DC
             
 			if ( nullptr == XmlDoc->first_node( ) )
 			{
-                SKLL_TRACE_MSG( "Failed to allocate xmlDoc object !" );
+                GLOG_ERROR( "Failed to allocate xmlDoc object !" );
 				return nullptr;
 			}
 
@@ -260,7 +260,7 @@ namespace SKL::DC
             {
                 if( IsVerbose() )
                 {
-                    SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
+                    GLOG_INFO( "DatacenterXMLAddaptor: Skipped element BY NAME!\n\tFile:%s\n\tElementName:%s"
                                 , FileName.data()
                                 , XmlDoc->first_node()->name() );
                 }
@@ -272,7 +272,7 @@ namespace SKL::DC
             {
                 if( IsVerbose() )
                 {
-                    SKLL_LOG_FMT( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
+                    GLOG_INFO( "DatacenterXMLAddaptor: Skipped element BY LANGUAGE!\n\tFile:%s\n\tElementName:%s\n\tAcceptedLanguage:%s"
                                 , FileName.data()
                                 , XmlDoc->first_node()->name()
                                 , GetLanguageString( static_cast<TLanguage>( GetCurrentLanguageFilter() ) ) );
@@ -283,7 +283,7 @@ namespace SKL::DC
             auto FileRootNode{ ParseXmlFileNode( FileName, this, nullptr, XmlDoc->first_node() ) };
             if( nullptr == FileRootNode )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to parse xml file %s!", FileName.c_str() );
+                GLOG_ERROR( "Failed to parse xml file %s!", FileName.c_str() );
 				return nullptr;
             }
 

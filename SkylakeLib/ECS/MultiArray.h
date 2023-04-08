@@ -23,7 +23,7 @@ namespace SKL
             );
             if( nullptr == Array )
             {
-                SKLL_WRN( "MultiArrayBase::MultiArrayBase() Failed to allocate array!" );
+                GLOG_FATAL( "MultiArrayBase::MultiArrayBase() Failed to allocate array!" );
             }
             else
             {
@@ -212,7 +212,7 @@ namespace SKL
             );
             if( nullptr == Array )
             {
-                SKLL_WRN( "MultiArrayWithConditionalPaddingBase::MultiArrayWithConditionalPaddingBase() Failed to allocate array!" );
+                GLOG_FATAL( "MultiArrayWithConditionalPaddingBase::MultiArrayWithConditionalPaddingBase() Failed to allocate array!" );
             }
             else
             {

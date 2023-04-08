@@ -453,7 +453,7 @@ namespace SKL
                 }
                 else
                 {
-                    SKLL_VER( "EntityStore::AllocateEntity() Reached max entities!" );
+                    GLOG_DEBUG( "EntityStore::AllocateEntity() Reached max entities!" );
                 }
             }
 
@@ -502,7 +502,7 @@ namespace SKL
                 }
                 else
                 {
-                    SKLL_VER( "EntityStore::AllocateSpecificEntity() Entity already allocated or reached max entities!" );
+                    GLOG_DEBUG( "EntityStore::AllocateSpecificEntity() Entity already allocated or reached max entities!" );
                 }
             }
 

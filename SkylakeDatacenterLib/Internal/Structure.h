@@ -389,7 +389,7 @@ namespace SKL::DC
 
                         if( false == Object.Serialize( InStream, true ) )
                         {
-                            SKLL_TRACE_MSG_FMT( "Failed to deserialize item %u", i );                            
+                            GLOG_ERROR( "Failed to deserialize item %u", i );                            
                             return false;
                         }
 
@@ -408,7 +408,7 @@ namespace SKL::DC
                     {
                         if( false == Data[i].Serialize( InStream, false ) )
                         {
-                            SKLL_TRACE_MSG_FMT( "Failed to serialize item %u", i );                            
+                            GLOG_ERROR( "Failed to serialize item %u", i );                            
                             return false;
                         }
                     }
@@ -483,7 +483,7 @@ namespace SKL::DC
 
                         if( false == Object.Serialize( InStream, true ) )
                         {
-                            SKLL_TRACE_MSG_FMT( "Failed to deserialize item %u", i );                            
+                            GLOG_ERROR( "Failed to deserialize item %u", i );                            
                             return false;
                         }
 
@@ -503,7 +503,7 @@ namespace SKL::DC
                     {
                         if( false == Data[i].Serialize( InStream, false ) )
                         {
-                            SKLL_TRACE_MSG_FMT( "Failed to serialize item %u", i );                            
+                            GLOG_ERROR( "Failed to serialize item %u", i );                            
                             return false;
                         }
                     }
@@ -516,7 +516,7 @@ namespace SKL::DC
                     auto* Reader{ IByteStreamObjectReader::FromStreamBase( InStream ) };
                     if( false == Reader->TryForward( Remaining * ElementSerialSize ) )
                     {
-                        SKLL_TRACE_MSG( "No space left in the stream" );                            
+                        GLOG_ERROR( "No space left in the stream" );                            
                         return false;  
                     }
                 }
@@ -528,7 +528,7 @@ namespace SKL::DC
                     {
                         if( false == DefaultObject.Serialize( InStream, false ) )
                         {
-                            SKLL_TRACE_MSG_FMT( "Failed to serialize padding item %u", i );                            
+                            GLOG_ERROR( "Failed to serialize padding item %u", i );                            
                             return false;
                         }
                     }
@@ -627,7 +627,7 @@ namespace SKL::DC
                     Block.reset( new wchar_t[ BlockTotalSize ] );
                     if( nullptr == Block )
                     {
-                        SKLL_TRACE_MSG_FMT( "Failed to Allocate block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
+                        GLOG_ERROR( "Failed to Allocate block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
                         return false;
                     }
 
@@ -639,7 +639,7 @@ namespace SKL::DC
                         , false
                     ) )
                     {
-                        SKLL_TRACE_MSG_FMT( "Failed to Read() String block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
+                        GLOG_ERROR( "Failed to Read() String block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
                         return false;
                     }
                 }
@@ -658,7 +658,7 @@ namespace SKL::DC
                         , false
                     ) )
                     {
-                        SKLL_TRACE_MSG_FMT( "Failed to Write() String block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
+                        GLOG_ERROR( "Failed to Write() String block: wchar_t-size %u", static_cast<uint32_t>( BlockTotalSize ) );
                         return false;
                     }
                 }
@@ -670,14 +670,14 @@ namespace SKL::DC
             {
                 if( BlockSize > std::numeric_limits<TBlockIndex>::max() )
                 {
-                    SKLL_TRACE_MSG_FMT( "Cannot allocate block bigger than max:%llu! wanted:%llu", static_cast<size_t>( std::numeric_limits<TBlockIndex>::max() ), BlockSize );
+                    GLOG_ERROR( "Cannot allocate block bigger than max:%llu! wanted:%llu", static_cast<size_t>( std::numeric_limits<TBlockIndex>::max() ), BlockSize );
                     return false;
                 }
 
                 Block.reset( new wchar_t[ BlockSize ] );
                 if( nullptr == Block )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to allocate block wchar_t-size:%llu", BlockSize );
+                    GLOG_ERROR( "Failed to allocate block wchar_t-size:%llu", BlockSize );
                     return false;
                 }
 
@@ -787,13 +787,13 @@ namespace SKL::DC
             {
                 if( false == StringBlocks.Serialize( InStream, bIsLoadingOrSaving ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to serialize StringBlocks" );
+                    GLOG_ERROR( "Failed to serialize StringBlocks" );
                     return false;
                 }
                 
                 if( false == AllStrings.Serialize( InStream, bIsLoadingOrSaving ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to serialize AllStrings" );
+                    GLOG_ERROR( "Failed to serialize AllStrings" );
                     return false;
                 }
 
@@ -872,7 +872,7 @@ namespace SKL::DC
                 TBlockIndices OutIndices;
                 if( false == InsertStringInBlock( InString, InStringSizeInWideCharsNoNullTerm, OutIndices ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to insert new string into blocks!" );
+                    GLOG_ERROR( "Failed to insert new string into blocks!" );
                     return false;
                 }
 
@@ -910,7 +910,7 @@ namespace SKL::DC
 
                 if( false == InsertStringInBlock( InString, InStringSizeInWideCharsNoNullTerm, OutIndices ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to insert new string into blocks!" );
+                    GLOG_ERROR( "Failed to insert new string into blocks!" );
                     return false;
                 }
 
@@ -986,13 +986,13 @@ namespace SKL::DC
                 StringBlock NewBlock{};
                 if( false == NewBlock.AllocateBlock() )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to allocate new block!" );
+                    GLOG_ERROR( "Failed to allocate new block!" );
                     return false;
                 }
 
                 if( nullptr == NewBlock.TryAddString( InString, InStringSizeInWideCharsNoNullTerm, OutIndices.second ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to add new string to the new block!" );
+                    GLOG_ERROR( "Failed to add new string to the new block!" );
                     return false;
                 }
 
@@ -1029,14 +1029,14 @@ namespace SKL::DC
             {
                 if( false == bIsLoadingOrSaving ) 
                 {
-                    SKLL_TRACE_MSG_FMT( "Cannot performa save without bEnableBuildCapabilities==true!" );
+                    GLOG_ERROR( "Cannot performa save without bEnableBuildCapabilities==true!" );
                     return false;
                 }
             }
 
             if( nullptr == SourceStream )
             {
-                SKLL_TRACE_MSG_FMT( "No source stream provided!" );
+                GLOG_ERROR( "No source stream provided!" );
                 return false;
             }
 
@@ -1061,25 +1061,25 @@ namespace SKL::DC
 
             if( false == Attributes.Serialize( TargetStream, bIsLoadingOrSaving ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to de/serialize Attributes!" );
+                GLOG_ERROR( "Failed to de/serialize Attributes!" );
                 return false;
             }
 
             if( false == Elements.Serialize( TargetStream, bIsLoadingOrSaving ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to de/serialize Elements!" );
+                GLOG_ERROR( "Failed to de/serialize Elements!" );
                 return false;
             }
             
             if( false == ValuesMap.Serialize( TargetStream, bIsLoadingOrSaving ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to de/serialize Values!" );
+                GLOG_ERROR( "Failed to de/serialize Values!" );
                 return false;
             }
             
             if( false == NamesMap.Serialize( TargetStream, bIsLoadingOrSaving ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to de/serialize Names!" );
+                GLOG_ERROR( "Failed to de/serialize Names!" );
                 return false;
             }
 
@@ -1087,7 +1087,7 @@ namespace SKL::DC
             {
                 if( false == PostLoadProcessing() )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to do the post load processing!" );
+                    GLOG_ERROR( "Failed to do the post load processing!" );
                     return false;
                 }
             }
@@ -1101,25 +1101,25 @@ namespace SKL::DC
         {
             if( false == ValuesMap.RefreshCaches() )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to refresh ValuesMap caches!" );
+                GLOG_ERROR( "Failed to refresh ValuesMap caches!" );
                 return false;
             }
 
             if( false == NamesMap.RefreshCaches() )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to refresh NamesMap caches!" );
+                GLOG_ERROR( "Failed to refresh NamesMap caches!" );
                 return false;
             }
 
             if( false == PostLoadProcessing_Attributes() )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to PostLoadProcessing_Attributes()!" );
+                GLOG_ERROR( "Failed to PostLoadProcessing_Attributes()!" );
                 return false;
             }
 
             if( false == PostLoadProcessing_Elements() )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to PostLoadProcessing_Elements()!" );
+                GLOG_ERROR( "Failed to PostLoadProcessing_Elements()!" );
                 return false;
             }
 
@@ -1288,7 +1288,7 @@ namespace SKL::DC
 
                     if( CInvalidStringIndex == AttributeItem.NameIndex )
                     {    
-                        SKLL_TRACE_MSG_FMT( "Loaded Attribute with inavlid NameId!" );
+                        GLOG_ERROR( "Loaded Attribute with inavlid NameId!" );
                         return false;
                     }
 
@@ -1309,7 +1309,7 @@ namespace SKL::DC
 
                     if( CInvalidStringIndex == ElementItem.NameIndex )
                     {
-                        SKLL_TRACE_MSG_FMT( "Loaded element with invalid name Index!" );
+                        GLOG_ERROR( "Loaded element with invalid name Index!" );
                         return false;
                     }
 
@@ -1360,7 +1360,7 @@ namespace SKL::DC
                 auto* AttributeItem{ GetAttribute( { InElement->AttributeIndices.first, static_cast<TBlockIndex>( InElement->AttributeIndices.second + i ) } ) };
                 if( nullptr == AttributeItem )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to get Attribute {%hu %hu} for element{%ws}"
+                    GLOG_ERROR( "Failed to get Attribute {%hu %hu} for element{%ws}"
                         , InElement->AttributeIndices.first
                         , InElement->AttributeIndices.second
                         , InElement->GetName() );
@@ -1379,7 +1379,7 @@ namespace SKL::DC
 
                 if( nullptr == Child )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to get Child {%hu %hu} for element{%ws}"
+                    GLOG_ERROR( "Failed to get Child {%hu %hu} for element{%ws}"
                         , InElement->ChildrenIndices.first
                         , static_cast<TBlockIndex>( InElement->ChildrenIndices.second + i )
                         , InElement->GetName() );

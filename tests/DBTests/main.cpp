@@ -177,7 +177,7 @@ namespace SkylakeDBTests
 
             while( true == Result.Next() )
             {
-                SKLL_INF_FMT( "[ Variable: %s Value:%s SetTime:[Y:%u M:%u D:%u h:%u m:%u s:%u] SetBy:%s]"
+                printf_s( "[ Variable: %s Value:%s SetTime:[Y:%u M:%u D:%u h:%u m:%u s:%u] SetBy:%s]\n"
                             , Variable.GetUtf8()
                             , Value.GetUtf8()
                             , SetTime.Year
@@ -222,7 +222,7 @@ namespace SkylakeDBTests
             
             while( true == Result.Next() )
             {
-                SKLL_INF_FMT( "[ Email: %s LastOnlineUTC:%llu"
+                printf_s( "[ Email: %s LastOnlineUTC:%llu ]\n"
                             , Email.GetUtf8()
                             , LastOnlineUTC );
             } 

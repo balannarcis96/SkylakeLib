@@ -306,7 +306,7 @@ namespace ServicesTests
         protected:
             SKL::RStatus Initialize() noexcept override
             {
-                SKLL_TRACE();
+                GTRACE();
 
                 SKL_ASSERT_ALLWAYS( 1 == ++SeqCounter );
                 return SKL::RSuccess;
@@ -314,33 +314,33 @@ namespace ServicesTests
 
             void OnServerStarted() noexcept override
             {
-                SKLL_TRACE();
+                GTRACE();
 
                 SKL_ASSERT_ALLWAYS( 2 == ++SeqCounter );
 
                 SKL::DeferTask([ this ]( SKL::ITask* ) noexcept -> void 
                 {
-                    SKLL_TRACE_MSG( "STOP!" );
+                    GTRACE_DEBUG( "STOP!" );
                     GetServerInstance().SignalToStop();
                 });
             }
     
             void OnServerStopped() noexcept override
             {
-                SKLL_TRACE();
+                GTRACE();
 
                 SKL_ASSERT_ALLWAYS( 4 == ++SeqCounter );
             }
     
             SKL::RStatus OnStopService() noexcept override
             {
-                SKLL_TRACE();
+                GTRACE();
 
                 SKL_ASSERT_ALLWAYS( 3 == ++SeqCounter );
                 
                 SKL::DeferTask( [ this ]( SKL::ITask* ) noexcept -> void 
                 {
-                    SKLL_TRACE();
+                    GTRACE();
 
                     // finally signal that the service was stopped
                     OnServiceStopped( SKL::RSuccess  );
@@ -413,7 +413,7 @@ namespace ServicesTests
 
                 Store.SetOnAllFreed( [this]() noexcept -> void 
                 {
-                    SKLL_VER( "All entities freed!" );
+                    puts( "All entities freed!" );
                     OnServiceStopped( SKL::RSuccess  );
                 } );
 
@@ -511,7 +511,7 @@ namespace ServicesTests
 
                 Store.SetOnAllFreed( [this]() noexcept -> void 
                 {
-                    SKLL_VER( "All entities freed!" );
+                    puts( "All entities freed!" );
                     OnServiceStopped( SKL::RSuccess  );
                 } );
 
@@ -525,11 +525,11 @@ namespace ServicesTests
             {
                 ( void )AllocatedPtr->DoAsyncAfter( 300, [ this ]( SKL::AOD::CustomObject& /*SelfObj*/ ) noexcept -> void
                 {
-                    SKLL_TRACE_MSG( "DO ASYNC" );
+                    GTRACE_DEBUG( "DO ASYNC" );
 
                     SKL::DeferTask( [ this ]( SKL::ITask* ) noexcept -> void 
                     {
-                        SKLL_TRACE_MSG( "STOP" );
+                        GTRACE_DEBUG( "STOP" );
                         GetServerInstance().SignalToStop( true );
                     } );
                 } );

@@ -65,7 +65,7 @@ namespace SKL
 
         if( nullptr == SourceServerInstance )   
         {
-            SKLL_WRN( "AODTLSContext::Reset() no server instance specified!" );
+            GLOG_DEBUG( "AODTLSContext::Reset() no server instance specified!" );
             return;
         }
 

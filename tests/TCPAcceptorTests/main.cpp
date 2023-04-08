@@ -45,7 +45,7 @@ namespace TCPAcceptorTests
         TCPAsyncAcceptorConfig.SetOnAcceptHandler( []( SKL::TSocket InAcceptedSocket ) noexcept
         {
             ASSERT_TRUE( true == SKL::IsValidSocket( InAcceptedSocket ) );
-            SKLL_INF( "New tcp socket accepted!" );
+            puts( "New tcp socket accepted!" );
             SKL::CloseSocket( InAcceptedSocket );
             SKL::ShutdownSocket( InAcceptedSocket );
         } );

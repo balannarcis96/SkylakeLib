@@ -81,7 +81,7 @@ namespace SKL
 
         if( nullptr == SourceServerInstance )   
         {
-            SKLL_WRN( "ServerInstanceTLSContext::Reset() no server instance specified!" );
+            GLOG_DEBUG( "ServerInstanceTLSContext::Reset() no server instance specified!" );
             return;
         }
 

@@ -13,7 +13,7 @@ namespace SKL
     {
         if( false == Skylake_IsTheLibraryInitialize() )
         {
-            SKLL_ERR( "ServerInstance::Initialize() Skylake_IsTheLibraryInitialize() Failed!" );
+            GLOG_ERROR( "ServerInstance::Initialize() Skylake_IsTheLibraryInitialize() Failed!" );
             return RFail;
         }
 
@@ -54,13 +54,13 @@ namespace SKL
         ServerBuiltFlags.bAllGroupsAreActive = bAllGroupsAreActive;
         if( true == bAllGroupsAreActive )
         {
-            SKLL_VER_FMT( "[ServerInstance:%ws] All worker groups are active-worker-groups!", GetName() );
+            GLOG_DEBUG( "[ServerInstance:%ws] All worker groups are active-worker-groups!", GetName() );
         }
 
         ServerBuiltFlags.bSupportsDelayedTasks = bAtLeastOneWorkerGroupThatHandlesDelayedTasks;
         if( false == bAtLeastOneWorkerGroupThatHandlesDelayedTasks )
         {
-            SKLL_WRN_FMT( "[ServerInstance:%ws] No worker group to handle delayed tasks, DONT USE DELAYED TASKS!!", GetName() );
+            GLOG_DEBUG( "[ServerInstance:%ws] No worker group to handle delayed tasks, DONT USE DELAYED TASKS!!", GetName() );
         }
 
         uint64_t NoOfWorkersThatSupportTLSSync{ 0 };
@@ -73,7 +73,7 @@ namespace SKL
  
             if( false == CreateWorkerGroup( WorkerConfig, bDoesMasterNeedsToBeCreated ) )
             {
-                SKLL_ERR_FMT( "[ServerInstance:%ws]::Initialize()", Config.Name );
+                GLOG_ERROR( "[ServerInstance:%ws]::Initialize()", Config.Name );
                 return RFail;
             }
 
@@ -88,21 +88,21 @@ namespace SKL
             MyTLSSyncSystem = std::make_unique_cacheline<TLSSyncSystem>();
             if( nullptr == MyTLSSyncSystem.get() )
             {
-                SKLL_ERR_FMT( "[ServerInstance:%ws]::Initialize() Failed to allocate TLSSyncSystem!", Config.Name );
+                GLOG_ERROR( "[ServerInstance:%ws]::Initialize() Failed to allocate TLSSyncSystem!", Config.Name );
                 return RFail;
             }
 
             MyTLSSyncSystem->NoOfWorkersThatSupportTLSSync = NoOfWorkersThatSupportTLSSync;
         }
 
-        SKLL_INF_FMT( "[ServerInstance:%ws] Created %llu Worker Groups. TLSSync workers count: %llu."
+        GLOG_INFO( "[ServerInstance:%ws] Created %llu Worker Groups. TLSSync workers count: %llu."
                      , Config.Name
                      , WorkerGroups.size()
                      , NoOfWorkersThatSupportTLSSync );
 
         if( false == OnAddServices() )
         {
-            SKLL_ERR_FMT( "[ServerInstance:%ws]::OnAddServices() Failed", Config.Name );
+            GLOG_ERROR( "[ServerInstance:%ws]::OnAddServices() Failed", Config.Name );
             return RFail;
         }
 
@@ -111,7 +111,7 @@ namespace SKL
         {
             if( const auto Result{ Service->Initialize() }; RSuccess != Result )
             {
-                SKLL_ERR_FMT( "[ServerInstance:%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
+                GLOG_ERROR( "[ServerInstance:%ws]::Service UID:%d failed to Initialize() Result:%d", Config.Name, Service->GetUID(), static_cast<int32_t>( Result ) );
                 return RFail;
             }
 
@@ -141,7 +141,7 @@ namespace SKL
             if( nullptr == Group ) { continue; }
             if( RSuccess != Group->Start() )
             {
-                SKLL_ERR_FMT("[WorkerGroup:%ws] Failed to start!", Group->GetTag().Name );
+                GLOG_ERROR("[WorkerGroup:%ws] Failed to start!", Group->GetTag().Name );
                 goto fail_case;
             }
         }
@@ -154,7 +154,7 @@ namespace SKL
 
             if( false == OnAfterServerStopped() )
             {
-                SKLL_ERR_FMT("[ServerInstance:%ws] OnAfterServerStopped() Failed!", Config.Name );
+                GLOG_ERROR("[ServerInstance:%ws] OnAfterServerStopped() Failed!", Config.Name );
             }
 
             return RServerInstanceFinalized;
@@ -178,11 +178,11 @@ namespace SKL
     //! Signal all worker groups to stop
     void ServerInstance::SignalToStop( bool bForce ) noexcept
     {
-        SKLL_TRACE();
+        GTRACE();
 
         if( false == bIsRunning.exchange( false ) )
         {
-            SKLL_VER_FMT( "[ServerInstance:%ws] SignalToStop() Already signaled!", Config.Name );
+            GLOG_ERROR( "[ServerInstance:%ws] SignalToStop() Already signaled!", Config.Name );
             return;
         }
         
@@ -190,16 +190,16 @@ namespace SKL
         {
             if( false == bForce )
             {
-                SKLL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed and cancelled the stop process!", Config.Name );
+                GLOG_ERROR( "[ServerInstance:%ws] OnBeforeStopServer() Failed and cancelled the stop process!", Config.Name );
                 return;
             }
 
-            SKLL_VER_FMT( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
+            GLOG_ERROR( "[ServerInstance:%ws] OnBeforeStopServer() Failed! The stop process continues [bForce=true]", Config.Name );
         }
 
         if( 0 != TotalNumberOfInitServices.load_acquire() )
         {
-            SKLL_VER_FMT( "Stopping %u services...", TotalNumberOfInitServices.load_relaxed() );
+            GLOG_ERROR( "Stopping %u services...", TotalNumberOfInitServices.load_relaxed() );
 
             // notice all services
             for( auto* Service : AllServices )
@@ -231,7 +231,7 @@ namespace SKL
         {
             if( RSuccess != NewGroup->AddNewTCPAcceptor( Item ) )
             {
-                SKLL_ERR( "ServerInstance::CreateWorkerGroup() Failed to create new async TCP Acceptor!" );
+                GLOG_ERROR( "ServerInstance::CreateWorkerGroup() Failed to create new async TCP Acceptor!" );
                 return false;
             }
         }
@@ -239,7 +239,7 @@ namespace SKL
         // build the group
         if ( RSuccess != NewGroup->Build( bCreateMaster ) )
         {
-            SKLL_ERR( "ServerInstance::CreateWorkerGroup() Failed to Build() WorkersGroup!" );
+            GLOG_ERROR( "ServerInstance::CreateWorkerGroup() Failed to Build() WorkersGroup!" );
             return false;
         }
 
@@ -282,7 +282,7 @@ namespace SKL
         {
             if( RSuccess != StringUtils::Create() )
             {
-                SKLL_ERR_FMT( "[Worker in WG:%ws] Failed to create StringUtils", InGroup.GetTag().Name );
+                GLOG_ERROR( "[Worker in WG:%ws] Failed to create StringUtils", InGroup.GetTag().Name );
                 return false;
             }
         }
@@ -291,22 +291,22 @@ namespace SKL
         {
             if( RSuccess != ThreadLocalMemoryManager::Create() )
             {
-                SKLL_ERR_FMT( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
+                GLOG_ERROR( "[Worker in WG:%ws] Failed to create ThreadLocalMemoryManager", InGroup.GetTag().Name );
                 return false;
             }   
 
-            SKLL_VER_FMT( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
+            GLOG_INFO( "[Worker in WG:%ws] Created ThreadLocalMemoryManager.", InGroup.GetTag().Name );
         }
     
         if( true == InGroup.GetTag().bPreallocateAllThreadLocalPools )
         {
-            SKLL_VER_FMT( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", InGroup.GetTag().Name );
+            GLOG_INFO( "[Worker in WG:%ws] Preallocated all pools in ThreadLocalMemoryManager.", InGroup.GetTag().Name );
             ThreadLocalMemoryManager::Preallocate();
         }
 
         if( RSuccess != ServerInstanceTLSContext::Create( this, InGroup.GetTag() ) )
         {
-            SKLL_ERR_FMT("[WorkerGroup:%ws] failed to create ServerInstanceTLSContext for worker!", InGroup.GetTag().Name );
+            GLOG_ERROR("[WorkerGroup:%ws] failed to create ServerInstanceTLSContext for worker!", InGroup.GetTag().Name );
             return false;
         }
 
@@ -314,7 +314,7 @@ namespace SKL
         {
             if( RSuccess != AODTLSContext::Create( this, InGroup.GetTag() ) )
             {
-                SKLL_ERR_FMT("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", InGroup.GetTag().Name );
+                GLOG_ERROR("[WorkerGroup:%ws] failed to create AODTLSContext for worker!", InGroup.GetTag().Name );
                 return false;
             }
         }
@@ -328,14 +328,14 @@ namespace SKL
             if( nullptr == Service ){ continue; }
             if ( RSuccess != Service->OnWorkerStarted( InWorker, InGroup ) )
             {
-                SKLL_ERR_FMT("[WorkerService:%u]OnWorkerStarted() failed!", Service->GetUID() );
+                GLOG_ERROR("[WorkerService:%u]OnWorkerStarted() failed!", Service->GetUID() );
                 return false;
             }
         }
 
         ( void )TotalNumberOfRunningWorkers.increment();
 
-        SKLL_INF_FMT("[WorkerGroup:%ws] Started! Running workers count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
+        GLOG_INFO("[WorkerGroup:%ws] Started! Running workers count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
     
@@ -352,14 +352,14 @@ namespace SKL
         }
 
         AODTLSContext::Destroy();
-        SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", InGroup.GetTag().Name );
+        GLOG_INFO( "[Worker in WG:%ws] OnWorkerStopped() Destroyed AODTLSContext.", InGroup.GetTag().Name );
 
         ServerInstanceTLSContext::Destroy();
-        SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", InGroup.GetTag().Name );
+        GLOG_INFO( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ServerInstanceTLSContext.", InGroup.GetTag().Name );
 
         ThreadLocalMemoryManager::FreeAllPools();
         ThreadLocalMemoryManager::Destroy();
-        SKLL_VER_FMT( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
+        GLOG_INFO( "[Worker in WG:%ws] OnWorkerStopped() Destroyed ThreadLocalMemoryManager.", InGroup.GetTag().Name );
 
         TRand::ShutdownThread();
 
@@ -367,13 +367,13 @@ namespace SKL
 
         TotalNumberOfRunningWorkers.decrement();
 
-        SKLL_VER_FMT( "[WorkerGroup:%ws] worker stopped! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
+        GLOG_INFO( "[WorkerGroup:%ws] worker stopped! Count:%u", InGroup.GetTag().Name, GetTotalNumberOfRunningWorkers() );
         return true;
     }
 
     bool ServerInstance::OnAllWorkersStarted( WorkerGroup& Group ) noexcept
     {
-        SKLL_VER_FMT( "[WorkerGroup:%ws] all workers started!", Group.GetTag().Name );
+        GLOG_INFO( "[WorkerGroup:%ws] all workers started!", Group.GetTag().Name );
         SKL_ASSERT( Group.GetTotalNumberOfWorkers() == Group.GetNumberOfRunningWorkers() );
         ( void )Group;
 
@@ -382,7 +382,7 @@ namespace SKL
     
     bool ServerInstance::OnAllWorkersStopped( WorkerGroup& Group ) noexcept
     {
-        SKLL_VER_FMT( "[WorkerGroup:%ws] all workers stopped!", Group.GetTag().Name );
+        GLOG_INFO( "[WorkerGroup:%ws] all workers stopped!", Group.GetTag().Name );
         SKL_ASSERT( 0 == Group.GetNumberOfRunningWorkers() );
         ( void )Group;
 
@@ -391,7 +391,7 @@ namespace SKL
 
     bool ServerInstance::OnWorkerGroupStarted( WorkerGroup& Group ) noexcept
     {
-        SKLL_VER_FMT("[WorkerGroup:%ws] started!", Group.GetTag().Name );
+        GLOG_INFO("[WorkerGroup:%ws] started!", Group.GetTag().Name );
         ( void )Group;
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.increment() + 1 };
@@ -405,7 +405,7 @@ namespace SKL
     
     bool ServerInstance::OnWorkerGroupStopped( WorkerGroup& Group ) noexcept
     {
-        SKLL_VER_FMT("[WorkerGroup:%ws] stopped!", Group.GetTag().Name );
+        GLOG_INFO("[WorkerGroup:%ws] stopped!", Group.GetTag().Name );
         ( void )Group;
 
         const auto NewActiveWorkerGroupsCount { ActiveWorkerGroups.decrement() - 1 };
@@ -415,7 +415,7 @@ namespace SKL
             {
                 if( false == OnAllWorkerGroupsStopped() )
                 {
-                    SKLL_ERR_FMT("[ServerInstance:%ws] OnAllWorkerGroupsStopped() Failed!", Config.Name );
+                    GLOG_DEBUG("[ServerInstance:%ws] OnAllWorkerGroupsStopped() Failed!", Config.Name );
                 }
 
                 return OnAfterServerStopped();
@@ -429,11 +429,11 @@ namespace SKL
     
     bool ServerInstance::OnAllWorkerGroupsStarted() noexcept
     {
-        SKLL_VER_FMT("[ServerInstance:%ws] All worker groups started!", Config.Name );
+        GLOG_INFO("[ServerInstance:%ws] All worker groups started!", Config.Name );
 
         if( false == OnServerStarted() )
         {
-            SKLL_ERR_FMT("[ServerInstance:%ws] OnServerStarted() Failed!", Config.Name );
+            GLOG_ERROR("[ServerInstance:%ws] OnServerStarted() Failed!", Config.Name );
             return false;
         }
 
@@ -444,16 +444,16 @@ namespace SKL
     {
         if( false == OnServerStopped() )
         {
-            SKLL_ERR_FMT("[ServerInstance:%ws] OnServerStopped() Failed!", Config.Name );
+            GLOG_ERROR("[ServerInstance:%ws] OnServerStopped() Failed!", Config.Name );
         }
 
-        SKLL_VER_FMT("[ServerInstance:%ws] All worker groups stopped!", Config.Name );
+        GLOG_INFO("[ServerInstance:%ws] All worker groups stopped!", Config.Name );
         return true;
     }
 
     bool ServerInstance::OnBeforeStartServer() noexcept
     {
-        SKLL_VER_FMT( "[ServerInstance:%ws] Will start!", Config.Name );
+        GLOG_INFO( "[ServerInstance:%ws] Will start!", Config.Name );
 
         //The server is finally running
         bIsRunning.exchange( TRUE );
@@ -463,7 +463,7 @@ namespace SKL
     
     bool ServerInstance::OnServerStarted() noexcept
     {
-        SKLL_VER_FMT( "[ServerInstance:%ws] Started!", Config.Name );
+        GLOG_INFO( "[ServerInstance:%ws] Started!", Config.Name );
 
         SKL_ASSERT( 1 <= SimpleServices.size() && nullptr == SimpleServices[0] );
         SKL_ASSERT( 1 <= AODServices.size() && nullptr == AODServices[0] );
@@ -479,7 +479,7 @@ namespace SKL
         // Start from 1 as first entry is nullptr
         if( 1 < ActiveServices.size() )
         {
-            SKLL_VER_FMT( "[ServerInstance:%ws] Started ticking %llu active services registered.", Config.Name, ActiveServices.size() - 1 );
+            GLOG_INFO( "[ServerInstance:%ws] Started ticking %llu active services registered.", Config.Name, ActiveServices.size() - 1 );
 
             DeferTask([ this ]( ITask* Self ) noexcept -> void
             {
@@ -497,13 +497,13 @@ namespace SKL
                 }
                 else
                 {
-                    SKLL_VER_FMT( "[ServerInstance:%ws] Stopped ticking active servers.", Config.Name );
+                    GLOG_INFO( "[ServerInstance:%ws] Stopped ticking active servers.", Config.Name );
                 }
             } );
         }
         else
         {
-            SKLL_VER_FMT( "[ServerInstance:%ws] No active services registered.", Config.Name );
+            GLOG_INFO( "[ServerInstance:%ws] No active services registered.", Config.Name );
         }
 
         return true;
@@ -511,13 +511,13 @@ namespace SKL
     
     bool ServerInstance::OnBeforeStopServer() noexcept
     {
-        SKLL_VER_FMT( "[ServerInstance:%ws] Will stop!", Config.Name );
+        GLOG_INFO( "[ServerInstance:%ws] Will stop!", Config.Name );
         return true;
     }
     
     bool ServerInstance::OnServerStopped() noexcept
     {
-        SKLL_VER_FMT( "[ServerInstance:%ws] Stopped!", Config.Name );
+        GLOG_INFO( "[ServerInstance:%ws] Stopped!", Config.Name );
 
         //The server is finally running
         bIsRunning.exchange( TRUE );
@@ -533,13 +533,13 @@ namespace SKL
 
     bool ServerInstance::OnAfterServerStopped() noexcept
     {
-        SKLL_VER_FMT( "[ServerInstance:%ws] Stopped final!", Config.Name );
+        GLOG_INFO( "[ServerInstance:%ws] Stopped final!", Config.Name );
         return true;
     }
     
     void ServerInstance::OnServiceStopped( IService* InService, RStatus InStatus ) noexcept
     {   
-        SKLL_VER_FMT( "Service %u %s! Status[%d]"
+        GLOG_INFO( "Service %u %s! Status[%d]"
             , InService->GetUID()
             , RSuccess == InStatus ? "stopped successfully" : "failed to stop"
             , RSTATUS_TO_NUMERIC( InStatus ) );
@@ -559,9 +559,9 @@ namespace SKL
     
     void ServerInstance::OnAllServiceStopped() noexcept
     {   
-        SKLL_VER( "All services stopped!" ); 
+        GLOG_INFO( "All services stopped!" ); 
 
-        SKLL_VER( "Stopping all worker groups!" ); 
+        GLOG_INFO( "Stopping all worker groups!" ); 
         for( auto* Group: WorkerGroups )
         {
             if( nullptr == Group ) { continue; }
@@ -575,19 +575,19 @@ namespace SKL
 
         if( nullptr == InService )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) nullptr service!", GetName() );
+            GLOG_DEBUG( "[ServerInstance: %ws]::AddService( SimpleService ) nullptr service!", GetName() );
             return false;
         }
 
         if( 0 != ( reinterpret_cast<uint64_t>( InService ) % SKL_CACHE_LINE_SIZE ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) Use CreateService<T>(...) to create the service!", GetName() );
+            GLOG_DEBUG( "[ServerInstance: %ws]::AddService( SimpleService ) Use CreateService<T>(...) to create the service!", GetName() );
             return false;
         }
 
         if( nullptr != GetSimpleServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( SimpleService ) A simple service with UID:%d was already added!", GetName(), InService->GetUID() );
+            GLOG_DEBUG( "[ServerInstance: %ws]::AddService( SimpleService ) A simple service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -608,13 +608,13 @@ namespace SKL
 
         if( nullptr == InService )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) nullptr service!", GetName() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( AODService ) nullptr service!", GetName() );
             return false;
         }
 
         if( nullptr != GetAODServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( AODService ) A AOD service with UID:%d was already added!", GetName(), InService->GetUID() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( AODService ) A AOD service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -635,13 +635,13 @@ namespace SKL
 
         if( nullptr == InService )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) nullptr service!", GetName() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( ActiveService ) nullptr service!", GetName() );
             return false;
         }
 
         if( nullptr != GetActiveServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( ActiveService ) An active service with UID:%d was already added!", GetName(), InService->GetUID() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( ActiveService ) An active service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 
@@ -662,13 +662,13 @@ namespace SKL
 
         if( nullptr == InService )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) nullptr service!", GetName() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( WorkerService ) nullptr service!", GetName() );
             return false;
         }
 
         if( nullptr != GetWorkerServiceById( InService->GetUID() ) )
         {
-            SKLL_ERR_FMT( "[ServerInstance: %ws]::AddService( WorkerService ) A worker service with UID:%d was already added!", GetName(), InService->GetUID() );
+            GLOG_ERROR( "[ServerInstance: %ws]::AddService( WorkerService ) A worker service with UID:%d was already added!", GetName(), InService->GetUID() );
             return false;
         }
 

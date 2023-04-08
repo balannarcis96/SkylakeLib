@@ -74,7 +74,7 @@ namespace SKL::DC
             TNameIndex NameIndex{ CInvalidStringIndex };
             if( false == this->NamesMap.InsertString( RawAttribute.GetName(), RawAttribute.GetNameSize(), NameIndex ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to insert attribute name into names map! str[%ws]", RawAttribute.GetName() );
+                GLOG_WARNING( "Failed to insert attribute name into names map! str[%ws]", RawAttribute.GetName() );
                 return false;
             }
             NewAttribute.SetNameIndex( NameIndex );
@@ -83,7 +83,7 @@ namespace SKL::DC
             TBlockIndices ValueIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
             if( false == this->NamesMap.InsertString( RawAttribute.GetValue(), RawAttribute.GetValueSize(), ValueIndices ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to insert attribute value into values map! %ws=\"%ws\"", RawAttribute.GetName(), RawAttribute.GetValue() );
+                GLOG_WARNING( "Failed to insert attribute value into values map! %ws=\"%ws\"", RawAttribute.GetName(), RawAttribute.GetValue() );
                 return false;
             }
             NewAttribute.SetValueIndices( ValueIndices );
@@ -139,14 +139,14 @@ namespace SKL::DC
     {
         if( CInvalidVersion == TargetVersion || CInvalidFormatVersion == TargetFormatVersion )
         {
-            SKLL_TRACE_MSG_FMT( "Invalid version or format version value!" );
+            GLOG_WARNING( "Invalid version or format version value!" );
             return false;
         }
 
         DatacenterAdapter* Adapter{ GetAdapter() };
         if( nullptr == Adapter )
         {
-            SKLL_TRACE_MSG_FMT( "No adapter set!" );
+            GLOG_WARNING( "No adapter set!" );
             return false;
         }
 
@@ -156,7 +156,7 @@ namespace SKL::DC
         std::unique_ptr<RawElement> RawStructureRootRawElement{ Adapter->BuildRawStructure() };
         if( nullptr == RawStructureRootRawElement )
         {
-            SKLL_TRACE_MSG_FMT( "Failed to build raw structure!" );
+            GLOG_WARNING( "Failed to build raw structure!" );
             return false;
         }
 
@@ -174,7 +174,7 @@ namespace SKL::DC
         TBlockIndices RootIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
         if( false == DC.AllocateElementsSection( 1, RootIndices ) )
         {
-            SKLL_TRACE_MSG( "Failed to allocate root elemnt!" );
+            GLOG_WARNING( "Failed to allocate root elemnt!" );
             return false;
         }
 
@@ -193,7 +193,7 @@ namespace SKL::DC
         TNameIndex NameIndex{ CInvalidStringIndex };
         if( false == DC.InsertName( InRawElement->GetName(), InRawElement->GetNameSize(), NameIndex ) )
         {
-            SKLL_TRACE_MSG_FMT( "Failed to insert element name into the names map. Name:%ws", InRawElement->GetName() );
+            GLOG_WARNING( "Failed to insert element name into the names map. Name:%ws", InRawElement->GetName() );
             return false;
         }
         Element->SetNameIndex( NameIndex );
@@ -204,7 +204,7 @@ namespace SKL::DC
             TBlockIndices ValueIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
             if( false == DC.InsertValue( InRawElement->GetValue(), InRawElement->GetValueSize(), ValueIndices ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to insert element value into the values map. <%ws ...></>", InRawElement->GetName() );
+                GLOG_WARNING( "Failed to insert element value into the values map. <%ws ...></>", InRawElement->GetName() );
                 return false;
             }
             Element->SetValueIndices( ValueIndices );
@@ -221,7 +221,7 @@ namespace SKL::DC
             TBlockIndices AttributesIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
             if( false == DC.AllocateAttributesSection( static_cast<uint32_t>( InRawElement->Attributes.size() ), AttributesIndices ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to allocate attributes block for element! count:%llu Name:%ws", InRawElement->Attributes.size(), InRawElement->GetName() );
+                GLOG_WARNING( "Failed to allocate attributes block for element! count:%llu Name:%ws", InRawElement->Attributes.size(), InRawElement->GetName() );
                 return false;
             }
             Element->SetAttributesIndices( AttributesIndices );
@@ -234,7 +234,7 @@ namespace SKL::DC
                 TNameIndex NewNameIndex{ CInvalidStringIndex };
                 if( false == DC.InsertName( RawAttribute.GetName(), RawAttribute.GetNameSize(), NewNameIndex ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to insert attribute name into the names map. <%ws %ws=\"%ws\"></>", InRawElement->GetName(), RawAttribute.GetName(), RawAttribute.GetValue() );
+                    GLOG_WARNING( "Failed to insert attribute name into the names map. <%ws %ws=\"%ws\"></>", InRawElement->GetName(), RawAttribute.GetName(), RawAttribute.GetValue() );
                     return false;
                 }
                 DCAttribute->SetNameIndex( NewNameIndex );
@@ -242,7 +242,7 @@ namespace SKL::DC
                 TBlockIndices ValueIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
                 if( false == DC.InsertValue( RawAttribute.GetValue(), RawAttribute.GetValueSize(), ValueIndices ) )
                 {
-                    SKLL_TRACE_MSG_FMT( "Failed to insert attribute value into the values map. <%ws %ws=\"%ws\"></>", InRawElement->GetName(), RawAttribute.GetName(), RawAttribute.GetValue() );
+                    GLOG_WARNING( "Failed to insert attribute value into the values map. <%ws %ws=\"%ws\"></>", InRawElement->GetName(), RawAttribute.GetName(), RawAttribute.GetValue() );
                     return false;
                 }
                 DCAttribute->SetValueIndices( ValueIndices );
@@ -262,7 +262,7 @@ namespace SKL::DC
         TBlockIndices ChildrenIndices{ CInvalidBlockIndex, CInvalidBlockIndex };
         if( false == DC.AllocateElementsSection( static_cast<uint32_t>( InRawElement->Children.size() ), ChildrenIndices ) )
         {
-            SKLL_TRACE_MSG_FMT( "Failed to allocate child elements!. <%ws ...></>", InRawElement->GetName() );
+            GLOG_WARNING( "Failed to allocate child elements!. <%ws ...></>", InRawElement->GetName() );
             return false;
         }
         DC.GetElement( InDCElementIndices )->SetChildrenIndices( ChildrenIndices );
@@ -270,7 +270,7 @@ namespace SKL::DC
         {
             if( false == BuildDCTreeRecursive( InRawElement->Children[i], { ChildrenIndices.first, static_cast<TBlockIndex>( i + ChildrenIndices.second ) } ) )
             {
-                SKLL_TRACE_MSG_FMT( "Failed to build child element index %u!. <%ws ...></>", i, InRawElement->GetName() );
+                GLOG_WARNING( "Failed to build child element index %u!. <%ws ...></>", i, InRawElement->GetName() );
                 return false;
             }
         }

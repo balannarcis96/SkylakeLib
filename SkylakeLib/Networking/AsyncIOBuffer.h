@@ -463,7 +463,7 @@ namespace SKL
 
                 if( false == Writer.Write( this->GetPacketBuffer() + ExpectedPacketSize, ExtraDataSize, false ) ) SKL_UNLIKELY
                 {
-                    SKLL_WRN_FMT( "ConfirmReceivedAmmount( ... ) Failed to copy extra data %u", ExtraDataSize );
+                    GLOG_DEBUG( "ConfirmReceivedAmmount( ... ) Failed to copy extra data %u", ExtraDataSize );
                     return { false, false };
                 }
 
@@ -648,7 +648,7 @@ namespace SKL
 
             if( bHasOverflow ) SKL_UNLIKELY
             {
-                SKLL_WRN_FMT( "AsyncNetBuffer::CalcultateTotalRoutingPacketSize() Overflow!! Routing packet size: %llu", Result );
+                GLOG_DEBUG( "AsyncNetBuffer::CalcultateTotalRoutingPacketSize() Overflow!! Routing packet size: %llu", Result );
             }
             SKL_ASSERT( false == bHasOverflow );
 
@@ -862,7 +862,7 @@ namespace SKL
 
             if( bHasOverflow ) SKL_UNLIKELY
             {
-                SKLL_WRN_FMT( "AsyncNetBuffer::Calcultate TotalBroadcastPacketSize() Overflow!! Broadcast packet size: %llu", Result );
+                GLOG_DEBUG( "AsyncNetBuffer::Calcultate TotalBroadcastPacketSize() Overflow!! Broadcast packet size: %llu", Result );
             }
             SKL_ASSERT( false == bHasOverflow );
 

@@ -16,7 +16,7 @@ namespace SKL
 
         SKL_NOINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
-            SKLL_TRACE();
+            GTRACE();
 
             const auto Tag                 = InGroup.GetTag(); //!< Stack tag copy
             const auto TickRate            = ( Flags.bSupportsTLSSync || Flags.bHasWorkerGroupSpecificTLSSync ) ? std::max( Tag.TickRate, Tag.SyncTLSTickRate ) : Tag.TickRate;
@@ -163,7 +163,7 @@ namespace SKL
 
         SKL_NOINLINE static void Run( Worker& InWorker, WorkerGroup& InGroup ) noexcept
         {
-            SKLL_TRACE();
+            GTRACE();
 
             const auto Tag                 = InGroup.GetTag(); //!< Stack tag copy
             const auto TickRate            = Tag.SyncTLSTickRate;

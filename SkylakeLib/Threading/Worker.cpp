@@ -40,7 +40,7 @@ namespace SKL
         const RStatus InitResult{ Skylake_InitializeLibrary_Thread() };
         if( InitResult != RSuccess )
         {
-            SKLL_ERR_FMT( "Worker Terminated! Skylake_InitializeLibrary_Thread() Failed! WG:%ws", Group->GetTag().Name );
+            GLOG_DEBUG( "Worker Terminated! Skylake_InitializeLibrary_Thread() Failed! WG:%ws", Group->GetTag().Name );
             return;
         }
         
@@ -78,7 +78,7 @@ namespace SKL
             
             Group->GetServerInstance()->SignalToStop( true );
 
-            SKLL_TRACE_MSG_FMT( "Failure WG:%ws", Group->GetTag().Name );
+            GTRACE_DEBUG( "Failure WG:%ws", Group->GetTag().Name );
         }
         
         // mark as stopped

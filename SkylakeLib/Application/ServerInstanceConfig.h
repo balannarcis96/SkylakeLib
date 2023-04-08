@@ -53,7 +53,7 @@ namespace SKL
             {
                 if( false == Tag.bSupportesTCPAsyncAcceptors )
                 {
-                    SKLL_ERR_FMT( "ApplicationWorkerGroupConfig::AddTCPAsyncAcceptor() Async TCP acceptors are not supported for this workers group [bSupportesTCPAsyncAcceptors == false]!" );
+                    GLOG_DEBUG( "ApplicationWorkerGroupConfig::AddTCPAsyncAcceptor() Async TCP acceptors are not supported for this workers group [bSupportesTCPAsyncAcceptors == false]!" );
                     return false;
                 }
 
@@ -108,13 +108,13 @@ namespace SKL
             { 
                 if( nullptr == Name )
                 {
-                    SKLL_ERR( "ApplicationWorkersConfig No name supplied!" );
+                    GLOG_DEBUG( "ApplicationWorkersConfig No name supplied!" );
                     return false;
                 }
 
                 if( true == WorkerGroups.empty() )
                 {   
-                    SKLL_ERR_FMT( "ApplicationWorkersConfig[%ws] No worker groups configured!", Name );
+                    GLOG_DEBUG( "ApplicationWorkersConfig[%ws] No worker groups configured!", Name );
                     return false;
                 }
 
@@ -123,7 +123,7 @@ namespace SKL
                     ( void )WorkerGroupConfigItem.Validate();
                     if( false == WorkerGroupConfigItem.IsValid() )
                     {
-                        SKLL_ERR_FMT( "ApplicationWorkersConfig[%ws] Worker group %ws is not valid!", Name, WorkerGroupConfigItem.GetName() );
+                        GLOG_DEBUG( "ApplicationWorkersConfig[%ws] Worker group %ws is not valid!", Name, WorkerGroupConfigItem.GetName() );
                         return false;
                     }
                 }

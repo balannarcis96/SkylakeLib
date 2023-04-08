@@ -20,7 +20,7 @@ namespace WorkersTests
         // Start sequence
         bool OnAddServices() noexcept override
         { 
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 1 == ++SequenceCount );
             
@@ -28,7 +28,7 @@ namespace WorkersTests
         }
         bool OnBeforeStartServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 2 == ++SequenceCount );
             
@@ -41,7 +41,7 @@ namespace WorkersTests
         }
         bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 3 == ++SequenceCount );
             
@@ -54,7 +54,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 4 == ++SequenceCount );
             
@@ -67,7 +67,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 5 == ++SequenceCount );
             
@@ -80,7 +80,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 6 == ++SequenceCount );
             
@@ -93,7 +93,7 @@ namespace WorkersTests
         }
         bool OnServerStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 7 == ++SequenceCount );
             
@@ -110,7 +110,7 @@ namespace WorkersTests
         // Stop sequence
         bool OnBeforeStopServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 8 == ++SequenceCount );
             
@@ -123,7 +123,7 @@ namespace WorkersTests
         }
         void OnAllServiceStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 9 == ++SequenceCount );
             
@@ -131,7 +131,7 @@ namespace WorkersTests
         }
         bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 10 == ++SequenceCount );
             
@@ -144,7 +144,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 11 == ++SequenceCount );
             
@@ -157,7 +157,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 12 == ++SequenceCount );
             
@@ -170,7 +170,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 13 == ++SequenceCount );
             
@@ -183,7 +183,7 @@ namespace WorkersTests
         }
         bool OnServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 14 == ++SequenceCount );
             
@@ -196,7 +196,7 @@ namespace WorkersTests
         }
         bool OnAfterServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 15 == ++SequenceCount );
             
@@ -210,7 +210,7 @@ namespace WorkersTests
         
         void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             TestApplication::OnServiceStopped( InService, InStatus );
         }
 
@@ -236,7 +236,7 @@ namespace WorkersTests
         // Start sequence
         bool OnAddServices() noexcept override
         { 
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 1 == ( SequenceCount.increment() + 1 ) );
             
@@ -244,7 +244,7 @@ namespace WorkersTests
         }
         bool OnBeforeStartServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 2 == ( SequenceCount.increment() + 1 ) );
             
@@ -257,7 +257,7 @@ namespace WorkersTests
         }
         bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 3 <= ( SequenceCount.increment() + 1 ) );
             
@@ -270,7 +270,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 19 == ( SequenceCount.increment() + 1 ) );
             
@@ -283,7 +283,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 20 == ( SequenceCount.increment() + 1 ) );
             
@@ -296,7 +296,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 21 == ( SequenceCount.increment() + 1 ) );
             
@@ -309,7 +309,7 @@ namespace WorkersTests
         }
         bool OnServerStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 22 == ( SequenceCount.increment() + 1 ) );
             
@@ -326,7 +326,7 @@ namespace WorkersTests
         // Stop sequence
         bool OnBeforeStopServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 23 == ( SequenceCount.increment() + 1 ) );
             
@@ -339,7 +339,7 @@ namespace WorkersTests
         }
         void OnAllServiceStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 24 == ( SequenceCount.increment() + 1 ) );
             
@@ -347,7 +347,7 @@ namespace WorkersTests
         }
         bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 25 <= ( SequenceCount.increment() + 1 ) );
             
@@ -360,7 +360,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_EQ( 41U , ( SequenceCount.increment() + 1U ) );
             
@@ -373,7 +373,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 42 == ( SequenceCount.increment() + 1 ) );
             
@@ -386,7 +386,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 43 == ( SequenceCount.increment() + 1 ) );
             
@@ -399,7 +399,7 @@ namespace WorkersTests
         }
         bool OnServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 44 == ( SequenceCount.increment() + 1 ) );
             
@@ -412,7 +412,7 @@ namespace WorkersTests
         }
         bool OnAfterServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 45 == ( SequenceCount.increment() + 1 ) );
             
@@ -426,7 +426,7 @@ namespace WorkersTests
         
         void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             TestApplication::OnServiceStopped( InService, InStatus );
         }
 
@@ -452,7 +452,7 @@ namespace WorkersTests
         // Start sequence
         bool OnAddServices() noexcept override
         { 
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 0 == SequenceCount.increment() );
             
@@ -460,7 +460,7 @@ namespace WorkersTests
         }
         bool OnBeforeStartServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 1 == SequenceCount.increment() );
             
@@ -473,7 +473,7 @@ namespace WorkersTests
         }
         bool OnWorkerStarted( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 2 <= SequenceCount.increment() );
             
@@ -486,7 +486,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             SequenceCount.increment();
             
@@ -505,7 +505,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStarted( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             SequenceCount.increment();
             
@@ -524,7 +524,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 38 == SequenceCount.increment() );
             
@@ -543,7 +543,7 @@ namespace WorkersTests
         }
         bool OnServerStarted() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 39 == SequenceCount.increment() );
 
@@ -560,7 +560,7 @@ namespace WorkersTests
         // Stop sequence
         bool OnBeforeStopServer() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 40 == SequenceCount.increment() );
             
@@ -573,7 +573,7 @@ namespace WorkersTests
         }
         void OnAllServiceStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
 
             EXPECT_TRUE( 41 == SequenceCount.increment() );
             
@@ -581,7 +581,7 @@ namespace WorkersTests
         }
         bool OnWorkerStopped( SKL::Worker& InWorker, SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             SequenceCount.increment();
             EXPECT_TRUE( false == InWorker.GetIsRunning() );
@@ -595,7 +595,7 @@ namespace WorkersTests
         }
         bool OnAllWorkersStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             SequenceCount.increment();
 
@@ -614,7 +614,7 @@ namespace WorkersTests
         }
         bool OnWorkerGroupStopped( SKL::WorkerGroup& Group ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             SequenceCount.increment();
 
@@ -633,7 +633,7 @@ namespace WorkersTests
         }
         bool OnAllWorkerGroupsStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 78 == SequenceCount.increment() );
             
@@ -652,7 +652,7 @@ namespace WorkersTests
         }
         bool OnServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 79 == SequenceCount.increment() );
             
@@ -671,7 +671,7 @@ namespace WorkersTests
         }
         bool OnAfterServerStopped() noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             
             EXPECT_TRUE( 80 == SequenceCount.increment() );
             
@@ -691,7 +691,7 @@ namespace WorkersTests
         
         void OnServiceStopped( SKL::IService* InService, SKL::RStatus InStatus ) noexcept override
         {
-            SKLL_TRACE();
+            GTRACE();
             TestApplication::OnServiceStopped( InService, InStatus );
         }
 
@@ -733,13 +733,13 @@ namespace WorkersTests
             ASSERT_TRUE( true == Group1.Validate() );
 
             Group1.SetWorkerStartHandler( []( SKL::Worker& /*InWorker*/, SKL::WorkerGroup& /*InGroup*/ ) mutable noexcept -> bool {
-                SKLL_INF( "Worker Group1 WORKER STARTED!" );
+                puts( "Worker Group1 WORKER STARTED!" );
                 return true;
             } ); 
 
             Group1.SetWorkerTickHandler( [ &Manager ]( SKL::Worker& Worker, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
             {
-                SKLL_INF( "Worker Group1 Tick()" );
+                puts( "Worker Group1 Tick()" );
 
                 if( Worker.GetAliveTime() < 1000 )
                 {
@@ -747,7 +747,7 @@ namespace WorkersTests
                 }
 
                 ( void )Manager.GetWorkerGroupById( 2 )->Defer( [ &Manager ]( SKL::ITask* /*Self*/ ) noexcept {
-                    SKLL_INF( "From TASK" );
+                    puts( "From TASK" );
                     Manager.SignalToStop();
                 } );
             
@@ -771,7 +771,7 @@ namespace WorkersTests
             SKL::ServerInstanceConfig::WorkerGroupConfig Group2{ Tag2 };
             Group2.SetWorkerTickHandler( [ /*&Manager*/ ]( SKL::Worker& /*Worker*/, SKL::WorkerGroup& /*Group*/ ) mutable noexcept -> void
             {
-                SKLL_INF( "Worker Group2 Tick()" );
+                puts( "Worker Group2 Tick()" );
             } );
             Config.AddNewGroup( std::move( Group2 ) );
 

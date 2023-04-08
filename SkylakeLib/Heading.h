@@ -108,48 +108,48 @@ namespace SKL
 
             if( wcslen( Name ) + 1 > static_cast<size_t>( CWorkerGroupNameMaxChars ) )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Name to long! Max:%u %ws!", CWorkerGroupNameMaxChars - 1, Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] Name to long! Max:%u %ws!", CWorkerGroupNameMaxChars - 1, Name );
                 return false;            
             }
 
             if ( 0U == Id )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Invalid Id %hu!", Name, Id );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] Invalid Id %hu!", Name, Id );
                 return false;
             }
 
             if ( false == bIsActive && false == bEnableAsyncIO )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] All inactive worker groups must be marked [bIsActive=false;bEnableAsyncIO=true]!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] All inactive worker groups must be marked [bIsActive=false;bEnableAsyncIO=true]!", Name );
                 return false;
             }
 
             if( false == bIsActive && bEnableTaskQueue )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] Reactive worker cannot have a task queue [bIsActive=false;bEnableTaskQueue=true]!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] Reactive worker cannot have a task queue [bIsActive=false;bEnableTaskQueue=true]!", Name );
                 return false;
             }
 
             if ( true == bIsActive && true == bEnableAsyncIO && false == bCallTickHandler && false == bHandlesTimerTasks && false == bSupportsAOD )
             {
-                SKLL_WRN_FMT( "WorkerGroupTag[%ws] For [bIsActive=true;bEnableAsyncIO=true;bCallTickHandler=false;bHandlesTimerTasks=false;bSupportsAOD=false] Recommended to use a reactive worker group instead!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] For [bIsActive=true;bEnableAsyncIO=true;bCallTickHandler=false;bHandlesTimerTasks=false;bSupportsAOD=false] Recommended to use a reactive worker group instead!", Name );
             }
 
             if( true == bSupportesTCPAsyncAcceptors && false == bEnableAsyncIO )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bEnableAsyncIO = true!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] [bSupportesTCPAsyncAcceptors == true] requires -> bEnableAsyncIO = true!", Name );
                 return false;
             }
 
             if( true == bHandlesTimerTasks && false == bIsActive )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bHandlesTimerTasks == true] requires -> bIsActive = true!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] [bHandlesTimerTasks == true] requires -> bIsActive = true!", Name );
                 return false;
             }
             
             if( true == bTickWorkerServices && false == bIsActive )
             {
-                SKLL_ERR_FMT( "WorkerGroupTag[%ws] [bTickWorkerServices == true] requires -> bIsActive = true!", Name );
+                GLOG_DEBUG( "WorkerGroupTag[%ws] [bTickWorkerServices == true] requires -> bIsActive = true!", Name );
                 return false;
             }
 

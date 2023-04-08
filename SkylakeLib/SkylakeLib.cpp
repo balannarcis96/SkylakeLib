@@ -20,7 +20,7 @@ namespace SKL
         const auto L1CacheLineSize { GetL1CacheLineSize() };
         if ( SKL_CACHE_LINE_SIZE != L1CacheLineSize )
         {
-            SKLL_ERR_FMT( "Expected L1 cache line size to be %d but it is %llu, PLATFORM NOT SUPPORTED, REBUILD!", static_cast<int32_t>( SKL_CACHE_LINE_SIZE ), L1CacheLineSize );
+            GTRACE_ERROR( "Expected L1 cache line size to be %d but it is %llu, PLATFORM NOT SUPPORTED, REBUILD!", static_cast<int32_t>( SKL_CACHE_LINE_SIZE ), L1CacheLineSize );
         }
 
         SKL_ASSERT_ALLWAYS_MSG( SKL_CACHE_LINE_SIZE == L1CacheLineSize, "Unsupported l1 cache line size!" );
@@ -30,7 +30,7 @@ namespace SKL
     {
         if( TRUE == GIsInit.load_relaxed() )
         {
-            SKLL_WRN( "The SkylakeLib was already initialized" );
+            GTRACE_WARNING( "The SkylakeLib was already initialized" );
             return RSuccess;
         }
     
@@ -43,14 +43,6 @@ namespace SKL
         }
 
 #if defined(SKL_USE_SERIALIZED_LOGGER)
-        if( false == GLogger.HasHandler() )
-        {
-            // Setup default serialized handler
-            GLogger.SetLogHandler( []( BufferStream& /*InStream*/ ) noexcept -> void
-            {
-                ( void )::printf( "NO HANDLER WAS SET FOR THE LOGGER!\nSee [%s]:[%s:%d]!\n", __FILE__, SKL_LOGGER_FUNCTION, __LINE__ );
-            } );
-        }
 #else
         GLogger.SetOutput( GLogOutput.load() );
 #endif
@@ -58,19 +50,17 @@ namespace SKL
         auto Result = AsyncIO::InitializeSystem();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR( "Failed to initialize the async io system!" );
+            GTRACE_ERROR( "Failed to initialize the async io system!" );
             return Result;
         }
 
         Result = Skylake_InitializeLibrary_Thread();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR( "Failed to initialize the SkylakeLibrary for the main thread!" );
+            GTRACE_ERROR( "Failed to initialize the SkylakeLibrary for the main thread!" );
             return Result;
         }
         
-        GTRACE_FATAL( "We haved std out logger baby! %d %ws", 151515, L"GAGAGAW!" );
-
         GIsInit.exchange( true );
         return RSuccess;
     }
@@ -79,21 +69,21 @@ namespace SKL
     {
         if( FALSE == GIsInit.load_relaxed() )
         {
-            SKLL_WRN( "The SkylakeLib was already terminated" );
+            GTRACE_WARNING( "The SkylakeLib was already terminated" );
             return RSuccess;
         }
 
         auto Result = AsyncIO::ShutdownSystem();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR( "Failed to shutdown the async io system!" );
+            GTRACE_ERROR( "Failed to shutdown the async io system!" );
             return Result;
         }
 
         Result = Skylake_TerminateLibrary_Thread();
         if( RSuccess != Result ) SKL_UNLIKELY
         {
-            SKLL_ERR( "Failed to terminate the SkylakeLibrary for the main thread!" );
+            GTRACE_ERROR( "Failed to terminate the SkylakeLibrary for the main thread!" );
             return Result;
         }
 
@@ -107,7 +97,7 @@ namespace SKL
     {
         if( true == SkylakeLibInitPerThread::GetValue() )
         {
-            SKLL_INF( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
+            GTRACE_WARNING( "[Skylake_InitializeLibrary_Thread()] The SkylakeLib was already init on this thread!" );
             return RSuccess;
         }
     
@@ -117,7 +107,7 @@ namespace SKL
         {
             if( RSuccess != StringUtils::Create() )
             {
-                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
+                GTRACE_ERROR( "[Skylake_InitializeLibrary_Thread()] Failed to create StringUtils" );
                 return RFail;
             }
         }
@@ -126,7 +116,7 @@ namespace SKL
         {
             if( RSuccess != KPIContext::Create() )
             {
-                SKLL_ERR( "[Skylake_InitializeLibrary_Thread()] Failed to create KPIContext" );
+                GTRACE_ERROR( "[Skylake_InitializeLibrary_Thread()] Failed to create KPIContext" );
                 return RFail;
             }
         }
@@ -140,7 +130,7 @@ namespace SKL
     {
         if( false == SkylakeLibInitPerThread::GetValue() )
         {
-            SKLL_INF( "[Skylake_TerminateLibrary_Thread()] The SkylakeLib was already terminated on this thread!" );
+            GTRACE_WARNING( "[Skylake_TerminateLibrary_Thread()] The SkylakeLib was already terminated on this thread!" );
             return RSuccess;
         }
 
@@ -186,14 +176,14 @@ namespace SKL
 {
     void IService::OnServiceStopped( RStatus InStatus ) noexcept
     {
-        SKLL_TRACE();
+        GTRACE();
 
         MyServerInstance->OnServiceStopped( this, InStatus );
     }
 
     void IService::OnServerStopSignaled() noexcept
     {
-        SKLL_TRACE();
+        GTRACE();
 
         const auto Result{ OnStopService() };
         if( Result != RPending )
@@ -202,7 +192,7 @@ namespace SKL
         }
         else
         {
-            SKLL_VER_FMT( "Service %u is pending to stop.", GetUID() );
+            GLOG_DEBUG( "Service %u is pending to stop.", GetUID() );
         }
     }
 }

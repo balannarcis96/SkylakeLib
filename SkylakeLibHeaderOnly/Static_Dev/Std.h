@@ -40,6 +40,7 @@ static_assert( sizeof( void* ) == 8, "64bit build Only!" );
 #include <latch>
 #include <bit>
 #include <span>
+#include <cassert>
 
 namespace SKL
 {

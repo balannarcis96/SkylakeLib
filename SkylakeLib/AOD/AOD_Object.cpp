@@ -119,7 +119,7 @@ namespace SKL::AOD
             }
             else
             {
-                SKLL_TRACE_MSG( "Flush SKIPP!" );
+                GLOG_DEBUG( "Flush SKIPP!" );
                 //SKL_BREAK();
                 // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }
@@ -233,7 +233,7 @@ namespace SKL::AOD
             }
             else
             {
-                SKLL_VER( "Flush SKIPP!" );
+                GLOG_DEBUG( "Flush SKIPP!" );
                 //SKL_BREAK();
                 // There is low a possiblility for a bit of spinning because of the gap between: case1{ RefPoint[0] and RefPoint[1] } or case2{ RefPoint[0] and RefPoint[2] }
             }

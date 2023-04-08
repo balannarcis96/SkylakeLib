@@ -26,7 +26,7 @@ file( GLOB_RECURSE _SKL_LIB_TLSSync_files                LIST_DIRECTORIES false 
 file( GLOB_RECURSE _SKL_LIB_Utils_files                  LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Utils/*.cpp"                  "${SKYLAKE_SRC_ROOT}/Utils/*.h" )
 file( GLOB_RECURSE _SKL_LIB_Measurements_files           LIST_DIRECTORIES false "${SKYLAKE_SRC_ROOT}/Measurements/*.cpp"           "${SKYLAKE_SRC_ROOT}/Measurements/*.h" )
 
-##### Group SkylakeLib Files #####
+#####SkylakeLib Files #####
 set_property(GLOBAL PROPERTY USE_FOLDERS YES)
 source_group("AdvancedSingleDispatch" FILES ${_SKL_LIB_AdvancedSingleDispatch_files})
 source_group("Application"            FILES ${_SKL_LIB_Application_files}           )
@@ -74,7 +74,7 @@ set( SKL_LIB_TLSSync_files                "${_SKL_LIB_TLSSync_files}"           
 set( SKL_LIB_Utils_files                  "${_SKL_LIB_Utils_files}"                  CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_Measurements_files           "${_SKL_LIB_Measurements_files}"           CACHE STRING "SkylakeLib Files" )
 
-function(Create_SkylakeLibTarget target_name)
+function(Create_SkylakeLibTarget target_name standalone_target_name)
     add_library (${target_name} STATIC  
         ${SKL_LIB_AdvancedSingleDispatch_files}
         ${SKL_LIB_Application_files}
@@ -107,24 +107,51 @@ function(Create_SkylakeLibTarget target_name)
     target_include_directories(${target_name} PUBLIC "${SKYLAKE_SRC_ROOT}/")
 
     # Link SkylakeLibStandalone
-    target_link_libraries(${target_name} PUBLIC SkylakeLibStandalone)
+    target_link_libraries(${target_name} PUBLIC "${standalone_target_name}")
     
-    if(SKL_BUILD_OS STREQUAL "Win64")
+    # Default Options
+    set(bUseFMTLib ON)
+    set(bNoNamespace ${SKL_NO_NAMESPACE})
+    set(bBuildShipping ${SKL_BUILD_SHIPPING})
+    set(bUseEIS ${SKL_USE_EIS})
+    set(bUseMiMalloc ${SKL_USE_MIMALLOC})
+    set(bMemoryStatistics ${SKL_MEMORY_STATISTICS})
+    set(bGuardAllocSize ${SKL_GUARD_ALLOC_SIZE})
+    set(bUsePreciseSleep ${SKL_USE_PRECISE_SLEEP})
+    set(bCacheLineMemManager ${SKL_CACHE_LINE_MEM_MANAGER})
+    set(bDebugMemoryAllocators ${SKL_DEBUG_MEMORY_ALLOCATORS})
+    set(bMath ${SKL_MATH})
+    set(bKPIsForQueueSizes ${SKL_KPI_QUEUE_SIZES})
+    set(bKPIsForWorkers ${SKL_KPI_WORKER_TICK})
+    set(KPIsForMemAllocCount ${SKL_KPI_MEM_ALLOC_CNT})
+    set(bKPIsForTLSMemAllocCount ${SKL_KPI_TLS_MEM_ALLOC_CNT})
+    set(KPIsForMemAllocTiming ${SKL_KPI_MEM_ALLOC_TIME})
+    set(bKPIsForTLSMemAllocTiming ${SKL_KPI_TLS_MEM_ALLOC_TIME})
+    set(logLevel ${SKL_LIB_LOG_LEVEL})
+    set(targetOS ${SKL_BUILD_OS})
+    set(realType ${SKL_REAL_TYPE})
+
+    if(targetOS STREQUAL "Win64")
         target_compile_definitions(${target_name} PUBLIC SKL_BUILD_WINDOWS)
-    elseif(SKL_BUILD_OS STREQUAL "FreeBSD")
+    elseif(targetOS STREQUAL "FreeBSD")
         target_compile_definitions(${target_name} PUBLIC SKL_BUILD_FREEBSD)
-    elseif(SKL_BUILD_OS STREQUAL "Ubuntu")
+    elseif(targetOS STREQUAL "Ubuntu")
         target_compile_definitions(${target_name} PUBLIC SKL_BUILD_UBUNTU)
     endif()
 
+    # fmt
+	if(bUseFMTLib)
+		target_link_libraries(${target_name} PUBLIC fmt::fmt)
+	endif()
+	
     # Link mimalloc-static
-    if(SKL_USE_MIMALLOC)
+    if(bUseMiMalloc)
         target_link_libraries(${target_name} PUBLIC mimalloc-static)
         target_compile_definitions(${target_name} PUBLIC SKL_USE_MIMALLOC)
     endif()
     
     # No Namespace
-    if(SKL_NO_NAMESPACE)
+    if(bNoNamespace)
         target_compile_definitions(${target_name} PUBLIC SKL_NO_NAMESPACE)
     endif()
 
@@ -132,87 +159,72 @@ function(Create_SkylakeLibTarget target_name)
     target_precompile_headers(${target_name} PUBLIC "${SKYLAKE_SRC_ROOT}/SkylakeLib.h")
     
 	# Set EIS flags
-	if(SKL_USE_EIS STREQUAL AVX2)
+	if(bUseEIS STREQUAL AVX2)
         target_compile_definitions(${target_name} PUBLIC SKL_USE_AVX2)
-	elseif(SKL_USE_EIS STREQUAL AVX_512)
+	elseif(bUseEIS STREQUAL AVX_512)
 		target_compile_definitions(${target_name} PUBLIC SKL_USE_AVX_512)
 	endif()
 	
     # [DevOnly] - MemoryStatistics
-    if(SKL_MEMORY_STATISTICS)
+    if(bMemoryStatistics)
         target_compile_definitions(${target_name} PUBLIC SKL_MEMORY_STATISTICS)
     endif()
     
     # Guard allocation sizes
-    if(SKL_GUARD_ALLOC_SIZE)
+    if(bGuardAllocSize)
         target_compile_definitions(${target_name} PUBLIC SKL_GUARD_ALLOC_SIZE)
     endif()
 
     # Use precise sleep
-    if(SKL_USE_PRECISE_SLEEP)
+    if(bUsePreciseSleep)
         target_compile_definitions(${target_name} PUBLIC SKL_USE_PRECISE_SLEEP)
     endif()
 
     # MemoryManager - All blocks must be cacheline alligned
-    if(SKL_CACHE_LINE_MEM_MANAGER)
+    if(bCacheLineMemManager)
         target_compile_definitions(${target_name} PUBLIC SKL_CACHE_LINE_MEM_MANAGER)
     endif()
 
     # Compile instrumentation for debugging mem allocators
-    if(SKL_DEBUG_MEMORY_ALLOCATORS)
+    if(bDebugMemoryAllocators)
         target_compile_definitions(${target_name} PUBLIC SKL_DEBUG_MEMORY_ALLOCATORS)
     endif()
 
     # Include math abstractions and utils
-    if(SKL_MATH)
+    if(bMath)
         target_compile_definitions(${target_name} PUBLIC SKL_MATH)
     endif()
 
 	# Set KPI flags
-	if(SKL_KPI_QUEUE_SIZES)
+	if(bKPIsForQueueSizes)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_QUEUE_SIZES)
 	endif()
-	if(SKL_KPI_WORKER_TICK)
+	if(bKPIsForWorkers)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_WORKER_TICK)
 	endif()
 	
 	# Allocations counters
-	if(SKL_KPI_MEM_ALLOC_CNT STREQUAL "OsOnly")
+	if(KPIsForMemAllocCount STREQUAL "OsOnly")
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS)
-	elseif(SKL_KPI_MEM_ALLOC_CNT STREQUAL "All")
+	elseif(KPIsForMemAllocCount STREQUAL "All")
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_OS)
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_COUNTER_GLOBAL)
 	endif()
 
-	if(SKL_KPI_TLS_MEM_ALLOC_CNT)
+	if(bKPIsForTLSMemAllocCount)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_TLS_MEM_ALLOC_CNT)
 	endif()
 
 	# Allocations timings
-	if(SKL_KPI_MEM_ALLOC_TIME STREQUAL "OsOnly")
+	if(KPIsForMemAllocTiming STREQUAL "OsOnly")
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_OS)
-	elseif(SKL_KPI_MEM_ALLOC_TIME STREQUAL "All")
+	elseif(KPIsForMemAllocTiming STREQUAL "All")
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_OS)
 		target_compile_definitions(${target_name} PUBLIC SKL_MEM_TIME_GLOBAL)
 	endif()
 
-	if(SKL_KPI_TLS_MEM_ALLOC_TIME)
+	if(bKPIsForTLSMemAllocTiming)
 		target_compile_definitions(${target_name} PUBLIC SKL_KPI_TLS_MEM_ALLOC_TIME)
-	endif()
-
-    # Magic Enum
-    if(SKL_ADD_MAGIC_ENUM)
-		target_compile_definitions(${target_name} PUBLIC SKL_MAGIC_ENUM)
-    endif()
-
-    # fmt
-	target_link_libraries(${target_name} PUBLIC fmt::fmt)
-	
-	# Logger
-	if(SKL_USE_SERIALIZED_LOGGER)
-		target_compile_definitions(${target_name} PUBLIC SKL_USE_SERIALIZED_LOGGER)
-	else()
-		# N/A
 	endif()
 
 endfunction(Create_SkylakeLibTarget)

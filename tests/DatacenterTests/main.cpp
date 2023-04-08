@@ -332,7 +332,7 @@ namespace DatacenterTests
                 return SKL::DC::CInternationalLanguage;
             }
 
-            SKLL_TRACE_MSG_FMT( "Unknown language %s", InLanguageStr );
+            GLOG_WARNING( "Unknown language %s", InLanguageStr );
 
             return SKL::DC::CInvalidLanguage;
         }

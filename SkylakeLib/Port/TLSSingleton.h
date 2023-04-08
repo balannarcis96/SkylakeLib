@@ -40,7 +40,7 @@ namespace SKL
             SKL_ASSERT( TLSSingletonType::GetValuePtr( ) == nullptr );
             TLSSingletonType::SetValuePtr( NewObject );
             
-            SKLL_VER_FMT( "[TLSSingleton] %s Created!", NewObject->GetName() );
+            GLOG_DEBUG( "[TLSSingleton] %s Created!", NewObject->GetName() );
 
             return RSuccess;
         }
@@ -57,7 +57,7 @@ namespace SKL
         {
             if( const auto *Instance = TLSSingletonType::GetValuePtr() )
             {
-                SKLL_VER_FMT( "[TLSSingleton] %s Destroyed!", Instance->GetName() );
+                GLOG_DEBUG( "[TLSSingleton] %s Destroyed!", Instance->GetName() );
                 delete Instance;
             }
 

@@ -48,9 +48,6 @@
 //! String Stream
 #include "Utils/StringUtils.h"
 
-//! Logger
-#include "Utils/Logger.h"
-
 //! Memory abstractions
 #include "Memory/Memory.h"
 

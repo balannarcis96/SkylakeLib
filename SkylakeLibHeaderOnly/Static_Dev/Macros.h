@@ -128,3 +128,10 @@ namespace SKL
     ClassName ( ClassName && ) = delete;                \
     ClassName & operator=( ClassName && ) = delete
 
+#if defined(__clang__) || defined(__GNUC__)
+    #define SKL_FUNCTION_SIG __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+    #define SKL_FUNCTION_SIG __FUNCSIG__
+#else   
+    #define SKL_FUNCTION_SIG "#FuncSig Not Supported#"
+#endif

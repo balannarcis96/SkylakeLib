@@ -56,15 +56,6 @@ namespace SKL
     };
     
     /*------------------------------------------------------------
-        Logging
-      ------------------------------------------------------------*/
-#if defined(SKL_USE_SERIALIZED_LOGGER)
-    constexpr bool CSkylakeUserSerializedLogger = true;
-#else
-    constexpr bool CSkylakeUserSerializedLogger = false;
-#endif
-
-    /*------------------------------------------------------------
         Thread local MemoryManager
       ------------------------------------------------------------*/
     struct ThreadLocalMemoryManagerConfig

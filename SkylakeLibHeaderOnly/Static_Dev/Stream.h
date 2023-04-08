@@ -352,7 +352,7 @@ namespace SKL
                                      | ( std::ofstream::trunc  * !bAppendInsteadOfTruncate ) ) };
             if( false == File.is_open() )
             {
-                //SKLL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
+                //GLOG_DEBUG( "IStreamReader::SaveToFile(InFileName) Failed to open file %s", InFileName );
                 return false;
             }
 
@@ -361,7 +361,7 @@ namespace SKL
             const auto Result{ File.good() };
             if( false == Result )
             {
-                //SKLL_WRN_FMT( "IStreamReader::SaveToFile(InFileName) Failed to write bytesCount:%u to file %s ", WriteSize, InFileName );
+                //GLOG_DEBUG( "IStreamReader::SaveToFile(InFileName) Failed to write bytesCount:%u to file %s ", WriteSize, InFileName );
             }
 
             File.close();
@@ -513,7 +513,7 @@ namespace SKL
             auto File{ std::ifstream( InFileName, std::ifstream::binary ) };
             if( false == File.is_open( ) )
             {
-                //SKLL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to open file %s", InFileName );
+                //GLOG_DEBUG( "IStreamWriter::ReadFromFile(InFileName) Failed to open file %s", InFileName );
                 return false;
             } 
 
@@ -523,7 +523,7 @@ namespace SKL
 
             if( 0 == ReadSize ) SKL_UNLIKELY
             {
-                //SKLL_WRN_FMT( "IStreamWriter::ReadFromFile(InFileName) Empty file %s", InFileName );
+                //GLOG_DEBUG( "IStreamWriter::ReadFromFile(InFileName) Empty file %s", InFileName );
                 File.close();
                 return false;
             }
@@ -531,7 +531,7 @@ namespace SKL
             const auto bItFits{ CanFit( ReadSize + 1 ) };
             if( false == bItFits && false == bTruncate )
             {
-                //SKLL_VER_FMT( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
+                //GLOG_DEBUG( "IStreamWriter::ReadFromFile(InFileName) Failed to read file %s! Exceeds buffer size. BufferSize:%u FileSize:%u", InFileName, this->GetRemainingSize(), ReadSize );
                 File.close();
                 return false;
             }
@@ -541,7 +541,7 @@ namespace SKL
             const auto Result{ File.good() };
             if( false == Result )
             {
-                //SKLL_WRN_FMT( "IStreamReader::ReadFromFile(InFileName) Failed to read bytesCount:%u to file %s ", ReadSize, InFileName );
+                //GLOG_DEBUG( "IStreamReader::ReadFromFile(InFileName) Failed to read bytesCount:%u to file %s ", ReadSize, InFileName );
             }
 
             File.close();
@@ -596,6 +596,12 @@ namespace SKL
     struct alignas( SKL_ALIGNMENT ) BinaryObjectStream: public IBinaryStream<TUnit, true>
     {
         BinaryObjectStream() noexcept = default;
+        BinaryObjectStream( uint32_t InAllocSize ) noexcept
+            : Stream{ 0, InAllocSize, nullptr, true } 
+        {
+            Stream.Buffer.Buffer = new uint8_t[InAllocSize];
+            assert( nullptr != Stream.Buffer.Buffer );
+        }
         BinaryObjectStream( uint8_t* InBuffer, uint32_t InSize, uint32_t InPosition, bool bOwnsBuffer ) noexcept
             : Stream{ InPosition, InSize, InBuffer, bOwnsBuffer } {}
 

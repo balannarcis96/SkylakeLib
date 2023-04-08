@@ -48,6 +48,9 @@
 //! Packet
 #include "Packet.h"
 
+//! Logger
+#include "Logger.h"
+
 //! Packet Builder
 #include "PacketBuilder.h"
 
