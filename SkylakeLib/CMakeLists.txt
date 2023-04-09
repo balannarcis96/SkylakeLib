@@ -73,8 +73,11 @@ set( SKL_LIB_Threading_files              "${_SKL_LIB_Threading_files}"         
 set( SKL_LIB_TLSSync_files                "${_SKL_LIB_TLSSync_files}"                CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_Utils_files                  "${_SKL_LIB_Utils_files}"                  CACHE STRING "SkylakeLib Files" )
 set( SKL_LIB_Measurements_files           "${_SKL_LIB_Measurements_files}"           CACHE STRING "SkylakeLib Files" )
+	
+function(Create_SkylakeLibTarget target_postfix)
+    Create_SkylakeLibTarget_Name(target_name ${target_postfix})
+    Create_SkylakeStandaloneLibTarget_Name(standalone_target_name ${target_postfix})
 
-function(Create_SkylakeLibTarget target_name standalone_target_name)
     add_library (${target_name} STATIC  
         ${SKL_LIB_AdvancedSingleDispatch_files}
         ${SKL_LIB_Application_files}

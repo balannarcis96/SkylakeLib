@@ -3,7 +3,9 @@ project ("SkyalakeLib_Math_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibMathTests main.cpp)
 add_test(NAME "TEST_SkylakeLibMathTests" COMMAND SkylakeLibMathTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-target_link_libraries(SkylakeLibMathTests PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibMathTests PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibMathTests PUBLIC gtest_main)

@@ -3,7 +3,9 @@ project ("SkyalakeLib_TLSSync_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibTLSSyncTests main.cpp)
 add_test(NAME "TEST_SkylakeLibTLSSyncTests" COMMAND SkylakeLibTLSSyncTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-target_link_libraries(SkylakeLibTLSSyncTests PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibTLSSyncTests PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibTLSSyncTests PUBLIC gtest_main)

@@ -3,7 +3,9 @@ project ("SkyalakeLib_Task_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibTaskTests main.cpp)
 add_test(NAME "TEST_SkylakeLibTaskTests" COMMAND SkylakeLibTaskTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-target_link_libraries(SkylakeLibTaskTests PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibTaskTests PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibTaskTests PUBLIC gtest_main)

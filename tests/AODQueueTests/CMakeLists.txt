@@ -3,7 +3,9 @@ project ("SkyalakeLib_AODQueue_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibAODQueueTests main.cpp)
 add_test(NAME "TEST_SkylakeLibAODQueueTests" COMMAND SkylakeLibAODQueueTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-target_link_libraries(SkylakeLibAODQueueTests PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibAODQueueTests PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibAODQueueTests PUBLIC gtest_main)

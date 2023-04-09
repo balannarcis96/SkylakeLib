@@ -24,8 +24,12 @@ source_group("Tuning"      FILES ${_Tuning_files}     )
 source_group("Utils"       FILES ${_Utils_files}      )
 source_group("/"           FILES ${_Root_files}       )
 
-function(Create_SkylakeStandaloneLibTarget target_name)
-    add_library (${target_name} STATIC  
+function(Create_SkylakeStandaloneLibTarget)
+    cmake_parse_arguments(MY_ARGS "" "TARGET_PREFIX;SERIALIZED_LOGGER" "" ${ARGN})
+
+    Create_SkylakeStandaloneLibTarget_Name(target_name ${MY_ARGS_TARGET_PREFIX})
+
+    add_library( ${target_name} STATIC  
         ${SKL_STANDALONE_LIB_Diagnostics_files}
         ${SKL_STANDALONE_LIB_ECS_files}
         ${SKL_STANDALONE_LIB_Std_files}                 
@@ -48,11 +52,15 @@ function(Create_SkylakeStandaloneLibTarget target_name)
     set(bNoNamespace ${SKL_NO_NAMESPACE})
     set(bBuildShipping ${SKL_BUILD_SHIPPING})
     set(bNoAssert ${SKL_NO_ASSERTS})
-    set(bUseSerializedLogger ${SKL_USE_SERIALIZED_LOGGER})
+    set(bUseSerializedLogger OFF)
     set(logLevel ${SKL_LIB_LOG_LEVEL})
     set(realType ${SKL_REAL_TYPE})
     set(bUseMgicEnum ${SKL_ADD_MAGIC_ENUM})
     
+    if(DEFINED MY_ARGS_SERIALIZED_LOGGER)
+        set(bUseSerializedLogger ${MY_ARGS_SERIALIZED_LOGGER})
+    endif()
+
     # Allow optional arguments to override options
 
     # Use Options

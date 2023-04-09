@@ -3,8 +3,12 @@ project ("SkyalakeLib_Datacenter_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibDatacenterTests main.cpp)
 add_test(NAME "TEST_SkylakeLibDatacenterTests" COMMAND SkylakeLibDatacenterTests WORKING_DIRECTORY "$<TARGET_FILE_DIR:SkylakeLibDatacenterTests>/../")
-target_link_libraries(SkylakeLibDatacenterTests PUBLIC SkylakeLib)
-target_link_libraries(SkylakeLibDatacenterTests PUBLIC SkylakeDatacenterBuilder)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibDatacenterTests PUBLIC ${skl_lib_target})
+
+Create_SkylakeDCBuilderLibTarget_Name(skldcbuilder_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibDatacenterTests PUBLIC ${skldcbuilder_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibDatacenterTests PUBLIC gtest_main)

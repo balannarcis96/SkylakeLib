@@ -3,7 +3,9 @@ project ("SkyalakeLib_TLS_Tests" VERSION 1.0.0)
 
 add_executable(SkylakeLibTCPAcceptorTests main.cpp)
 add_test(NAME "TEST_SkylakeLibTCPAcceptorTests" COMMAND SkylakeLibTCPAcceptorTests WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-target_link_libraries(SkylakeLibTCPAcceptorTests PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibTCPAcceptorTests PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibTCPAcceptorTests PUBLIC gtest_main)

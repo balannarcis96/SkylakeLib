@@ -7,6 +7,7 @@ set(SKL_DEBUG_MEMORY_ALLOCATORS_DESC "Enable checks for correct allocation/deall
 set(SKL_ENABLE_LIKELY_FLAGS_DESC "SkylakeLib is laced out with SKL_LIKELY, enable SKL_LIKELY?")
 set(SKL_ENABLE_UNLIKELY_FLAGS_DESC "SkylakeLib is laced out with SKL_UNLIKELY, enable SKL_UNLIKELY?")
 
+option(SKL_DEV_MODE                      "Development mode"                          ON)
 option(SKL_BUILD_TESTS                   "Build tests"                               ON)
 option(SKL_DISABLE_EXCEPTIONS            "Disable exceptions[Recommended]!"         OFF)
 option(SKL_BUILD_SHIPPING                "Build for shipping"                       OFF)
@@ -31,11 +32,14 @@ option(SKL_ENABLE_UNLIKELY_FLAGS         "${SKL_ENABLE_UNLIKELY_FLAGS_DESC}"    
 option(SKL_ADD_MAGIC_ENUM		         "Include the magic_enum lib"         		 ON)
 option(SKL_KPI_TLS_MEM_ALLOC_TIME		 "TLS Memory Allocations Time"               ON)
 option(SKL_KPI_TLS_MEM_ALLOC_CNT		 "TLS Memory Allocations Counters"           ON)
-option(SKL_USE_SERIALIZED_LOGGER		 "TLS Memory Allocations Counters"          OFF)
+
 
 # KPIs
 option(SKL_KPI_QUEUE_SIZES		         "KPI - Sample Queue Sizes API"	     ON)
 option(SKL_KPI_WORKER_TICK		         "KPI - Per Worker Tick Duration"	 ON)
+
+# Name of the development skl targets
+set(SKL_DEV_NAME "_dev"	CACHE STRING "TLS Memory Allocations Counters")
 
 #Timing - Global Memory Allocations
 set(SKL_KPI_MEM_ALLOC_TIME_OPTIONS None OSOnly All)
@@ -46,9 +50,6 @@ set_property(CACHE SKL_KPI_MEM_ALLOC_TIME PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_T
 set(SKL_KPI_MEM_ALLOC_CNT_OPTIONS None OSOnly All)
 set(SKL_KPI_MEM_ALLOC_CNT All CACHE STRING "Global Memory Allocations Counter")
 set_property(CACHE SKL_KPI_MEM_ALLOC_CNT PROPERTY STRINGS ${SKL_KPI_MEM_ALLOC_CNT_OPTIONS})
-
-# Override this to create as many skylake lib targets as you need
-set(SKL_LIB_TARGETS "Dev;Testing" CACHE STRING "Skyalke lib targets to create")
 
 #SKL_L1_CACHE_LINE_SIZE
 set(SKL_L1_CACHE_LINE_SIZE_OPTIONS 64bytes 128bytes 512bytes)
@@ -148,6 +149,28 @@ if(SKL_USE_MIMALLOC)
 	endif()
 endif()	
 
+#Utils ##########################################################
+
+function(Create_SkylakeLibTarget_Name out postfix)
+	set(${out} "libskl${postfix}" PARENT_SCOPE)
+endfunction()
+
+function(Create_SkylakeStandaloneLibTarget_Name out prefix)	
+	set(${out} "libsklstandalone${prefix}" PARENT_SCOPE)
+endfunction(Create_SkylakeStandaloneLibTarget_Name)
+
+function(Create_SkylakeDCLibTarget_Name out postfix)
+	set(${out} "libskldc${postfix}" PARENT_SCOPE)
+endfunction()
+
+function(Create_SkylakeDCBuilderLibTarget_Name out postfix)
+	set(${out} "libskldcbuilder${postfix}" PARENT_SCOPE)
+endfunction()
+
+function(Create_SkylakeDBLibTarget_Name out postfix)
+	set(${out} "libskldb${postfix}" PARENT_SCOPE)
+endfunction()
+
 ################################################################
 
 add_subdirectory("ThirdParty")
@@ -195,27 +218,42 @@ if(SKL_DISABLE_EXCEPTIONS)
         string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     
-        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS})# Disable Exceptions
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHa" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
         string(REPLACE "/EHs" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS}) # Disable Exceptions
     endif()
 endif()
 
-function(Create_SkylakeLibTargets target_postfix)
-    set(STANDALONE_LIB_NAME "SkylakeLibStandalone_${target_postfix}")
-    set(LIB_NAME "SkylakeLib_${target_postfix}")
+function(Create_SkylakeLibTargets)
+    cmake_parse_arguments(MY_ARGS "" "NAME;SERIALIZED_LOGGER" "" ${ARGN})
+    
+    set(group_name ${MY_ARGS_NAME})
 
-    Create_SkylakeStandaloneLibTarget("${STANDALONE_LIB_NAME}")
-    Create_SkylakeLibTarget("${LIB_NAME}" "${STANDALONE_LIB_NAME}")
+    # Add the standalone lib target
+    Create_SkylakeStandaloneLibTarget(TARGET_PREFIX ${group_name} SERIALIZED_LOGGER ${MY_ARGS_SERIALIZED_LOGGER})
+
+    # Add the full skylake lib target
+    Create_SkylakeLibTarget(${group_name})
+
+    # Add the skylake db lib target
+    if(SKL_BUILD_DB)
+        Create_SkylakeDBLibTarget(${group_name})
+    endif()
+
+    # Add the skylake DC and DCBuilder lib targets
+    if(SKL_BUILD_DATACENTER)
+        Create_SkylakeDCLibTarget(${group_name})
+    endif()
+
 endfunction(Create_SkylakeLibTargets)
 
-##### Create all SkyalekLib Targets #####
-foreach(target_name ${SKL_LIB_TARGETS})
-    Create_SkylakeLibTargets(${target_name})
-endforeach()
+if(SKL_DEV_MODE)
+    ##### Create the dev SkyalekLib Targets #####
+    Create_SkylakeLibTargets(NAME "${SKL_DEV_NAME}")
+endif()
 
 ##### Tests #####
-if(SKL_BUILD_TESTS)
+if(SKL_BUILD_TESTS AND SKL_DEV_MODE)
     enable_testing()
 
     if(SKL_ADD_TEST_LIBS)

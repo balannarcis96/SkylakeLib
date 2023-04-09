@@ -5,7 +5,9 @@ add_library(SkylakeLibTestsSharedLib STATIC
     "include/ApplicationSetup.h"
     "private/ApplicationSetup.cpp"
 )
-target_link_libraries(SkylakeLibTestsSharedLib PUBLIC SkylakeLib)
+
+Create_SkylakeLibTarget_Name(skl_lib_target ${SKL_DEV_NAME})
+target_link_libraries(SkylakeLibTestsSharedLib PUBLIC ${skl_lib_target})
 
 # Link Google Test
 target_link_libraries(SkylakeLibTestsSharedLib PUBLIC gtest_main)
